@@ -28,7 +28,7 @@ func bedDistanceFromChrEnds(inFile string, chromFile string, outFile string) {
 			log.Fatalf("inputBed coordinates are outside chrom.sizes coordinate range, %s", records[i])
 		}
 		records[i].Score = numbers.Min(lengthFromEnd, records[i].ChromStart) //calculate if the beginning of the bed is closer to the start than the end of the bed is to the end of the chrom and store that distance in the score field of the bed that will be written out
-		if records[i].FieldsInitialized < 5 {                                // output bed should have 5 fields (more information about the bed fields int eh codebase can be found in gonomics/bed/bed.go
+		if records[i].FieldsInitialized < 5 {                                // output bed should have 5 fields (more information about the bed fields in the codebase can be found in gonomics/bed/bed.go
 			records[i].FieldsInitialized = 5
 		}
 	}
