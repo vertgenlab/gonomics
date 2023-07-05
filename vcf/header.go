@@ -295,8 +295,7 @@ func parseHeaderFields(line string) (Id string, Number string, Type InfoType, De
 	return
 }
 
-// NewHeader If you have multiple samples to add to the header, use strings.Join(samples[], "\t") as an argument that combines multiple samples by tabs
-// Name input is strictly used to push in a name for the sample column.
+// NewHeader creates a new minimal header for a vcf file
 func NewHeader() Header {
 	var header Header
 	header.Text = append(header.Text, "##fileformat=VCFv4.2")
