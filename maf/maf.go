@@ -1,4 +1,5 @@
-// Package maf provides 
+// Package maf provides structs and functions for processing alignments in maf format.
+// The file format is described more here: https://genome.ucsc.edu/FAQ/FAQformat.html
 package maf
 
 import (
@@ -14,8 +15,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-// pointers are retained in the maf package because they are needed for null checks
-
+// MafSLine holds the information stored in an "S" line of the maf format.
 type MafSLine struct {
 	Src     string
 	Start   int
@@ -25,6 +25,7 @@ type MafSLine struct {
 	Seq     []dna.Base
 }
 
+// MafILine holds the information stored in an "I" line of the maf format.
 type MafILine struct {
 	Src         string
 	LeftStatus  rune
@@ -33,6 +34,7 @@ type MafILine struct {
 	RightCount  int
 }
 
+// MafELine holds the information stored in an "E" line of the maf format.
 type MafELine struct {
 	Src     string
 	Start   int
@@ -42,6 +44,7 @@ type MafELine struct {
 	Status  rune
 }
 
+// MafSpecies holds the info for a given species in a given maf block
 type MafSpecies struct {
 	Src   string
 	SLine *MafSLine
@@ -49,11 +52,17 @@ type MafSpecies struct {
 	ELine *MafELine
 }
 
+// Maf holds the information for a given maf block.
 type Maf struct {
 	Score   float64
 	Species []*MafSpecies
 }
 
+// SrcToAssemblyAndChrom many times in the maf format a sequence is labeled
+// as assembly.chromosome (e.g. hg38.chr7) and this function breaks
+// them apart and returns the assembly followed by the chromosome.
+// If there is no dot, it returns the input string as the assembly
+// and no chromosome.  If there is more than one dot it calls log.Fatal().
 func SrcToAssemblyAndChrom(src string) (string, string) {
 	dots := strings.Count(src, ".")
 	switch dots {
@@ -168,7 +177,11 @@ func parseMafELine(line string) *MafELine {
 	return (&curr)
 }
 
-// returns nil if not found.
+// FindSpeciesExactMatch take a pointer to a maf block and the string
+// to match.  If the source of the maf block is exactly equal to the
+// input string than a pointer to the info for that species is returned,
+// and otherwise nil is returned.  For example, hg38 would find a maf
+// block with hg38 as the source of a sequence, but not hg38.chr7
 func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 	for i := 0; i < len(m.Species); i++ {
 		if m.Species[i].Src == src {
@@ -178,7 +191,9 @@ func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 	return nil
 }
 
-// returns nil if not found.
+// FindSpeciesBeforeDot is similar to FindSpeciesExactMatch, but
+// in this case searching hg38 will find blocks with hg38, hg38.chr6
+// or hg38.chr22
 func FindSpeciesBeforeDot(m *Maf, assembly string) *MafSpecies {
 	for i := 0; i < len(m.Species); i++ {
 		currAssembly, _ := SrcToAssemblyAndChrom(m.Species[i].Src)
@@ -189,7 +204,8 @@ func FindSpeciesBeforeDot(m *Maf, assembly string) *MafSpecies {
 	return nil
 }
 
-// would be better if this checked for the EOF line at the end and that there was a blank line as the next to last line.
+// Read takes the filename of a maf file and returns the contents of the file as a slice of pointers to maf blocks.
+// Would be better if this checked for the EOF line at the end and that there was a blank line as the next to last line.
 func Read(filename string) []*Maf {
 	var answer []*Maf
 	var line, prevLine string
@@ -299,6 +315,7 @@ func calculateFieldSizes(m *Maf) (int, int, int, int) {
 	return srcLen, startLen, sizeLen, srcSizeLen
 }
 
+// WriteToFileHandle writes a single maf block to an io.Writer
 func WriteToFileHandle(file io.Writer, m *Maf) {
 	_, err := fmt.Fprintf(file, "a score=%.1f\n", m.Score)
 	common.ExitIfError(err)
@@ -325,6 +342,7 @@ func WriteToFileHandle(file io.Writer, m *Maf) {
 	common.ExitIfError(err)
 }
 
+// Write writes an entire slice of maf blocks to a file specified by the given filename
 func Write(filename string, data []*Maf) {
 	var err error
 
