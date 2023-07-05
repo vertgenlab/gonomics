@@ -1,5 +1,5 @@
-//package wig provides functions to read, write, and manipulate wig files.
-//more information on the WIG file format can be found at https://genome.ucsc.edu/goldenPath/help/wiggle.html
+// Package wig provides functions to read, write, and manipulate wig files.
+// more information on the WIG file format can be found at https://genome.ucsc.edu/goldenPath/help/wiggle.html
 
 package wig
 
@@ -15,7 +15,8 @@ import (
 	"sync"
 )
 
-// Wig stores information on the chromosome location and step properties of Wig data. Individual wig values are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
+// Wig stores information on the chromosome location and step properties of Wig data. Individual wig values
+// are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
 type Wig struct {
 	StepType string
 	Chrom    string
@@ -93,6 +94,7 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 }
 
 // ReadToChan reads from a fileio.EasyReader to send Wig structs to a chan<- Wig.
+// When it has finished reading the file, ReadToChan will call Done on the waitgroup.
 func ReadToChan(file *fileio.EasyReader, data chan<- Wig, wg *sync.WaitGroup) {
 	for curr, done := NextWig(file); !done; curr, done = NextWig(file) {
 		data <- curr
@@ -145,7 +147,7 @@ func Write(filename string, rec []Wig) {
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle is an helper function for Write that writes the Wig data structure to a file.
+// WriteToFileHandle is an helper function for Write that writes the Wig data structure to an io.Writer
 func WriteToFileHandle(file io.Writer, rec Wig) {
 	var err error
 	if rec.StepType == "fixedStep" {
