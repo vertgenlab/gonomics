@@ -32,7 +32,7 @@ func indelLength(lambda float64) int {
 const bufferSize = 10_000_000
 
 // SimulateWithIndels takes an input fastaFile, which must contain a single fasta entry, and simulates a mutated sequence.
-// The output sequence is provided in a multiFa alignment, aligned ot the initial sequence.
+// The output sequence is provided in a multiFa alignment, aligned to the initial sequence.
 // branchLength (a float from 0 to 1) specifies the expected value of the proportion of sites in the input sequence that will be mutated.
 // propIndel (a float from 0 to 1) specifies the expected value of the proportion of indels in the output sequence.
 // lambda specifies the rate parameter for an exponential distribution, from which INDEL sizes will be sampled.
