@@ -58,7 +58,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	//here are examples of using options in a command. They have default values, which will depend on their type and the desired result. Bools can be set to true or false, ints can be any number,
+	//here are examples of using options in a command. They have default values, which will depend on their type and the desired result. Bools can be set to tru or false, ints can be any number,
 	//but if there's a desired "missing value" number, then that may be best as the default as shown with the "end " option here. Strings defaults are usually empty because they refer to files that aren't needed in the defaults, typically.
 	var refPositions *bool = flag.Bool("refPositions", false, "Uses reference positions for range specifications instead of alignment positions.")
 	var start *int = flag.Int("start", 0, "Retains the sequence after this position.")
