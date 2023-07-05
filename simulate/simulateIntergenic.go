@@ -19,7 +19,7 @@ import (
 func RandIntergenicSeq(GcContent float64, lenSeq int) []dna.Base {
 	var answer []dna.Base = make([]dna.Base, lenSeq)
 	for i := range answer {
-		answer[i] = chooseRandomBase(GcContent)
+		answer[i] = ChooseRandomBase(GcContent)
 	}
 	return answer
 }
@@ -158,7 +158,7 @@ func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float6
 				indelPos = 0
 				for indelPos < length {
 					answer[0].Seq[outputPos] = dna.Gap
-					answer[1].Seq[outputPos] = chooseRandomBase(gcContent)
+					answer[1].Seq[outputPos] = ChooseRandomBase(gcContent)
 					currAlt = append(currAlt, answer[1].Seq[outputPos])
 					outputPos++
 					emptyRoomInBuffer--

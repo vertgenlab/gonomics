@@ -104,8 +104,8 @@ var BLOSUM = [][]float64{{0.288590604, 0.03087248322, 0.03087248322, 0.029530201
 	{0.06995884774, 0.0219478738, 0.01646090535, 0.01783264746, 0.01920438957, 0.01646090535, 0.02331961591, 0.02469135802, 0.008230452675, 0.1646090535, 0.1303155007, 0.02606310014, 0.03155006859, 0.03566529492, 0.01646090535, 0.0329218107, 0.04938271605, 0.00548696845, 0.02057613169, 0.268861454, 0.0},
 	{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}}
 
-// chooseRandomBase chooses one of the four bases according to the GC content provided.
-func chooseRandomBase(GCcontent float64) dna.Base {
+// ChooseRandomBase chooses one of the four bases according to the GC content provided.
+func ChooseRandomBase(GCcontent float64) dna.Base {
 	var base dna.Base
 	var AT float64
 	AT = 1 - GCcontent
@@ -127,10 +127,10 @@ func chooseRandomBase(GCcontent float64) dna.Base {
 
 // changeBase takes an input base (A, C, G, or T) and returns one of the three possible substitutions.
 func changeBase(originalBase dna.Base) dna.Base {
-	newBase := chooseRandomBase(GC)
+	newBase := ChooseRandomBase(GC)
 
 	for newBase == originalBase {
-		newBase = chooseRandomBase(GC)
+		newBase = ChooseRandomBase(GC)
 	}
 	return newBase
 }
