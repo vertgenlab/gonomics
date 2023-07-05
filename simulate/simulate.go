@@ -22,9 +22,12 @@ type BaseExt struct {
 	SeqPos int
 }
 
+// GC is the expected GC-content
 var GC float64 = 0.42
 
-// makes random gene with start and stop codon, must be length multiple of 3.
+// RandGene takes a gene name, length (in bp) and expected GC content and
+// makes a random gene with start and stop codons.  Length must be a multiple of 3
+// and it returns the gene as a slice of fasta.Fasta with a single entry that is the gene.
 func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 	var AT float64
 	AT = 1 - GCcontent
@@ -66,7 +69,10 @@ func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 	return answer
 }
 
-// final function to run to simulate based off of the random gene and the tree.
+// Simulate takes a filename of a fasta file that will be the starting sequence at the root nodes, a pointer to a phylogenetic tree,
+// a genePred filename related to the starting sequence, and if deletions should be allowed along with substitutions.
+// The starting sequence will then be evolved according to the neutral tree provided and each node in the tree
+// will be assigned a DNA sequence.
 func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, deletions bool) {
 	var rand1 []fasta.Fasta
 
@@ -98,7 +104,7 @@ var BLOSUM = [][]float64{{0.288590604, 0.03087248322, 0.03087248322, 0.029530201
 	{0.06995884774, 0.0219478738, 0.01646090535, 0.01783264746, 0.01920438957, 0.01646090535, 0.02331961591, 0.02469135802, 0.008230452675, 0.1646090535, 0.1303155007, 0.02606310014, 0.03155006859, 0.03566529492, 0.01646090535, 0.0329218107, 0.04938271605, 0.00548696845, 0.02057613169, 0.268861454, 0.0},
 	{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}}
 
-// choose base based off of random float, takes in GC content.
+// chooseRandomBase chooses one of the four bases according to the GC content provided.
 func chooseRandomBase(GCcontent float64) dna.Base {
 	var base dna.Base
 	var AT float64
@@ -119,7 +125,7 @@ func chooseRandomBase(GCcontent float64) dna.Base {
 	return base
 }
 
-// changeBase takes an input base (A,C, G, or T) and replaces it with a one of the three possible substitutions.
+// changeBase takes an input base (A, C, G, or T) and returns one of the three possible substitutions.
 func changeBase(originalBase dna.Base) dna.Base {
 	newBase := chooseRandomBase(GC)
 
@@ -129,7 +135,8 @@ func changeBase(originalBase dna.Base) dna.Base {
 	return newBase
 }
 
-// mutate base given random float, whether it's mutated is dependent on branchLength.
+// mutateBase takes a base, a position, and a branch length and returns the base (possibily mutated)
+// along with its position
 func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 	r := rand.Float64()
 
@@ -148,7 +155,8 @@ func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 	return base
 }
 
-// MutateGene takes a starting sequence, it's structure in the form of a genePred and branch lengths from a tree and simulates evolution of the seq based on branch lengths.
+// MutateGene takes a starting sequence, a branch length, and the gene structure of the starting sequence in the form of a genePred file, along with a flag
+// for if deletions should be allowed along with substitutions.  The function returns the evolved sequence.
 func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, deletions bool) []dna.Base {
 	//TODO: make sure a genePred can be updated as we go through the tree
 	//TODO: any time there is an insertion we loop through and increment all SeqPos > insertion's SeqPos +1, deletion -1, or assign SeqPos between original position numbers and fix them later
@@ -348,7 +356,7 @@ func BaseExtToBases(seq []BaseExt) []dna.Base {
 	return newSequence
 }
 
-// SortBaseExtBySeqPos orders a string of BaseExt by seq position.
+// OrderBaseExtBySeqPos orders a string of BaseExt by seq position.
 func OrderBaseExtBySeqPos(unordered []BaseExt) []dna.Base {
 	var ordered = make([]dna.Base, len(unordered))
 
@@ -356,21 +364,7 @@ func OrderBaseExtBySeqPos(unordered []BaseExt) []dna.Base {
 		ordered[unordered[i].SeqPos] = unordered[i].Base
 	}
 	return ordered
-	//sort.Slice(unordered, func(i, j int) bool {
-	//	return Compare(unordered[i], unordered[j]) == -1
-	//})
 }
-
-////Compare returns 0 if the seqPos
-//func Compare(a BaseExt, b BaseExt) int {
-//	if a.SeqPos < b.SeqPos {
-//		return -1
-//	} else if a.SeqPos > b.SeqPos {
-//		return 1
-//	} else {
-//		return 0
-//	}
-//}
 
 // CodonExtToBaseExt converts a slice of CodonExt to a slice of BaseExt.
 func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
@@ -385,7 +379,7 @@ func CodonExtToBaseExt(allCodons []CodonExt) []BaseExt {
 	return seq
 }
 
-// CodonExtToCodon converts a since CodonExt to a pointer to a single dna.Codon.
+// CodonExtToCodon converts a since CodonExt to a single dna.Codon.
 func CodonExtToCodon(cE CodonExt) dna.Codon {
 	var codon dna.Codon
 
@@ -409,7 +403,8 @@ func CodonExtsToCodons(cE []CodonExt) []dna.Codon {
 	return codons
 }
 
-// CheckExon takes in a genePred and a position and determines if the base at that position is in an exon. It returns a bool and the int that refers to the exon the base is in.
+// CheckExon takes in a genePred and a position and determines if the base at that position is in an exon.
+// It returns a bool and the int that refers to the exon the base is in.
 func CheckExon(gene genePred.GenePred, position int) (bool, int) {
 	var answer bool
 	var exonNum int
@@ -454,7 +449,7 @@ func PickStop(codon CodonExt) CodonExt {
 	return codon
 }
 
-// make a slice and a copy of that list of an original sequence so the sequence can be assigned to a node and then mutated.
+// copySeq makes a copy of a []dna.Base
 func copySeq(seq []dna.Base) []dna.Base {
 	original := make([]dna.Base, len(seq))
 	copy(original, seq)
@@ -478,6 +473,8 @@ func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string
 	}
 }
 
+// RemoveAncestors takes a an input fasta filename and a pointer to a tree, along with an output file.
+// All sequences in the input file that match the name of a leaf node in the tree will be written to the output file.
 func RemoveAncestors(filename string, tree *expandedTree.ETree, outputFilename string) {
 	var fastas []fasta.Fasta
 	var newFastas []fasta.Fasta
