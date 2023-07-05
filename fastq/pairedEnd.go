@@ -2,13 +2,12 @@ package fastq
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
 	"sync"
-
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // PairedEnd is a struct that contains two paired Fastq structs, marked Fwd and Rev.
