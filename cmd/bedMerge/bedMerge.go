@@ -51,27 +51,7 @@ func bedMergeLowMem(infile string, outfile string, mergeAdjacent bool) {
 
 func bedMergeHighMem(infile string, outfile string, mergeAdjacent bool, keepAllNames bool) {
 	var records = bed.Read(infile)
-	var outList []bed.Bed
-
-	bed.SortByCoord(records)
-	var currentMax = records[0]
-
-	for i := 1; i < len(records); i++ {
-		if bed.Overlap(currentMax, records[i]) || mergeAdjacent && bed.Adjacent(currentMax, records[i]) {
-			if records[i].Score > currentMax.Score {
-				currentMax.Score = records[i].Score
-			}
-			currentMax.ChromEnd = numbers.Max(records[i].ChromEnd, currentMax.ChromEnd)
-			if keepAllNames && records[i].Name != "" || keepAllNames && currentMax.Name != "" {
-				currentMax.Name = currentMax.Name + "," + records[i].Name
-			}
-		} else {
-			outList = append(outList, currentMax)
-			currentMax = records[i]
-		}
-	}
-
-	outList = append(outList, currentMax)
+	outList := bed.MergeHighMem(records, mergeAdjacent, keepAllNames)
 	bed.Write(outfile, outList)
 }
 
