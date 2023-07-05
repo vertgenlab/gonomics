@@ -13,7 +13,9 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-// RandIntergenicSeq makes a randomly generated DNA sequence of a specified length and GC content. Unlike RandGene, it does not have to be divisible by 3.
+// RandIntergenicSeq makes a randomly generated DNA sequence by drawing from a distribution with a specified GC content.
+// Unlike RandGene, it does not have to be divisible by 3.
+// The inputs are the expected GC content and the desired length of the output sequence.
 func RandIntergenicSeq(GcContent float64, lenSeq int) []dna.Base {
 	var answer []dna.Base = make([]dna.Base, lenSeq)
 	for i := range answer {
@@ -29,13 +31,13 @@ func indelLength(lambda float64) int {
 
 const bufferSize = 10_000_000
 
-// SimulateWithIndels takes an input fastaFile, which must contain to a single fasta entry, and simulates a mutated sequence.
+// SimulateWithIndels takes an input fastaFile, which must contain a single fasta entry, and simulates a mutated sequence.
 // The output sequence is provided in a multiFa alignment, aligned ot the initial sequence.
 // branchLength (a float from 0 to 1) specifies the expected value of the proportion of sites in the input sequence that will be mutated.
-// propIndel (a float from 0 to 1)specifies the expected value of the proportion of indels in the output sequence.
-// lambda specifies the rate parameter for an exponential distribution, from which simulated INDEL sizes will be sampled.
+// propIndel (a float from 0 to 1) specifies the expected value of the proportion of indels in the output sequence.
+// lambda specifies the rate parameter for an exponential distribution, from which INDEL sizes will be sampled.
 // gcContent specifies the expected value of GC content for inserted sequences.
-// vcfOutFile specifies an optional return, which records all variants made during the simulated mutation process.
+// vcfOutFile specifies an optional (empty string disables this option) return that records all variants made during the simulated mutation process.
 // transitionBias specifies the expected value of the ratio of transitions to transversions in the output sequence.
 // qName sets the suffix for the output query fasta name.
 func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, transitionBias float64, vcfOutFile string, qName string) []fasta.Fasta {
