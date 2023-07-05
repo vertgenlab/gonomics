@@ -26,7 +26,7 @@ func TestSequelOverlap(t *testing.T) {
 	answer := sequelOverlap(options)
 
 	for val := range answer {
-		b := val.answer[0].(bed.Bed)
+		b := val.answer[0].(*bed.Bed)
 		if b.Chrom != "chr1" || b.ChromStart != 100 || b.ChromEnd != 200 {
 			t.Errorf("ERROR: Problem with intervalOverlap cmd")
 		}
