@@ -84,8 +84,12 @@ func MergeHighMem(records []Bed, mergeAdjacent bool, keepAllNames bool) []Bed {
 				currentMax.Score = records[i].Score
 			}
 			currentMax.ChromEnd = numbers.Max(records[i].ChromEnd, currentMax.ChromEnd)
-			if keepAllNames && records[i].Name != "" || keepAllNames && currentMax.Name != "" {
-				currentMax.Name = currentMax.Name + "," + records[i].Name
+			if keepAllNames && records[i].Name != "" {
+				if currentMax.Name != "" {
+					currentMax.Name = currentMax.Name + "," + records[i].Name
+				} else {
+					currentMax.Name = records[i].Name
+				}
 			}
 		} else {
 			outList = append(outList, currentMax)
