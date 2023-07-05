@@ -19,7 +19,7 @@ func TestSequelOverlap(t *testing.T) {
 		BaseOverlap:     0,
 		Aggregate:       false,
 		Relationship:    "any",
-		MergedOutput:    false,
+		MergedOutput:    true,
 		SwapTargetQuery: false,
 	}
 
