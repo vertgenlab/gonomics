@@ -1,3 +1,5 @@
+// Package tree provides a struct and functions that allow for creating binary trees
+// modifying them, and doing calculations on them.
 package tree
 
 import (
@@ -12,6 +14,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
+// A Tree is a node in a binary tree
 type Tree struct {
 	Name         string
 	OnlyTopology bool
@@ -34,6 +37,9 @@ func splittingCommaIndex(input string) int {
 	return -1
 }
 
+// ParseDot takes in the filename of a filename of a tree in "dot" format
+// and a verbose flag that can be used to print debugging info.  ParseDot
+// returns a pointer to the root node of the tree.
 func ParseDot(input string, verbose bool) *Tree {
 	var line string
 	var root *Tree
@@ -113,6 +119,8 @@ func ParseDot(input string, verbose bool) *Tree {
 	return root
 }
 
+// ParseNewick takes a newick tree as an input string and returns a pointer
+// to the root of the tree.
 func ParseNewick(input string) (*Tree, error) {
 	if !strings.HasPrefix(input, "(") || !strings.HasSuffix(input, ";") {
 		return nil, fmt.Errorf("Error: tree %s should start with '(' and end with ';'", input)
@@ -186,6 +194,8 @@ func parseNewickHelper(input string) (*Tree, error) {
 	}
 }
 
+// ReadNewick takes a filename of a newick tree as input and returns
+// a pointer to the root of the tree.
 func ReadNewick(filename string) (*Tree, error) {
 	var singleLineTree string
 	singleLineTree = fileio.ReadFileToSingleLineString(filename)
@@ -226,6 +236,8 @@ func toStringHelper(buffer *bytes.Buffer, node *Tree) {
 	}
 }
 
+// ToString takes a pointer to the root of a tree and returns
+// that tree as a text representation of the tree in newick format.
 func ToString(node *Tree) string {
 	if node == nil {
 		return ""
@@ -236,6 +248,8 @@ func ToString(node *Tree) string {
 	return buffer.String()
 }
 
+// WriteNewick takes a filename and a pointer to the root of a tree.  It
+// writes the tree to the file in newick format.
 func WriteNewick(filename string, node *Tree) error {
 	file, err := os.Create(filename)
 	defer file.Close()

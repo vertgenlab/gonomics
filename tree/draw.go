@@ -50,6 +50,8 @@ func drawHelper(img *image.RGBA, node *Tree, heightAbove float64, pixelsPerBranc
 	return y
 }
 
+// Draw prints a tree to as an image.  The function takes a pointer to the root of the tree along with
+// the desired height and width of the output image.
 func Draw(node *Tree, imageWidth int, imageHeight int) (*image.RGBA, error) {
 	//totalHeight := Height(node)
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
