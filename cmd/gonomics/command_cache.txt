@@ -11,10 +11,10 @@
 ##CmdName:bedMerge
 ##CmdName:bedMinimumDistanceName
 ##CmdName:bedOverlapByWindow
-##CmdName:bedPeOverlap
 ##CmdName:bedToFasta
 ##CmdName:bedToWig
 ##CmdName:bedValueWig
+##CmdName:bedpeOverlap
 ##CmdName:branchLengthsMultiFaBed
 ##CmdName:callVariants
 ##CmdName:catMultiFa
@@ -37,6 +37,7 @@
 ##CmdName:filterGenotypes
 ##CmdName:findAndReplace
 ##CmdName:formatIdeogram
+##CmdName:geneIdToName
 ##CmdName:girafCompress
 ##CmdName:girafSimulate
 ##CmdName:girafSort
@@ -61,7 +62,6 @@
 ##CmdName:mouseRecon
 ##CmdName:multFaVisualizeBeds
 ##CmdName:multFaVisualizer
-##CmdName:multiAlign
 ##CmdName:multiFaAcceleration
 ##CmdName:multiFaExtract
 ##CmdName:multiFaReduce
@@ -83,8 +83,8 @@
 ##CmdName:samToWig
 ##CmdName:sampleVcf
 ##CmdName:scCount
-##CmdName:selectionMCMC
-##CmdName:selectionMLE
+##CmdName:selectionMcmc
+##CmdName:selectionMle
 ##CmdName:simRecon
 ##CmdName:simulateBed
 ##CmdName:simulateDivergentWindowsVcf
@@ -127,7 +127,7 @@
      [32mmafToBed[0m                      [36mconvert a maf alignment into a bed, where the bed score is the alignment score. The Bed Name field will include a semicolon delimited list of references found in that maf block.[0m
      [32mmafToMultiFa[0m                  [36m[0m
      [32mmultiFaToVcf[0m                  [36mGenerates a VCF file from an input pairwise multiFa alignment with the first entry as the reference.Note that deletions in the first position of an alignment will not appear in the output Vcf.[0m
-     [32msamAssembler[0m                  [36mReference-based diploid assembly of aligned short reads.Can be used in two modes: 'build' generates diploid assemblies.'score' validates assembly accuracy with a five way alignment including the known divergent sequencesIn 'score', the user specifies a list of filenames, corresponding to each multiFa to score together (usually one file per chromosome).For score, type may be chosen from the following: smallBaseMatrix, baseMatrixByRefBase[0m
+     [32msamAssembler[0m                  [36mReference-based diploid assembly of aligned short reads.Can be used in two modes: 'build' generates diploid assemblies.'score' validates assembly accuracy with a five way alignment including the known divergent sequencesIn 'score', the user specifies a list of filenames, corresponding to each multiFa to score together (usually one file per chromosome).For score, type may be chosen from the following: baseMatrix, baseMatrixByRefBase[0m
      [32msamConsensus[0m                  [36mGenerates a fasta file from a sam over a reference sequence.[0m
      [32msamToBed[0m                      [36mConverts sam to bed[0m
      [32msamToWig[0m                      [36mConverts sam to wig[0m
@@ -204,7 +204,7 @@
      [32mmultiFaAcceleration[0m           [36mPerforms velocity and acceleration on a four way multiple alignment in multiFa format.A four way multiple alignment must contain four species (index 0 to 3) in the topology that aln[0] is the most derived and species 1 to 3 are successive outgroups.[0m
      [32mplotFunctions[0m                 [36mreturns a tab separated list of function evaluations for plotting functions. f(x) is printed in logSpace unless stated otherwise.[0m
      [32mprcompFormat[0m                  [36mGenerates a binary input matrix for PCA.[0m
-     [32mselectionMCMC[0m                 [36mReturns values sampled from the probability distribution of the mean selection coefficient for a given set of bed regions.[0m
+     [32mselectionMcmc[0m                 [36mReturns values sampled from the probability distribution of the mean selection coefficient for a given set of bed regions.[0m
      [32mstatCalc[0m                      [36mCommand line statistics calculator.[0m
      [32mvcfAfs[0m                        [36mReturns allele frequency spectrum information in a text file for graphing.[0m
                                             
@@ -233,23 +233,23 @@
      [32mbedGraphToWig[0m                 [36mConverts bedGraph to wig. Wig scores will be equal to the bedGraph dataValue field across the range of the bedGraph entry.[0m
      [32mbedMath[0m                       [36mPerforms comparative arithmetic operations on float values in bed files.[0m
      [32mbedMinimumDistanceName[0m        [36mFor all entries in bed A (inputBed), look at the Name field and[0m
-     [32mbedPeOverlap[0m                  [36mFilters bedpe entries based on overlaps from the select file.[0m
+     [32mbedpeOverlap[0m                  [36mFilters bedpe entries based on overlaps from the select file.[0m
      [32mbranchLengthsMultiFaBed[0m       [36mUsing a four-way multiple alignment (including the reference species followed by three successive outgroups),[0m
      [32mcigarToBed[0m                    [36m./cigarToBed[0m
      [32mfaBin[0m                         [36m[0m
      [32mfaUniq[0m                        [36m[0m
+     [32mgeneIdToName[0m                  [36m[0m
      [32mhaplotypeGenerator[0m            [36m[0m
      [32mintervalContacts[0m              [36m[0m
      [32mintervalSubsetMatrix[0m          [36mProduces a binary matrix for accessibility breadth analysis.[0m
      [32mlastZWriter[0m                   [36m[0m
      [32mmergeMultiFa[0m                  [36mMerge two multiFa files on a shared reference. Does not perform local realignment on INDELs.[0m
      [32mmouseRecon[0m                    [36m[0m
-     [32mmultiAlign[0m                    [36m[0m
      [32mmultiFaToChain[0m                [36mConvert a pairwise multiFa format alignment to a chain file. First species is the target by default.[0m
      [32moverlapEnrichments[0m            [36mReturns the p-value of enrichment and depletion for overlaps between the elements in two input files.[0m
      [32mproximityBlockVcf[0m             [36mPseudorandomly selects variantsfrom an input VCF file and retains variants in the outputthat do not fall within a user-specified distanceof variants already chosen. Output is returned in a shuffled order.[0m
      [32mquickOrthologs[0m                [36mFind corresponding orthologous transcription startsites.[0m
-     [32mselectionMLE[0m                  [36mPerforms maximum likelihood estimation of selection on variants from an input VCF format file.[0m
+     [32mselectionMle[0m                  [36mPerforms maximum likelihood estimation of selection on variants from an input VCF format file.[0m
      [32msimulateDivergentWindowsVcf[0m   [36mSimulates Vcf data, partitioned by divergence-based ascertainment.[0m
      [32mslurmCheck[0m                    [36mUsed to check for completion of SLURM job arrays. Takes in a 'fancy' version of a job array text file.[0m
      [32mwigFilter[0m                     [36m[0m

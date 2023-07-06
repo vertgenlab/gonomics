@@ -1,13 +1,12 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/vcf"
 	"os"
 	"strings"
 	"testing"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var VcfFilterTests = []struct {
@@ -92,8 +91,6 @@ func TestVcfFilter(t *testing.T) {
 		} else {
 			err = os.Remove(v.tmpOutFile)
 		}
-		if err != nil {
-			common.ExitIfError(err)
-		}
+		exception.PanicOnErr(err)
 	}
 }

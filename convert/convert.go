@@ -3,22 +3,20 @@
 package convert
 
 import (
-	"log"
-	"sort"
-
-	//"fmt" //DEBUG.
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedGraph"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
+	"log"
+	"sort"
 )
 
 // SingleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
@@ -149,7 +147,7 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 					log.Fatalf("Error: overlapping bed elements detected in bed file. Run bedMerge and rerun.")
 				}
 				if method == "Name" {
-					wigSlice[chromIndex].Values[i] = common.StringToFloat64(b.Name)
+					wigSlice[chromIndex].Values[i] = parse.StringToFloat64(b.Name)
 				} else if method == "Score" {
 					wigSlice[chromIndex].Values[i] = float64(b.Score)
 				} else {
@@ -158,7 +156,7 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 			}
 		} else {
 			if method == "Name" {
-				wigSlice[chromIndex].Values[midpoint] = common.StringToFloat64(b.Name)
+				wigSlice[chromIndex].Values[midpoint] = parse.StringToFloat64(b.Name)
 			} else if method == "Score" {
 				wigSlice[chromIndex].Values[midpoint] = float64(b.Score)
 			} else {

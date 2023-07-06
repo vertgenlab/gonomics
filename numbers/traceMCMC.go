@@ -1,13 +1,12 @@
 package numbers
 
 import (
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"math"
 	"sort"
 	"strings"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // McmcTrace is a general struct for Mcmc trace output. Used for discarding burn-in and calculating the mean and credible interval.
@@ -27,7 +26,7 @@ func ReadMcmcTrace(inFile string, parameterName string) McmcTrace {
 
 	for curr, doneReading = fileio.EasyNextLine(in); !doneReading; curr, doneReading = fileio.EasyNextLine(in) {
 		words = strings.Split(curr, "\t")
-		currParam = common.StringToFloat64(words[ParameterIndex])
+		currParam = parse.StringToFloat64(words[ParameterIndex])
 		t.Parameter = append(t.Parameter, currParam)
 	}
 

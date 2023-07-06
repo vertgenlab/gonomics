@@ -2,13 +2,12 @@ package fastq
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
 	"sync"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // PairedEnd is a struct that contains two paired Fastq structs, marked Fwd and Rev.
@@ -26,16 +25,19 @@ type PairedEndBig struct {
 // ReadPairs takes two input file names and returns a slice of PairedEnd structs. For large input files, it is advisable to use PairEndToChan.
 func ReadPairs(readOne string, readTwo string) []PairedEnd {
 	file1 := fileio.EasyOpen(readOne)
-	defer file1.Close()
-
 	file2 := fileio.EasyOpen(readTwo)
-	defer file2.Close()
 
 	answer := ReadFastqPairs(file1, file2)
+
+	err := file1.Close()
+	exception.PanicOnErr(err)
+	err = file2.Close()
+	exception.PanicOnErr(err)
+
 	return answer
 }
 
-// PairEndToChan parses PairedEnd structs from two input fastq files, with filenames readOne and readTwo, and sends them to a channel named output.
+// PairedEndToChan parses PairedEnd structs from two input fastq files, with filenames readOne and readTwo, and sends them to a channel named output.
 func PairedEndToChan(readOne string, readTwo string, output chan<- PairedEnd) {
 	var curr PairedEnd
 	var done bool
@@ -90,9 +92,9 @@ func ReadFastqPairs(er *fileio.EasyReader, er2 *fileio.EasyReader) []PairedEnd {
 func WritingHelper(fileOne *fileio.EasyWriter, fileTwo *fileio.EasyWriter, fq PairedEnd) {
 	var err error
 	_, err = fmt.Fprintf(fileOne, "@%s\n%s\n+\n%s\n", fq.Fwd.Name, dna.BasesToString(fq.Fwd.Seq), QualString(fq.Fwd.Qual))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = fmt.Fprintf(fileTwo, "@%s\n%s\n+\n%s\n", fq.Rev.Name, dna.BasesToString(fq.Rev.Seq), QualString(fq.Rev.Qual))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
 // WritePair takes two filenames and writes PairedEnd reads to the respective outputs.

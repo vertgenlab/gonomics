@@ -1,10 +1,9 @@
 package fastq
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"math"
 	"strings"
-
-	"github.com/vertgenlab/gonomics/common"
 )
 
 // SAM format uses ascii offset of 33 to make everything start with individual characters
@@ -44,7 +43,7 @@ func QualString(qual []uint8) string {
 	str.Grow(len(qual))
 	for i := 0; i < len(qual); i++ {
 		err = str.WriteByte(byte(qual[i] + asciiOffset))
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 	return str.String()
 }

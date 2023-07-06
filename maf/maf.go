@@ -2,15 +2,15 @@ package maf
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // pointers are retained in the maf package because they are needed for null checks
@@ -76,7 +76,7 @@ func parseMafALine(line string) *Maf {
 	for i := 1; i < len(words); i++ {
 		parts := strings.Split(words[i], "=")
 		if parts[0] == "score" {
-			curr.Score = common.StringToFloat64(parts[1])
+			curr.Score = parse.StringToFloat64(parts[1])
 		}
 	}
 	return (&curr)
@@ -89,10 +89,10 @@ func parseMafSLine(line string) *MafSLine {
 	}
 	curr := MafSLine{
 		Src:     words[1],
-		Start:   common.StringToInt(words[2]),
-		Size:    common.StringToInt(words[3]),
-		Strand:  common.StringToStrand(words[4]),
-		SrcSize: common.StringToInt(words[5]),
+		Start:   parse.StringToInt(words[2]),
+		Size:    parse.StringToInt(words[3]),
+		Strand:  parse.StringToStrand(words[4]),
+		SrcSize: parse.StringToInt(words[5]),
 		Seq:     dna.StringToBases(words[6]),
 	}
 	return (&curr)
@@ -126,9 +126,9 @@ func parseMafILine(line string) *MafILine {
 	curr := MafILine{
 		Src:         words[1],
 		LeftStatus:  parseMafIStatus(words[2]),
-		LeftCount:   common.StringToInt(words[3]),
+		LeftCount:   parse.StringToInt(words[3]),
 		RightStatus: parseMafIStatus(words[4]),
-		RightCount:  common.StringToInt(words[5]),
+		RightCount:  parse.StringToInt(words[5]),
 	}
 	return (&curr)
 }
@@ -158,10 +158,10 @@ func parseMafELine(line string) *MafELine {
 	}
 	curr := MafELine{
 		Src:     words[1],
-		Start:   common.StringToInt(words[2]),
-		Size:    common.StringToInt(words[3]),
-		Strand:  common.StringToStrand(words[4]),
-		SrcSize: common.StringToInt(words[5]),
+		Start:   parse.StringToInt(words[2]),
+		Size:    parse.StringToInt(words[3]),
+		Strand:  parse.StringToStrand(words[4]),
+		SrcSize: parse.StringToInt(words[5]),
 		Status:  parseMafEStatus(words[6]),
 	}
 	return (&curr)
@@ -300,18 +300,18 @@ func calculateFieldSizes(m *Maf) (int, int, int, int) {
 
 func WriteToFileHandle(file io.Writer, m *Maf) {
 	_, err := fmt.Fprintf(file, "a score=%.1f\n", m.Score)
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	srcChars, startChars, sizeChars, srcSizeChars := calculateFieldSizes(m)
 	for i := 0; i < len(m.Species); i++ {
 		if m.Species[i].SLine != nil {
-			_, err := fmt.Fprintf(file, "s %-*s %*d %*d %c %*d %s\n",
+			_, err = fmt.Fprintf(file, "s %-*s %*d %*d %c %*d %s\n",
 				srcChars, m.Species[i].SLine.Src,
 				startChars, m.Species[i].SLine.Start,
 				sizeChars, m.Species[i].SLine.Size,
-				common.StrandToRune(m.Species[i].SLine.Strand),
+				parse.StrandToRune(m.Species[i].SLine.Strand),
 				srcSizeChars, m.Species[i].SLine.SrcSize,
 				dna.BasesToString(m.Species[i].SLine.Seq))
-			common.ExitIfError(err)
+			exception.PanicOnErr(err)
 		}
 		if m.Species[i].ILine != nil {
 			//nothing for now
@@ -321,18 +321,17 @@ func WriteToFileHandle(file io.Writer, m *Maf) {
 		}
 	}
 	_, err = fmt.Fprintf(file, "\n")
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
 func Write(filename string, data []*Maf) {
 	var err error
-
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
-
 	_, err = fmt.Fprint(file, "##maf version=1\n")
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	for i := range data {
 		WriteToFileHandle(file, data[i])
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 }
