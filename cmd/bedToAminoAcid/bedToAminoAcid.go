@@ -47,7 +47,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-//example main function for gonomics/cmd directory
+// example main function for gonomics/cmd directory
 func main() {
 	var expectedNumArgs int = 3 //this line specifies the expected number of arguments for the function. Any deviation from this (not including options) will produce an error that prints the usage statement
 
