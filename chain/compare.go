@@ -73,8 +73,11 @@ func compareQueryCoord(a Chain, b Chain) int {
 	return 0
 }
 
-func SortByCoordinates(align []Chain, whichGenome bool) {
-	sort.Slice(align, func(i, j int) bool { return compareStartCoord(align[i], align[j], whichGenome) == -1 })
+// SortByCoordinates will sort a slice of chain by genomic location.  If useTarget is true
+// then this sort will be based on the target coordinates, and will otherwise be the query
+// coordinates.
+func SortByCoordinates(align []Chain, useTarget bool) {
+	sort.Slice(align, func(i, j int) bool { return compareStartCoord(align[i], align[j], useTarget) == -1 })
 }
 
 func compareScores(a Chain, b Chain) int {
@@ -87,6 +90,7 @@ func compareScores(a Chain, b Chain) int {
 	return 0
 }
 
+// Equal returns true if the values in the chain slices are identical to each other.
 func Equal(a []Chain, b []Chain) bool {
 	if len(a) != len(b) {
 		return false
