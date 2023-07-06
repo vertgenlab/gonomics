@@ -48,15 +48,6 @@ func SamToBed(s sam.Sam) bed.Bed {
 	}
 }
 
-/* TODO: Write Sam to Bed conversion for paired reads.
-
-func SamToBedPaired(s *sam.Sam) []*bed.Bed {
-	//sort sam by QName
-	//check for "properly aligned" flag
-	//grab two properly paired samAln (sanme QName with strings.suffix removed), feed into helper function for bed conversion
-	//add output to bedlist
-} */
-
 // SamToBedFrag converts a Sam entry into a bed based on the fragment length from which the aligned read was derived.
 // Uses a chromInfo map to ensure fragments are called within the ends of the chromosomes.
 func SamToBedFrag(s sam.Sam, fragLength int, reference map[string]chromInfo.ChromInfo) bed.Bed {
