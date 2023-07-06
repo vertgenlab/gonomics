@@ -14,14 +14,14 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// The Gene struct organizes all underlying data on a gene feature in a GTF file.
+// Gene organizes all underlying data on a gene feature in a GTF file.
 type Gene struct {
 	GeneID      string
 	GeneName    string
 	Transcripts []*Transcript
 }
 
-// The Transcript struct contains information on the location, score and strand of a transcript, along with the underlying exons.
+// Transcript contains information on the location, score and strand of a transcript, along with the underlying exons.
 type Transcript struct {
 	Chr          string
 	Source       string
@@ -33,7 +33,7 @@ type Transcript struct {
 	Exons        []*Exon
 }
 
-// The Exon struct contains information on the location, score, and relative order of exons in a GTF file.
+// Exon contains information on the location, score, and relative order of exons in a GTF file.
 type Exon struct {
 	Start      int
 	End        int
@@ -187,7 +187,6 @@ func parseGtfLine(line string, currentTranscript *Transcript, prevCds *Cds, answ
 	return currentTranscript, prevCds
 }
 
-// TODO: Set up Exon and Cds pointers to match the style of transcripts
 // Read generates a map[geneID]*Gene of GTF information from an input GTF format file.
 func Read(filename string) map[string]*Gene {
 	file := fileio.EasyOpen(filename)
@@ -216,7 +215,7 @@ func Write(filename string, records map[string]*Gene) {
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle is a helper function of Write that facilitates writing GTF data to an output file.
+// WriteToFileHandle is a helper function of Write that writes a single gene to an output file.
 func WriteToFileHandle(file io.Writer, gene *Gene) {
 	var err error
 	for i := 0; i < len(gene.Transcripts); i++ { //for each transcript associated with that gene
