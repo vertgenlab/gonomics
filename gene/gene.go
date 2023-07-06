@@ -1,3 +1,4 @@
+// Package gene contains structs and functions to help understand protein-coding genes.
 package gene
 
 import (
@@ -6,7 +7,10 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
+// Feature 
 type Feature int32
+
+// MutationType
 type MutationType byte
 
 const (
