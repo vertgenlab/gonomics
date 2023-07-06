@@ -62,7 +62,8 @@ func ReadPairBigToChan(fileOne string, fileTwo string, answer chan<- PairedEndBi
 	close(answer)
 }
 
-// NextFastqPair is a helper funcotion of PairEndToChan. It checks a reader for additional data lines and parses PairedEnd structs if more lines exist. The bool return indicates 'done', or that a file has no additional data lines.
+// NextFastqPair is a helper function of PairEndToChan. It checks a reader for additional data lines and
+// parses PairedEnd structs if more lines exist. The bool return indicates 'done', or that a file has no additional data lines.
 func NextFastqPair(reader1 *fileio.EasyReader, reader2 *fileio.EasyReader) (PairedEnd, bool) {
 	fqOne, done1 := NextFastq(reader1)
 	fqTwo, done2 := NextFastq(reader2)
@@ -120,6 +121,8 @@ func WritingChan(readOne string, readTwo string, output <-chan PairedEnd, wg *sy
 	wg.Done()
 }
 
+// GoWriteFqPair takes filenames to write read one and read two to and then launches a go routine
+// to pull read pairs from a channel and write them to these files.
 func GoWriteFqPair(readOne string, readTwo string, data <-chan PairedEnd) {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -128,9 +131,6 @@ func GoWriteFqPair(readOne string, readTwo string, data <-chan PairedEnd) {
 }
 
 // ReadFqBigPair will take 2 readers which will convert paired end read fastq files into a paired end FastqBig struct.
-// Note: while this function is return as a pointer, it's purpose is to be deferenced at the next function call.
-// In addition the pointers to read one and read two will also be dereference. When sending a pointer to a struct through
-// a channel, or a struct with pointers inside, memory allocated will be placed on the heap hindering performance.
 func ReadFqBigPair(readerOne *fileio.ByteReader, readerTwo *fileio.ByteReader) (PairedEndBig, bool) {
 	var doneOne, doneTwo bool
 	var fqOne, fqTwo FastqBig = FastqBig{}, FastqBig{}
