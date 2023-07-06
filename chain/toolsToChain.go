@@ -8,8 +8,9 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-// TODO: Will move to the overlap interface once we have that set up, essentially all the functions
-// if target bool is true, we select the target/references regions, if target bool is false we use the query.
+// OverlapChainBed returns true if the provided chain and bed overlap
+// in genomic coordinates.  If check target is true, this calculation
+// is done on the chain's target, and otherwise on the chain's query.
 func OverlapChainBed(alpha Chain, beta bed.Bed, checkTarget bool) bool {
 	if checkTarget {
 		return targetOverlap(alpha, beta)
@@ -46,7 +47,9 @@ func queryOverlap(alpha Chain, beta bed.Bed) bool {
 	}
 }
 
-func ChainToBed(ch Chain, checkTarget bool) bed.Bed {
+// ChainToBed converts a chain into a bed region equal to the target bases covered by the chain,
+// or the query bases if useTarget is false.
+func ChainToBed(ch Chain, useTarget bool) bed.Bed {
 	if checkTarget {
 		return convertTargetBed(ch)
 	} else {
