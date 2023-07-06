@@ -1,3 +1,4 @@
+// Package sort holds structs and functions for sorting genomic data types
 package sort
 
 import (
@@ -221,7 +222,7 @@ func writeIdx(filename string, sortOrder []uint32) {
 	}
 }
 
-func ReadIdx(filename string) []uint32 {
+func readIdx(filename string) []uint32 {
 	answer := make([]uint32, 0)
 	file := fileio.EasyOpen(filename)
 
