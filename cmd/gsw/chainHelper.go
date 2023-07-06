@@ -24,7 +24,7 @@ func convertChains(chainFile, targetFa, queryFa, format, output string) {
 	case "vcf":
 		vcfChannel := goChainToVcf(chainFile, targetFa, queryFa)
 		file := fileio.EasyCreate(output)
-		vcf.NewWriteHeader(file, vcf.NewHeader(targetFa))
+		vcf.NewWriteHeader(file, vcf.NewHeader())
 		for i := range vcfChannel {
 			vcf.WriteVcf(file, i)
 		}

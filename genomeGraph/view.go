@@ -2,12 +2,11 @@ package genomeGraph
 
 import (
 	"bytes"
-	"strings"
-
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
+	"strings"
 )
 
 func calcExtension(seq []dna.Base) int64 {
@@ -26,7 +25,7 @@ func LocalView(samLine *sam.Sam, ref []*Node) string {
 	var j int64 = 0
 	var count int
 	words := strings.Split(samLine.RName, "_")
-	var alpha []dna.Base = ref[common.StringToInt64(words[1])].Seq
+	var alpha []dna.Base = ref[parse.StringToInt64(words[1])].Seq
 	var beta []dna.Base = samLine.Seq
 
 	for _, operation := range operations {

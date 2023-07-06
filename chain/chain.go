@@ -3,16 +3,15 @@ package chain
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"strings"
-	"sync"
-
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
+	"io"
+	"log"
+	"strings"
+	"sync"
 )
 
 // Chain alignment fields.
@@ -123,7 +122,7 @@ func WriteToFile(filename string, chaining <-chan Chain, comments HeaderComments
 func WriteToFileHandle(file io.Writer, rec Chain) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", ToString(rec))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
 // Write will write chain slice and any given comments to the top of the file.
@@ -142,7 +141,7 @@ func WriteHeaderComments(file *fileio.EasyWriter, comments HeaderComments) {
 	var err error
 	for _, each := range comments.HashTag {
 		_, err = fmt.Fprintf(file, "%s\n", each)
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 }
 
@@ -165,7 +164,7 @@ func ReadHeaderComments(er *fileio.EasyReader) HeaderComments {
 
 // ToString will convert a chain struct to original string format.
 func ToString(ch Chain) string {
-	var answer string = fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
+	var answer string = fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, parse.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, parse.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
 	//minus one in the loop because last line contains 2 zeros and we do not want to print those
 	for i := 0; i < len(ch.Alignment)-1; i++ {
 		answer += fmt.Sprintf("%d\t%d\t%d\n", ch.Alignment[i].Size, ch.Alignment[i].TBases, ch.Alignment[i].QBases)
@@ -190,19 +189,19 @@ func NewChain(text string, reader *fileio.EasyReader) Chain {
 		log.Fatalf("Error: header line needs to contain 13 data fields\n")
 	}
 	curr := Chain{
-		Score:     common.StringToInt(data[1]),
+		Score:     parse.StringToInt(data[1]),
 		TName:     data[2],
-		TSize:     common.StringToInt(data[3]),
-		TStrand:   common.StringToStrand(data[4]),
-		TStart:    common.StringToInt(data[5]),
-		TEnd:      common.StringToInt(data[6]),
+		TSize:     parse.StringToInt(data[3]),
+		TStrand:   parse.StringToStrand(data[4]),
+		TStart:    parse.StringToInt(data[5]),
+		TEnd:      parse.StringToInt(data[6]),
 		QName:     data[7],
-		QSize:     common.StringToInt(data[8]),
-		QStrand:   common.StringToStrand(data[9]),
-		QStart:    common.StringToInt(data[10]),
-		QEnd:      common.StringToInt(data[11]),
+		QSize:     parse.StringToInt(data[8]),
+		QStrand:   parse.StringToStrand(data[9]),
+		QStart:    parse.StringToInt(data[10]),
+		QEnd:      parse.StringToInt(data[11]),
 		Alignment: chainingHelper(reader),
-		Id:        common.StringToInt(data[12]),
+		Id:        parse.StringToInt(data[12]),
 	}
 	return curr
 }
@@ -218,7 +217,7 @@ func chainingHelper(reader *fileio.EasyReader) []BaseStats {
 		data = strings.Split(line, "\t")
 		if len(data) == 1 {
 			curr = BaseStats{
-				Size:   common.StringToInt(data[0]),
+				Size:   parse.StringToInt(data[0]),
 				TBases: 0,
 				QBases: 0,
 			}
@@ -228,9 +227,9 @@ func chainingHelper(reader *fileio.EasyReader) []BaseStats {
 			return answer
 		} else if len(data) == 3 {
 			curr = BaseStats{
-				Size:   common.StringToInt(data[0]),
-				TBases: common.StringToInt(data[1]),
-				QBases: common.StringToInt(data[2]),
+				Size:   parse.StringToInt(data[0]),
+				TBases: parse.StringToInt(data[1]),
+				QBases: parse.StringToInt(data[2]),
 			}
 			answer = append(answer, curr)
 		} else {
@@ -242,7 +241,7 @@ func chainingHelper(reader *fileio.EasyReader) []BaseStats {
 
 // printHeader is a pretty print that will return a string containing chain alignment fields without the alignment stats columns.
 func printHeader(ch Chain) string {
-	return fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, common.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, common.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
+	return fmt.Sprintf("chain %d %s %d %c %d %d %s %d %c %d %d %d\n", ch.Score, ch.TName, ch.TSize, parse.StrandToRune(ch.TStrand), ch.TStart, ch.TEnd, ch.QName, ch.QSize, parse.StrandToRune(ch.QStrand), ch.QStart, ch.QEnd, ch.Id)
 }
 
 // Simple swaping of target and query fields.

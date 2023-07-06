@@ -1,11 +1,10 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var FastqFormatTests = []struct {
@@ -51,21 +50,15 @@ func TestFastqFormat(t *testing.T) {
 				t.Errorf("Error in fastqFormat, paired reads, read 2.")
 			}
 			err = os.Remove(v.R1OutFile)
-			if err != nil {
-				common.ExitIfError(err)
-			}
+			exception.PanicOnErr(err)
 			err = os.Remove(v.R2OutFile)
-			if err != nil {
-				common.ExitIfError(err)
-			}
+			exception.PanicOnErr(err)
 		} else {
 			if !fileio.AreEqual(v.OutFile, v.ExpectedOutFile) {
 				t.Errorf("Error in fastqFormat, unpaired reads.")
 			}
 			err = os.Remove(v.OutFile)
-			if err != nil {
-				common.ExitIfError(err)
-			}
+			exception.PanicOnErr(err)
 		}
 	}
 }

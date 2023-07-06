@@ -3,13 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"math/rand"
-
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
+	"math/rand"
 )
 
 func proximityBlockVcf(inFile string, outFile string, distance int, setSeed int64) {
@@ -82,6 +81,6 @@ func main() {
 	}
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
-	distance := common.StringToInt(flag.Arg(2))
+	distance := parse.StringToInt(flag.Arg(2))
 	proximityBlockVcf(inFile, outFile, distance, *setSeed)
 }

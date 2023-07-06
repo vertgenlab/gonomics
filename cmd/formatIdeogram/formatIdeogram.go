@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strings"
 
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -27,31 +28,31 @@ func formatIdeogram(inBed string, outTxt string, noScore bool) {
 	var err error
 
 	file := fileio.EasyOpen(inBed)
-	defer file.Close()
-
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		words := strings.Split(line, "\t")
 		chrom = words[0]
-		startNum = common.StringToInt(words[1])
-		endNum = common.StringToInt(words[2])
+		startNum = parse.StringToInt(words[1])
+		endNum = parse.StringToInt(words[2])
 		midpoint = (startNum + endNum) / 2
 
 		outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint - 1, Score: 1})
 		if noScore {
 			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: 10})
 		} else {
-			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: common.StringToInt(words[4])})
+			outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint, Score: parse.StringToInt(words[4])})
 		}
 		outIdeogram = append(outIdeogram, IdeogramPoint{Chrom: chrom, Position: midpoint + 1, Score: 1})
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 
 	outfile := fileio.EasyCreate(outTxt)
-	defer outfile.Close()
-
 	for i := 0; i < len(outIdeogram); i++ {
 		_, err = fmt.Fprintf(outfile, "%s\t%v\t%v\n", outIdeogram[i].Chrom, outIdeogram[i].Position, outIdeogram[i].Score)
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
+	err = outfile.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {

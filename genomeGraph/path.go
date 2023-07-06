@@ -3,13 +3,12 @@ package genomeGraph
 import (
 	"bytes"
 	"fmt"
-	"strings"
-
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
+	"strings"
 )
 
 func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {
@@ -92,7 +91,7 @@ func addStartChrPos(samfile sam.Sam) int {
 	var answer int = 0
 	if strings.Contains(samfile.Extra, "XO:i:") {
 		words := strings.Split(samfile.Extra, "\t")
-		answer = common.StringToInt(words[2][5:])
+		answer = parse.StringToInt(words[2][5:])
 	}
 	return answer
 }
