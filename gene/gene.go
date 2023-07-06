@@ -1,3 +1,4 @@
+// Package gene contains structs and functions to help understand protein-coding genes.
 package gene
 
 import (
@@ -7,6 +8,7 @@ import (
 )
 
 type Feature int32
+
 type MutationType byte
 
 const (
@@ -175,6 +177,8 @@ func CodingPosToGenomic(g *Gene, cdnaPos int) (int, error) {
 	}
 }
 
+// CdnaPosToCodon takes a gene and a base position in the cDNA, and returns the codon
+// associated with that cDNA position.
 func CdnaPosToCodon(g *Gene, cdnaPos int) (dna.Codon, error) {
 	var answer dna.Codon
 	if cdnaPos < 0 {
