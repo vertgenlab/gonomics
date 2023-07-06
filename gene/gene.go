@@ -7,10 +7,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-// Feature 
 type Feature int32
 
-// MutationType
 type MutationType byte
 
 const (
@@ -179,6 +177,8 @@ func CodingPosToGenomic(g *Gene, cdnaPos int) (int, error) {
 	}
 }
 
+// CdnaPosToCodon takes a gene and a base position in the cDNA, and returns the codon
+// associated with that cDNA position.
 func CdnaPosToCodon(g *Gene, cdnaPos int) (dna.Codon, error) {
 	var answer dna.Codon
 	if cdnaPos < 0 {
