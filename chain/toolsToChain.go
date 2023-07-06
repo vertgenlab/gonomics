@@ -50,7 +50,7 @@ func queryOverlap(alpha Chain, beta bed.Bed) bool {
 // ChainToBed converts a chain into a bed region equal to the target bases covered by the chain,
 // or the query bases if useTarget is false.
 func ChainToBed(ch Chain, useTarget bool) bed.Bed {
-	if checkTarget {
+	if useTarget {
 		return convertTargetBed(ch)
 	} else {
 		return convertQueryBed(ch)
