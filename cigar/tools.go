@@ -1,5 +1,8 @@
 package cigar
 
+// AddCigar ads a cigar struct to the end of a slice, but is smart about checking
+// to see if the addition is the same operation that is present at the end of the
+// existing slice and just increasing the run length of that entry.
 func AddCigar(cigs []Cigar, newCig Cigar) []Cigar {
 	if len(cigs) == 0 {
 		cigs = append(cigs, newCig)
@@ -11,6 +14,10 @@ func AddCigar(cigs []Cigar, newCig Cigar) []Cigar {
 	return cigs
 }
 
+// CatCigar cats two cigars together, but is smart about checking to see if the
+// last element of the first slice is the same operation as the first element
+// of the second slice.  In this case it will compress that struct into a single
+// element with a longer run length.
 func CatCigar(cigs []Cigar, newCigs []Cigar) []Cigar {
 	if len(newCigs) == 0 || newCigs == nil {
 		return cigs
