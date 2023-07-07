@@ -1,6 +1,6 @@
 package cigar
 
-// AddCigar ads a cigar struct to the end of a slice, but is smart about checking
+// AddCigar adds a cigar struct to the end of a slice, but is smart about checking
 // to see if the addition is the same operation that is present at the end of the
 // existing slice and just increasing the run length of that entry.
 func AddCigar(cigs []Cigar, newCig Cigar) []Cigar {
