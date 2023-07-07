@@ -118,6 +118,8 @@ func EasyPeekReal(file *EasyReader, n int) ([]byte, error) {
 	return PeekReal(file.BuffReader, n)
 }
 
+// EasyReadHeader will read any leading comments lines from the file and return them as a slice of strings
+// with each element in the slice being a comment line.
 func EasyReadHeader(file *EasyReader) ([]string, error) {
 	return ReadHeader(file.BuffReader)
 }
@@ -141,13 +143,16 @@ func Read(filename string) []string {
 	return answer
 }
 
+// WriteToFileHandle will write a string to an io.Writer and panic on
+// any error.
 func WriteToFileHandle(file io.Writer, rec string) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", rec)
 	exception.PanicOnErr(err)
 }
 
-// Write writes a file.
+// Write writes a slice of strings to a file with a newline
+// placed after each element of the slice.
 func Write(filename string, records []string) {
 	var err error
 	file := EasyCreate(filename)
