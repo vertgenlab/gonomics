@@ -94,7 +94,7 @@ func GetBranch(node *ETree) []*ETree {
 	return branch
 }
 
-// GetBranch takes a root node and returns a slice of all leaf nodes in the tree.
+// GetLeaves takes a root node and returns a slice of all leaf nodes in the tree.
 func GetLeaves(node *ETree) []*ETree {
 	var leaf []*ETree
 	if node.Left != nil && node.Right != nil {
