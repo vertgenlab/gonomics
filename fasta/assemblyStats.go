@@ -9,6 +9,9 @@ import (
 	"sort"
 )
 
+// AssemblyStats takes the path to a fasta file and a flag for whether lower case letters
+// should count as assembly gaps.  Five ints are returned, which encode:
+// the N50 size, half the size of the genome, size of the genome, size of the largest contig, and the number of contigs.
 func AssemblyStats(infile string, countLowerAsGaps bool) (int, int, int, int, int) {
 	records := Read(infile)
 	var genomeLength int
@@ -28,6 +31,8 @@ func AssemblyStats(infile string, countLowerAsGaps bool) (int, int, int, int, in
 	return N50, halfGenome, genomeLength, largestContig, numContigs
 }
 
+// CalculateN50 takes a slice of contig lengths and the size of half
+// the genome.  It returns the N50 size.
 func CalculateN50(contigList []int, halfGenome int) int {
 	var sum int = 0
 	for i := len(contigList) - 1; i > -1; i-- {
@@ -40,6 +45,8 @@ func CalculateN50(contigList []int, halfGenome int) int {
 	return -1
 }
 
+// MakeContigList takes a slice of fasta sequences and a flag for whether lower case
+// letters should count as gaps.  A slice of contig sizes is the return value.
 func MakeContigList(records []Fasta, countLowerAsGaps bool) []int {
 	var contigLen int = 0
 	var contig bool = false
@@ -89,10 +96,13 @@ func MakeContigList(records []Fasta, countLowerAsGaps bool) []int {
 	return contigList
 }
 
-func WriteAssemblyStats(infile string, outfile string, N50 int, halfGenome int, genomeLength int, largestContig int, numContigs int) {
+// WriteAssemblyStats takes the name of an assembly, a path to an output file, and stats for:
+// the N50 size, half the size of the genome, size of the genome, size of the largest contig, and the number of contigs.
+// The stats, with some human-readable labels are written to the output file.
+func WriteAssemblyStats(assemblyName string, outfile string, N50 int, halfGenome int, genomeLength int, largestContig int, numContigs int) {
 	file := fileio.EasyCreate(outfile)
 	var err error
-	_, err = fmt.Fprintf(file, "Assembly Name: %s\n", infile)
+	_, err = fmt.Fprintf(file, "Assembly Name: %s\n", assemblyName)
 	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "halfGenome: %d\n", halfGenome)
 	exception.FatalOnErr(err)
