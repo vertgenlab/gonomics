@@ -1,5 +1,4 @@
-//package convert contains functions for converting data between standard file formats. This is a high level package that avoids circular dependencies.
-
+// Package convert contains functions for converting data between standard file formats. This is a high level package that avoids circular dependencies.
 package convert
 
 import (

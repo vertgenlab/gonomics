@@ -1,3 +1,5 @@
+// Package simulate contains functions for simulation of genomic data, including generating random sequences,
+// variants, reads, or regions.
 package simulate
 
 import (

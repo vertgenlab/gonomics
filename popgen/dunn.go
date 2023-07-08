@@ -1,3 +1,4 @@
+// Package popgen contains functions for analyzing population genetic statistics from variation or alignment data.
 package popgen
 
 import (

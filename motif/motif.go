@@ -1,5 +1,4 @@
-//Package motif provides functions for reading, writing, and manipulating position matrices for transcription factor binding site motif analysis.
-
+// Package motif provides functions for reading, writing, and manipulating position matrices for transcription factor binding site motif analysis.
 package motif
 
 import (
