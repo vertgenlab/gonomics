@@ -61,14 +61,7 @@ func simulateSam(s Settings) {
 	var err error
 
 	if s.DeaminationDistribution != "" {
-		deaminationOut := fileio.EasyCreate(s.DeaminationDistribution)
-		_, err = fmt.Fprintf(deaminationOut, "Position\tCount\n")
-		for i := range deaminationDistributionSlice {
-			_, err = fmt.Fprintf(deaminationOut, "%v\t%v\n", i, deaminationDistributionSlice[i])
-			exception.PanicOnErr(err)
-		}
-		err = deaminationOut.Close()
-		exception.PanicOnErr(err)
+		writeDeaminationDistribution(deaminationDistributionSlice, s)
 	}
 
 	if bamOutput {
@@ -76,6 +69,19 @@ func simulateSam(s Settings) {
 		exception.PanicOnErr(err)
 	}
 	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+// writeDeaminationDistribution is a helper function that writes the deaminationDistributionSlice to a file
+func writeDeaminationDistribution(deaminationDistributionSlice []int, s Settings) {
+	var err error
+	deaminationOut := fileio.EasyCreate(s.DeaminationDistribution)
+	_, err = fmt.Fprintf(deaminationOut, "Position\tCount\n")
+	for i := range deaminationDistributionSlice {
+		_, err = fmt.Fprintf(deaminationOut, "%v\t%v\n", i, deaminationDistributionSlice[i])
+		exception.PanicOnErr(err)
+	}
+	err = deaminationOut.Close()
 	exception.PanicOnErr(err)
 }
 

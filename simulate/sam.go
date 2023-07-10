@@ -54,6 +54,7 @@ func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFra
 }
 
 // generateSamReadNoFlag generates a sam record for the input position.
+// the second return is a deaminationDistributionSlice, recording the positions of observed cytosine deamination events.
 // Soft clips sequence that is off template and does not generate Flag, RNext, or PNext.
 func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, start, end int, flatErrorRate float64, ancientErrorRate float64, flatAlias numbers.BinomialAlias, ancientAlias numbers.BinomialAlias, geometricParam float64, forward bool, deaminationDistributionSlice []int) (sam.Sam, []int) {
 	var currSam sam.Sam
