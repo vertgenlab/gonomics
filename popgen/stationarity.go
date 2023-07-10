@@ -29,7 +29,7 @@ const (
 	Derived
 )
 
-// k is len(sites).
+// Afs is a struct that contains an Allele Frequency Spectrum, or a set of segregating sites.
 type Afs struct {
 	Sites []*SegSite
 }
@@ -41,6 +41,7 @@ type SegSite struct {
 	L LikelihoodFunction //specifies with likelihood function to use. 1 for ancestral, 0 for uncorrected, 2 for derived.
 }
 
+// segSitesAreEqual returns true if two SegSite structs have the same attribute values, false otherwise.
 func segSitesAreEqual(a SegSite, b SegSite) bool {
 	if a.I != b.I {
 		return false
@@ -54,7 +55,7 @@ func segSitesAreEqual(a SegSite, b SegSite) bool {
 	return true
 }
 
-// InvertSegSite reverses the polarity of a segregating site.
+// InvertSegSite reverses the polarity of a segregating site in place.
 func InvertSegSite(s *SegSite) {
 	s.I = s.N - s.I
 }
@@ -151,7 +152,7 @@ func VcfSampleToSegSite(i vcf.Vcf, DivergenceAscertainment bool, UnPolarized boo
 	return currentSeg, true
 }
 
-// VcfDerivedAlleleFrequency returns the derived allele frequency based on the sample columns of a VCF variant.
+// VcfSampleDerivedAlleleFrequency returns the derived allele frequency based on the sample columns of a VCF variant.
 func VcfSampleDerivedAlleleFrequency(v vcf.Vcf) float64 {
 	if !vcf.IsPolarizable(v) {
 		log.Fatalf("VcfSampleDerivedAlleleFrequency requires polarizable input variants.")
@@ -160,10 +161,9 @@ func VcfSampleDerivedAlleleFrequency(v vcf.Vcf) float64 {
 	return float64(segSite.I) / float64(segSite.N)
 }
 
-// AfsToFrequency converts an  allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
+// AfsToFrequency converts an allele frequency spectrum into allele frequencies. Useful for constructing subsequent AFS histograms.
 func AfsToFrequency(a Afs) []float64 {
-	var answer []float64
-	answer = make([]float64, len(a.Sites))
+	answer := make([]float64, len(a.Sites))
 	for x := 0; x < len(a.Sites); x++ {
 		answer[x] = float64(a.Sites[x].I) / float64(a.Sites[x].N)
 	}
@@ -199,7 +199,6 @@ func AfsSampleDensity(n int, k int, alpha float64, binomMap [][]float64, integra
 	}
 	var switchPoint float64 = float64(k) / float64(n)
 	f := FIntegralComponent(n, k, alpha, binomMap)
-	//TODO: Integral accuracy is set at 1e-7, but lowering this may increase runtime without much accuracy cost.
 	return logspace.Add(numbers.AdaptiveSimpsonsLog(f, 0.0, switchPoint, integralError, 100), numbers.AdaptiveSimpsonsLog(f, switchPoint, 1.0, integralError, 100))
 }
 

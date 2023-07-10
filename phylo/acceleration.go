@@ -1,3 +1,4 @@
+// Package phylo contains functions related to phylogenetic analysis from multiple sequence alignment data.
 package phylo
 
 import (
@@ -101,7 +102,7 @@ func BranchLengthsAlternatingLeastSquares(d AccelDistancesAndWeights, allowNegat
 	return answer
 }
 
-// AccelFourWaySnpDistancesAndweights generates an AccelDistancesAndWeights struct from SNP distance, which includes only SNPs.
+// AccelFourWaySnpDistancesAndWeights generates an AccelDistancesAndWeights struct from SNP distance, which includes only SNPs.
 // Species index order is as follows: 0-Human, 1-Chimp, 2-Gor, 3-Orang.
 func AccelFourWaySnpDistancesAndWeights(records []fasta.Fasta, alignmentCounter int, windowSize int, d *AccelDistancesAndWeights, zeroDistanceWeightConstant float64, CavalliSforzaWeight bool) bool {
 	//first we clear the values in d.
@@ -332,7 +333,7 @@ func nonNegativeApproximation(d1 float64, d2 float64, v1 float64, v2 float64, w1
 	return numbers.Max((w1*(d1-v1)+w2*(d2-v2))/(w1+w2), 0) //ensures the estimate is non-negative
 }
 
-// CalculateQ: for a set of distances and corresponding branch lengths and weights, determine the value of Q, the Fitch-Margoliash least squares error term.
+// CalculateQ for a set of distances and corresponding branch lengths and weights, determine the value of Q, the Fitch-Margoliash least squares error term.
 func CalculateQ(d AccelDistancesAndWeights, b AccelBranchLengths) float64 {
 	var sum float64 = 0
 	sum += d.WhumChimp * math.Pow(d.DhumChimp-(b.BchimpHca+b.BchimpHca), 2)

@@ -24,7 +24,7 @@ func convertChains(chainFile, targetFa, queryFa, format, output string) {
 	case "vcf":
 		vcfChannel := goChainToVcf(chainFile, targetFa, queryFa)
 		file := fileio.EasyCreate(output)
-		vcf.NewWriteHeader(file, vcf.NewHeader(targetFa))
+		vcf.NewWriteHeader(file, vcf.NewHeader())
 		for i := range vcfChannel {
 			vcf.WriteVcf(file, i)
 		}
@@ -111,7 +111,7 @@ func filterVcfPos(vcfs []vcf.Vcf) []vcf.Vcf {
 		curr = chrVcfMap[key]
 		encountered := make(map[int]bool)
 		for i = 0; i < len(curr); i++ {
-			if encountered[curr[i].Pos] == true {
+			if encountered[curr[i].Pos] {
 				//do not add
 			} else {
 				encountered[curr[i].Pos] = true

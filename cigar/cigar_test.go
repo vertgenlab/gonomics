@@ -36,8 +36,5 @@ func TestToString(t *testing.T) {
 }
 
 func isEqual(a Cigar, b Cigar) bool {
-	if !(a.RunLength == b.RunLength && a.Op == b.Op) {
-		return false
-	}
-	return true
+	return (a.RunLength == b.RunLength && a.Op == b.Op)
 }

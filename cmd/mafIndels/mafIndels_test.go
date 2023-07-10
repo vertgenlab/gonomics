@@ -1,11 +1,10 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/exception"
 	"os"
 	"testing"
-
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 )
 
 // use struct to specify testdata.
@@ -31,9 +30,7 @@ func TestMafIndels(t *testing.T) {
 			t.Errorf("Error: processing mafIndels for outIns.")
 		}
 		err := os.Remove("outIns_tmp.bed")
-		if err != nil {
-			common.ExitIfError(err)
-		}
+		exception.PanicOnErr(err)
 
 		records_del := bed.Read("outDel_tmp.bed")
 		expected_del := bed.Read(v.outDelBed)
@@ -41,8 +38,6 @@ func TestMafIndels(t *testing.T) {
 			t.Errorf("Error in mafIndels for outDel.")
 		}
 		err = os.Remove("outDel_tmp.bed")
-		if err != nil {
-			common.ExitIfError(err)
-		}
+		exception.PanicOnErr(err)
 	}
 }

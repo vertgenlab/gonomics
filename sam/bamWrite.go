@@ -109,7 +109,11 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 	bw.recordBuf.Write(bw.u32[:2])
 
 	// num cigar op
-	le.PutUint16(bw.u32[:2], uint16(len(s.Cigar)))
+	if len(s.Cigar) > 0 && s.Cigar[0].Op == '*' {
+		le.PutUint16(bw.u32[:2], 0)
+	} else {
+		le.PutUint16(bw.u32[:2], uint16(len(s.Cigar)))
+	}
 	bw.recordBuf.Write(bw.u32[:2])
 
 	// flag
@@ -153,6 +157,9 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 
 	// cigar
 	for i := range s.Cigar {
+		if i == 0 && s.Cigar[0].Op == '*' {
+			break
+		}
 		le.PutUint32(bw.u32[:4], getCigUint32(s.Cigar[i]))
 		bw.recordBuf.Write(bw.u32[:4])
 	}

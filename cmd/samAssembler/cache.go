@@ -13,6 +13,7 @@ type CacheStruct struct {
 	HeterozygousBaseCache  [][]float64
 	HomozygousIndelCache   [][]float64
 	HeterozygousIndelCache [][]float64
+	AncientLikelihoodCache sam.AncientLikelihoodCache
 }
 
 // cacheSetup returns a CacheStruct of initialized samAssembler caches based on the user Settings struct.
@@ -53,5 +54,19 @@ func cacheSetup(s Settings) CacheStruct {
 		HeterozygousBaseCache:  heterozygousBaseCache,
 		HomozygousIndelCache:   homozygousIndelCache,
 		HeterozygousIndelCache: heterozygousIndelCache,
+		AncientLikelihoodCache: setupAncientLikelihoodCache(s.LikelihoodCacheSize),
+	}
+}
+
+func setupAncientLikelihoodCache(size int) sam.AncientLikelihoodCache {
+	return sam.AncientLikelihoodCache{
+		EpsilonOverThree:                                 make([]float64, size),
+		OneMinusEpsilon:                                  make([]float64, size),
+		OneMinusEpsilonMinusLambda:                       make([]float64, size),
+		EpsilonOverThreePlusLambda:                       make([]float64, size),
+		PointFiveMinusEpsilonOverThree:                   make([]float64, size),
+		EpsilonOverThreePlusLambdaOverTwo:                make([]float64, size),
+		PointFiveMinusEpsilonOverThreePlusLambdaOverTwo:  make([]float64, size),
+		PointFiveMinusEpsilonOverThreeMinusLambdaOverTwo: make([]float64, size),
 	}
 }

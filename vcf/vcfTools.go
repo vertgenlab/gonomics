@@ -4,24 +4,17 @@ import (
 	"strings"
 )
 
+// Snp checks SVTYPE and returns true if the value is SNP
 func Snp(v Vcf) bool {
-	if strings.Contains(v.Info, "SVTYPE=SNP") {
-		return true
-	}
-	return false
+	return strings.Contains(v.Info, "SVTYPE=SNP")
 }
 
+// Ins checks SVTYPE and returns true if the value is INS
 func Ins(v Vcf) bool {
-	if strings.Contains(v.Info, "SVTYPE=INS") {
-		return true
-	}
-	return false
+	return strings.Contains(v.Info, "SVTYPE=INS")
 }
 
+// Del checks SVTYPE and returns true if the value is DEL
 func Del(v Vcf) bool {
-	var truth bool = false
-	if strings.Contains(v.Info, "SVTYPE=DEL") {
-		return true
-	}
-	return truth
+	return strings.Contains(v.Info, "SVTYPE=DEL")
 }

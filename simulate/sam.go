@@ -13,7 +13,12 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-// IlluminaPairedSam generates a pair of sam reads randomly distributed across the input ref.
+// IlluminaPairedSam generates pairs of sam reads randomly distributed across the input DNA sequence.
+// The inputs are the name of the input DNA sequence, the sequence itself, the number of read pairs to generate, the length of each read,
+// the average fragment size, the standard deviation of fragment sizes, the error rate where a base in
+// the read will not match the input DNA, a numbers.binomialAlias that is used to speed up calculations, and
+// output file handles for sam, bam, and a bool denoting if bam (or sam) should be the output.
+// Whichever handle (sam or bam) is not being used can be nil.
 func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFragmentSize int, avgFragmentStdDev float64, flatErrorRate float64, ancientErrorRate float64, flatBinomialAlias numbers.BinomialAlias, ancientBinomialAlias numbers.BinomialAlias, geometricParam float64, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool, deaminationDistributionSlice []int) {
 	var fragmentSize, midpoint, startFor, startRev, endFor, endRev int
 	var currFor, currRev sam.Sam

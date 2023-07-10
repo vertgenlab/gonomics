@@ -88,7 +88,7 @@ func binMinSize(genome []Fasta, min int) map[int][]Fasta {
 				if k < 0 && i+1 == len(genome) {
 					bins[len(bins)-1] = append(bins[len(bins)-1], genome[i])
 				} else if k < 0 {
-					value, _ := bins[len(bins)]
+					value := bins[len(bins)]
 					if value == nil {
 						bins[len(bins)] = append(bins[len(bins)], genome[i])
 					}

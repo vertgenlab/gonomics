@@ -1,7 +1,6 @@
 package gtf
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -48,7 +47,7 @@ func VcfToVariant(v vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[str
 	overlappingGenes := interval.Query(tree, &v, "any")
 
 	if len(overlappingGenes) > 1 {
-		err = errors.New(fmt.Sprintf("Variant overlaps with multiple genes. Mutation will be based on first gene."))
+		err = fmt.Errorf("Variant overlaps with multiple genes. Mutation will be based on first gene.")
 	}
 
 	var annotatingGene *Gene

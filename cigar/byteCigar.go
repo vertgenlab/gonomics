@@ -1,11 +1,11 @@
 package cigar
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strconv"
 	"strings"
-
-	"github.com/vertgenlab/gonomics/common"
 )
 
 // ByteCigar struct encodes sequence comparison operations and includes run length info.
@@ -92,7 +92,7 @@ func ReadToBytesCigar(cigar []byte) []ByteCigar {
 	var lastNum int = 0
 	for i := 0; i < len(cigar); i++ {
 		if IsValidCigar(cigar[i]) {
-			ans = append(ans, ByteCigar{RunLen: common.StringToUint16(string(cigar[lastNum:i])), Op: cigar[i]})
+			ans = append(ans, ByteCigar{RunLen: parse.StringToUint16(string(cigar[lastNum:i])), Op: cigar[i]})
 			lastNum = i + 1
 		}
 	}
@@ -137,9 +137,9 @@ func ByteCigarToString(cigar []ByteCigar) string {
 	var err error
 	for _, c := range cigar {
 		_, err = str.WriteString(strconv.Itoa(int(c.RunLen)))
-		common.ExitIfError(err)
+		exception.FatalOnErr(err)
 		err = str.WriteByte(c.Op)
-		common.ExitIfError(err)
+		exception.FatalOnErr(err)
 	}
 	return str.String()
 }

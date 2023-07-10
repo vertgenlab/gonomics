@@ -2,14 +2,14 @@ package giraf
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strconv"
 	"strings"
-
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fastq"
 )
 
 func GirafToString(g *Giraf) string {
@@ -24,14 +24,14 @@ func stringToGiraf(line string) *Giraf {
 	if len(data) > 10 {
 		curr = &Giraf{
 			QName:     data[0],
-			QStart:    common.StringToInt(data[1]),
-			QEnd:      common.StringToInt(data[2]),
-			Flag:      common.StringToUint8(data[3]),
+			QStart:    parse.StringToInt(data[1]),
+			QEnd:      parse.StringToInt(data[2]),
+			Flag:      parse.StringToUint8(data[3]),
 			PosStrand: StringToPos(data[4]),
 			Path:      FromStringToPath(data[5]),
 			Cigar:     cigar.ReadToBytesCigar([]byte(data[6])),
-			AlnScore:  common.StringToInt(data[7]),
-			MapQ:      uint8(common.StringToInt(data[8])),
+			AlnScore:  parse.StringToInt(data[7]),
+			MapQ:      uint8(parse.StringToInt(data[8])),
 			Seq:       dna.StringToBases(data[9]),
 			Qual:      fastq.ToQualUint8([]rune(data[10]))}
 
@@ -58,11 +58,11 @@ func FromStringToPath(column string) Path {
 		log.Fatalf("Error: Needs exact 3 values, only found %d", len(words))
 	}
 	nodes := strings.Split(words[1], ">")
-	answer := Path{TStart: common.StringToInt(words[0]), Nodes: make([]uint32, len(nodes)), TEnd: common.StringToInt(words[2])}
+	answer := Path{TStart: parse.StringToInt(words[0]), Nodes: make([]uint32, len(nodes)), TEnd: parse.StringToInt(words[2])}
 
 	if nodes[0] != "" { // catch unaligned reads
 		for i, v := range nodes {
-			answer.Nodes[i] = common.StringToUint32(v)
+			answer.Nodes[i] = parse.StringToUint32(v)
 		}
 	}
 
@@ -126,9 +126,8 @@ func qualToString(qual []uint8) string {
 }
 
 func fromStringToQual(s string) []uint8 {
-	words := []rune(s)
 	answer := make([]uint8, 0)
-	for _, v := range words {
+	for _, v := range s {
 		answer = append(answer, uint8(v))
 	}
 	return answer
@@ -139,48 +138,48 @@ func ToString(g *Giraf) string {
 	buf.Grow(400)
 	var err error
 	_, err = buf.WriteString(g.QName)
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = buf.WriteString(strconv.Itoa(g.QStart))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = buf.WriteString(strconv.Itoa(g.QEnd))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = buf.WriteString(strconv.Itoa(int(g.Flag)))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
-	common.ExitIfError(err)
-	_, err = buf.WriteRune(common.StrandToRune(g.PosStrand))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
+	_, err = buf.WriteRune(parse.StrandToRune(g.PosStrand))
+	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = buf.WriteString(PathToString(g.Path))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = buf.WriteString(cigar.ByteCigarToString(g.Cigar))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = buf.WriteString(strconv.Itoa(g.AlnScore))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = buf.WriteString(strconv.Itoa(int(g.MapQ)))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = buf.WriteString(dna.BasesToString(g.Seq))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = buf.WriteString(fastq.QualString(g.Qual))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	_, err = buf.WriteString(NotesToString(g.Notes))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	return buf.String()
 }

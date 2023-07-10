@@ -54,6 +54,8 @@ func nearestGroupsChunk(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen i
 	return bestX, bestY, bestScore, bestRoute
 }
 
+// AllSeqAffine performs a multiple alignment of all fasta sequences according to the score matrix and gap penalties.
+// The alignment is returned as a multi-fasta.
 func AllSeqAffine(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64) []fasta.Fasta {
 	groups := fastaListToIndividualGroups(records)
 	for len(groups) > 1 {
@@ -63,7 +65,8 @@ func AllSeqAffine(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, g
 	return groups[0]
 }
 
-// align sequences.
+// AllSeqAffineChunk is similar to AllSeqAffine, but aligns the sequences in chunks of chunkSize bases.  This was used when aligning
+// tandem repeats with repeat units of length chunkSize.
 func AllSeqAffineChunk(records []fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64, chunkSize int) []fasta.Fasta {
 	groups := fastaListToIndividualGroups(records)
 	for len(groups) > 1 {

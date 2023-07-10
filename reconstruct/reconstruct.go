@@ -53,18 +53,18 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 				for g := 0; g < len(genes); g++ {
 					for k := 0; k < len(sim[i].Seq); k++ {
 						exon, _ = simulate.CheckExon(genes[g], k)
-						if exon == true {
+						if exon {
 							exonBases = exonBases + 1
 						} else {
 							nonCodingBases = nonCodingBases + 1
 						}
 						if sim[i].Seq[k] != recon[j].Seq[k] {
-							if leaf == false {
+							if !leaf {
 								mistakes = mistakes + 1
 							} else {
 								leafMistakes = leafMistakes + 1
 							}
-							if exon == true {
+							if exon {
 								exonMistakes = exonMistakes + 1
 							} else {
 								nonCodingMistakes = nonCodingMistakes + 1
@@ -74,10 +74,10 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 				}
 			}
 		}
-		if found == false {
+		if !found {
 			log.Fatal("Did not find all simulated sequences in reconstructed fasta.")
 		}
-		if leaf == false {
+		if !leaf {
 			accuracy := mistakes / float64(len(sim[i].Seq)) * 100.0
 			//DEBUG: fmt.Printf("tot: %f, len(sim): %f, len(sim[0].Seq): %f \n", total, float64(len(sim)), float64(len(sim[0].Seq)))
 			acc := 100 - accuracy

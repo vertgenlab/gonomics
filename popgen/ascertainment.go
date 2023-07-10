@@ -10,7 +10,7 @@ import (
 
 // BuildFCache builds a slice of len(n) where each index i contains log(F(i | n, alpha)), where F is popgen.AFSSampleDensity.
 func BuildFCache(n int, alpha float64, binomCache [][]float64, integralError float64) []float64 {
-	var answer []float64 = make([]float64, n, n)
+	var answer []float64 = make([]float64, n)
 	for j := 1; j < n; j++ {
 		answer[j] = AfsSampleDensity(n, j, alpha, binomCache, integralError)
 	}
@@ -48,12 +48,12 @@ func DerivedAscertainmentDenominator(fCache []float64, fCacheSum float64, d int)
 	return answer
 }
 
-// AncestralAscertainmentProbability returns P(Asc | i, alpha) for ancestral allele ascertainment corrections.
+// AncestralAscertainmentProbability returns P(Asc | i) for ancestral allele ascertainment corrections.
 func AncestralAscertainmentProbability(n int, i int, d int) float64 {
 	return logspace.Divide(numbers.BinomCoefficientLog(n-i, d), numbers.BinomCoefficientLog(n, d))
 }
 
-// DerivedAscertainmentProbability returns P(Asc | i, alpha) for derived allele ascertainment corrections.
+// DerivedAscertainmentProbability returns P(Asc | i) for derived allele ascertainment corrections.
 func DerivedAscertainmentProbability(n int, i int, d int) float64 {
 	return logspace.Divide(numbers.BinomCoefficientLog(i, d), numbers.BinomCoefficientLog(n, d))
 }

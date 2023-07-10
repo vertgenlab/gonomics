@@ -1,11 +1,10 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
 	"os"
 	"testing"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fasta"
 )
 
 var RandSeqTests = []struct {
@@ -32,8 +31,6 @@ func TestRandSeq(t *testing.T) {
 			t.Errorf("Error in randSeq.")
 		}
 		err = os.Remove(v.outFile)
-		if err != nil {
-			common.ExitIfError(err)
-		}
+		exception.PanicOnErr(err)
 	}
 }

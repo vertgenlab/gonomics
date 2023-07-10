@@ -27,6 +27,9 @@ type DiploidInsertion struct {
 	Ib   string
 }
 
+// DiploidInsertionToSeqs converts the sequences present in a DiploidInsertion struct from
+// strings into a slice of slices of dna.Base, where the first slice of bases is represents
+// the sequence of the first allele and the second slice of bases represents the second allele.
 func DiploidInsertionToSeqs(i DiploidInsertion) [][]dna.Base {
 	switch i.Type {
 	case IaIa:
@@ -52,7 +55,7 @@ func diploidInsertionString(i DiploidInsertion) string {
 	case IaB:
 		return fmt.Sprintf("IaB. Ia: %s.\n", i.Ia)
 	case BBnoIns:
-		return fmt.Sprintf("BB.\n")
+		return "BB.\n"
 	}
 	log.Fatalf("InsertionType not recognized.")
 	return ""
@@ -173,7 +176,7 @@ func diploidDeletionString(i DiploidDeletion) string {
 	case DaB:
 		return fmt.Sprintf("DaB. Da: %v.\n", i.Da)
 	case BBNoDel:
-		return fmt.Sprintf("BB.\n")
+		return "BB.\n"
 	}
 	log.Fatalf("DeletionType not recognized.")
 	return ""

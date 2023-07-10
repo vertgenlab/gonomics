@@ -29,7 +29,7 @@ func samToBed(samFilename string, bedFilename string, fragLength int) {
 	//bed file to write
 	bedFile := fileio.EasyCreate(bedFilename)
 
-	for aln, done = sam.ReadNext(samFile); done != true; aln, done = sam.ReadNext(samFile) {
+	for aln, done = sam.ReadNext(samFile); !done; aln, done = sam.ReadNext(samFile) {
 		if aln.Cigar[0].Op != '*' {
 			if fragLength != -1 {
 				bed.WriteToFileHandle(bedFile, convert.SamToBedFrag(aln, fragLength, chroms))

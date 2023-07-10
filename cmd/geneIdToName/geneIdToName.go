@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cmd/geneIdToName/presets"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"strings"
 )
 
 func makeCustomMap(gnt string) map[string]string {

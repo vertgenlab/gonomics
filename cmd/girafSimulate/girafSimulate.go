@@ -19,7 +19,7 @@ func girafSimulate(graph *genomeGraph.GenomeGraph, numReads int, readLen int, ra
 		genomeGraph.RandSomaticMutations(graph, reads, numSomaticSNV, AlleleFrequency, randSeed)
 	}
 
-	if outputSam == true {
+	if outputSam {
 		for i := 0; i < len(reads); i++ {
 			samReads = append(samReads, genomeGraph.GirafToSam(reads[i]))
 		}
@@ -61,7 +61,7 @@ func main() {
 	graph := genomeGraph.Read(inFile)
 
 	//TODO add remove block once GirafToSam is complete
-	if *outputSam == true {
+	if *outputSam {
 		log.Fatalln("ERROR: Sam output is still in development")
 	}
 

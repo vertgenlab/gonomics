@@ -70,9 +70,9 @@ func MergeLowMem(b <- chan Bed, mergeAdjacent bool) <- chan Bed {
 
 // MergeHighMem retains input Bed entries that are non-overlapping with other input bed entries and merges together overlapping bed entries.
 // Merged bed entries will retain the maximum score in the output.
-func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
+func MergeHighMem(records []Bed, mergeAdjacent bool, keepAllNames bool) []Bed {
 	var outList []Bed
-	if records == nil || len(records) == 0 {
+	if len(records) == 0 {
 		return records //empty and nil slices are returned as is.
 	}
 	SortByCoord(records)
@@ -84,6 +84,13 @@ func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
 				currentMax.Score = records[i].Score
 			}
 			currentMax.ChromEnd = numbers.Max(records[i].ChromEnd, currentMax.ChromEnd)
+			if keepAllNames && records[i].Name != "" {
+				if currentMax.Name != "" {
+					currentMax.Name = currentMax.Name + "," + records[i].Name
+				} else {
+					currentMax.Name = records[i].Name
+				}
+			}
 		} else {
 			outList = append(outList, currentMax)
 			currentMax = records[i]
