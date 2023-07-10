@@ -18,7 +18,7 @@ import (
 // To access debug prints, set verbose to 1 or 2 and then compile. 2 returns lots of debug info, and 1 returns formatted debug info in tsv format for plotting.
 const verbose int = 0
 
-// The McmcSettings type stores settings for the various Mcmc helper functions.`.
+// McmcSettings is a struct that stores settings for the various Mcmc helper functions.`.
 type McmcSettings struct {
 	Iterations              int
 	MuStep                  float64
@@ -40,7 +40,7 @@ type McmcSettings struct {
 	IncludeRef              bool    //If true, includes the reference genome allele state as a datapoint in the allele frequency spectrum.
 }
 
-// The Theta struct stores parameter sets, including the alpha vector, mu, and sigma parameters, along with the likelihood of a particular parameter set for MCMC.
+// Theta is a struct that stores parameter sets, including the alpha vector, mu, and sigma parameters, along with the likelihood of a particular parameter set for MCMC.
 type Theta struct {
 	alpha        []float64 //defines the vector of selction parameters alpha for each segregating site.
 	mu           float64   //hyperparameter to generate alpha. Defines the mean of the distribution of alpha values.

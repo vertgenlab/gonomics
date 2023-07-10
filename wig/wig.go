@@ -1,6 +1,5 @@
 // Package wig provides functions to read, write, and manipulate wig files.
 // more information on the WIG file format can be found at https://genome.ucsc.edu/goldenPath/help/wiggle.html
-
 package wig
 
 import (

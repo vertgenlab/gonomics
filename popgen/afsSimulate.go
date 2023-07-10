@@ -80,7 +80,7 @@ func SegSiteToAlleleArray(s *SegSite) []int16 {
 	return answer
 }
 
-// StationaritySample returns an allele frequency i out of n individuals sampled from a stationarity
+// StationaritySampler returns an allele frequency i out of n individuals sampled from a stationarity
 // distribution with selection parameter alpha.
 func StationaritySampler(alpha float64, samples int, maxSampleDepth int, bins int, xLeft float64, xRight float64) []float64 {
 	f := AfsStationarityClosure(alpha)
