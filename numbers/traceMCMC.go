@@ -14,6 +14,8 @@ type McmcTrace struct {
 	Parameter []float64 //Parameter state, where Parameter[i] is the value of Parameter in the ith iteration.
 }
 
+// ReadMcmcTrace takes a filename of the trace output file and a parameter name of interest.
+// The function returns the values of that parameter across the Mcmc run.
 func ReadMcmcTrace(inFile string, parameterName string) McmcTrace {
 	var curr string
 	var words []string
