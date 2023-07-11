@@ -1,3 +1,7 @@
+// Find and replace gene IDs with gene names according to an input table or preset NCBI RefSeq / ENSEMBL ID conversion tables
+
+// Command Group: "Data Conversion"
+
 package main
 
 import (

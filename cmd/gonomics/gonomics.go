@@ -1,3 +1,5 @@
+// A collection of tools that use the gonomics core library
+
 package main
 
 import (

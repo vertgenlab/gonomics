@@ -1,3 +1,5 @@
+// A tool to find variation between multiple alignment files
+
 // Command Group: "Variant Calling & Annotation"
 
 package main

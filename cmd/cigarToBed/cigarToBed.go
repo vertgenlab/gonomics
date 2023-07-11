@@ -1,3 +1,7 @@
+// Uses globalAlignment, affineGap (instead of constGap) to align 2 .fasta files, each with only 1 sequence, then convert cigars to ins and del beds
+
+// Command Group: "Data Conversion"
+
 package main
 
 import (

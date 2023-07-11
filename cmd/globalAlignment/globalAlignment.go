@@ -1,3 +1,5 @@
+// Align two FASTA files, each with only 1 sequence
+
 // Command Group: "Linear Alignment Tools"
 
 package main

@@ -1,6 +1,5 @@
 //# GONOMICS: testse
 
-// Package main does stuff
 package main
 
 import (

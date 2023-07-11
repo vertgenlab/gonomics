@@ -1,3 +1,6 @@
+// Align two or more sequences by "chunks" of bases instead of by single bases. Each sequence must
+// have a length that is divisible by the chunk size
+
 // Command Group: "FASTA and Multi-FASTA Tools"
 
 package main
@@ -28,7 +31,7 @@ func faDrawAlnChunks(faAlnFilename string, chunkSize int, imageOutFilename strin
 
 func usage() {
 	fmt.Fprint(os.Stderr,
-		"faDrawAlnChunks - Align two or more sequeces by \"chunks\" of bases\n"+
+		"faDrawAlnChunks - Align two or more sequences by \"chunks\" of bases\n"+
 			"                   instead of by single bases.  Each sequence must\n"+
 			"                   have a length that is divisible by the chunk size.\n"+
 			"Usage:\n"+

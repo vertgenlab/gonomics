@@ -1,3 +1,5 @@
+// GIRAF <-> GIRAF.FE conversion, for more information, see the giraf package
+
 // Command Group: "Genome Graph Tools"
 
 package main

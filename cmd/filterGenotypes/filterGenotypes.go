@@ -1,3 +1,5 @@
+//filter genotyped VCFs containing at least 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents
+
 // Command Group: "VCF Tools"
 
 package main
@@ -14,7 +16,7 @@ import (
 
 func usage() {
 	fmt.Print(
-		"filterGenotypes - filter genotyped Vcfs containing at leaste 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents\n\n" +
+		"filterGenotypes - filter genotyped Vcfs containing at least 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents\n\n" +
 			"Usage:\n" +
 			"  ./filterGenotypes [options] input.vcf output.vcf\n\n")
 	flag.PrintDefaults()

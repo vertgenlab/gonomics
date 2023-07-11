@@ -1,3 +1,5 @@
+// Returns a file of giraf alignments for a input genome graph
+
 // Command Group: "Data Simulation"
 
 package main
