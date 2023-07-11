@@ -1,11 +1,4 @@
-// For all entries in bed A (inputBed), look at the Name field and
-// find the matching Name field in bed B (genomeBed). Calculates the minimum distance between
-// the two bed entries and determines if the inputBed entry is upstream or downstream of the matching
-// genomeBed entry. Upstream is denoted as '-' and downstream is denoted as '+'.
-// The outputBed is the inputBed, with minimum distance reported in the 'Score' field and the
-// upstream/downstream labeling reported in the 'Strand' field.
-// Both 'Score' and 'Strand' fields will be overwritten from the inputBed if these
-// fields are not blank.
+// Calculates the minimum distance between beds in separate files with matching names
 
 // Command Group: "BED Tools"
 
