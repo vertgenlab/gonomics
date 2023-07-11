@@ -1,3 +1,4 @@
+// lastZWriter takes in alignment information and creates a file that contains all necessary lastz jobs with all required parameters for any species listed, as well as creating all the directories where data will be stored when those jobs are run.
 package lastZWriter
 
 import (
