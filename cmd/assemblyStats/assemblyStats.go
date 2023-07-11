@@ -1,5 +1,7 @@
-// Command Group: "Statistics & Population Genetics"
 // Provides information about the number of scaffolds, including the N50, number of scaffolds, and distribution of lengths of assembled scaffolds.
+
+// Command Group: "Statistics & Population Genetics"
+
 package main
 
 import (

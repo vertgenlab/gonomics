@@ -1,3 +1,8 @@
+// Using a four-way multiple alignment (including the reference species followed by three successive outgroups),
+// this program calculates branch lengths in units of estimate substitutions for regions in the alignment specified by an input bed file
+
+// Command Group: "FASTA and Multi-FASTA Tools"
+
 package main
 
 import (

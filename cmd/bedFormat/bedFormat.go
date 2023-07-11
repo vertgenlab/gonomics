@@ -1,3 +1,5 @@
+// Options to alter bed formatting
+
 // Command Group: "BED Tools"
 
 package main

@@ -1,3 +1,7 @@
+// Converts bedGraph to wig. Wig scores will be equal to the bedGraph dataValue field across the range of the bedGraph entry
+
+// Command Group: "BED Tools"
+
 package main
 
 import (
