@@ -1,3 +1,4 @@
+// Package expandedTree contains structs and functions that build and utilize information in a binary tree format that can be used for genome simulation and reconstruction
 package expandedTree
 
 import (
