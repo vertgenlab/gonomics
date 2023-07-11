@@ -18,6 +18,7 @@ import (
 	"github.com/vertgenlab/gonomics/genomeGraph"
 )
 
+// helper function: count the number of sequences in input FASTA files.
 // raven did not put this helper function into the globalAlignment function because it is used twice within the globalAlignment function
 // raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
 // raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx.
@@ -35,6 +36,7 @@ func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	return seqIdx
 }
 
+// helper function: visualize the alignment of 2 sequences
 // raven did not put this helper function into the globalAlignment function because it is used in the globalAlignment function
 // faONe is target, faTwo is query.
 func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *genomeGraph.GenomeGraph {
@@ -64,6 +66,7 @@ func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *gen
 	return answer
 }
 
+// main function: align 2 sequences and optionally write to output file.
 // raven moved helper functions from main and non-usage functions into this function.
 func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyReader, outFileName string) {
 	//make sure files meet the usage requirements of globalAlignment.go
@@ -108,8 +111,7 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 // raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options.
 func usage() {
 	fmt.Print(
-		"./globalAlignment - chelsea's global alignment\n" +
-			" Align 2 .fasta files, each with only 1 sequence\n" +
+		"./globalAlignment - Align 2 .fasta files, each with only 1 sequence\n" +
 			"Usage:\n" +
 			"	globalAlignment target.fasta query.fasta\n" +
 			"options:\n")
