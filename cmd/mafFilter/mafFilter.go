@@ -1,3 +1,5 @@
+// Filter a maf file to remove entries below a score threshold
+
 // Command Group: "FASTA and Multi-FASTA Tools"
 
 package main

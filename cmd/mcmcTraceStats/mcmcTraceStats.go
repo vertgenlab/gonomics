@@ -1,3 +1,5 @@
+// Returns summary statistics on an MCMC trace file produced by selectionMCMC
+
 // Command Group: "Statistics & Population Genetics"
 
 package main

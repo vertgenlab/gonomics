@@ -1,3 +1,7 @@
+// Generate unique haplotypes for provided regions from genetic variation data
+
+// Command Group: "Statistics & Population Genetics"
+
 package main
 
 import (

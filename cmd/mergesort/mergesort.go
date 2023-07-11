@@ -1,3 +1,5 @@
+// Executes an external merge sort of the input file based on desired sort criteria
+
 // Command Group: "Sorting"
 
 package main

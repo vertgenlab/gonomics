@@ -1,3 +1,7 @@
+// Write out lastZ pairwise inputs using contig alignment where multiple references are being used
+
+// Command Group: "General Tools"
+
 package main
 
 import (
