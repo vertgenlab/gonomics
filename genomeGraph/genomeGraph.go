@@ -1,3 +1,4 @@
+// Package genomeGraph has structs and tools for reading, writing, editing and aligning graph representations of genomes
 package genomeGraph
 
 import (
