@@ -1,4 +1,4 @@
-//filter genotyped VCFs containing at least 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents
+// Filter genotyped VCFs containing at least 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents
 
 // Command Group: "VCF Tools"
 
