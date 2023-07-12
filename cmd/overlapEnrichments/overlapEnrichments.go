@@ -1,3 +1,7 @@
+// Returns the p-value of enrichment and depletion for overlaps between the elements in two input files
+
+// Command Group: "Statistics & Population Genetics"
+
 package main
 
 import (

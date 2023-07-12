@@ -1,3 +1,5 @@
+// Returns a tab separated list of function evaluations for plotting functions
+
 // Command Group: "Statistics & Population Genetics"
 
 package main

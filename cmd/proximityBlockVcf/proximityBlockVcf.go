@@ -1,3 +1,7 @@
+// Pseudorandomly selects variants from an input VCF file
+
+// Command Group: "Statistics & Population Genetics"
+
 package main
 
 import (
