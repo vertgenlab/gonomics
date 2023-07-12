@@ -33,7 +33,9 @@ Executables will be present in the Go binary folder (`~/go/bin` by default)
 
 The command line tools' code is located in `/gonomics/cmd/`
 
-* More information about using our tools can be found here: [Using gonomics commands](https://github.com/vertgenlab/gonomics/wiki/Using-gonomics-commands) and instructions and examples on making your own tools can be found here: [Writing new tools with gonomics](https://github.com/vertgenlab/gonomics/wiki/Writing-new-tools-with-gonomics)
+* More information about using our tools can be found here: [Using gonomics commands](https://github.com/vertgenlab/gonomics/wiki/Using-gonomics-commands)
+* To See every command in gonomics in command groups with their usage listed run `~/go/bin/gonomics`
+* Instructions and examples on making your own tools can be found here: [Writing new tools with gonomics](https://github.com/vertgenlab/gonomics/wiki/Writing-new-tools-with-gonomics)
 ---
 
 ### To create a docker container of Gonomics
