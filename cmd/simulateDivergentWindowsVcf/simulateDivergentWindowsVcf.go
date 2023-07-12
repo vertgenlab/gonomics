@@ -1,3 +1,7 @@
+// Simulates Vcf data, partitioned by divergence-based ascertainment
+
+// Command Group: "Data Simulation"
+
 package main
 
 import (

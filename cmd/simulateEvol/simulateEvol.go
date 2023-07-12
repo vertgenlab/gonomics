@@ -1,3 +1,5 @@
+// Simulate sequence evolution on an input fasta from the root of a newick tree to the leaf nodes
+
 // Command Group: "Sequence Evolution & Reconstruction"
 
 package main

@@ -1,3 +1,5 @@
+// Command line statistics calculator
+
 // Command Group: "Statistics & Population Genetics"
 
 package main

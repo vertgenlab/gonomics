@@ -1,3 +1,5 @@
+// Provides summary statistics on an input VCF file
+
 // Command Group: "VCF Tools"
 
 package main

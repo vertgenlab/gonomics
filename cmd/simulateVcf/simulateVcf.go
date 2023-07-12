@@ -1,3 +1,5 @@
+// Contains functions for simulating VCF data
+
 // Command Group: "Data Simulation"
 
 package main

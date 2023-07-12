@@ -1,3 +1,5 @@
+// Topologically sorts nodes in a genome graph (.gg) file
+
 // Command Group: "Sorting"
 
 package main
