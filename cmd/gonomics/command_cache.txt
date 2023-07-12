@@ -251,8 +251,6 @@
      [32mwigFilter[0m                     [36mReturns a filtered wig based on option parameters.[0m
      [32mwigMath[0m                       [36mPerform mathematical operations on wig format data.[0m
      [32mwigPeaks[0m                      [36mIdentifies peaks in a WIG file[0m
-                                            
-[31mWig Tools[0m                              
      [32mwigStats[0m                      [36mprovide coverage histogram for WIG format visualization files.[0m
                                             
 [31mUncategorized[0m                          

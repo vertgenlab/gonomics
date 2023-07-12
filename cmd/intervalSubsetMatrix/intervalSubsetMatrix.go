@@ -1,6 +1,6 @@
 // Produces a binary matrix for accessibility breadth analysis
 
-// Command Group; "General Tools"
+// Command Group: "General Tools"
 
 package main
 
