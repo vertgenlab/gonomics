@@ -5,6 +5,8 @@
 # gonomics
 A collection of genomics software tools written in Go (golang).
 
+![GonomicsReleaseFigure](https://github.com/vertgenlab/gonomics/assets/50707122/cf62dc98-1975-4d03-aabf-dcf4096def07)
+
 ### Complete Gonomics Documentation
 The complete documentation for Gonomics can be found [here](https://pkg.go.dev/github.com/vertgenlab/gonomics).
 
