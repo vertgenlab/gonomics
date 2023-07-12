@@ -1,3 +1,5 @@
+// Converts a gtf file into bed format
+
 // Command Group: "Data Conversion"
 
 package main

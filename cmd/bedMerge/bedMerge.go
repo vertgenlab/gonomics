@@ -1,3 +1,5 @@
+// Combines overlapping bed entries, keeping max score. Output will be sorted by genome coordinate
+
 // Command Group: "BED Tools"
 
 package main

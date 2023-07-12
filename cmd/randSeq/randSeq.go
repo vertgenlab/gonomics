@@ -1,3 +1,5 @@
+// Returns pseudorandomly generated DNA sequences in fasta format
+
 // Command Group: "Data Simulation"
 
 package main

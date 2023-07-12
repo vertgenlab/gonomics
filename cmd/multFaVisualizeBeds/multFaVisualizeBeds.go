@@ -1,3 +1,5 @@
+// Provides human-readable multiple alignments for all entries in a bed file
+
 // Command Group: "FASTA and Multi-FASTA Tools"
 
 package main

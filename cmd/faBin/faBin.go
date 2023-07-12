@@ -1,3 +1,7 @@
+// Bins fastas into a minimum size group with either a single record or multiple records from a size ordered chrom.sizes file
+
+// Command Group: "FASTA and Multi-FASTA Tools"
+
 package main
 
 import (

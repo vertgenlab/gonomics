@@ -1,3 +1,5 @@
+// Lifts a compatible file format between assembly coordinates
+
 // Command Group: "General Tools"
 
 package main

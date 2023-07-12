@@ -1,3 +1,7 @@
+// Returns a filtered wig based on option parameters
+
+// Command Group: "WIG Tools"
+
 package main
 
 import (

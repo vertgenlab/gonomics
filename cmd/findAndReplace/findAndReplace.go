@@ -1,3 +1,5 @@
+// Finds values in a file and replaces them, processes the input as a string
+
 // Command Group: "General Tools"
 
 package main

@@ -1,3 +1,5 @@
+// Simulate alignments to a reference sequence
+
 // Command Group: "Data Simulation"
 
 package main

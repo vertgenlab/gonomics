@@ -1,3 +1,5 @@
+// A tool to find variation between multiple alignment files
+
 // Command Group: "Variant Calling & Annotation"
 
 package main
@@ -22,6 +24,14 @@ import (
 func usage() {
 	fmt.Print(
 		"callVariants - A tool to find variation between multiple alignment files.\n\n" +
+			"callVariants is a joint variant caller, i.e. it requires a minimum of two inputs: an experimental file declared with -i (e.g. a tumor sample), " +
+			"and a normal sample declared with -n (ideally but not necessarily from the same individual as -i). callVariants does NOT support single-sample calling. " +
+			"callVariants generates pileups for each position covered in the input -i and -n files and generates a 2x2 contingency table consisting of the " +
+			"number of reads with the reference allele in the -i and -n files and the number of reads with the alternate allele in the -i and -n files. " +
+			"a fishers exact test is performed on the contingency table to evaluate whether the alternate allele frequency in the -i file is significantly different " +
+			"from the alternate allele frequency in the -n files. There are several filters listed below that may be used to refine the results and account for common " +
+			"sources of error in sequencing data such as strand bias and alignment artifacts. The authors recommend that callVariants be used in conjunction with other " +
+			"variant callers rather than as a replacement.\n\n" +
 			"Usage:\n" +
 			"  callVariants [options] -i file1.bam -i file2.bam -n normal.bam -r reference.fasta\n\n" +
 			"Options:\n\n")

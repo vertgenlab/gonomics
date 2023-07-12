@@ -1,5 +1,7 @@
-// Command Group: "Variant Calling & Annotation"
 // Separates a sam alignment from a heterozygous individual
+
+// Command Group: "Variant Calling & Annotation"
+
 package main
 
 import (

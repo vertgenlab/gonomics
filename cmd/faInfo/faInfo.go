@@ -1,3 +1,5 @@
+// Returns summary statistics to standard out for an input.fa, including the counts for each base.
+
 // Command Group: "FASTA and Multi-FASTA Tools"
 
 package main

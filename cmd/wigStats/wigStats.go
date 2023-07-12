@@ -1,4 +1,6 @@
-// Command Group: "Wig Tools"
+// Provide coverage histogram for WIG format visualization files
+
+// Command Group: "WIG Tools"
 //TODO make wigStats compatible with negative wig values
 
 package main

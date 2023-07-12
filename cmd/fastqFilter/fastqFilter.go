@@ -1,3 +1,5 @@
+// Returns a filtered fastq based on option parameters
+
 // Command Group: "FASTQ Tools"
 
 package main

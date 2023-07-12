@@ -1,3 +1,5 @@
+// Annotate Vcf records with cDNA and protein effect predictions
+
 // Command Group: "Variant Calling & Annotation"
 
 package main

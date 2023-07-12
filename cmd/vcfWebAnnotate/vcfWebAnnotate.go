@@ -1,3 +1,5 @@
+// Annotate a vcf file by querying various databases via CellBase
+
 // Command Group: "Variant Calling & Annotation"
 
 package main

@@ -1,3 +1,5 @@
+// Predict amplicon products generated from PCR
+
 // Command Group: "Data Simulation"
 
 package main

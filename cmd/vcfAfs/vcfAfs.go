@@ -1,3 +1,5 @@
+// Returns allele frequency spectrum information in a text file for graphing
+
 // Command Group: "Statistics & Population Genetics"
 
 package main

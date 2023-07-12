@@ -1,3 +1,5 @@
+// Generates a fasta file from a sam over a reference sequence
+
 // Command Group: "Data Conversion"
 
 package main

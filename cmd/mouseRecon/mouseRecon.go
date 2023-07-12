@@ -1,3 +1,7 @@
+// Returns maximum likelihood ancestral sequences from a Mouse-Rat-ChineseHamster-Squirrel multiple alignment in multiFa format
+
+// Command Group: "Sequence Evolution & Reconstruction"
+
 package main
 
 import (

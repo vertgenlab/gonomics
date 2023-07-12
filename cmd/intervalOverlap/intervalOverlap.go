@@ -1,3 +1,5 @@
+// A tool to find non/overlapping genomic regions
+
 // Command Group: "General Tools"
 
 package main

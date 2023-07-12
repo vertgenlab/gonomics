@@ -1,3 +1,7 @@
+// Returns all regions that contact input genomic regions
+
+// Command Group: "General Tools"
+
 package main
 
 import (

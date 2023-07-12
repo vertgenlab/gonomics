@@ -1,3 +1,5 @@
+// Converts sam or bam to wig
+
 // Command Group: "Data Conversion"
 
 package main

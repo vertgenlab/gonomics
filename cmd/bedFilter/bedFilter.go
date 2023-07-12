@@ -1,3 +1,5 @@
+// Output a subset of a bed file using score, name, position, and length
+
 // Command Group: "BED Tools"
 
 package main

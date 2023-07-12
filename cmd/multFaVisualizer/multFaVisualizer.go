@@ -1,3 +1,5 @@
+// Provides human-readable multiple alignment from a given multiFa
+
 // Command Group: "FASTA and Multi-FASTA Tools"
 
 package main

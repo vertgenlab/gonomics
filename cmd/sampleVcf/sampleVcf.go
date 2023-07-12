@@ -1,3 +1,5 @@
+// Returns a sample from a VCF file with a specified number of results
+
 // Command Group: "VCF Tools"
 
 package main

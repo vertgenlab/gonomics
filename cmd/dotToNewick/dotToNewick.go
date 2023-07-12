@@ -1,3 +1,5 @@
+// Generates a newick tree file from an input dot format tree
+
 // Command Group: "Sequence Evolution & Reconstruction"
 
 package main

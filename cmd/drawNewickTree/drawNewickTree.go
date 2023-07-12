@@ -1,3 +1,5 @@
+// Reads a newick format text file to a png for tree visualization
+
 // Command Group: "Sequence Evolution & Reconstruction"
 // Command Usage: "Create PNG of Newick tree"
 
