@@ -260,8 +260,13 @@ func getHeaderCommentLines(filepath string) []string {
 	var done bool
 	file := fileio.EasyOpen(filepath)
 
-	for line, done = fileio.EasyNextLine(file); !done && strings.HasPrefix(line, "//"); line, done = fileio.EasyNextLine(file) {
-		answer = append(answer, line)
+	for line, done = fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
+		if strings.HasPrefix(line, "// Command Group:") {
+			answer = append(answer, line)
+		} else if strings.HasPrefix(line, "// Command Usage:") {
+			answer = append(answer, line)
+		}
+
 	}
 	err := file.Close()
 	if err != nil {
