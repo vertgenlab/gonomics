@@ -1,7 +1,6 @@
-// Returns a filtered fasta based on option parameters
-
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Returns a filtered fasta based on option parameters
 package main
 
 import (

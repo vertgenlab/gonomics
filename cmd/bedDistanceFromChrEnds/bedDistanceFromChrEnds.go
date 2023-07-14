@@ -1,7 +1,6 @@
-// Returns a bed file with the Score field containing the minimum distance from the end of the chromosome.
-
 // Command Group: "BED Tools"
 
+// Returns a bed file with the Score field containing the minimum distance from the end of the chromosome.
 package main
 
 import (

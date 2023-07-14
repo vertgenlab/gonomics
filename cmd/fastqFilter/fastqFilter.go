@@ -1,7 +1,6 @@
-// Returns a filtered fastq based on option parameters
-
 // Command Group: "FASTQ Tools"
 
+// Returns a filtered fastq based on option parameters
 package main
 
 import (

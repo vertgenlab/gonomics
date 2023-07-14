@@ -1,7 +1,6 @@
-// Options to alter bed formatting
-
 // Command Group: "BED Tools"
 
+// Options to alter bed formatting
 package main
 
 import (

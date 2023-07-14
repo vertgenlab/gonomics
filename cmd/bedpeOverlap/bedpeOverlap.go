@@ -1,15 +1,6 @@
-// Filters bedpe entries based on overlaps from the select file.
-// Default behavior expects a bedpe select file and returns entries where both ends of a bedpe entry from the input file
-// overlap both ends of a bedpe entry from the select file.
-// When the select file is a bed, as specified in the option 'bedSelect',
-// entries are retained if at least one end of an input bedpe overlaps a bed entry
-// in the select file.
-// overlapThreshold will only return entries that have an overlap that covers greater than x% of the bedpe overlap entry
-// by default every overlap regardless of overlap percentage will be reported
-// overlapThreshold is only compatible with -bedSelect
-
 // Command Group: "BED Tools"
 
+// Filters bedpe entries based on overlaps from the select file.
 package main
 
 import (

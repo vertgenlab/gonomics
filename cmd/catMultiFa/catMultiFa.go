@@ -1,7 +1,6 @@
-// Concatenate multiFa alignment files by sequence. Accepts an arbitrary number of input fasta files
-
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Concatenate multiFa alignment files by sequence. Accepts an arbitrary number of input fasta files
 package main
 
 import (

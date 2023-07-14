@@ -1,7 +1,6 @@
-// Computes the Dunn Index based on variable SNPs for each input bed region of a multiple alignment
-
 // Command Group: "Statistics & Population Genetics"
 
+// Computes the Dunn Index based on variable SNPs for each input bed region of a multiple alignment
 package main
 
 import (

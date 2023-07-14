@@ -1,7 +1,6 @@
-// Determine the mutation spectrum for divergent sites in each region of an input bed file
-
 // Command Group: "Sequence Evolution & Reconstruction"
 
+// Determine the mutation spectrum for divergent sites in each region of an input bed file
 package main
 
 import (
