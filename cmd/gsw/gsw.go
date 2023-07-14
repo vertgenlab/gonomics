@@ -1,8 +1,7 @@
-// Graph-Smith-Waterman: align single or paired end fastqs
-
 // Command Group: "Genome Graph Tools"
 // Command Usage: "Genome Graph Creation, Alignment, and Manipulation"
 
+// Graph-Smith-Waterman: align single or paired end fastqs
 package main
 
 import (

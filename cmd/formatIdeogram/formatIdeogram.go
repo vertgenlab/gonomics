@@ -1,7 +1,6 @@
-// Generates ideogram txt file from a bed
-
 // Command Group: "BED Tools"
 
+// Generates ideogram txt file from a bed
 package main
 
 import (

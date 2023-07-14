@@ -1,7 +1,6 @@
-// Takes pairwise alignment maf and finds insertions in species_ins not present in species_del but flanked by continuous alignments
-
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Takes pairwise alignment maf and finds insertions in species_ins not present in species_del but flanked by continuous alignments
 package main
 
 import (

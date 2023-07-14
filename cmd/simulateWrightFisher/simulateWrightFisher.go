@@ -1,7 +1,6 @@
-// Simulate a multiallelic, haplotic Wright-Fisher population (discrete, non-overlapping generations)
-
 // Command Group: "Data Simulation"
 
+// Simulate a multiallelic, haplotic Wright-Fisher population (discrete, non-overlapping generations)
 package main
 
 import (

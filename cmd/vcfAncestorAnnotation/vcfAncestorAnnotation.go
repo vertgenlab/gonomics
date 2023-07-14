@@ -1,7 +1,6 @@
-// Adds ancestral allele to the INFO column of entries in a VCF file
-
 // Command Group: "Variant Calling & Annotation"
 
+// Adds ancestral allele to the INFO column of entries in a VCF file
 package main
 
 import (

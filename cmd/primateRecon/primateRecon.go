@@ -1,7 +1,6 @@
-// Returns maximum likelihood sequence from an HBCGO primate alignment
-
 // Command Group: "Sequence Evolution & Reconstruction"
 
+// Returns maximum likelihood sequence from an HBCGO primate alignment
 package main
 
 import (

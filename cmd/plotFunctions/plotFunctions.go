@@ -1,7 +1,6 @@
-// Returns a tab separated list of function evaluations for plotting functions
-
 // Command Group: "Statistics & Population Genetics"
 
+// Returns a tab separated list of function evaluations for plotting functions
 package main
 
 import (

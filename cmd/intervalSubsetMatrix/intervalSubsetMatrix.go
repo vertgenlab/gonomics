@@ -1,7 +1,6 @@
-// Produces a binary matrix for accessibility breadth analysis
-
 // Command Group: "General Tools"
 
+// Produces a binary matrix for accessibility breadth analysis
 package main
 
 import (

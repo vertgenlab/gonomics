@@ -1,7 +1,6 @@
-// Find corresponding orthologous transcription start
-
 // Command Group: "General Tools"
 
+// Find corresponding orthologous transcription start
 package main
 
 import (

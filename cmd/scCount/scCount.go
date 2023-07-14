@@ -1,9 +1,8 @@
-// Generate count matrix from single-cell sequencing data
-
 // Command Group: "SAM Tools"
 
 //TODO: Input-normalization.
 
+// Generate count matrix from single-cell sequencing data
 package main
 
 import (

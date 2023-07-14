@@ -1,7 +1,6 @@
-// Convert a pairwise multiFa format alignment to a chain file. First species is the target by default
-
 // Command Group: "Data Conversion"
 
+// Convert a pairwise multiFa format alignment to a chain file. First species is the target by default
 package main
 
 import (

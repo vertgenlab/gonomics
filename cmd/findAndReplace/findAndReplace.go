@@ -1,7 +1,6 @@
-// Finds values in a file and replaces them, processes the input as a string
-
 // Command Group: "General Tools"
 
+// Finds values in a file and replaces them, processes the input as a string
 package main
 
 import (

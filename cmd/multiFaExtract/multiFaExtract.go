@@ -1,7 +1,6 @@
-// Pull sub-sequence from multiple Fasta alignment for each entry
-
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Pull sub-sequence from multiple Fasta alignment for each entry
 package main
 
 import (
