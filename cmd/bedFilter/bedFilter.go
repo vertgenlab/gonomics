@@ -1,7 +1,6 @@
-// Output a subset of a bed file using score, name, position, and length
-
 // Command Group: "BED Tools"
 
+// Output a subset of a bed file using score, name, position, and length
 package main
 
 import (

@@ -1,7 +1,6 @@
-// Generates a VCF file from an input pairwise multiFa alignment with the first entry as the reference
-
 // Command Group: "Data Conversion"
 
+// Generates a VCF file from an input pairwise multiFa alignment with the first entry as the reference
 package main
 
 import (

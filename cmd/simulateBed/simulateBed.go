@@ -1,7 +1,6 @@
-// Returns a file of random bed regions of an input bed file
-
 // Command Group: "Data Simulation"
 
+// Returns a file of random bed regions of an input bed file
 package main
 
 import (

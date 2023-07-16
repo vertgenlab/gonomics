@@ -1,7 +1,6 @@
-// Convert axt alignments to sam format
-
 // Command Group: "Data Conversion"
 
+// Convert axt alignments to sam format
 package main
 
 import (

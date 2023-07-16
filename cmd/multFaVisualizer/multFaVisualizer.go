@@ -1,7 +1,6 @@
-// Provides human-readable multiple alignment from a given multiFa
-
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Provides human-readable multiple alignment from a given multiFa
 package main
 
 import (

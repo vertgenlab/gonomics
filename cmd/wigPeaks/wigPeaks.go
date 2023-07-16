@@ -1,8 +1,7 @@
-// Takes wig file and finds peaks
-
 // Command Group: "WIG Tools"
 // Command Usage: "Identifies peaks in a WIG file"
 
+// Takes wig file and finds peaks
 package main
 
 import (

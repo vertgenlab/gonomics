@@ -1,7 +1,6 @@
-// Returns number of mutations that separate two sequences for a given window size
-
 // Command Group: "Sequence Evolution & Reconstruction"
 
+// Returns number of mutations that separate two sequences for a given window size
 package main
 
 import (

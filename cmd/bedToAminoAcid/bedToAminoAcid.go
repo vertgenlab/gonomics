@@ -1,7 +1,6 @@
-// Converts a bed and fasta sequences into amino acid sequences within the bed regions
-
 // Command Group: "Data Conversion"
 
+// Converts a bed and fasta sequences into amino acid sequences within the bed regions
 package main
 
 import (

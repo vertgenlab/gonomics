@@ -1,7 +1,6 @@
-// Count bases from sequencing data
-
 // Command Group: "SAM Tools"
 
+// Count bases from sequencing data
 package main
 
 import (

@@ -1,7 +1,6 @@
-// Align two FASTA files, each with only 1 sequence
-
 // Command Group: "Linear Alignment Tools"
 
+// Align two FASTA files, each with only 1 sequence
 package main
 
 import (

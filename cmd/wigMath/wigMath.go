@@ -1,7 +1,6 @@
-// Perform mathematical operations on wig format data
-
 // Command Group: "WIG Tools"
 
+// Perform mathematical operations on wig format data
 package main
 
 import (

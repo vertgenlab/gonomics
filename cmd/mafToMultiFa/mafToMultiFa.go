@@ -1,7 +1,6 @@
-// Convert a maf alignment into a multiple fasta alignment
-
 // Command Group: "Data Conversion"
 
+// Convert a maf alignment into a multiple fasta alignment
 package main
 
 import (

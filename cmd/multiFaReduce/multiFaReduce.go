@@ -1,7 +1,6 @@
-// Removes all columns in a multi fasta alignment that are not variable
-
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Removes all columns in a multi fasta alignment that are not variable
 package main
 
 import (

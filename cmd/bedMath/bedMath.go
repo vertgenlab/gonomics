@@ -1,7 +1,6 @@
-// Performs comparative arithmetic operations on float values in bed files
-
 // Command Group: "BED Tools"
 
+// Performs comparative arithmetic operations on float values in bed files
 package main
 
 import (

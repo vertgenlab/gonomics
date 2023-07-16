@@ -1,7 +1,6 @@
-// Use the variant data in the vcf to edit an input fasta of the reference
-
 // Command Group: "VCF Tools"
 
+// Use the variant data in the vcf to edit an input fasta of the reference
 package main
 
 import (

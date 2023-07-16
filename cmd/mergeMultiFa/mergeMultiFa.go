@@ -1,7 +1,6 @@
-// Merge two multiFa files on a shared reference. Does not perform local realignment on INDELs
-
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Merge two multiFa files on a shared reference. Does not perform local realignment on INDELs
 package main
 
 import (

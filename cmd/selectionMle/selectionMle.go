@@ -1,5 +1,6 @@
 // Command Group: "Statistics & Population Genetics"
 
+// Performs maximum likelihood estimation of selection on variants from an input VCF format file
 package main
 
 import (

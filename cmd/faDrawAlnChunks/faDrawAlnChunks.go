@@ -1,8 +1,7 @@
-// Align two or more sequences by "chunks" of bases instead of by single bases. Each sequence must
-// have a length that is divisible by the chunk size
-
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Align two or more sequences by "chunks" of bases instead of by single bases. Each sequence must
+// have a length that is divisible by the chunk size
 package main
 
 import (

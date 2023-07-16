@@ -1,7 +1,6 @@
-// Command line statistics calculator
-
 // Command Group: "Statistics & Population Genetics"
 
+// Command line statistics calculator
 package main
 
 import (
