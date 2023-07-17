@@ -5,6 +5,8 @@
 # gonomics
 A collection of genomics software tools written in Go (golang).
 
+![GonomicsReleaseFigure](https://github.com/vertgenlab/gonomics/assets/50707122/cf62dc98-1975-4d03-aabf-dcf4096def07)
+
 ### Complete Gonomics Documentation
 The complete documentation for Gonomics can be found [here](https://pkg.go.dev/github.com/vertgenlab/gonomics).
 
@@ -34,7 +36,7 @@ Executables will be present in the Go binary folder (`~/go/bin` by default)
 The command line tools' code is located in `/gonomics/cmd/`
 
 * More information about using our tools can be found here: [Using gonomics commands](https://github.com/vertgenlab/gonomics/wiki/Using-gonomics-commands)
-* To See every command in gonomics in command groups with their usage listed run `~/go/bin/gonomics`
+* To see every command in gonomics in command groups with their usage listed run `~/go/bin/gonomics`
 * Instructions and examples on making your own tools can be found here: [Writing new tools with gonomics](https://github.com/vertgenlab/gonomics/wiki/Writing-new-tools-with-gonomics)
 ---
 
