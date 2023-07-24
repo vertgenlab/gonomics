@@ -12,7 +12,6 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"math"
@@ -20,19 +19,20 @@ import (
 )
 
 type Settings struct {
-	InFile              string
-	OutFile             string
-	UCSCToEnsembl       bool
-	EnsemblToUCSC       bool
-	ScaleNameFloat      float64
-	EvenPadLength       int
-	UpstreamPadLength   int
-	DownstreamPadLength int
-	ChromSizeFile       string
-	ToMidpoint          bool
-	ToTss               bool
-	FdrScoreAnnotation  bool
-	ScoreBuffer         int
+	InFile                   string
+	OutFile                  string
+	UCSCToEnsembl            bool
+	EnsemblToUCSC            bool
+	ScaleNameFloat           float64
+	EvenPadLength            int
+	UpstreamPadLength        int
+	DownstreamPadLength      int
+	ChromSizeFile            string
+	ToMidpoint               bool
+	ToTss                    bool
+	FdrScoreAnnotation       bool
+	RawPValueAnnotationField int
+	ScoreBuffer              int
 }
 
 // FdrConverter contains a RawPValue and Rank, which are used to calculate an AdjPValue
@@ -128,6 +128,10 @@ func bedFormat(s Settings) {
 				log.Fatalf("Error: score in bed entry: %v, is greater than the scoreBuffer. Raise the scoreBuffer and rerun.", v.Score)
 			}
 			fdrList[v.Score].Count++
+			if s.RawPValueAnnotationField >= len(v.Annotation) {
+				log.Fatalf("Error: rawPValueAnnotationField, %v, exceeds the length of the annotation slice in bed entry: %v.\n", s.RawPValueAnnotationField, len(v.Annotation))
+			}
+			fdrList[v.Score].RawPValue = parse.StringToFloat64(v.Annotation[s.RawPValueAnnotationField])
 			bed.WriteBed(tmp, v)
 		} else {
 			bed.WriteBed(out, v)
@@ -142,7 +146,9 @@ func bedFormat(s Settings) {
 		for i := len(fdrList) - 1; i >= 0; i-- {
 			currRank += fdrList[i].Count
 			fdrList[i].Rank = currRank
-			fdrList[i].AdjPValue = numbers.Max(logspace.Multiply(math.Log10(float64(totalWindows)/float64(fdrList[i].Rank)), fdrList[i].RawPValue), 0)
+			fdrList[i].RawPValue = math.Pow(10, -1*fdrList[i].RawPValue) //leaving logSpace
+			fdrList[i].AdjPValue = math.Max(0, -1*math.Log10(fdrList[i].RawPValue*(float64(totalWindows)/float64(fdrList[i].Rank))))
+			//fdrList[i].AdjPValue = numbers.Max(logspace.Multiply(math.Log10(float64(totalWindows)/float64(fdrList[i].Rank)), fdrList[i].RawPValue), 0)
 		}
 
 		ch = bed.GoReadToChan(s.OutFile + ".tmp")
@@ -179,8 +185,9 @@ func main() {
 	var chromSizeFile *string = flag.String("chromSizeFile", "", "Specify a .chrom.sizes file for use with the padLength option. Ensures padding is truncated at chromosome ends.")
 	var ToMidpoint *bool = flag.Bool("ToMidpoint", false, "Trim the output bed to single-base pair ranges at the midpoint of the input bed ranges.")
 	var ToTss *bool = flag.Bool("ToTss", false, "Trim the output bed to a single-base pair range at the start of the region. Strand-sensitive.")
-	var FdrScoreAnnotation *bool = flag.Bool("fdrScoreAnnotation", false, "Used when the first annotation field stores a raw P value related to a numerical value in the score column (such as in faFindFast). "+
-		"Adds an FDR-adjusted P values to second annotation column.")
+	var FdrScoreAnnotation *bool = flag.Bool("fdrScoreAnnotation", false, "Used when an annotation field stores a raw P value related to a numerical value in the score column (such as in faFindFast). "+
+		"Appends an FDR-adjusted P values to the first free annotation column.")
+	var rawPValueAnnotationField *int = flag.Int("rawPValueAnnotationField", 0, "Specify the annotation field where raw P values are stored for fdrScoreAnnotation.")
 	var scoreBuffer *int = flag.Int("scoreBuffer", 500, "Set the size of the cache for FDR calculations. Should be greater than or equal to max score in the input bed file.")
 
 	flag.Usage = usage
@@ -197,19 +204,20 @@ func main() {
 	outfile := flag.Arg(1)
 
 	s := Settings{
-		InFile:              infile,
-		OutFile:             outfile,
-		UCSCToEnsembl:       *UCSCToEnsembl,
-		EnsemblToUCSC:       *ensemblToUCSC,
-		ScaleNameFloat:      *scaleNameFloat,
-		EvenPadLength:       *evenPadLength,
-		UpstreamPadLength:   *upstreamPadLength,
-		DownstreamPadLength: *downstreamPadLength,
-		ChromSizeFile:       *chromSizeFile,
-		ToMidpoint:          *ToMidpoint,
-		ToTss:               *ToTss,
-		FdrScoreAnnotation:  *FdrScoreAnnotation,
-		ScoreBuffer:         *scoreBuffer,
+		InFile:                   infile,
+		OutFile:                  outfile,
+		UCSCToEnsembl:            *UCSCToEnsembl,
+		EnsemblToUCSC:            *ensemblToUCSC,
+		ScaleNameFloat:           *scaleNameFloat,
+		EvenPadLength:            *evenPadLength,
+		UpstreamPadLength:        *upstreamPadLength,
+		DownstreamPadLength:      *downstreamPadLength,
+		ChromSizeFile:            *chromSizeFile,
+		ToMidpoint:               *ToMidpoint,
+		ToTss:                    *ToTss,
+		FdrScoreAnnotation:       *FdrScoreAnnotation,
+		RawPValueAnnotationField: *rawPValueAnnotationField,
+		ScoreBuffer:              *scoreBuffer,
 	}
 
 	bedFormat(s)
