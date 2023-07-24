@@ -142,7 +142,7 @@ func bedFormat(s Settings) {
 		for i := len(fdrList) - 1; i >= 0; i-- {
 			currRank += fdrList[i].Count
 			fdrList[i].Rank = currRank
-			fdrList[i].AdjPValue = logspace.Multiply(math.Log(float64(totalWindows)/float64(fdrList[i].Rank)), fdrList[i].RawPValue)
+			fdrList[i].AdjPValue = numbers.Max(logspace.Multiply(math.Log10(float64(totalWindows)/float64(fdrList[i].Rank)), fdrList[i].RawPValue), 0)
 		}
 
 		ch = bed.GoReadToChan(s.OutFile + ".tmp")
