@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
@@ -55,10 +55,9 @@ func TestSamFilter(t *testing.T) {
 		runFilter(s)
 		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
 			t.Errorf("Error in samFilter.")
-		}
-		err = os.Remove(v.outputFile)
-		if err != nil {
-			common.ExitIfError(err)
+		} else {
+			err = os.Remove(v.outputFile)
+			exception.PanicOnErr(err)
 		}
 	}
 }
