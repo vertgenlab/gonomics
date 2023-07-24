@@ -1,6 +1,8 @@
 package hic
 
-import "testing"
+import (
+	"testing"
+)
 
 var straw1 = Straw{Bin1Start: 1000, Bin2Start: 5000, ContactScore: 5}
 var straw2 = Straw{Bin1Start: 2000, Bin2Start: 10000, ContactScore: 10}

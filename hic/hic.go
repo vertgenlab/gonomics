@@ -39,9 +39,9 @@ func Read(filename string) []Straw {
 // processStrawLine is a helper function to read a straw file into a straw struct
 func processStrawLine(line string) Straw {
 	words := strings.Split(line, "\t")
-	startBin1 := parse.StringToInt(words[1])
-	startBin2 := parse.StringToInt(words[2])
-	score := parse.StringToInt(words[3])
+	startBin1 := parse.StringToInt(words[0])
+	startBin2 := parse.StringToInt(words[1])
+	score := parse.StringToInt(words[2])
 
 	current := Straw{Bin1Start: startBin1, Bin2Start: startBin2, ContactScore: score}
 
