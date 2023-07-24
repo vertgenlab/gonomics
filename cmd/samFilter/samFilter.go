@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"strings"
@@ -133,8 +133,8 @@ func runFilter(s Settings) {
 			bedRegion = bed.Bed{Chrom: chrom, ChromStart: 0, ChromEnd: numbers.MaxInt}
 		} else {
 			p = strings.Split(words[1], "-")
-			start = common.StringToInt(p[0])
-			end = common.StringToInt(p[1])
+			start = parse.StringToInt(p[0])
+			end = parse.StringToInt(p[1])
 			bedRegion = bed.Bed{Chrom: chrom, ChromStart: start, ChromEnd: end}
 		}
 	}
