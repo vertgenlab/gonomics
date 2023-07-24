@@ -2,20 +2,19 @@ package genomeGraph
 
 import (
 	"bytes"
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/numbers"
 	"io"
 	"log"
 	"math"
 	"sort"
 	"sync"
-
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/numbers"
 )
 
 const (
@@ -622,16 +621,18 @@ func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *syn
 		buf = simplePool.Get().(*bytes.Buffer)
 		buf.Reset()
 		_, err = buf.WriteString(giraf.ToString(&gp.Fwd))
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 		err = buf.WriteByte('\n')
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 		_, err = buf.WriteString(giraf.ToString(&gp.Rev))
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 		err = buf.WriteByte('\n')
-		common.ExitIfError(err)
-		io.Copy(file, buf)
+		exception.PanicOnErr(err)
+		_, err = io.Copy(file, buf)
+		exception.PanicOnErr(err)
 		simplePool.Put(buf)
 	}
-	file.Close()
+	err = file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }

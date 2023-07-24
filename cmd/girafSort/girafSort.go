@@ -1,5 +1,6 @@
 // Command Group: "Sorting"
 
+// External sort of giraf records based on topological ordering of nodes in input graph
 package main
 
 import (

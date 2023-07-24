@@ -92,7 +92,7 @@ func IntervalSliceToLift(b []interval.Interval) []Lift {
 	return answer
 }
 
-// matchOverlapLen returns the number of bases shared between two start and end points. Used in MatchProportion.
+// MatchOverlapLen returns the number of bases shared between two start and end points. Used in MatchProportion.
 func MatchOverlapLen(start1 int, end1 int, start2 int, end2 int) int {
 	return numbers.Max(0, numbers.Min(end1, end2)-numbers.Max(start1, start2))
 }

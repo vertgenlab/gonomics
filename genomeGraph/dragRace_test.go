@@ -1,17 +1,16 @@
 package genomeGraph
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"os"
 	"runtime/pprof"
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
 )
 
 const Profile int = 0
@@ -56,10 +55,10 @@ func TestQuickMemPool(t *testing.T) {
 
 	if Profile > 0 {
 		f, err := os.Create("testdata/cpuprofile.data")
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 		defer f.Close()
 		err = pprof.StartCPUProfile(f)
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 	start := time.Now()
 	workerWaiter.Add(numWorkers)

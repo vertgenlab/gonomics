@@ -5,23 +5,22 @@ package gtf
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// The Gene struct organizes all underlying data on a gene feature in a GTF file.
+// Gene organizes all underlying data on a gene feature in a GTF file.
 type Gene struct {
 	GeneID      string
 	GeneName    string
 	Transcripts []*Transcript
 }
 
-// The Transcript struct contains information on the location, score and strand of a transcript, along with the underlying exons.
+// Transcript contains information on the location, score and strand of a transcript, along with the underlying exons.
 type Transcript struct {
 	Chr          string
 	Source       string
@@ -33,7 +32,7 @@ type Transcript struct {
 	Exons        []*Exon
 }
 
-// The Exon struct contains information on the location, score, and relative order of exons in a GTF file.
+// Exon contains information on the location, score, and relative order of exons in a GTF file.
 type Exon struct {
 	Start      int
 	End        int
@@ -74,7 +73,7 @@ func parseFrame(s string) int {
 	if s == "." {
 		return -1
 	}
-	answer := common.StringToInt(s)
+	answer := parse.StringToInt(s)
 	if answer > 2 || answer < 0 {
 		log.Fatalf("Frame for GTF entries must be either dot, 0, 1, or 2.")
 	}
@@ -144,8 +143,8 @@ func parseGtfLine(line string, currentTranscript *Transcript, prevCds *Cds, answ
 	switch words[2] {
 	case "transcript":
 		prevCds = nil
-		currentTranscript = &Transcript{Chr: words[0], Source: words[1], Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5]), TranscriptID: currT}
-		currentTranscript.Strand = common.StringToStrand(words[6])
+		currentTranscript = &Transcript{Chr: words[0], Source: words[1], Start: parse.StringToInt(words[3]), End: parse.StringToInt(words[4]), Score: parse.StringToFloat64(words[5]), TranscriptID: currT}
+		currentTranscript.Strand = parse.StringToStrand(words[6])
 		currentTranscript.Exons = make([]*Exon, 0)
 
 		if _, ok := answer[currGeneID]; ok {
@@ -157,11 +156,11 @@ func parseGtfLine(line string, currentTranscript *Transcript, prevCds *Cds, answ
 		}
 	case "exon":
 		t := findTranscript(currT, answer[currGeneID].Transcripts)
-		t.Exons = append(t.Exons, &Exon{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), ExonNumber: currENumber, ExonID: currEID, Score: common.StringToFloat64(words[5])})
+		t.Exons = append(t.Exons, &Exon{Start: parse.StringToInt(words[3]), End: parse.StringToInt(words[4]), ExonNumber: currENumber, ExonID: currEID, Score: parse.StringToFloat64(words[5])})
 
 	case "CDS":
 		e := findExon(currEID, findTranscript(currT, answer[currGeneID].Transcripts))
-		currentCDS := Cds{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5]), Frame: parseFrame(words[7])}
+		currentCDS := Cds{Start: parse.StringToInt(words[3]), End: parse.StringToInt(words[4]), Score: parse.StringToFloat64(words[5]), Frame: parseFrame(words[7])}
 		currentCDS.Prev = prevCds
 		if prevCds != nil {
 			prevCds.Next = &currentCDS
@@ -171,12 +170,12 @@ func parseGtfLine(line string, currentTranscript *Transcript, prevCds *Cds, answ
 
 	case "5UTR":
 		e := findExon(currEID, findTranscript(currT, answer[currGeneID].Transcripts))
-		current5Utr := FiveUtr{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5])}
+		current5Utr := FiveUtr{Start: parse.StringToInt(words[3]), End: parse.StringToInt(words[4]), Score: parse.StringToFloat64(words[5])}
 		e.FiveUtr = &current5Utr
 
 	case "3UTR":
 		e := findExon(currEID, findTranscript(currT, answer[currGeneID].Transcripts))
-		current3Utr := ThreeUtr{Start: common.StringToInt(words[3]), End: common.StringToInt(words[4]), Score: common.StringToFloat64(words[5])}
+		current3Utr := ThreeUtr{Start: parse.StringToInt(words[3]), End: parse.StringToInt(words[4]), Score: parse.StringToFloat64(words[5])}
 		e.ThreeUtr = &current3Utr
 
 	default:
@@ -187,7 +186,6 @@ func parseGtfLine(line string, currentTranscript *Transcript, prevCds *Cds, answ
 	return currentTranscript, prevCds
 }
 
-// TODO: Set up Exon and Cds pointers to match the style of transcripts
 // Read generates a map[geneID]*Gene of GTF information from an input GTF format file.
 func Read(filename string) map[string]*Gene {
 	file := fileio.EasyOpen(filename)
@@ -216,7 +214,7 @@ func Write(filename string, records map[string]*Gene) {
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle is a helper function of Write that facilitates writing GTF data to an output file.
+// WriteToFileHandle is a helper function of Write that writes a single gene to an output file.
 func WriteToFileHandle(file io.Writer, gene *Gene) {
 	var err error
 	for i := 0; i < len(gene.Transcripts); i++ { //for each transcript associated with that gene

@@ -7,6 +7,8 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
+// ConstGap aligns two sequences (alpha, beta) using a score matrix (scores) and a constant gap penalty of gapPen.
+// The return values are the alignment score and the cigar representing the alignment.
 // This version of ConstGap has a fixed checkersize of 10000*10000.
 func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
 	var checkersize_i, checkersize_j int
@@ -65,6 +67,8 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	return score_highest, route
 }
 
+// ConstGap_customizeCheckersize aligns two sequences (alpha, beta) using a score matrix (scores) and a constant gap penalty of gapPen.
+// The return values are the alignment score and the cigar representing the alignment.
 // This version of ConstGap needs additional inputs and allows customization of checkersize_i and checkersize_j.
 func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int) (int64, []Cigar) {
 	//Step 1: find highest score, as well as get the position (i and j) of the highest score, and materials needed to fill traceback and write cigar in checkerboards

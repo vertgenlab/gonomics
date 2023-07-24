@@ -1,5 +1,6 @@
 // Command Group: "General Tools"
 
+// View http url links and print data stream to stdout
 package main
 
 import (

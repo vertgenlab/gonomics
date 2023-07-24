@@ -1,5 +1,6 @@
 // Command Group: "Data Conversion"
 
+// Reference-based diploid assembly of aligned short reads
 package main
 
 import (

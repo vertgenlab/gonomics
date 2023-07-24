@@ -1,5 +1,6 @@
 // Command Group: "Data Conversion"
 
+// Converts bed score to wig
 package main
 
 import (

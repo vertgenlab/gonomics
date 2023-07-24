@@ -1,5 +1,6 @@
 // Command Group: "Data Conversion"
 
+// Converts sam to bed
 package main
 
 import (

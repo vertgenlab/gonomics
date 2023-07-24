@@ -1,3 +1,6 @@
+// Command Group: "BED Tools"
+
+// Calculates the minimum distance between beds in separate files with matching names
 package main
 
 import (

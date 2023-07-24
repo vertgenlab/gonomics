@@ -2,13 +2,14 @@
 package popgen
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"strings"
 
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// The Group struct and associated functions provides a system to partition a list of samples or species for subsequent analysis of subsections of the overall data.
+// Group is a struct with associated functions that provide a system to partition a list of samples or species for subsequent analysis of subsections of the overall data.
 type Group struct {
 	Name    string
 	Members []string
@@ -34,7 +35,8 @@ func ReadGroups(filename string) []*Group {
 			answer[index].Members = append(answer[index].Members, line)
 		}
 	}
-	groupFile.Close()
+	err := groupFile.Close()
+	exception.PanicOnErr(err)
 	return answer
 }
 
@@ -84,7 +86,7 @@ func GroupCompare(a *Group, b *Group) int {
 	return 0
 }
 
-// min is a local implmentation of a minimum int function to avoid a numbers import.
+// min is a local implementation of a minimum int function to avoid a numbers import.
 func min(a int, b int) int {
 	if a < b {
 		return a

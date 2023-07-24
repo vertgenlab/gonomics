@@ -1,3 +1,4 @@
+// Package reconstruct has tools for reconstructing ancient genomes from the genomes of extant species using newick trees and fasta files.
 package reconstruct
 
 import (

@@ -1,5 +1,6 @@
 // Command Group: "Data Simulation"
 
+// Contains functions for simulating VCF data
 package main
 
 import (
