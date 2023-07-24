@@ -1,1 +1,1 @@
-package hicStraw
+package hic
