@@ -12,8 +12,11 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
+	"math"
+	"os"
 )
 
 type Settings struct {
@@ -28,13 +31,32 @@ type Settings struct {
 	ChromSizeFile       string
 	ToMidpoint          bool
 	ToTss               bool
+	FdrScoreAnnotation  bool
+	ScoreBuffer         int
+}
+
+// FdrConverter contains a RawPValue and Rank, which are used to calculate an AdjPValue
+type FdrConverter struct {
+	Count     int
+	RawPValue float64
+	Rank      int
+	AdjPValue float64
 }
 
 func bedFormat(s Settings) {
 	var err error
 	var inMap bool
+	var tmp *fileio.EasyWriter
 	var sizes map[string]chromInfo.ChromInfo
 	ch := bed.GoReadToChan(s.InFile)
+
+	fdrList := make([]FdrConverter, s.ScoreBuffer)
+	var totalWindows int = 0
+
+	if s.FdrScoreAnnotation {
+		tmp = fileio.EasyCreate(s.OutFile + ".tmp")
+	}
+
 	out := fileio.EasyCreate(s.OutFile)
 
 	if s.EnsemblToUCSC && s.UCSCToEnsembl {
@@ -99,7 +121,38 @@ func bedFormat(s Settings) {
 		if s.ScaleNameFloat != 1 {
 			v.Name = fmt.Sprintf("%.8g", s.ScaleNameFloat*parse.StringToFloat64(v.Name))
 		}
-		bed.WriteBed(out, v)
+
+		if s.FdrScoreAnnotation {
+			totalWindows++
+			if v.Score > s.ScoreBuffer {
+				log.Fatalf("Error: score in bed entry: %v, is greater than the scoreBuffer. Raise the scoreBuffer and rerun.", v.Score)
+			}
+			fdrList[v.Score].Count++
+			bed.WriteBed(tmp, v)
+		} else {
+			bed.WriteBed(out, v)
+		}
+	}
+
+	if s.FdrScoreAnnotation {
+		err = tmp.Close()
+		exception.PanicOnErr(err)
+
+		var currRank int = 0
+		for i := len(fdrList) - 1; i >= 0; i-- {
+			currRank += fdrList[i].Count
+			fdrList[i].Rank = currRank
+			fdrList[i].AdjPValue = logspace.Multiply(math.Log(float64(totalWindows)/float64(fdrList[i].Rank)), fdrList[i].RawPValue)
+		}
+
+		ch = bed.GoReadToChan(s.OutFile + ".tmp")
+		for v := range ch {
+			v.Annotation = append(v.Annotation, fmt.Sprintf("%e", fdrList[v.Score].AdjPValue))
+			bed.WriteBed(out, v)
+		}
+
+		err = os.Remove(s.OutFile + ".tmp")
+		exception.PanicOnErr(err)
 	}
 
 	err = out.Close()
@@ -126,6 +179,9 @@ func main() {
 	var chromSizeFile *string = flag.String("chromSizeFile", "", "Specify a .chrom.sizes file for use with the padLength option. Ensures padding is truncated at chromosome ends.")
 	var ToMidpoint *bool = flag.Bool("ToMidpoint", false, "Trim the output bed to single-base pair ranges at the midpoint of the input bed ranges.")
 	var ToTss *bool = flag.Bool("ToTss", false, "Trim the output bed to a single-base pair range at the start of the region. Strand-sensitive.")
+	var FdrScoreAnnotation *bool = flag.Bool("fdrScoreAnnotation", false, "Used when the first annotation field stores a raw P value related to a numerical value in the score column (such as in faFindFast). "+
+		"Adds an FDR-adjusted P values to second annotation column.")
+	var scoreBuffer *int = flag.Int("scoreBuffer", 500, "Set the size of the cache for FDR calculations. Should be greater than or equal to max score in the input bed file.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -152,6 +208,8 @@ func main() {
 		ChromSizeFile:       *chromSizeFile,
 		ToMidpoint:          *ToMidpoint,
 		ToTss:               *ToTss,
+		FdrScoreAnnotation:  *FdrScoreAnnotation,
+		ScoreBuffer:         *scoreBuffer,
 	}
 
 	bedFormat(s)

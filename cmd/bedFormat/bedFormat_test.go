@@ -21,6 +21,8 @@ var BedFormatTests = []struct {
 	ChromSizeFile       string
 	ToMidpoint          bool
 	ToTss               bool
+	FdrScoreAnnotation  bool
+	ScoreBuffer         int
 }{
 	{InFile: "testdata/test.bed", //this test is for scaleNameFloat
 		OutFile:             "testdata/test.outFloat.bed",
@@ -34,6 +36,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:       "",
 		ToMidpoint:          false,
 		ToTss:               false,
+		FdrScoreAnnotation:  false,
+		ScoreBuffer:         500,
 	},
 	{InFile: "testdata/test.bed", //this test is for UCSCToEnsembl
 		OutFile:             "testdata/test.outEnsembl.bed",
@@ -47,6 +51,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:       "",
 		ToMidpoint:          false,
 		ToTss:               false,
+		FdrScoreAnnotation:  false,
+		ScoreBuffer:         500,
 	},
 	{InFile: "testdata/test.Ensembl.bed", //this test is for UCSCToEnsembl
 		OutFile:             "testdata/test.outUCSC.bed",
@@ -60,6 +66,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:       "",
 		ToMidpoint:          false,
 		ToTss:               false,
+		FdrScoreAnnotation:  false,
+		ScoreBuffer:         500,
 	},
 	{InFile: "testdata/pad.bed",
 		OutFile:             "testdata/out.pad.bed",
@@ -73,6 +81,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:       "testdata/test.chrom.sizes",
 		ToMidpoint:          false,
 		ToTss:               false,
+		FdrScoreAnnotation:  false,
+		ScoreBuffer:         500,
 	},
 	{InFile: "testdata/test.bed",
 		OutFile:             "testdata/test.midpoint.bed",
@@ -86,6 +96,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:       "testdata/test.chrom.sizes",
 		ToMidpoint:          true,
 		ToTss:               false,
+		FdrScoreAnnotation:  false,
+		ScoreBuffer:         500,
 	},
 	{InFile: "testdata/test.strand.bed",
 		OutFile:             "testdata/test.tss.bed",
@@ -99,6 +111,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:       "testdata/test.chrom.sizes",
 		ToMidpoint:          false,
 		ToTss:               true,
+		FdrScoreAnnotation:  false,
+		ScoreBuffer:         500,
 	},
 	{InFile: "testdata/test.strand.bed",
 		OutFile:             "testdata/test.upstream.bed",
@@ -112,6 +126,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:       "testdata/test.chrom.sizes",
 		ToMidpoint:          false,
 		ToTss:               false,
+		FdrScoreAnnotation:  false,
+		ScoreBuffer:         500,
 	},
 	{InFile: "testdata/test.strand.bed",
 		OutFile:             "testdata/test.downstream.bed",
@@ -125,6 +141,23 @@ var BedFormatTests = []struct {
 		ChromSizeFile:       "testdata/test.chrom.sizes",
 		ToMidpoint:          false,
 		ToTss:               false,
+		FdrScoreAnnotation:  false,
+		ScoreBuffer:         500,
+	},
+	{InFile: "testdata/test.fdrScoreAnnotation.bed",
+		OutFile:             "testdata/out.fdrScoreAnnotation.bed",
+		ExpectedFile:        "testdata/expected.fdrScoreAnnotation.bed",
+		UCSCToEnsembl:       false,
+		EnsemblToUCSC:       false,
+		ScaleNameFloat:      1,
+		PadLength:           0,
+		UpstreamPadLength:   0,
+		DownstreamPadLength: 0,
+		ChromSizeFile:       "",
+		ToMidpoint:          false,
+		ToTss:               false,
+		FdrScoreAnnotation:  true,
+		ScoreBuffer:         100,
 	},
 }
 
@@ -144,6 +177,8 @@ func TestBedFormat(t *testing.T) {
 			DownstreamPadLength: v.DownstreamPadLength,
 			ToMidpoint:          v.ToMidpoint,
 			ToTss:               v.ToTss,
+			FdrScoreAnnotation:  true,
+			ScoreBuffer:         100,
 		}
 		bedFormat(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
