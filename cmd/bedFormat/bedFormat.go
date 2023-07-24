@@ -146,6 +146,7 @@ func bedFormat(s Settings) {
 		for i := len(fdrList) - 1; i >= 0; i-- {
 			currRank += fdrList[i].Count
 			fdrList[i].Rank = currRank
+			// TODO: Must find a way to avoid leaving logspace
 			fdrList[i].RawPValue = math.Pow(10, -1*fdrList[i].RawPValue) //leaving logSpace
 			fdrList[i].AdjPValue = math.Max(0, -1*math.Log10(fdrList[i].RawPValue*(float64(totalWindows)/float64(fdrList[i].Rank))))
 			//fdrList[i].AdjPValue = numbers.Max(logspace.Multiply(math.Log10(float64(totalWindows)/float64(fdrList[i].Rank)), fdrList[i].RawPValue), 0)
