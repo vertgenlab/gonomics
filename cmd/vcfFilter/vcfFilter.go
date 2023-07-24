@@ -1,5 +1,6 @@
 // Command Group: "VCF Tools"
 
+// Filter vcf records
 package main
 
 import (

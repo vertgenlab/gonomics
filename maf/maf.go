@@ -1,20 +1,21 @@
+// Package maf provides structs and functions for processing alignments in maf format.
+// The file format is described more here: https://genome.ucsc.edu/FAQ/FAQformat.html
 package maf
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
 )
 
-// pointers are retained in the maf package because they are needed for null checks
-
+// MafSLine holds the information stored in an "S" line of the maf format.
 type MafSLine struct {
 	Src     string
 	Start   int
@@ -24,6 +25,7 @@ type MafSLine struct {
 	Seq     []dna.Base
 }
 
+// MafILine holds the information stored in an "I" line of the maf format.
 type MafILine struct {
 	Src         string
 	LeftStatus  rune
@@ -32,6 +34,7 @@ type MafILine struct {
 	RightCount  int
 }
 
+// MafELine holds the information stored in an "E" line of the maf format.
 type MafELine struct {
 	Src     string
 	Start   int
@@ -41,6 +44,7 @@ type MafELine struct {
 	Status  rune
 }
 
+// MafSpecies holds the info for a given species in a given maf block
 type MafSpecies struct {
 	Src   string
 	SLine *MafSLine
@@ -48,11 +52,17 @@ type MafSpecies struct {
 	ELine *MafELine
 }
 
+// Maf holds the information for a given maf block.
 type Maf struct {
 	Score   float64
 	Species []*MafSpecies
 }
 
+// SrcToAssemblyAndChrom many times in the maf format a sequence is labeled
+// as assembly.chromosome (e.g. hg38.chr7) and this function breaks
+// them apart and returns the assembly followed by the chromosome.
+// If there is no dot, it returns the input string as the assembly
+// and no chromosome.  If there is more than one dot it calls log.Fatal().
 func SrcToAssemblyAndChrom(src string) (string, string) {
 	dots := strings.Count(src, ".")
 	switch dots {
@@ -76,7 +86,7 @@ func parseMafALine(line string) *Maf {
 	for i := 1; i < len(words); i++ {
 		parts := strings.Split(words[i], "=")
 		if parts[0] == "score" {
-			curr.Score = common.StringToFloat64(parts[1])
+			curr.Score = parse.StringToFloat64(parts[1])
 		}
 	}
 	return (&curr)
@@ -89,10 +99,10 @@ func parseMafSLine(line string) *MafSLine {
 	}
 	curr := MafSLine{
 		Src:     words[1],
-		Start:   common.StringToInt(words[2]),
-		Size:    common.StringToInt(words[3]),
-		Strand:  common.StringToStrand(words[4]),
-		SrcSize: common.StringToInt(words[5]),
+		Start:   parse.StringToInt(words[2]),
+		Size:    parse.StringToInt(words[3]),
+		Strand:  parse.StringToStrand(words[4]),
+		SrcSize: parse.StringToInt(words[5]),
 		Seq:     dna.StringToBases(words[6]),
 	}
 	return (&curr)
@@ -126,9 +136,9 @@ func parseMafILine(line string) *MafILine {
 	curr := MafILine{
 		Src:         words[1],
 		LeftStatus:  parseMafIStatus(words[2]),
-		LeftCount:   common.StringToInt(words[3]),
+		LeftCount:   parse.StringToInt(words[3]),
 		RightStatus: parseMafIStatus(words[4]),
-		RightCount:  common.StringToInt(words[5]),
+		RightCount:  parse.StringToInt(words[5]),
 	}
 	return (&curr)
 }
@@ -158,16 +168,20 @@ func parseMafELine(line string) *MafELine {
 	}
 	curr := MafELine{
 		Src:     words[1],
-		Start:   common.StringToInt(words[2]),
-		Size:    common.StringToInt(words[3]),
-		Strand:  common.StringToStrand(words[4]),
-		SrcSize: common.StringToInt(words[5]),
+		Start:   parse.StringToInt(words[2]),
+		Size:    parse.StringToInt(words[3]),
+		Strand:  parse.StringToStrand(words[4]),
+		SrcSize: parse.StringToInt(words[5]),
 		Status:  parseMafEStatus(words[6]),
 	}
 	return (&curr)
 }
 
-// returns nil if not found.
+// FindSpeciesExactMatch take a pointer to a maf block and the string
+// to match.  If the source of the maf block is exactly equal to the
+// input string than a pointer to the info for that species is returned,
+// and otherwise nil is returned.  For example, hg38 would find a maf
+// block with hg38 as the source of a sequence, but not hg38.chr7
 func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 	for i := 0; i < len(m.Species); i++ {
 		if m.Species[i].Src == src {
@@ -177,7 +191,9 @@ func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 	return nil
 }
 
-// returns nil if not found.
+// FindSpeciesBeforeDot is similar to FindSpeciesExactMatch, but
+// in this case searching hg38 will find blocks with hg38, hg38.chr6
+// or hg38.chr22
 func FindSpeciesBeforeDot(m *Maf, assembly string) *MafSpecies {
 	for i := 0; i < len(m.Species); i++ {
 		currAssembly, _ := SrcToAssemblyAndChrom(m.Species[i].Src)
@@ -188,7 +204,8 @@ func FindSpeciesBeforeDot(m *Maf, assembly string) *MafSpecies {
 	return nil
 }
 
-// would be better if this checked for the EOF line at the end and that there was a blank line as the next to last line.
+// Read takes the filename of a maf file and returns the contents of the file as a slice of pointers to maf blocks.
+// Would be better if this checked for the EOF line at the end and that there was a blank line as the next to last line.
 func Read(filename string) []*Maf {
 	var answer []*Maf
 	var line, prevLine string
@@ -298,20 +315,21 @@ func calculateFieldSizes(m *Maf) (int, int, int, int) {
 	return srcLen, startLen, sizeLen, srcSizeLen
 }
 
+// WriteToFileHandle writes a single maf block to an io.Writer
 func WriteToFileHandle(file io.Writer, m *Maf) {
 	_, err := fmt.Fprintf(file, "a score=%.1f\n", m.Score)
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	srcChars, startChars, sizeChars, srcSizeChars := calculateFieldSizes(m)
 	for i := 0; i < len(m.Species); i++ {
 		if m.Species[i].SLine != nil {
-			_, err := fmt.Fprintf(file, "s %-*s %*d %*d %c %*d %s\n",
+			_, err = fmt.Fprintf(file, "s %-*s %*d %*d %c %*d %s\n",
 				srcChars, m.Species[i].SLine.Src,
 				startChars, m.Species[i].SLine.Start,
 				sizeChars, m.Species[i].SLine.Size,
-				common.StrandToRune(m.Species[i].SLine.Strand),
+				parse.StrandToRune(m.Species[i].SLine.Strand),
 				srcSizeChars, m.Species[i].SLine.SrcSize,
 				dna.BasesToString(m.Species[i].SLine.Seq))
-			common.ExitIfError(err)
+			exception.PanicOnErr(err)
 		}
 		if m.Species[i].ILine != nil {
 			//nothing for now
@@ -321,18 +339,18 @@ func WriteToFileHandle(file io.Writer, m *Maf) {
 		}
 	}
 	_, err = fmt.Fprintf(file, "\n")
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
+// Write writes an entire slice of maf blocks to a file specified by the given filename
 func Write(filename string, data []*Maf) {
 	var err error
-
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
-
 	_, err = fmt.Fprint(file, "##maf version=1\n")
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	for i := range data {
 		WriteToFileHandle(file, data[i])
 	}
+	err = file.Close()
+	exception.PanicOnErr(err)
 }

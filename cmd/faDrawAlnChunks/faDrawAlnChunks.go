@@ -1,40 +1,36 @@
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Align two or more sequences by "chunks" of bases instead of by single bases. Each sequence must
+// have a length that is divisible by the chunk size
 package main
 
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/align"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
 	"image/png"
 	"log"
 	"os"
 	"strconv"
-
-	"github.com/vertgenlab/gonomics/align"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fasta"
 )
 
 func faDrawAlnChunks(faAlnFilename string, chunkSize int, imageOutFilename string) {
-	log.Printf("Reading %s...\n", faAlnFilename)
 	aln := fasta.Read(faAlnFilename)
-	log.Printf("Successfully read %d sequences from fasta file.\n", len(aln))
-
 	img, err := align.DrawAlignedChunks(aln, chunkSize, 6, 12)
-	common.ExitIfError(err)
-
-	log.Printf("Writing aligned sequences to %s...", imageOutFilename)
+	exception.PanicOnErr(err)
 	imgOutFile, err := os.Create(imageOutFilename)
-	common.ExitIfError(err)
-	defer imgOutFile.Close()
+	exception.PanicOnErr(err)
 	err = png.Encode(imgOutFile, img)
-	common.ExitIfError(err)
-	log.Print("Done\n")
+	exception.PanicOnErr(err)
+	err = imgOutFile.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
 	fmt.Fprint(os.Stderr,
-		"faDrawAlnChunks - Align two or more sequeces by \"chunks\" of bases\n"+
+		"faDrawAlnChunks - Align two or more sequences by \"chunks\" of bases\n"+
 			"                   instead of by single bases.  Each sequence must\n"+
 			"                   have a length that is divisible by the chunk size.\n"+
 			"Usage:\n"+
@@ -55,7 +51,7 @@ func main() {
 
 	alignmentFilename := flag.Arg(0)
 	chunkSize, err := strconv.Atoi(flag.Arg(1))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	imageOutFilename := flag.Arg(2)
 
 	faDrawAlnChunks(alignmentFilename, chunkSize, imageOutFilename)

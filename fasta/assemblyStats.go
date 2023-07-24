@@ -2,14 +2,16 @@ package fasta
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"sort"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
+// AssemblyStats takes the path to a fasta file and a flag for whether lower case letters
+// should count as assembly gaps.  Five ints are returned, which encode:
+// the N50 size, half the size of the genome, size of the genome, size of the largest contig, and the number of contigs.
 func AssemblyStats(infile string, countLowerAsGaps bool) (int, int, int, int, int) {
 	records := Read(infile)
 	var genomeLength int
@@ -29,6 +31,8 @@ func AssemblyStats(infile string, countLowerAsGaps bool) (int, int, int, int, in
 	return N50, halfGenome, genomeLength, largestContig, numContigs
 }
 
+// CalculateN50 takes a slice of contig lengths and the size of half
+// the genome.  It returns the N50 size.
 func CalculateN50(contigList []int, halfGenome int) int {
 	var sum int = 0
 	for i := len(contigList) - 1; i > -1; i-- {
@@ -41,6 +45,8 @@ func CalculateN50(contigList []int, halfGenome int) int {
 	return -1
 }
 
+// MakeContigList takes a slice of fasta sequences and a flag for whether lower case
+// letters should count as gaps.  A slice of contig sizes is the return value.
 func MakeContigList(records []Fasta, countLowerAsGaps bool) []int {
 	var contigLen int = 0
 	var contig bool = false
@@ -90,21 +96,25 @@ func MakeContigList(records []Fasta, countLowerAsGaps bool) []int {
 	return contigList
 }
 
-func WriteAssemblyStats(infile string, outfile string, N50 int, halfGenome int, genomeLength int, largestContig int, numContigs int) {
+// WriteAssemblyStats takes the name of an assembly, a path to an output file, and stats for:
+// the N50 size, half the size of the genome, size of the genome, size of the largest contig, and the number of contigs.
+// The stats, with some human-readable labels are written to the output file.
+func WriteAssemblyStats(assemblyName string, outfile string, N50 int, halfGenome int, genomeLength int, largestContig int, numContigs int) {
 	file := fileio.EasyCreate(outfile)
-	defer file.Close()
-
 	var err error
-	_, err = fmt.Fprintf(file, "Assembly Name: %s\n", infile)
-	common.ExitIfError(err)
+	_, err = fmt.Fprintf(file, "Assembly Name: %s\n", assemblyName)
+	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "halfGenome: %d\n", halfGenome)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "genomeLength: %d\n", genomeLength)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "Number of contigs: %d\n", numContigs)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "Largest Contig: %d\n", largestContig)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
 	_, err = fmt.Fprintf(file, "N50: %d\n", N50)
-	common.ExitIfError(err)
+	exception.FatalOnErr(err)
+
+	err = file.Close()
+	exception.FatalOnErr(err)
 }

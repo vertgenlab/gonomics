@@ -1,15 +1,17 @@
+// Command Group: "BED Tools"
+
+// Performs comparative arithmetic operations on float values in bed files
 package main
 
 import (
 	"flag"
 	"fmt"
-	"log"
-	"strings"
-
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
+	"log"
+	"strings"
 )
 
 type Operation byte
@@ -54,8 +56,8 @@ func bedMath(s Settings) {
 }
 
 func doBedMath(a bed.Bed, b bed.Bed, Op Operation) bed.Bed {
-	var aFloat = common.StringToFloat64(a.Name)
-	var bFloat = common.StringToFloat64(b.Name)
+	var aFloat = parse.StringToFloat64(a.Name)
+	var bFloat = parse.StringToFloat64(b.Name)
 	if Op == Add {
 		a.Name = fmt.Sprintf("%.8g", aFloat+bFloat)
 	} else if Op == Subtract {

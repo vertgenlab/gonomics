@@ -1,5 +1,6 @@
 // Command Group: "General Tools"
 
+// Lifts a compatible file format between assembly coordinates
 package main
 
 import (

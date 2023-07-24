@@ -1,15 +1,13 @@
-//Package motif provides functions for reading, writing, and manipulating position matrices for transcription factor binding site motif analysis.
-
+// Package motif provides functions for reading, writing, and manipulating position matrices for transcription factor binding site motif analysis.
 package motif
 
 import (
 	"fmt"
-	"log"
-	"strings"
-
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
+	"log"
+	"strings"
 )
 
 type PositionMatrixType byte
@@ -181,6 +179,6 @@ func parseMotifLine(answer PositionMatrix, line string, motifLen int, index int)
 	answer.Mat[index] = make([]float64, motifLen)
 	fields = fields[1:] //trim first field, which corresponds to nucleotide id.
 	for i := 0; i < len(fields); i++ {
-		answer.Mat[index][i] = common.StringToFloat64(fields[i])
+		answer.Mat[index][i] = parse.StringToFloat64(fields[i])
 	}
 }

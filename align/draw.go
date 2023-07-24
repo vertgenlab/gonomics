@@ -69,6 +69,9 @@ func drawNames(aln []fasta.Fasta, vSpacing int) *image.RGBA {
 	return img
 }
 
+// DrawAlignedChunks takes a multiple alignment in fasta format, a chunkSize, a width of pixels to use for coloring each
+// alignment chunk, a height of each chunk, and then returns an image describing the alignment where each unique chunk
+// gets a unique color.  This was used to visualize the alignment of tandem repeats.
 func DrawAlignedChunks(aln []fasta.Fasta, chunkSize int, chunkPixelWidth int, chunkPixelHeight int) (*image.RGBA, error) {
 	imgChunks, err := drawChunks(aln, chunkSize, chunkPixelWidth, chunkPixelHeight)
 	if err != nil {

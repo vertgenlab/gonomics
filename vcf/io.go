@@ -2,13 +2,13 @@ package vcf
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -16,13 +16,14 @@ import (
 func Read(filename string) ([]Vcf, Header) {
 	var answer []Vcf
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
 	header := ReadHeader(file)
 	var curr Vcf
 	var done bool
 	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
 		answer = append(answer, curr)
 	}
+	err := file.Close()
+	exception.PanicOnErr(err)
 	return answer, header
 }
 
@@ -31,7 +32,8 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Vcf, wg *sync.WaitGroup) {
 	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
 		data <- curr
 	}
-	file.Close()
+	err := file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }
 
@@ -40,7 +42,7 @@ func GoReadToChan(filename string) (<-chan Vcf, Header) {
 	file := fileio.EasyOpen(filename)
 	header := ReadHeader(file)
 	var wg sync.WaitGroup
-	data := make(chan Vcf)
+	data := make(chan Vcf, 1000)
 	wg.Add(1)
 	go ReadToChan(file, data, &wg)
 
@@ -58,13 +60,13 @@ func processVcfLine(line string) Vcf {
 	var err error
 	data := strings.Split(line, "\t")
 	if len(data) < 8 {
-		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
+		log.Panicf("Error when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
 	}
 
 	curr.Chr = data[0]
 	curr.Pos, err = strconv.Atoi(data[1])
 	if err != nil {
-		log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
+		log.Panicf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
 	}
 	curr.Id = data[2]
 	curr.Ref = data[3]
@@ -73,7 +75,7 @@ func processVcfLine(line string) Vcf {
 	if data[5] != "." {
 		curr.Qual, err = strconv.ParseFloat(data[5], 64)
 		if err != nil {
-			log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
+			log.Panicf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
 		}
 	}
 	curr.Filter = data[6]
@@ -206,7 +208,7 @@ func WriteVcfToFileHandle(file io.Writer, input []Vcf) {
 		} else {
 			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, FormatToString(input[i].Format), SamplesToString(input[i].Samples))
 		}
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 }
 
@@ -218,15 +220,15 @@ func WriteVcf(file io.Writer, input Vcf) {
 	} else {
 		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, FormatToString(input.Format), SamplesToString(input.Samples))
 	}
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
 // Write writes a []Vcf to an output filename.
 func Write(filename string, data []Vcf) {
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
-
 	WriteVcfToFileHandle(file, data)
+	err := file.Close()
+	exception.PanicOnErr(err)
 }
 
 // PrintVcf prints every line of a []Vcf.

@@ -94,6 +94,8 @@ func expandCigarRunLength(route []Cigar, chunkSize int64) {
 	}
 }
 
+// AffineGap_highMem aligns two DNA sequences (alpha and beta) using a score matrix, a gap opening penalty, and a gap extension penality.
+// The return values are the alignment score and a cigar describing the alignment.
 func AffineGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	return affineGap_highMem(alpha, beta, scores, gapOpen, gapExtend, false)
 }
@@ -104,6 +106,7 @@ func AffineGapLocal(target []dna.Base, query []dna.Base, scores [][]int64, gapOp
 	return affineGap_highMem(target, query, scores, gapOpen, gapExtend, true)
 }
 
+// TargetQueryPair holds two sequences, their alignment score, and the cigar describing their alignment
 type TargetQueryPair struct {
 	Target []dna.Base
 	Query  []dna.Base
@@ -111,6 +114,9 @@ type TargetQueryPair struct {
 	Cigar  []Cigar
 }
 
+// GoAffineGapLocalEngine returns input and output channels for TargetQueryPairs and launches a go routine to locally align any sequences coming
+// from the input channel and send the results to the output channel.  This alignment is performed according to the score matrix and opening, extension
+// penalities.
 func GoAffineGapLocalEngine(scores [][]int64, gapOpen int64, gapExtend int64) (inputs chan<- TargetQueryPair, outputs <-chan TargetQueryPair) {
 	i := make(chan TargetQueryPair, 1000)
 	o := make(chan TargetQueryPair, 1000)
@@ -216,6 +222,8 @@ func affineGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapO
 	return maxScore, route
 }
 
+// AffineGapChunk is similar to AffineGap, but rather than aligning individual bases, it aligns them in chunks of chunkSize bases.
+// This was used to align tandem repeats against each other, where a repeating unit is of chunkSize.
 func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []Cigar) {
 	var alphaSize, betaSize int64 = int64(len(alpha)), int64(len(beta))
 	if alphaSize%chunkSize != 0 {

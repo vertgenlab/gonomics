@@ -5,11 +5,14 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
+// VariantArrayOverlap takes a vcf record and a map of bool slices (chrom name maps to a bool for each base in that chrom).
+// The bool slice encodes the presense/absense of some genomic feature and true is returned if the vcf position overlaps that feature.
 func VariantArrayOverlap(v *vcf.Vcf, a map[string][]bool) bool {
 	return a[v.Chr][v.Pos-1]
 }
 
-// returns a map of chromosome names to bool arrays, true if that position lies in an exon.
+// ExonBoolArray returns a map of chromosome names to bool slices.  The bool is true if that position lies in an exon.
+// A map of chromosome name to the information for that chromosome is needed to know the length of the retuned bool slices.
 func ExonBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[string][]bool {
 	var answer map[string][]bool
 	for k := range c {
@@ -29,6 +32,8 @@ func ExonBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[st
 	return answer
 }
 
+// CdsBoolArray returns a map of chromosome names to bool slices.  The bool is true if that position lies in a cds (protein-coding) region.
+// A map of chromosome name to the information for that chromosome is needed to know the length of the retuned bool slices.
 func CdsBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[string][]bool {
 	var answer map[string][]bool
 	for k := range c {
@@ -49,6 +54,8 @@ func CdsBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[str
 	return answer
 }
 
+// FiveUtrBoolArray returns a map of chromosome names to bool slices.  The bool is true if that position lies in a 5' UTR.
+// A map of chromosome name to the information for that chromosome is needed to know the length of the retuned bool slices.
 func FiveUtrBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[string][]bool {
 	var answer map[string][]bool
 	for k := range c {
@@ -69,6 +76,8 @@ func FiveUtrBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map
 	return answer
 }
 
+// ThreeUtrBoolArray returns a map of chromosome names to bool slices.  The bool is true if that position lies in a 3' UTR.
+// A map of chromosome name to the information for that chromosome is needed to know the length of the retuned bool slices.
 func ThreeUtrBoolArray(g map[string]*Gene, c map[string]*chromInfo.ChromInfo) map[string][]bool {
 	var answer map[string][]bool
 	for k := range c {

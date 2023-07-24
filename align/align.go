@@ -8,7 +8,7 @@ import (
 var veryNegNum int64 = math.MinInt64 / 2
 
 // these are relative to the first seq.
-// e.g. colI is an insertion in the second seq, relative to the first.
+// e.g. ColI is an insertion in the second seq, relative to the first.
 type ColType uint8
 
 const (
@@ -17,12 +17,14 @@ const (
 	ColD ColType = 2
 )
 
+// Cigar is a runlength encoding of how two sequences align to each other.
 type Cigar struct {
 	RunLength int64
 	Op        ColType
 }
 
-// O=400 E=30.
+// DefaultScoreMatrix is a DNA-DNA scoring matrix that pairs well with opening and extension penalites of:
+// O=400 E=30.  It may be good for distances similar to human-mouse.
 var DefaultScoreMatrix = [][]int64{
 	{91, -114, -31, -123, -44},
 	{-114, 100, -125, -31, -43},
@@ -31,7 +33,8 @@ var DefaultScoreMatrix = [][]int64{
 	{-44, -43, -43, -44, -43},
 }
 
-// O=400 E=30.
+// DefaultScoreMatrix is a DNA-DNA scoring matrix that pairs well with opening and extension penalites of:
+// O=400 E=30.  It may be good for distances similar to human-fish.
 var HoxD55ScoreMatrix = [][]int64{
 	{91, -114, -31, -123, 0},
 	{-114, 100, -125, -31, 0},
@@ -40,7 +43,8 @@ var HoxD55ScoreMatrix = [][]int64{
 	{0, 0, 0, 0, 0},
 }
 
-// O=600 E=55.
+// DefaultScoreMatrix is a DNA-DNA scoring matrix that pairs well with opening and extension penalites of:
+// O=600 E=55.  It may be good for distances similar to mouse-rat.
 var MouseRatScoreMatrix = [][]int64{
 	{91, -114, -31, -123, 0},
 	{-114, 100, -125, -31, 0},
@@ -49,7 +53,8 @@ var MouseRatScoreMatrix = [][]int64{
 	{0, 0, 0, 0, 0},
 }
 
-// O=600 E=150.
+// DefaultScoreMatrix is a DNA-DNA scoring matrix that pairs well with opening and extension penalites of:
+// O=600 E=150.  It may be good for distances similar to human-chimp.
 var HumanChimpTwoScoreMatrix = [][]int64{
 	{90, -330, -236, -356, -208},
 	{-330, 100, -318, -236, -196},

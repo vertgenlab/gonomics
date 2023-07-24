@@ -1,5 +1,6 @@
 // Command Group: "Data Conversion"
 
+// Extracts sequences from a fasta file from regions specified by an input bed
 package main
 
 import (

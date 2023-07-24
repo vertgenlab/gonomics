@@ -1,19 +1,19 @@
 // Command Group: "BED Tools"
 
+// Output a subset of a bed file using score, name, position, and length
 package main
 
 import (
 	"flag"
 	"fmt"
-	"log"
-	"math"
-	"math/rand"
-
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/parse"
+	"log"
+	"math"
+	"math/rand"
 )
 
 func bedFilter(s Settings) {
@@ -56,12 +56,12 @@ func bedFilter(s Settings) {
 			pass = false
 		}
 		if s.MinNameFloat != -1*math.MaxFloat64 {
-			if common.StringToFloat64(curr.Name) < s.MinNameFloat {
+			if parse.StringToFloat64(curr.Name) < s.MinNameFloat {
 				pass = false
 			}
 		}
 		if s.MaxNameFloat != math.MaxFloat64 {
-			if common.StringToFloat64(curr.Name) > s.MaxNameFloat {
+			if parse.StringToFloat64(curr.Name) > s.MaxNameFloat {
 				pass = false
 			}
 		}

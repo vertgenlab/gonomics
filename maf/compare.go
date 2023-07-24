@@ -7,6 +7,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
+// MafSLinesAreEqual returns true if, and only if, the values
+// in two "S" lines are identical
 func MafSLinesAreEqual(a MafSLine, b MafSLine) bool {
 	if a.Src != b.Src {
 		return false
@@ -29,6 +31,8 @@ func MafSLinesAreEqual(a MafSLine, b MafSLine) bool {
 	return true
 }
 
+// MafILinesAreEqual returns true if, and only if, the values
+// in two "I" lines are identical
 func MafILinesAreEqual(a MafILine, b MafILine) bool {
 	if a.Src != b.Src {
 		return false
@@ -48,6 +52,8 @@ func MafILinesAreEqual(a MafILine, b MafILine) bool {
 	return true
 }
 
+// MafELinesAreEqual returns true if, and only if, the values
+// in two "E" lines are identical
 func MafELinesAreEqual(a MafELine, b MafELine) bool {
 	if a.Src != b.Src {
 		return false
@@ -70,6 +76,9 @@ func MafELinesAreEqual(a MafELine, b MafELine) bool {
 	return true
 }
 
+// MafSpeciesAreEqual returns true if, and only if, the
+// info for two MafSpecies structs are identical.  This
+// is the Src field, as well as any "S," "I," or "E" lines.
 func MafSpeciesAreEqual(a MafSpecies, b MafSpecies) bool {
 	if a.Src != b.Src {
 		return false
@@ -86,6 +95,10 @@ func MafSpeciesAreEqual(a MafSpecies, b MafSpecies) bool {
 	return true
 }
 
+// MafsAreEqual returns true if, and only if, two maf
+// blocks have identical values, including the species
+// in each block and any "S," "I," or "E" lines associated
+// with each species.
 func MafsAreEqual(a Maf, b Maf) bool {
 	if a.Score != b.Score {
 		return false
@@ -131,14 +144,21 @@ func compareScore(a *Maf, b *Maf) int {
 	}
 }
 
+// SortByPos will sort a slice of maf blocks by their genomic position,
+// which will first use the value of Src (i.e. assembly and/or chromosome)
+// and then the numerical position.
 func SortByPos(m []*Maf) {
 	sort.Slice(m, func(i, j int) bool { return comparePos(m[i], m[j]) == -1 })
 }
 
+// SortByPos will sort a slice of maf blocks in reverse order (highest to lowest) by their genomic position,
+// which will first use the value of Src (i.e. assembly and/or chromosome)
+// and then the numerical position.
 func SortByPosRev(m []*Maf) {
 	sort.Slice(m, func(i, j int) bool { return comparePos(m[i], m[j]) == 1 })
 }
 
+// SortScore will sort a slice of maf blocks by their score
 func SortScore(m []*Maf) {
 	sort.Slice(m, func(i, j int) bool { return compareScore(m[i], m[j]) == 1 })
 }

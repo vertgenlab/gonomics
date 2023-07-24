@@ -1,5 +1,6 @@
 // Command Group: "BED Tools"
 
+// Given a window size (default 5000), return the number of base pairs that are in any bed region within that window
 package main
 
 import (

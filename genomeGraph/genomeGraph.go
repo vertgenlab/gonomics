@@ -1,17 +1,17 @@
+// Package genomeGraph has structs and tools for reading, writing, editing and aligning graph representations of genomes
 package genomeGraph
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"strings"
-
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/parse"
+	"io"
+	"log"
+	"strings"
 )
 
 // GenomeGraph struct contains a slice of Nodes.
@@ -31,7 +31,7 @@ type Node struct {
 } // used to have Name (string) and Info (Annotation)
 
 // Edge describes the neighboring nodes and a weighted probability
-// of the of the more likely path.
+// of the more likely path.
 type Edge struct {
 	Dest *Node
 	Prob float32
@@ -61,16 +61,16 @@ func Read(filename string) *GenomeGraph {
 		line = reader.String()
 		switch true {
 		case strings.HasPrefix(line, ">"):
-			nodeId = common.StringToUint32(line[1:])
+			nodeId = parse.StringToUint32(line[1:])
 			AddNode(genome, &Node{Id: nodeId})
 		case strings.Contains(line, "\t"):
 			words = strings.Split(line, "\t")
-			homeNodeIdx = common.StringToUint32(words[0])
+			homeNodeIdx = parse.StringToUint32(words[0])
 			homeNode = &genome.Nodes[homeNodeIdx]
 			if len(words) > 2 {
 				for i = 1; i < len(words); i += 2 {
-					weight = common.StringToFloat32(words[i])
-					destNodeIdx = common.StringToUint32(words[i+1])
+					weight = parse.StringToFloat32(words[i])
+					destNodeIdx = parse.StringToUint32(words[i+1])
 					destNode = &genome.Nodes[destNodeIdx]
 					AddEdge(homeNode, destNode, weight)
 				}
