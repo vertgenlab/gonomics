@@ -120,7 +120,7 @@ func BedGraphToWig(inFile string, reference map[string]chromInfo.ChromInfo, miss
 // equal to the float64-casted name of an overlapping bed entry. Regions with no bed entries will be set to the
 // value set by Missing (default 0 in the cmd).
 // useRange sets the wig value to the bed value across the range of the bed region, not just at the midpoint, as is default.
-func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string, useRange bool) []wig.Wig {
+func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Missing float64, method string, useRange bool, annotationField int) []wig.Wig {
 	wigSlice := makeWigSkeleton(reference, Missing)
 	var chromIndex, midpoint, i int
 	bedChan := bed.GoReadToChan(inFile)
@@ -140,6 +140,11 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 					wigSlice[chromIndex].Values[i] = parse.StringToFloat64(b.Name)
 				} else if method == "Score" {
 					wigSlice[chromIndex].Values[i] = float64(b.Score)
+				} else if method == "Annotation" {
+					if annotationField >= len(b.Annotation) {
+						log.Fatalf("Error: annotationField, %v, exceeds the length of the annotation slice in the following bed entry:\n%v", annotationField, bed.ToString(b, b.FieldsInitialized))
+					}
+					wigSlice[chromIndex].Values[i] = parse.StringToFloat64(b.Annotation[annotationField])
 				} else {
 					log.Fatalf("Unrecognized method.")
 				}
@@ -149,6 +154,11 @@ func BedValuesToWig(inFile string, reference map[string]chromInfo.ChromInfo, Mis
 				wigSlice[chromIndex].Values[midpoint] = parse.StringToFloat64(b.Name)
 			} else if method == "Score" {
 				wigSlice[chromIndex].Values[midpoint] = float64(b.Score)
+			} else if method == "Annotation" {
+				if annotationField >= len(b.Annotation) {
+					log.Fatalf("Error: annotationField, %v, exceeds the length of the annotation slice in the following bed entry:\n%v", annotationField, bed.ToString(b, b.FieldsInitialized))
+				}
+				wigSlice[chromIndex].Values[midpoint] = parse.StringToFloat64(b.Annotation[annotationField])
 			} else {
 				log.Fatalf("Unrecognized method.")
 			}
