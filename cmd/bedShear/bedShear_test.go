@@ -23,6 +23,16 @@ var BedShearTests = []struct {
 		ExpectedFile: "testdata/expected.7.bed",
 		FragmentSize: 7,
 	},
+	{InFile: "testdata/test.bed",
+		OutFile:      "testdata/tmp.7.bed",
+		ExpectedFile: "testdata/expected.7.bed",
+		FragmentSize: 7,
+	},
+	{InFile: "testdata/test.bed",
+		OutFile:      "testdata/tmp.80.bed",
+		ExpectedFile: "testdata/expected.80.bed",
+		FragmentSize: 80,
+	},
 }
 
 func TestBedShear(t *testing.T) {

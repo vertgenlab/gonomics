@@ -24,9 +24,8 @@ func bedShear(inFile string, outFile string, fragmentSize int) {
 	out := fileio.EasyCreate(outFile)
 
 	for currInBed = range ch {
+		// first we make a copy of the inBed that we can edit
 		currOutBed.Chrom = currInBed.Chrom
-		currOutBed.ChromStart = currInBed.ChromStart
-		currOutBed.ChromEnd = currInBed.ChromStart + fragmentSize
 		currOutBed.FieldsInitialized = currInBed.FieldsInitialized
 		if currInBed.FieldsInitialized > 3 {
 			currOutBed.Name = currInBed.Name
@@ -38,7 +37,7 @@ func bedShear(inFile string, outFile string, fragmentSize int) {
 			currOutBed.Strand = currInBed.Strand
 		}
 		if currInBed.FieldsInitialized > 6 {
-			currOutBed.Annotation = currInBed.Annotation
+			currOutBed.Annotation = currInBed.Annotation // keep in mind this is not a memory copy
 		}
 
 		for currStart = currInBed.ChromStart; currStart < currInBed.ChromEnd; currStart += fragmentSize {
