@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/numbers"
 	"io"
+	"log"
 	"math"
 )
 
@@ -105,7 +106,10 @@ func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Ba
 			if !noPrintIfN || totalNs == 0 {
 				if longOutput {
 					percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(windowSize))
-					rawPValue = -1 * math.Log10(numbers.BinomialRightSummation(windowSize, numbers.Max(totalSubst+totalGaps-1, 0), divergenceRate))
+					if totalSubst+totalGaps > windowSize {
+						log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.")
+					}
+					rawPValue = -1 * math.Log10(numbers.BinomialRightSummation(windowSize, totalSubst+totalGaps, divergenceRate))
 					_, err = fmt.Fprintf(out, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", refChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, refChrName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
 					exception.PanicOnErr(err)
 				} else {
