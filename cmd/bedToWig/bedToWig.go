@@ -14,16 +14,16 @@ import (
 	"github.com/vertgenlab/gonomics/wig"
 )
 
-func bedToWig(method string, inFile string, refFile string, outFile string, missing float64, useRange bool) {
+func bedToWig(method string, inFile string, refFile string, outFile string, missing float64, useRange bool, annotationField int) {
 	ref := chromInfo.ReadToMap(refFile)
 	var outWig []wig.Wig
 	if method == "Reads" {
 		rec := bed.Read(inFile)
 		outWig = convert.BedReadsToWig(rec, ref)
-	} else if method == "Name" || method == "Score" {
-		outWig = convert.BedValuesToWig(inFile, ref, missing, method, useRange)
+	} else if method == "Name" || method == "Score" || method == "Annotation" {
+		outWig = convert.BedValuesToWig(inFile, ref, missing, method, useRange, annotationField)
 	} else {
-		log.Fatalf("Unrecognized method.")
+		log.Fatalf("Unrecognized method. Expected 'Reads', 'Name', 'Score', or 'Annotation'. Found: %s.", method)
 	}
 	wig.SortByCoord(outWig)
 	wig.Write(outFile, outWig)
@@ -38,6 +38,7 @@ func usage() {
 			"Score: Use the bed score column to set the wig value at the bed entry midpoint.\n" +
 			"Reads: Use the bed region count to set the wig values across the entire range of the bed entry.\n" +
 			"Name: Use the bed name column to set the wig value at the bed entry midpoint.\n" +
+			"Annotation: Use an annotation column to set wig values at the bed entry midpoint. Default first annotation column, but can be controlled by the option 'annotationField'.\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -45,7 +46,8 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 4
 	var missing *float64 = flag.Float64("missingData", 0, "For BedNameToWig, sets the value of the output wig in regions where there is no bed data.")
-	var useRange *bool = flag.Bool("useRange", false, "For Name or Score method, set the wig value across the whole bed range instead of the midpoint.")
+	var useRange *bool = flag.Bool("useRange", false, "For Name, Annotation, or Score method, set the wig value across the whole bed range instead of the midpoint.")
+	var annotationField *int = flag.Int("annotationField", 0, "Specify which annotation column to use for wig values.")
 
 	flag.Usage = usage
 
@@ -62,5 +64,5 @@ func main() {
 	reference := flag.Arg(2)
 	outFile := flag.Arg(3)
 
-	bedToWig(method, inFile, reference, outFile, *missing, *useRange)
+	bedToWig(method, inFile, reference, outFile, *missing, *useRange, *annotationField)
 }
