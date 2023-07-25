@@ -27,7 +27,7 @@ func great3d(s Settings) {
 		tss = bed.Read(s.GeneFile)
 	} else {
 		genes := gtf.Read(s.GeneFile)
-		tss = gtf.GenesToTssBed(genes, sizes)
+		tss = gtf.GenesToTssBed(genes, sizes, true) //always want this merged
 	}
 	if s.Output1d != "" {
 		proximityFile := bed.FillSpaceNoHiddenValue(tss, sizes)
