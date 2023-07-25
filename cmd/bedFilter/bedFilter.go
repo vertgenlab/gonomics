@@ -65,6 +65,22 @@ func bedFilter(s Settings) {
 				pass = false
 			}
 		}
+		if s.MinAnnotationFloat != -1*math.MaxFloat64 {
+			if s.AnnotationFilterField >= len(curr.Annotation) {
+				log.Fatalf("Error: specified annotationFilterField that exceeds the number of annotation fields in the input bed. AnnotationFilterField: %v. LenCurrAnnotation: %v. CurrBed: %v.", s.AnnotationFilterField, len(curr.Annotation), bed.ToString(curr, curr.FieldsInitialized))
+			}
+			if parse.StringToFloat64(curr.Annotation[s.AnnotationFilterField]) < s.MinAnnotationFloat {
+				pass = false
+			}
+		}
+		if s.MaxAnnotationFloat != math.MaxFloat64 {
+			if s.AnnotationFilterField >= len(curr.Annotation) {
+				log.Fatalf("Error: specified annotationFilterField that exceeds the number of annotation fields in the input bed. AnnotationFilterField: %v. LenCurrAnnotation: %v. CurrBed: %v.", s.AnnotationFilterField, len(curr.Annotation), bed.ToString(curr, curr.FieldsInitialized))
+			}
+			if parse.StringToFloat64(curr.Annotation[s.AnnotationFilterField]) > s.MaxAnnotationFloat {
+				pass = false
+			}
+		}
 		if s.Chrom != "" {
 			if curr.Chrom != s.Chrom {
 				pass = false
@@ -95,21 +111,24 @@ func usage() {
 }
 
 type Settings struct {
-	InFile       string
-	OutFile      string
-	MinScore     int
-	MaxScore     int
-	MinLength    int
-	MaxLength    int
-	MinStart     int
-	MaxStart     int
-	MinEnd       int
-	MaxEnd       int
-	MinNameFloat float64
-	MaxNameFloat float64
-	Chrom        string
-	SubSet       float64
-	SetSeed      int64
+	InFile                string
+	OutFile               string
+	MinScore              int
+	MaxScore              int
+	MinLength             int
+	MaxLength             int
+	MinStart              int
+	MaxStart              int
+	MinEnd                int
+	MaxEnd                int
+	MinNameFloat          float64
+	MaxNameFloat          float64
+	MinAnnotationFloat    float64
+	MaxAnnotationFloat    float64
+	AnnotationFilterField int
+	Chrom                 string
+	SubSet                float64
+	SetSeed               int64
 }
 
 func main() {
@@ -124,6 +143,9 @@ func main() {
 	var maxEnd *int = flag.Int("maxEnd", numbers.MaxInt, "Specifies the maximum ending position of the region.")
 	var minNameFloat *float64 = flag.Float64("minNameFloat", -1*math.MaxFloat64, "Specifies the minimum floating point number value for bed entries where floating point numbers are stored in the name field.")
 	var maxNameFloat *float64 = flag.Float64("maxNameFloat", math.MaxFloat64, "Specifies the maximum floating point number value for bed entries where floating point numbers are stored in the name field.")
+	var minAnnotationFloat *float64 = flag.Float64("minAnnotationFloat", -1*math.MaxFloat64, "Specifies the minimum floating point number value for bed entries where floating point numbers are stored in the an annotation field. Annotation field for filtering can be specified with -annotationFilterField.")
+	var maxAnnotationFloat *float64 = flag.Float64("maxAnnotationFloat", math.MaxFloat64, "Specifies the maximum floating point number value for bed entries where floating point numbers are stored in the an annotation field. Annotation field for filtering can be specified with -annotationFilterField.")
+	var annotationFilterField *int = flag.Int("annotationFilterField", 0, "Specify which annotation field (0-based) will be used for filtering with min/maxAnnotationFloat.")
 	var chrom *string = flag.String("chrom", "", "Specifies the chromosome name.")
 	var subSet *float64 = flag.Float64("subSet", 1.0, "Proportion of entries to retain in output, range from 0 to 1.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
@@ -139,21 +161,24 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 	s := Settings{
-		InFile:       infile,
-		OutFile:      outfile,
-		MinScore:     *minScore,
-		MaxScore:     *maxScore,
-		MinLength:    *minLength,
-		MaxLength:    *maxLength,
-		MinStart:     *minStart,
-		MaxStart:     *maxStart,
-		MinEnd:       *minEnd,
-		MaxEnd:       *maxEnd,
-		MinNameFloat: *minNameFloat,
-		MaxNameFloat: *maxNameFloat,
-		Chrom:        *chrom,
-		SubSet:       *subSet,
-		SetSeed:      *setSeed,
+		InFile:                infile,
+		OutFile:               outfile,
+		MinScore:              *minScore,
+		MaxScore:              *maxScore,
+		MinLength:             *minLength,
+		MaxLength:             *maxLength,
+		MinStart:              *minStart,
+		MaxStart:              *maxStart,
+		MinEnd:                *minEnd,
+		MaxEnd:                *maxEnd,
+		MinNameFloat:          *minNameFloat,
+		MaxNameFloat:          *maxNameFloat,
+		MinAnnotationFloat:    *minAnnotationFloat,
+		MaxAnnotationFloat:    *maxAnnotationFloat,
+		AnnotationFilterField: *annotationFilterField,
+		Chrom:                 *chrom,
+		SubSet:                *subSet,
+		SetSeed:               *setSeed,
 	}
 	bedFilter(s)
 }
