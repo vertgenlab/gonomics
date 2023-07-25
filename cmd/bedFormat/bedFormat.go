@@ -173,7 +173,7 @@ func bedFormat(s Settings) {
 			fdrSlice[i].RawPValue = fdrSlice[i].RawPValue * -1                                                          //from -log10p to log10p
 			fdrSlice[i].AdjPValue = fdrSlice[i].RawPValue + math.Log10(float64(totalWindows)/float64(fdrSlice[i].Rank)) //note that addition is logspace multiply
 			fdrSlice[i].RawPValue = fdrSlice[i].RawPValue * -1                                                          //from log10p to -log10p
-			fdrSlice[i].AdjPValue = fdrSlice[i].AdjPValue * -1                                                          //from log10p to -log10p
+			fdrSlice[i].AdjPValue = math.Max(fdrSlice[i].AdjPValue*-1, 0)                                               //from log10p to -log10p
 			fdrMap[fdrSlice[i].RawPValue] = fdrSlice[i]
 
 		}
@@ -219,7 +219,7 @@ func main() {
 	var ToTss *bool = flag.Bool("ToTss", false, "Trim the output bed to a single-base pair range at the start of the region. Strand-sensitive.")
 	var FdrAnnotation *bool = flag.Bool("fdrAnnotation", false, "Used when an annotation field stores a raw P value."+
 		"Appends an FDR-adjusted P values to the first free annotation column.")
-	var rawPValueAnnotationField *int = flag.Int("rawPValueAnnotationField", 0, "Specify the annotation field where raw P values are stored for fdrScoreAnnotation.")
+	var rawPValueAnnotationField *int = flag.Int("rawPValueAnnotationField", 0, "Specify the annotation field where raw P values are stored for fdrAnnotation.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
