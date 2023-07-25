@@ -7,7 +7,7 @@ A collection of genomics software tools written in Go (golang).
 
 ![gonomicsFigure](https://github.com/vertgenlab/gonomics/assets/49315918/7475cdf8-c20c-45e3-a0c1-3c2fbf6ef7a7)
 
-### Complete Gonomics Documentation
+### Complete gonomics Documentation
 The complete documentation for Gonomics can be found [here](https://pkg.go.dev/github.com/vertgenlab/gonomics).
 
 ### Installation
@@ -40,7 +40,7 @@ The command line tools' code is located in `/gonomics/cmd/`
 * Instructions and examples on making your own tools can be found here: [Writing new tools with gonomics](https://github.com/vertgenlab/gonomics/wiki/Writing-new-tools-with-gonomics)
 ---
 
-### To create a docker container of Gonomics
+### To create a docker container of gonomics
 
 1. Inside the root directory of the gonomics repository run this command to build a docker container of gonomics:
 
@@ -88,7 +88,7 @@ docker run -v $(pwd):/mnt gonomics go run $script.go
 
 ---
 
-### Compatibility with Previous Golang Versions
+### Compatibility with previous golang Vvrsions
 <p>Gonomics is compatible with Golang version 1.18 and above. Please note that due to changes in random number generation since Golang v1.20,
 many cmd tests will fail if run on 1.18 or 1.19, including cmds that use random numbers, such as the simulate commands and MCMC sampling.
 However, we expect these programs to function as intended in these older versions.</p>
