@@ -16,6 +16,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"sort"
 )
 
 type Settings struct {
@@ -30,9 +31,9 @@ type Settings struct {
 	ChromSizeFile            string
 	ToMidpoint               bool
 	ToTss                    bool
-	FdrScoreAnnotation       bool
+	FdrAnnotation            bool
 	RawPValueAnnotationField int
-	ScoreBuffer              int
+	LogTransformPValue       bool
 }
 
 // FdrConverter contains a RawPValue and Rank, which are used to calculate an AdjPValue
@@ -43,17 +44,28 @@ type FdrConverter struct {
 	AdjPValue float64
 }
 
+func compareFdrConverter(a FdrConverter, b FdrConverter) int {
+	if a.RawPValue > b.RawPValue { //a is greater (more significant for -log10Pvalues)
+		return 1
+	}
+	if a.RawPValue < b.RawPValue {
+		return -1
+	}
+	return 0
+}
+
 func bedFormat(s Settings) {
 	var err error
 	var inMap bool
 	var tmp *fileio.EasyWriter
 	var sizes map[string]chromInfo.ChromInfo
+	var mapEntry FdrConverter
 	ch := bed.GoReadToChan(s.InFile)
 
-	fdrList := make([]FdrConverter, s.ScoreBuffer)
+	fdrMap := make(map[float64]FdrConverter)
 	var totalWindows int = 0
 
-	if s.FdrScoreAnnotation {
+	if s.FdrAnnotation {
 		tmp = fileio.EasyCreate(s.OutFile + ".tmp")
 	}
 
@@ -122,39 +134,58 @@ func bedFormat(s Settings) {
 			v.Name = fmt.Sprintf("%.8g", s.ScaleNameFloat*parse.StringToFloat64(v.Name))
 		}
 
-		if s.FdrScoreAnnotation {
+		if s.FdrAnnotation {
 			totalWindows++
-			if v.Score > s.ScoreBuffer {
-				log.Fatalf("Error: score in bed entry: %v, is greater than the scoreBuffer. Raise the scoreBuffer and rerun.", v.Score)
-			}
-			fdrList[v.Score].Count++
 			if s.RawPValueAnnotationField >= len(v.Annotation) {
 				log.Fatalf("Error: rawPValueAnnotationField, %v, exceeds the length of the annotation slice in bed entry: %v.\n", s.RawPValueAnnotationField, len(v.Annotation))
 			}
-			fdrList[v.Score].RawPValue = parse.StringToFloat64(v.Annotation[s.RawPValueAnnotationField])
+			if mapEntry, inMap = fdrMap[parse.StringToFloat64(v.Annotation[s.RawPValueAnnotationField])]; inMap {
+				mapEntry.Count++
+				mapEntry.RawPValue = parse.StringToFloat64(v.Annotation[s.RawPValueAnnotationField])
+				fdrMap[parse.StringToFloat64(v.Annotation[s.RawPValueAnnotationField])] = mapEntry
+			} else {
+				fdrMap[parse.StringToFloat64(v.Annotation[s.RawPValueAnnotationField])] = FdrConverter{Count: 1, Rank: 0, RawPValue: parse.StringToFloat64(v.Annotation[s.RawPValueAnnotationField]), AdjPValue: 0}
+			}
+
 			bed.WriteBed(tmp, v)
 		} else {
 			bed.WriteBed(out, v)
 		}
 	}
 
-	if s.FdrScoreAnnotation {
+	if s.FdrAnnotation {
 		err = tmp.Close()
 		exception.PanicOnErr(err)
 
 		var currRank int = 0
-		for i := len(fdrList) - 1; i >= 0; i-- {
-			currRank += fdrList[i].Count
-			fdrList[i].Rank = currRank
-			// TODO: Must find a way to avoid leaving logspace
-			fdrList[i].RawPValue = math.Pow(10, -1*fdrList[i].RawPValue) //leaving logSpace
-			fdrList[i].AdjPValue = math.Max(0, -1*math.Log10(fdrList[i].RawPValue*(float64(totalWindows)/float64(fdrList[i].Rank))))
-			//fdrList[i].AdjPValue = numbers.Max(logspace.Multiply(math.Log10(float64(totalWindows)/float64(fdrList[i].Rank)), fdrList[i].RawPValue), 0)
+		var fdrSlice []FdrConverter = make([]FdrConverter, 0)
+		for i := range fdrMap {
+			fdrSlice = append(fdrSlice, fdrMap[i])
+		}
+
+		sort.Slice(fdrSlice, func(i, j int) bool { return compareFdrConverter(fdrSlice[i], fdrSlice[j]) == -1 })
+
+		for i := len(fdrSlice) - 1; i >= 0; i-- {
+			currRank += fdrSlice[i].Count
+			fdrSlice[i].Rank = currRank
+
+			// note here I move from -log10 space to log10 space for readability
+			fdrSlice[i].RawPValue = fdrSlice[i].RawPValue * -1                                                          //from -log10p to log10p
+			fdrSlice[i].AdjPValue = fdrSlice[i].RawPValue + math.Log10(float64(totalWindows)/float64(fdrSlice[i].Rank)) //note that addition is logspace multiply
+			fdrSlice[i].RawPValue = fdrSlice[i].RawPValue * -1                                                          //from log10p to -log10p
+			fdrSlice[i].AdjPValue = fdrSlice[i].AdjPValue * -1                                                          //from log10p to -log10p
+			fdrMap[fdrSlice[i].RawPValue] = fdrSlice[i]
+
 		}
 
 		ch = bed.GoReadToChan(s.OutFile + ".tmp")
+		var currRawP float64
 		for v := range ch {
-			v.Annotation = append(v.Annotation, fmt.Sprintf("%e", fdrList[v.Score].AdjPValue))
+			if s.RawPValueAnnotationField >= len(v.Annotation) {
+				log.Fatalf("Error: rawPValueAnnotationField, %v, exceeds the length of the annotation slice in bed entry: %v.\n", s.RawPValueAnnotationField, len(v.Annotation))
+			}
+			currRawP = parse.StringToFloat64(v.Annotation[s.RawPValueAnnotationField])
+			v.Annotation = append(v.Annotation, fmt.Sprintf("%e", fdrMap[currRawP].AdjPValue))
 			bed.WriteBed(out, v)
 		}
 
@@ -186,10 +217,9 @@ func main() {
 	var chromSizeFile *string = flag.String("chromSizeFile", "", "Specify a .chrom.sizes file for use with the padLength option. Ensures padding is truncated at chromosome ends.")
 	var ToMidpoint *bool = flag.Bool("ToMidpoint", false, "Trim the output bed to single-base pair ranges at the midpoint of the input bed ranges.")
 	var ToTss *bool = flag.Bool("ToTss", false, "Trim the output bed to a single-base pair range at the start of the region. Strand-sensitive.")
-	var FdrScoreAnnotation *bool = flag.Bool("fdrScoreAnnotation", false, "Used when an annotation field stores a raw P value related to a numerical value in the score column (such as in faFindFast). "+
+	var FdrAnnotation *bool = flag.Bool("fdrAnnotation", false, "Used when an annotation field stores a raw P value."+
 		"Appends an FDR-adjusted P values to the first free annotation column.")
 	var rawPValueAnnotationField *int = flag.Int("rawPValueAnnotationField", 0, "Specify the annotation field where raw P values are stored for fdrScoreAnnotation.")
-	var scoreBuffer *int = flag.Int("scoreBuffer", 500, "Set the size of the cache for FDR calculations. Should be greater than or equal to max score in the input bed file.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -216,9 +246,8 @@ func main() {
 		ChromSizeFile:            *chromSizeFile,
 		ToMidpoint:               *ToMidpoint,
 		ToTss:                    *ToTss,
-		FdrScoreAnnotation:       *FdrScoreAnnotation,
+		FdrAnnotation:            *FdrAnnotation,
 		RawPValueAnnotationField: *rawPValueAnnotationField,
-		ScoreBuffer:              *scoreBuffer,
 	}
 
 	bedFormat(s)

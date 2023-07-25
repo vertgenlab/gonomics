@@ -21,9 +21,8 @@ var BedFormatTests = []struct {
 	ChromSizeFile            string
 	ToMidpoint               bool
 	ToTss                    bool
-	FdrScoreAnnotation       bool
+	FdrAnnotation            bool
 	RawPValueAnnotationField int
-	ScoreBuffer              int
 }{
 	{InFile: "testdata/test.bed", //this test is for scaleNameFloat
 		OutFile:                  "testdata/test.outFloat.bed",
@@ -37,9 +36,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:            "",
 		ToMidpoint:               false,
 		ToTss:                    false,
-		FdrScoreAnnotation:       false,
+		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
-		ScoreBuffer:              500,
 	},
 	{InFile: "testdata/test.bed", //this test is for UCSCToEnsembl
 		OutFile:                  "testdata/test.outEnsembl.bed",
@@ -53,9 +51,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:            "",
 		ToMidpoint:               false,
 		ToTss:                    false,
-		FdrScoreAnnotation:       false,
+		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
-		ScoreBuffer:              500,
 	},
 	{InFile: "testdata/test.Ensembl.bed", //this test is for UCSCToEnsembl
 		OutFile:                  "testdata/test.outUCSC.bed",
@@ -69,9 +66,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:            "",
 		ToMidpoint:               false,
 		ToTss:                    false,
-		FdrScoreAnnotation:       false,
+		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
-		ScoreBuffer:              500,
 	},
 	{InFile: "testdata/pad.bed",
 		OutFile:                  "testdata/out.pad.bed",
@@ -85,9 +81,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:            "testdata/test.chrom.sizes",
 		ToMidpoint:               false,
 		ToTss:                    false,
-		FdrScoreAnnotation:       false,
+		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
-		ScoreBuffer:              500,
 	},
 	{InFile: "testdata/test.bed",
 		OutFile:                  "testdata/test.midpoint.bed",
@@ -101,9 +96,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:            "testdata/test.chrom.sizes",
 		ToMidpoint:               true,
 		ToTss:                    false,
-		FdrScoreAnnotation:       false,
+		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
-		ScoreBuffer:              500,
 	},
 	{InFile: "testdata/test.strand.bed",
 		OutFile:                  "testdata/test.tss.bed",
@@ -117,9 +111,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:            "testdata/test.chrom.sizes",
 		ToMidpoint:               false,
 		ToTss:                    true,
-		FdrScoreAnnotation:       false,
+		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
-		ScoreBuffer:              500,
 	},
 	{InFile: "testdata/test.strand.bed",
 		OutFile:                  "testdata/test.upstream.bed",
@@ -133,9 +126,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:            "testdata/test.chrom.sizes",
 		ToMidpoint:               false,
 		ToTss:                    false,
-		FdrScoreAnnotation:       false,
+		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
-		ScoreBuffer:              500,
 	},
 	{InFile: "testdata/test.strand.bed",
 		OutFile:                  "testdata/test.downstream.bed",
@@ -149,13 +141,12 @@ var BedFormatTests = []struct {
 		ChromSizeFile:            "testdata/test.chrom.sizes",
 		ToMidpoint:               false,
 		ToTss:                    false,
-		FdrScoreAnnotation:       false,
+		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
-		ScoreBuffer:              500,
 	},
-	{InFile: "testdata/test.fdrScoreAnnotation.bed",
-		OutFile:                  "testdata/out.fdrScoreAnnotation.bed",
-		ExpectedFile:             "testdata/expected.fdrScoreAnnotation.bed",
+	{InFile: "testdata/test.fdrAnnotation.bed",
+		OutFile:                  "testdata/out.fdrAnnotation.bed",
+		ExpectedFile:             "testdata/expected.fdrAnnotation.bed",
 		UCSCToEnsembl:            false,
 		EnsemblToUCSC:            false,
 		ScaleNameFloat:           1,
@@ -165,9 +156,8 @@ var BedFormatTests = []struct {
 		ChromSizeFile:            "",
 		ToMidpoint:               false,
 		ToTss:                    false,
-		FdrScoreAnnotation:       true,
+		FdrAnnotation:            true,
 		RawPValueAnnotationField: 1,
-		ScoreBuffer:              100,
 	},
 }
 
@@ -187,9 +177,8 @@ func TestBedFormat(t *testing.T) {
 			DownstreamPadLength:      v.DownstreamPadLength,
 			ToMidpoint:               v.ToMidpoint,
 			ToTss:                    v.ToTss,
-			FdrScoreAnnotation:       v.FdrScoreAnnotation,
+			FdrAnnotation:            v.FdrAnnotation,
 			RawPValueAnnotationField: v.RawPValueAnnotationField,
-			ScoreBuffer:              v.ScoreBuffer,
 		}
 		bedFormat(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
