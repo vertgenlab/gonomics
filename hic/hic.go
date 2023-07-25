@@ -50,21 +50,18 @@ func processStrawLine(line string) Straw {
 
 // Equal compares two Straw structs to see if the values are identical and returns a bool
 func Equal(a Straw, b Straw) bool {
-	var equal bool
 	if a.Bin1Start == b.Bin1Start && a.Bin2Start == b.Bin2Start && a.ContactScore == b.ContactScore {
-		equal = true
+		return true
 	} else if a.Bin1Start == b.Bin2Start && a.Bin2Start == b.Bin1Start && a.ContactScore == b.ContactScore { //bins don't have restrictions of ordering
-		equal = true
+		return true
 	} else {
-		equal = false
+		return false
 	}
 
-	return equal
 }
 
 // AllAreEqual compares two slices of Straw structs to see if the values are identical and returns a bool
 func AllAreEqual(a []Straw, b []Straw) bool {
-	var equal bool
 	var i int
 
 	if len(a) != len(b) {
@@ -72,11 +69,10 @@ func AllAreEqual(a []Straw, b []Straw) bool {
 	}
 
 	for i = range a {
-		equal = Equal(a[i], b[i])
-		if !equal {
-			return equal
+		if !Equal(a[i], b[i]) {
+			return false
 		}
 	}
 
-	return equal
+	return true
 }
