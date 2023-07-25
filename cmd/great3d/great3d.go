@@ -1,3 +1,7 @@
+// Command Group: "General Tools"
+
+// Perform functional enrichment analysis by associating genomic regions
+// with their nearest gene in 3d space using bedPe contact sites.
 package main
 
 import (
