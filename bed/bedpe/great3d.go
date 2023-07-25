@@ -20,13 +20,13 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 	answer := make([]bed.Bed, len(tss))
 	copy(answer, tss)
 	var currNearestBed, currAnswerA, currAnswerB bed.Bed
-	var closest2dGenesIntervals, currNearest []interval.Interval
-	closest2dGene := bed.FillSpaceNoHiddenValue(tss, sizes)
+	var closest1dGenesIntervals, currNearest []interval.Interval
+	closest1dGene := bed.FillSpaceNoHiddenValue(tss, sizes)
 
-	for i := range closest2dGene {
-		closest2dGenesIntervals = append(closest2dGenesIntervals, closest2dGene[i])
+	for i := range closest1dGene {
+		closest1dGenesIntervals = append(closest1dGenesIntervals, closest1dGene[i])
 	}
-	closest2dGeneTree := interval.BuildTree(closest2dGenesIntervals)
+	closest1dGeneTree := interval.BuildTree(closest1dGenesIntervals)
 
 	midpointBedpe := contactsToMidpoints(contacts)
 
@@ -38,13 +38,13 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 			if !chromInFile {
 				continue
 			}
-		} else if midpointBedpe[j].A.Chrom != midpointBedpe[j-1].A.Chrom {
+		} else if midpointBedpe[j].A.Chrom != midpointBedpe[j-1].A.Chrom { // only check when we encounter a new chrom in the bedpe file
 			chromInFile = checkGeneFileForChrom(midpointBedpe[j], geneChroms)
 			if !chromInFile {
 				continue
 			}
 		}
-		currNearest = interval.Query(closest2dGeneTree, midpointBedpe[j].A, "any")
+		currNearest = interval.Query(closest1dGeneTree, midpointBedpe[j].A, "any")
 		if len(currNearest) > 1 || len(currNearest) == 0 {
 			log.Fatal("Space Filled bed should return one nearest bed entry.")
 		}
@@ -55,13 +55,16 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 			Name:              currNearestBed.Name,
 			Score:             0,
 			FieldsInitialized: 5}
-		if currNearestBed.Score < midpointBedpe[j].A.ChromStart {
+		//we've maintained the original absolute chromStart of every gene record in the FillSpaceNoHiddenValue run so
+		//that when we are calculating the distance to that start we have an easy way to find that position.
+		//the actual start position contained for the record after running FillSpaceNoHiddenValue would be the midpoint between that gene and its left neighbor
+		if currNearestBed.Score < midpointBedpe[j].A.ChromStart { //if the absolute start position of a gene's tss (currNearestBed.Score) is left of the bedpe midpoint
 			currAnswerA.Score = midpointBedpe[j].A.ChromStart - currNearestBed.Score
 		} else {
 			currAnswerA.Score = currNearestBed.Score - midpointBedpe[j].A.ChromStart
 		}
 
-		currNearest = interval.Query(closest2dGeneTree, midpointBedpe[j].B, "any")
+		currNearest = interval.Query(closest1dGeneTree, midpointBedpe[j].B, "any")
 		if len(currNearest) > 1 || len(currNearest) == 0 {
 			log.Fatal("Space Filled bed should return one nearest bed entry.")
 		}

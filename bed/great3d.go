@@ -13,7 +13,7 @@ func FillSpaceNoHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo
 	records = removeRecordsOnMissingChrom(records, genome)
 	var answer = make([]Bed, 0)
 	if records == nil || len(records) == 0 {
-		return records // return slice as is if it is empty or nil.
+		return records // return slice if it is empty or nil.
 	}
 
 	var currAnswer = Bed{Chrom: records[0].Chrom, ChromStart: 0, ChromEnd: records[0].ChromEnd, Name: records[0].Name, Score: records[0].ChromStart, FieldsInitialized: 5}
@@ -61,37 +61,13 @@ func removeRecordsOnMissingChrom(records []Bed, genome map[string]chromInfo.Chro
 	return out
 }
 
-// helper fucntion of FillSpaceHiddenValue. Define the 3dMidpoint between bed entries A and B (with hidden values
-// Ha and Hb) as (A.ChromEnd-Ha + B.ChromStart+Hb) / 2 s.t. A.ChromEnd < B.ChromStart.
-// if 3dMidpoint(A, B) < A.ChromEnd, then entry A can never have an entry in the output bed of FillSpaceHiddenValue,
-// and should be removed.
-func removeBedsWithNoTerritory(records []Bed) ([]Bed, bool) {
-	var answer []Bed
-	var threeDmidpoint int
-	var violation = false
-	for i := 1; i < len(records); i++ {
-		if records[i-1].Chrom == records[i].Chrom {
-			threeDmidpoint = (records[i-1].ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
-			if threeDmidpoint < records[i-1].ChromEnd {
-				violation = true
-			} else {
-				answer = append(answer, records[i-1])
-			}
-		} else {
-			answer = append(answer, records[i-1])
-		}
-	}
-	answer = append(answer, records[len(records)-1])
-
-	return answer, violation
-}
-
 // FillSpaceHiddenValue accepts a slice of Bed structs and a reference genome as a map[string]chromInfo.ChromInfo and returns a
 // slice of Bed structs that assigns each genomic position to the nearest feature in 3D space from the input bed, using
 // the input bed scores to represent "hidden values", or the distance from that position to its nearest TSS in 3D space.
+// bed that is passed here from Fill3dSpace has gene positions and bedpe positions already filled in
 func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
-	records = runUntilNoNewHidden(records)
 	records = removeRecordsOnMissingChrom(records, genome)
+	records = runUntilNoNewHidden(records)
 	var violation = true
 	for violation {
 		records, violation = removeBedsWithNoTerritory(records)
@@ -137,7 +113,8 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 	return answer
 }
 
-// runUntilNoNewHidden directs our mergeKeepLowNameAndScore function to keep updating until no changes occur
+// runUntilNoNewHidden directs our mergeKeepLowNameAndScore function to keep updating until no changes occur,
+// meaning everything is assigned the smallest possible distance to a gene
 func runUntilNoNewHidden(records []Bed) []Bed {
 	var newHidden bool
 	records, newHidden = mergeKeepLowScoreAndName(records)
@@ -147,7 +124,10 @@ func runUntilNoNewHidden(records []Bed) []Bed {
 	return records
 }
 
-// mergeKeepLowScoreAndName is a helper function for 3d great that takes in a slice of bed structs
+// mergeKeepLowScoreAndName is a helper function for 3d great that takes in a slice of bed structs and determines if there's a mismatch in logic for hidden values.
+// Hidden values should be the lowest posible distance between a bedpe point and a gene in 3d space. If there's a situation where
+// the hidden value of a contact (A) is more than the distance to a neighbor (B) plus that neighbors hidden value (B's HV),
+// then the hidden vale of A is recalculated as the distance from A to B plus B's hidden value.
 func mergeKeepLowScoreAndName(records []Bed) (out []Bed, newHidden bool) {
 	var dist int
 	newHidden = false
@@ -180,4 +160,27 @@ func mergeKeepLowScoreAndName(records []Bed) (out []Bed, newHidden bool) {
 	}
 	outList = append(outList, curr)
 	return outList, newHidden
+}
+
+// helper fucntion of FillSpaceHiddenValue. Define the 3dMidpoint between bed entries A and B (with hidden values
+// Ha and Hb) as (A.ChromEnd-Ha + B.ChromStart+Hb) / 2. If the midpoint is left of end of record A, then A is removed from the output
+func removeBedsWithNoTerritory(records []Bed) ([]Bed, bool) {
+	var answer []Bed
+	var threeDMidpoint int
+	var violation = false
+	for i := 1; i < len(records); i++ {
+		if records[i-1].Chrom == records[i].Chrom {
+			threeDMidpoint = (records[i-1].ChromEnd - records[i-1].Score + records[i].ChromStart + records[i].Score) / 2
+			if threeDMidpoint < records[i-1].ChromEnd {
+				violation = true
+			} else {
+				answer = append(answer, records[i-1])
+			}
+		} else {
+			answer = append(answer, records[i-1])
+		}
+	}
+	answer = append(answer, records[len(records)-1])
+
+	return answer, violation
 }
