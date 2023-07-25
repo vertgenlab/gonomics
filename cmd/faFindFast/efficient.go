@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
-	"io"
-
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers"
+	"io"
+	"log"
+	"math"
 )
 
 // incrementWindowEdge takes two aligned fasta sequences and a current index into the alignment.
@@ -63,11 +66,13 @@ func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdxOrig int) (
 	return
 }
 
-func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Base, refChrName string, noPrintIfN bool, verbose bool, out io.Writer) {
+func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Base, refChrName string, noPrintIfN bool, longOutput bool, divergenceRate float64, out io.Writer) {
 	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                   // these are the two edges of the sliding window in "alignment coordinates"
 	var refIdxBeforeWindow, lastRefIdxOfWindow int = -1, -1                                                   // these are the two edges of the sliding window in "reference (no gaps) coordinates"
 	var totalGaps, totalNs, totalSubst int                                                                    // this is the data we need to keep track of that describes the current window
 	var gapOpenCloseRef, gapOpenQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base
+	var err error
+	var percentDiverged, rawPValue float64
 
 	for lastAlnIdxOfWindow < len(reference) { // this check could also be "!done", I am not sure what is more clear
 		// we always move the lastBaseOfTheWindow (right side) and add on what we find to the counters because
@@ -99,7 +104,18 @@ func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Ba
 		if lastRefIdxOfWindow-refIdxBeforeWindow == windowSize && lastAlnIdxOfWindow < len(reference) {
 			// an option/flag can tell us not to print if there are Ns in the query or target
 			if !noPrintIfN || totalNs == 0 {
-				fmt.Fprintf(out, "%s\t%d\t%d\t%s_%d\t%d\n", refChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, refChrName, refIdxBeforeWindow+1, totalSubst+totalGaps)
+				if longOutput {
+					percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(windowSize))
+					if totalSubst+totalGaps > windowSize {
+						log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.")
+					}
+					rawPValue = -1 * math.Log10(numbers.BinomialRightSummation(windowSize, totalSubst+totalGaps, divergenceRate))
+					_, err = fmt.Fprintf(out, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", refChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, refChrName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
+					exception.PanicOnErr(err)
+				} else {
+					_, err = fmt.Fprintf(out, "%s\t%d\t%d\t%s_%d\t%d\n", refChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, refChrName, refIdxBeforeWindow+1, totalSubst+totalGaps)
+					exception.PanicOnErr(err)
+				}
 			}
 		}
 	}
