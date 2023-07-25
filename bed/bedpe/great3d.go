@@ -95,6 +95,7 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 	return bed.FillSpaceHiddenValue(answer, sizes)
 }
 
+// makeChromSlice is a helper function of Fill3dSpace that makes a list of all the chroms in the set of genes
 func makeChromSlice(records []bed.Bed) []string {
 	var chroms []string
 	var inChroms bool
@@ -117,6 +118,7 @@ func makeChromSlice(records []bed.Bed) []string {
 	return chroms
 }
 
+// checkGeneFileForChrom is a helper function for fill3dSpace and checks the contacts bedpe to make sure that the chromosome is in the gene set as well
 func checkGeneFileForChrom(a BedPe, b []string) bool {
 	chromInFile := false
 
