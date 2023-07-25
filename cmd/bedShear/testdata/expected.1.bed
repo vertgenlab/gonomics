@@ -1,0 +1,80 @@
+chr1	10	11	FirstBed	10	+	Annotation	SecondEntry
+chr1	11	12	FirstBed	10	+	Annotation	SecondEntry
+chr1	12	13	FirstBed	10	+	Annotation	SecondEntry
+chr1	13	14	FirstBed	10	+	Annotation	SecondEntry
+chr1	14	15	FirstBed	10	+	Annotation	SecondEntry
+chr1	15	16	FirstBed	10	+	Annotation	SecondEntry
+chr1	16	17	FirstBed	10	+	Annotation	SecondEntry
+chr1	17	18	FirstBed	10	+	Annotation	SecondEntry
+chr1	18	19	FirstBed	10	+	Annotation	SecondEntry
+chr1	19	20	FirstBed	10	+	Annotation	SecondEntry
+chr1	20	21	FirstBed	10	+	Annotation	SecondEntry
+chr1	21	22	FirstBed	10	+	Annotation	SecondEntry
+chr1	22	23	FirstBed	10	+	Annotation	SecondEntry
+chr1	23	24	FirstBed	10	+	Annotation	SecondEntry
+chr1	24	25	FirstBed	10	+	Annotation	SecondEntry
+chr1	25	26	FirstBed	10	+	Annotation	SecondEntry
+chr1	26	27	FirstBed	10	+	Annotation	SecondEntry
+chr1	27	28	FirstBed	10	+	Annotation	SecondEntry
+chr1	28	29	FirstBed	10	+	Annotation	SecondEntry
+chr1	29	30	FirstBed	10	+	Annotation	SecondEntry
+chr1	30	31	FirstBed	10	+	Annotation	SecondEntry
+chr1	31	32	FirstBed	10	+	Annotation	SecondEntry
+chr1	32	33	FirstBed	10	+	Annotation	SecondEntry
+chr1	33	34	FirstBed	10	+	Annotation	SecondEntry
+chr1	34	35	FirstBed	10	+	Annotation	SecondEntry
+chr1	35	36	FirstBed	10	+	Annotation	SecondEntry
+chr1	36	37	FirstBed	10	+	Annotation	SecondEntry
+chr1	37	38	FirstBed	10	+	Annotation	SecondEntry
+chr1	38	39	FirstBed	10	+	Annotation	SecondEntry
+chr1	39	40	FirstBed	10	+	Annotation	SecondEntry
+chr2	500	501	SecondBed	5	-	OnlyOneAnnotation
+chr2	501	502	SecondBed	5	-	OnlyOneAnnotation
+chr2	502	503	SecondBed	5	-	OnlyOneAnnotation
+chr2	503	504	SecondBed	5	-	OnlyOneAnnotation
+chr2	504	505	SecondBed	5	-	OnlyOneAnnotation
+chr2	505	506	SecondBed	5	-	OnlyOneAnnotation
+chr2	506	507	SecondBed	5	-	OnlyOneAnnotation
+chr2	507	508	SecondBed	5	-	OnlyOneAnnotation
+chr2	508	509	SecondBed	5	-	OnlyOneAnnotation
+chr2	509	510	SecondBed	5	-	OnlyOneAnnotation
+chr2	510	511	SecondBed	5	-	OnlyOneAnnotation
+chr2	511	512	SecondBed	5	-	OnlyOneAnnotation
+chr2	512	513	SecondBed	5	-	OnlyOneAnnotation
+chr2	513	514	SecondBed	5	-	OnlyOneAnnotation
+chr2	514	515	SecondBed	5	-	OnlyOneAnnotation
+chr2	515	516	SecondBed	5	-	OnlyOneAnnotation
+chr2	516	517	SecondBed	5	-	OnlyOneAnnotation
+chr2	517	518	SecondBed	5	-	OnlyOneAnnotation
+chr2	518	519	SecondBed	5	-	OnlyOneAnnotation
+chr2	519	520	SecondBed	5	-	OnlyOneAnnotation
+chr2	520	521	SecondBed	5	-	OnlyOneAnnotation
+chr2	521	522	SecondBed	5	-	OnlyOneAnnotation
+chr2	522	523	SecondBed	5	-	OnlyOneAnnotation
+chr2	523	524	SecondBed	5	-	OnlyOneAnnotation
+chr2	524	525	SecondBed	5	-	OnlyOneAnnotation
+chr2	525	526	SecondBed	5	-	OnlyOneAnnotation
+chr2	526	527	SecondBed	5	-	OnlyOneAnnotation
+chr2	527	528	SecondBed	5	-	OnlyOneAnnotation
+chr2	528	529	SecondBed	5	-	OnlyOneAnnotation
+chr2	529	530	SecondBed	5	-	OnlyOneAnnotation
+chr2	530	531	SecondBed	5	-	OnlyOneAnnotation
+chr2	531	532	SecondBed	5	-	OnlyOneAnnotation
+chr2	532	533	SecondBed	5	-	OnlyOneAnnotation
+chr2	533	534	SecondBed	5	-	OnlyOneAnnotation
+chr2	534	535	SecondBed	5	-	OnlyOneAnnotation
+chr2	535	536	SecondBed	5	-	OnlyOneAnnotation
+chr2	536	537	SecondBed	5	-	OnlyOneAnnotation
+chr2	537	538	SecondBed	5	-	OnlyOneAnnotation
+chr2	538	539	SecondBed	5	-	OnlyOneAnnotation
+chr2	539	540	SecondBed	5	-	OnlyOneAnnotation
+chr2	540	541	SecondBed	5	-	OnlyOneAnnotation
+chr2	541	542	SecondBed	5	-	OnlyOneAnnotation
+chr2	542	543	SecondBed	5	-	OnlyOneAnnotation
+chr2	543	544	SecondBed	5	-	OnlyOneAnnotation
+chr2	544	545	SecondBed	5	-	OnlyOneAnnotation
+chr2	545	546	SecondBed	5	-	OnlyOneAnnotation
+chr2	546	547	SecondBed	5	-	OnlyOneAnnotation
+chr2	547	548	SecondBed	5	-	OnlyOneAnnotation
+chr2	548	549	SecondBed	5	-	OnlyOneAnnotation
+chr2	549	550	SecondBed	5	-	OnlyOneAnnotation
