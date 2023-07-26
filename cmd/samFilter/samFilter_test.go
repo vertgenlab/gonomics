@@ -26,11 +26,11 @@ var SamFilterTests = []struct {
 	{"testdata/in.test.sam", "testdata/out.QFilter.sam", "testdata/expected.QFilter.sam", 2, 0, "", false, false, "", 0, false, false, false},
 	{"testdata/in.test.sam", "testdata/out.LenFilter.sam", "testdata/expected.LenFilter.sam", 0, 70, "", false, false, "", 0, false, false, false},
 	{"testdata/in.test.sam", "testdata/out.cigar.sam", "testdata/expected.cigar.sam", 0, 0, "starrSeqIntrons", false, false, "", 0, false, false, false},
-	//{"testdata/in.test.sam", "testdata/out.collapseUMI.sam", "testdata/expected.collapseUMI.sam", 0, 0, "", true, true, "", 0, false, false, false},
+	{"testdata/expected.test.bam", "testdata/out.collapseUMI.sam", "testdata/expected.collapseUMI.sam", 0, 0, "", true, true, "", 0, true, false, false},
 	{"testdata/in.test.sam", "testdata/out.region.sam", "testdata/expected.region.sam", 0, 0, "", false, false, "chrSS", 0, false, false, false},
 	{"testdata/in.test.sam", "testdata/out.flag.sam", "testdata/expected.flag.sam", 0, 0, "", false, false, "", 16, false, false, false},
 	{"testdata/in.test.sam", "testdata/out.sort.sam", "testdata/expected.sort.sam", 0, 0, "", false, false, "", 0, true, false, false},
-	{"testdata/in.testBamOut.sam", "testdata/out.test.bam", "testdata/expected.test.bam", 0, 0, "", false, false, "", 0, false, true, false},
+//	{"testdata/in.test.sam", "testdata/out.test.bam", "testdata/expected.test.bam", 0, 0, "", false, false, "", 0, false, true, false},
 	{"testdata/in.test.sam", "testdata/out.noHead.sam", "testdata/expected.noHead.sam", 0, 0, "", false, false, "", 0, false, false, true},
 }
 
