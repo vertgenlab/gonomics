@@ -1,0 +1,13 @@
+chr1	10	17	FirstBed	10	+	Annotation	SecondEntry
+chr1	17	24	FirstBed	10	+	Annotation	SecondEntry
+chr1	24	31	FirstBed	10	+	Annotation	SecondEntry
+chr1	31	38	FirstBed	10	+	Annotation	SecondEntry
+chr1	38	40	FirstBed	10	+	Annotation	SecondEntry
+chr2	500	507	SecondBed	5	-	OnlyOneAnnotation
+chr2	507	514	SecondBed	5	-	OnlyOneAnnotation
+chr2	514	521	SecondBed	5	-	OnlyOneAnnotation
+chr2	521	528	SecondBed	5	-	OnlyOneAnnotation
+chr2	528	535	SecondBed	5	-	OnlyOneAnnotation
+chr2	535	542	SecondBed	5	-	OnlyOneAnnotation
+chr2	542	549	SecondBed	5	-	OnlyOneAnnotation
+chr2	549	550	SecondBed	5	-	OnlyOneAnnotation

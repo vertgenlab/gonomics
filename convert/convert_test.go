@@ -73,35 +73,47 @@ func TestPairwiseFaToVcfSubstitutionsOnly(t *testing.T) {
 }
 
 var BedValuesToWigTests = []struct {
-	inFile        string
-	chromSizeFile string
-	Missing       float64
-	OutFile       string
-	ExpectedFile  string
-	Method        string
-	UseRange      bool
+	InFile          string
+	ChromSizeFile   string
+	Missing         float64
+	OutFile         string
+	ExpectedFile    string
+	Method          string
+	UseRange        bool
+	AnnotationField int
 }{
-	{"testdata/test.bed",
-		"testdata/ref.chrom.sizes",
-		0,
-		"testdata/name.tmp.wig",
-		"testdata/name.Expected.wig",
-		"Name",
-		false},
-	{"testdata/test.bed",
-		"testdata/ref.chrom.sizes",
-		0,
-		"testdata/score.tmp.wig",
-		"testdata/score.Expected.wig",
-		"Score",
-		false},
-	{"testdata/test.bed",
-		"testdata/ref.chrom.sizes",
-		-1,
-		"testdata/name.missing.tmp.wig",
-		"testdata/name.missing.Expected.wig",
-		"Name",
-		false},
+	{InFile: "testdata/test.bed",
+		ChromSizeFile:   "testdata/ref.chrom.sizes",
+		Missing:         0,
+		OutFile:         "testdata/name.tmp.wig",
+		ExpectedFile:    "testdata/name.Expected.wig",
+		Method:          "Name",
+		UseRange:        false,
+		AnnotationField: 0},
+	{InFile: "testdata/test.bed",
+		ChromSizeFile:   "testdata/ref.chrom.sizes",
+		Missing:         0,
+		OutFile:         "testdata/score.tmp.wig",
+		ExpectedFile:    "testdata/score.Expected.wig",
+		Method:          "Score",
+		UseRange:        false,
+		AnnotationField: 0},
+	{InFile: "testdata/test.bed",
+		ChromSizeFile:   "testdata/ref.chrom.sizes",
+		Missing:         -1,
+		OutFile:         "testdata/name.missing.tmp.wig",
+		ExpectedFile:    "testdata/name.missing.Expected.wig",
+		Method:          "Name",
+		UseRange:        false,
+		AnnotationField: 0},
+	{InFile: "testdata/test.annotation.bed",
+		ChromSizeFile:   "testdata/annotation.chrom.sizes",
+		Missing:         -1,
+		OutFile:         "testdata/tmp.annotation.wig",
+		ExpectedFile:    "testdata/expected.annotation.wig",
+		Method:          "Annotation",
+		UseRange:        false,
+		AnnotationField: 0},
 }
 
 func TestBedValuesToWig(t *testing.T) {
@@ -109,8 +121,8 @@ func TestBedValuesToWig(t *testing.T) {
 	var reference map[string]chromInfo.ChromInfo
 	var wigs []wig.Wig
 	for _, v := range BedValuesToWigTests {
-		reference = chromInfo.ReadToMap(v.chromSizeFile)
-		wigs = BedValuesToWig(v.inFile, reference, v.Missing, v.Method, v.UseRange)
+		reference = chromInfo.ReadToMap(v.ChromSizeFile)
+		wigs = BedValuesToWig(v.InFile, reference, v.Missing, v.Method, v.UseRange, v.AnnotationField)
 		wig.Write(v.OutFile, wigs)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in BedValuesToWig. Output was not as expected.")
