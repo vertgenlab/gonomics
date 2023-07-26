@@ -211,10 +211,9 @@ func runFilter(s Settings) {
 	if s.OutBam {
 		err = bw.Close()
 		exception.PanicOnErr(err)
-	} else {
-		err = out.Close()
-		exception.PanicOnErr(err)
 	}
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
