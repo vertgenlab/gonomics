@@ -203,18 +203,31 @@ func Prob(a int, b int, t float64) float64 {
 	return p
 }
 
-// Yhat returns the index of the most likely base for each position of a sequence. That position refers to a specific base.
-func Yhat(r []float64) int {
-	var n float64
-	n = 0
-	var pos int
-	for p, v := range r {
-		if v > n {
-			n = v
-			pos = p
+// LikelihoodsToBase returns the index of the most likely base for each position of a sequence. That position refers to a specific base.
+func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, highestProbThreshold float64) dna.Base {
+	var highestProb, nonBiasBaseProb, total float64 = 0, 0, 0
+
+	var answer dna.Base = biasBase
+	for p, v := range likelihoods {
+		total += v
+		if dna.Base(p) != biasBase {
+			nonBiasBaseProb += v
+		}
+		if v > highestProb {
+			highestProb = v
+			answer = dna.Base(p)
 		}
 	}
-	return pos
+
+	if highestProb/total < highestProbThreshold {
+		return dna.N
+	}
+
+	if nonBiasBaseProb/total < nonBiasBaseThreshold {
+		return biasBase
+	}
+
+	return answer
 }
 
 // allZero checks if all values in a slice = 0 and returns a bool.
@@ -345,12 +358,32 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 
 // LoopNodes is called by reconstructSeq.go on each base of the modern (leaf) seq. Loop over the nodes of the tree
 // to return most probable base at any given position for every node of the tree.
-func LoopNodes(root *expandedTree.ETree, position int) {
+func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64) {
+	var fix []float64
+	var biasBase, answerBase dna.Base
+	var biasParentName string
+	var biasLeafNode *expandedTree.ETree
+
+	if biasLeafName != "" {
+		biasLeafNode = expandedTree.FindNodeName(root, biasLeafName)
+		if biasLeafNode == nil {
+			log.Fatalf("Didn't find %v in tree.\n", biasLeafName)
+		}
+		biasParentName = biasLeafNode.Up.Name
+	}
+
 	internalNodes := expandedTree.GetBranch(root)
 	SetState(root, position)
 	for k := 0; k < len(internalNodes); k++ {
-		fix := FixFc(root, internalNodes[k])
-		yHat := Yhat(fix)
-		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{dna.Base(yHat)}...)
+		fix = FixFc(root, internalNodes[k])
+
+		if internalNodes[k].Name == biasParentName {
+			biasBase = biasLeafNode.Fasta.Seq[position]
+			answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
+		} else {
+			answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
+		}
+
+		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{answerBase}...)
 	}
 }

@@ -56,6 +56,14 @@ func TestAllPossibleOneHumanNonGeneric(t *testing.T) {
 		exception.PanicOnErr(err)
 	}
 
+	primateReconHcaMle("testdata/allPossible.oneHuman.fa", "testdata/4d.mod", true, false, 0.0, 0, false, "testdata/out.humanBiasedMleNoThreshold.fa")
+	if !fileio.AreEqual("testdata/out.humanBiasedMleNoThreshold.fa", "testdata/expected.humanBiasedMleNoThreshold.fa") {
+		t.Errorf("Error in primateRecon, human biased version nonHumanProb no threshold. Output was not as expected.")
+	} else {
+		err = os.Remove("testdata/out.humanBiasedMleNoThreshold.fa")
+		exception.PanicOnErr(err)
+	}
+
 	primateReconHcaMle("testdata/allPossible.oneHuman.fa", "testdata/4d.mod", true, false, 0.0, 0.99, false, "testdata/out.humanBiasedMle99.fa")
 	if !fileio.AreEqual("testdata/out.humanBiasedMle99.fa", "testdata/expected.humanBiasedMle99.fa") {
 		t.Errorf("Error in primateRecon, human biased version nonHumanProb 99. Output was not as expected.")
