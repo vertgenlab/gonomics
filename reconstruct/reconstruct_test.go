@@ -1,13 +1,12 @@
 package reconstruct
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
-	"testing"
-
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
+	"testing"
 )
 
 var ReconstructTests = []struct {
