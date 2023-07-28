@@ -189,24 +189,21 @@ func WriteLeavesToFasta(tree *expandedTree.ETree, leafFile string) {
 	fasta.Write(leafFile, leafFastas)
 }
 
-// Prob calculate probability of switching from one base (a) to another (b) over branch length (t).
-func Prob(a int, b int, t float64) float64 {
-	var p float64
+// mutationProbability calculate probability of switching from one base (a) to another (b) over branch length (t).
+func mutationProbability(a int, b int, t float64) float64 {
 	switch {
 	case a > 3 || b > 3:
-		p = 0
+		return 0
 	case a == b:
-		p = 1 - t
+		return 1 - t
 	default:
-		p = t / 3
+		return t / 3
 	}
-	return p
 }
 
 // LikelihoodsToBase returns the index of the most likely base for each position of a sequence. That position refers to a specific base.
 func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, highestProbThreshold float64) dna.Base {
 	var highestProb, nonBiasBaseProb, total float64 = 0, 0, 0
-
 	var answer dna.Base = biasBase
 	for p, v := range likelihoods {
 		total += v
@@ -218,15 +215,12 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 			answer = dna.Base(p)
 		}
 	}
-
 	if highestProb/total < highestProbThreshold {
 		return dna.N
 	}
-
 	if nonBiasBaseProb/total < nonBiasBaseThreshold {
 		return biasBase
 	}
-
 	return answer
 }
 
@@ -242,45 +236,48 @@ func allZero(r []float64) bool {
 
 // SetState calculates initial probabilities for all bases of the sequences for all nodes of the tree.
 func SetState(node *expandedTree.ETree, position int) {
+	var currNodeCounter, currLeftCounter, currRightCounter int
+	var currSum float64
+
 	if node.Left != nil && node.Right != nil {
 		SetState(node.Left, position)
 		SetState(node.Right, position)
 		if allZero(node.Left.Stored) && allZero(node.Right.Stored) {
-			log.Fatal("no Stored values passed to internal node")
+			log.Fatalf("Error: no Stored values passed to internal node.\n")
 		}
 
-		for i := 0; i < 4; i++ {
-			sum := 0.0
-			for j := 0; j < 4; j++ {
-				for k := 0; k < 4; k++ {
-					sum = sum + Prob(i, j, node.Left.BranchLength)*node.Left.Stored[j]*Prob(i, k, node.Right.BranchLength)*node.Right.Stored[k]
+		for currNodeCounter = range node.Stored {
+			currSum = 0.0
+			for currLeftCounter = range node.Left.Stored {
+				for currRightCounter = range node.Right.Stored {
+					currSum += mutationProbability(currNodeCounter, currLeftCounter, node.Left.BranchLength) * node.Left.Stored[currLeftCounter] * mutationProbability(currNodeCounter, currRightCounter, node.Right.BranchLength) * node.Right.Stored[currRightCounter]
 				}
 			} //branch length (transition probability) times the probability of a base appearing given the context of the lower tree nodes
-			node.Stored[i] = sum
+			node.Stored[currNodeCounter] = currSum
 		}
 	} else if node.Left != nil {
 		SetState(node.Left, position)
 		if node.Left.Stored == nil {
-			log.Fatal("no Stored values passed to internal node, left branch")
+			log.Fatalf("Error: no Stored values passed to internal node, left branch.\n")
 		}
-		for i := 0; i < 4; i++ {
-			sum := 0.0
-			for j := 0; j < 4; j++ {
-				sum = sum + Prob(i, j, node.Left.BranchLength)*node.Left.Stored[j]
+		for currNodeCounter = range node.Stored {
+			currSum = 0.0
+			for currLeftCounter = range node.Left.Stored {
+				currSum += mutationProbability(currNodeCounter, currLeftCounter, node.Left.BranchLength) * node.Left.Stored[currLeftCounter]
 			} //branch length (transition probability) times the probability of a base appearing given the context of the lower tree nodes
-			node.Stored[i] = sum
+			node.Stored[currNodeCounter] = currSum
 		}
 	} else if node.Right != nil {
 		SetState(node.Right, position)
 		if node.Right.Stored == nil {
-			log.Fatal("no Stored values passed to internal node, right branch")
+			log.Fatalf("Error: no Stored values passed to internal node, right branch.\n")
 		}
-		for i := 0; i < 4; i++ {
-			sum := 0.0
-			for k := 0; k < 4; k++ {
-				sum = sum + Prob(i, k, node.Right.BranchLength)*node.Right.Stored[k]
+		for currNodeCounter = range node.Stored {
+			currSum = 0.0
+			for currRightCounter = range node.Right.Stored {
+				currSum += mutationProbability(currNodeCounter, currRightCounter, node.Right.BranchLength) * node.Right.Stored[currRightCounter]
 			}
-			node.Stored[i] = sum
+			node.Stored[currNodeCounter] = currSum
 		}
 	} else if node.Right == nil && node.Left == nil {
 		node.State = 4 // starts as N
@@ -290,13 +287,13 @@ func SetState(node *expandedTree.ETree, position int) {
 			log.Fatal("position specified is out of range of sequence \n")
 		} else {
 			node.State = int(node.Fasta.Seq[position])
-			for i := 0; i < 4; i++ {
+			for currNodeCounter = range node.Stored {
 				if node.Fasta.Seq[position] == dna.N || node.Fasta.Seq[position] == dna.Gap {
-					node.Stored[i] = 0.25
-				} else if i == node.State {
-					node.Stored[i] = 1
+					node.Stored[currNodeCounter] = 0.25
+				} else if currNodeCounter == node.State {
+					node.Stored[currNodeCounter] = 1
 				} else {
-					node.Stored[i] = 0
+					node.Stored[currNodeCounter] = 0
 				}
 			}
 		}
@@ -305,28 +302,29 @@ func SetState(node *expandedTree.ETree, position int) {
 
 // BubbleUp calculates the final probabilities of all states in every position of the sequence at each internal node.
 // using the stored values (initial probabilities from SetState) BubbleUp recursively calculates the
-// probability on a child node based on both of the descendents of it's ancestor. If a child node is a left child,
+// probability on a child node based on both of the descendents of its ancestor. If a child node is a left child,
 // BubbleUp uses the parent and right child's sequence information in Stored to compute a final probability
 // of each of the base states at the left child, then passes those new probabilities up the tree to the root.
 func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []float64) {
-	tot := 0.0
-	scrapNew := []float64{0, 0, 0, 0}
-	for i := 0; i < 4; i++ {
-		sum := 0.0
-		for j := 0; j < 4; j++ {
-			for k := 0; k < 4; k++ {
+	var currNodeCounter, currLeftCounter, currRightCounter int
+	var currSum, tot float64
+	scrapNew := make([]float64, len(node.Stored))
+	for currNodeCounter = range node.Stored {
+		currSum = 0
+		for currLeftCounter = range node.Left.Stored {
+			for currRightCounter = range node.Right.Stored {
 				if prevNode.Up != nil {
 					if prevNode == node.Left { //scrap is equal to one position of prevNode.Stored (Left or Right)
-						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[j]*node.Right.Stored[k]
+						currSum += mutationProbability(currNodeCounter, currLeftCounter, node.Left.BranchLength) * mutationProbability(currNodeCounter, currRightCounter, node.Right.BranchLength) * scrap[currLeftCounter] * node.Right.Stored[currRightCounter]
 					} else if prevNode == node.Right {
-						sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*scrap[k]*node.Left.Stored[j]
+						currSum += mutationProbability(currNodeCounter, currLeftCounter, node.Left.BranchLength) * mutationProbability(currNodeCounter, currRightCounter, node.Right.BranchLength) * scrap[currRightCounter] * node.Left.Stored[currLeftCounter]
 					}
 				} else if prevNode.Up == nil {
-					sum = sum + Prob(i, j, node.Left.BranchLength)*Prob(i, k, node.Right.BranchLength)*node.Left.Stored[j]*node.Right.Stored[k]
+					currSum += mutationProbability(currNodeCounter, currLeftCounter, node.Left.BranchLength) * mutationProbability(currNodeCounter, currRightCounter, node.Right.BranchLength) * node.Left.Stored[currLeftCounter] * node.Right.Stored[currRightCounter]
 				}
 			}
 		}
-		scrapNew[i] = sum
+		scrapNew[currNodeCounter] = currSum
 	}
 	if node.Up != nil {
 		BubbleUp(node.Up, node, scrapNew)
@@ -339,17 +337,18 @@ func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []fl
 // FixFc passes a node to BubbleUp so that final base probabilities can be calculated from
 // the initial values calculated in SetState.
 func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
-	ans := []float64{0, 0, 0, 0}
+	var currNodeCounter int
+	ans := make([]float64, len(node.Stored))
 
-	for i := 0; i < 4; i++ {
+	for currNodeCounter = range node.Stored {
 		scrap := []float64{0, 0, 0, 0} //checking one base at a time each time you call BubbleUp
-		scrap[i] = node.Stored[i]
+		scrap[currNodeCounter] = node.Stored[currNodeCounter]
 		if node.Up != nil {
 			//node will be BubbleUp prevNode and node.Up will be the node being operated on
-			BubbleUp(node.Up, node, scrap) //node becomes PrevNode and scrap is set to one value of prevNode.Stored in BubbleUp
-			ans[i] = root.Scrap            //root.Stored has previously assigned values (SetInternalState), you want to use whatever is returned by BubbleUp instead
+			BubbleUp(node.Up, node, scrap)    //node becomes PrevNode and scrap is set to one value of prevNode.Stored in BubbleUp
+			ans[currNodeCounter] = root.Scrap //root.Stored has previously assigned values (SetInternalState), you want to use whatever is returned by BubbleUp instead
 		} else if node.Up == nil {
-			ans[i] = root.Stored[i]
+			ans[currNodeCounter] = root.Stored[currNodeCounter]
 		}
 	}
 
@@ -374,7 +373,7 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 
 	internalNodes := expandedTree.GetBranch(root)
 	SetState(root, position)
-	for k := 0; k < len(internalNodes); k++ {
+	for k := range internalNodes {
 		fix = FixFc(root, internalNodes[k])
 
 		if internalNodes[k].Name == biasParentName {
