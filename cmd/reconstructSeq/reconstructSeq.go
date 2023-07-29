@@ -54,7 +54,9 @@ func ReconstructSeq(s Settings) {
 
 func usage() {
 	fmt.Print(
-		"reconstructSeq takes in a newick tree file and a fasta file containing fastas for all leaf nodes and returns a fasta file containing fastas for all nodes of the tree\n" +
+		"reconstructSeq performs ancestral sequence reconstruction based on an input multiFa alignment and Newick tree." +
+			"This program returns a fasta file containing sequences for all nodes of the tree, including the input sequences (leaves)," +
+			"and the inferred ancestral nodes.\n" +
 			"Usage:\n" +
 			"reconstructSeq <treeFile.txt> <inFasta.fasta> <outFasta.fasta>\n" +
 			"options:\n")

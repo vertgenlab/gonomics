@@ -300,12 +300,12 @@ func SetState(node *expandedTree.ETree, position int) {
 	}
 }
 
-// BubbleUp calculates the final probabilities of all states in every position of the sequence at each internal node.
-// using the stored values (initial probabilities from SetState) BubbleUp recursively calculates the
+// bubbleUp calculates the final probabilities of all states in every position of the sequence at each internal node.
+// using the stored values (initial probabilities from SetState) bubbleUp recursively calculates the
 // probability on a child node based on both of the descendents of its ancestor. If a child node is a left child,
-// BubbleUp uses the parent and right child's sequence information in Stored to compute a final probability
+// bubbleUp uses the parent and right child's sequence information in Stored to compute a final probability
 // of each of the base states at the left child, then passes those new probabilities up the tree to the root.
-func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []float64) {
+func bubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []float64) {
 	var currNodeCounter, currLeftCounter, currRightCounter int
 	var currSum, tot float64
 	scrapNew := make([]float64, len(node.Stored))
@@ -327,7 +327,7 @@ func BubbleUp(node *expandedTree.ETree, prevNode *expandedTree.ETree, scrap []fl
 		scrapNew[currNodeCounter] = currSum
 	}
 	if node.Up != nil {
-		BubbleUp(node.Up, node, scrapNew)
+		bubbleUp(node.Up, node, scrapNew)
 	} else if node.Up == nil {
 		tot = scrapNew[0] + scrapNew[1] + scrapNew[2] + scrapNew[3]
 		node.Scrap = tot
@@ -344,8 +344,8 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 		scrap := []float64{0, 0, 0, 0} //checking one base at a time each time you call BubbleUp
 		scrap[currNodeCounter] = node.Stored[currNodeCounter]
 		if node.Up != nil {
-			//node will be BubbleUp prevNode and node.Up will be the node being operated on
-			BubbleUp(node.Up, node, scrap)    //node becomes PrevNode and scrap is set to one value of prevNode.Stored in BubbleUp
+			//node will be bubbleUp prevNode and node.Up will be the node being operated on
+			bubbleUp(node.Up, node, scrap)    //node becomes PrevNode and scrap is set to one value of prevNode.Stored in BubbleUp
 			ans[currNodeCounter] = root.Scrap //root.Stored has previously assigned values (SetInternalState), you want to use whatever is returned by BubbleUp instead
 		} else if node.Up == nil {
 			ans[currNodeCounter] = root.Stored[currNodeCounter]
@@ -408,8 +408,12 @@ func DescendentBaseExists(node *expandedTree.ETree, pos int) {
 	}
 }
 
-// LoopNodes is called by reconstructSeq.go on each base of the modern (leaf) seq. Loop over the nodes of the tree
-// to return most probable base at any given position for every node of the tree.
+// LoopNodes performs ancestral sequence reconstruction for all nodes of an input tree, specified by an input root node,
+// at a user-specified alignment position.
+// Options: the user may specify a 'biasLeafName'. When specified, the reconstruction of this sequence's immediate ancestor
+// will be biased towards that descendent. Teh degree of this bias is controlled by the option 'nonBiasBaseThreshold'.
+// The user may also specify a 'highestProbThreshold'. If the program is uncertain about ancestral reconstruction for a particular
+// node, this option will allow LoopNodes to return an 'N' for that node instead.
 func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64) {
 	var fix []float64
 	var biasBase, answerBase dna.Base
