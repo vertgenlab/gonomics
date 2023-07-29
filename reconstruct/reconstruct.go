@@ -355,6 +355,59 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 	return ans
 }
 
+// BaseExists determines, for a particular node at a particular position, whether a base exists (A, C, G, T, N)
+// or not (node.Fasta.Seq[position] == dna.Gap). This information is stored as a bool in the field node.BasePresent.
+// This function recursively searches descendent nodes and updates the BasePresent field.
+func BaseExists(node *expandedTree.ETree, pos int) {
+	var count int = 0
+	if node.Left != nil && node.Right == nil {
+		log.Fatalf("Error: tree is not a well-formed binary tree. For node: %v, left is not nil but right is nil.\n", node.Name)
+	}
+	if node.Right != nil && node.Left == nil {
+		log.Fatalf("Error: tree is not a well-formed binary tree. For node: %v, right is not nil but left is nil.\n", node.Name)
+	}
+	if node.Up != nil && node.Up.BasePresent {
+		count++
+	}
+	if node.Left != nil && node.Left.DescendentBasePresent {
+		count++
+	}
+	if node.Right != nil && node.Right.DescendentBasePresent {
+		count++
+	}
+	node.BasePresent = count >= 2
+	if node.Left != nil {
+		BaseExists(node.Left, pos)
+	}
+	if node.Right != nil {
+		BaseExists(node.Right, pos)
+	}
+}
+
+// DescendentBaseExists determines whether, for a given node, any descendent nodes contain a base.
+// This bool output is stored in node.DescendentBasePresent.
+// This function recursively updates this field for all descendent nodes of the input node.
+func DescendentBaseExists(node *expandedTree.ETree, pos int) {
+	if node.Left != nil && node.Right == nil {
+		log.Fatalf("Error: tree is not a well-formed binary tree. For node: %v, left is not nil but right is nil.\n", node.Name)
+	}
+	if node.Right != nil && node.Left == nil {
+		log.Fatalf("Error: tree is not a well-formed binary tree. For node: %v, right is not nil but left is nil.\n", node.Name)
+	}
+	if node.Left == nil && node.Right == nil { //if node is a leaf
+		// a descendent base is present at a leaf if the sequence at this position is not a gap.
+		node.DescendentBasePresent = node.Fasta.Seq[pos] != dna.Gap
+	} else { //if we are not a leaf
+		if node.Left != nil {
+			DescendentBaseExists(node.Left, pos)
+		}
+		if node.Right != nil {
+			DescendentBaseExists(node.Right, pos)
+		}
+		node.DescendentBasePresent = node.Left.DescendentBasePresent || node.Right.DescendentBasePresent
+	}
+}
+
 // LoopNodes is called by reconstructSeq.go on each base of the modern (leaf) seq. Loop over the nodes of the tree
 // to return most probable base at any given position for every node of the tree.
 func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64) {
@@ -373,14 +426,20 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 
 	internalNodes := expandedTree.GetBranch(root)
 	SetState(root, position)
+	DescendentBaseExists(root, position)
+	BaseExists(root, position)
 	for k := range internalNodes {
 		fix = FixFc(root, internalNodes[k])
 
-		if internalNodes[k].Name == biasParentName {
-			biasBase = biasLeafNode.Fasta.Seq[position]
-			answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
+		if internalNodes[k].BasePresent {
+			if internalNodes[k].Name == biasParentName {
+				biasBase = biasLeafNode.Fasta.Seq[position]
+				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
+			} else {
+				answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
+			}
 		} else {
-			answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
+			answerBase = dna.Gap
 		}
 
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{answerBase}...)

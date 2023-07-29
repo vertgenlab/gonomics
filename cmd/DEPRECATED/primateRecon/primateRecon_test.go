@@ -19,19 +19,21 @@ func TestAllPossibleOneHumanNonGeneric(t *testing.T) {
 	var ora fasta.Fasta = fasta.Fasta{Name: "ponAbe3"}
 	var species []fasta.Fasta
 	var h, c, b, g, o dna.Base // the values of the human, humanAlt, chimp, ... bases
-	h = dna.A                  // human is fixed
+	var hBases []dna.Base = []dna.Base{dna.A, dna.N, dna.Gap}
 	var possibleBases []dna.Base = []dna.Base{dna.A, dna.C, dna.G, dna.T, dna.N, dna.Gap}
 
 	// given that human is A or N or Gap, we will now go through all possible combinations
-	for _, c = range possibleBases {
-		for _, b = range possibleBases {
-			for _, g = range possibleBases {
-				for _, o = range possibleBases {
-					hum.Seq = append(hum.Seq, h)
-					chi.Seq = append(chi.Seq, c)
-					bon.Seq = append(bon.Seq, b)
-					gor.Seq = append(gor.Seq, g)
-					ora.Seq = append(ora.Seq, o)
+	for _, h = range hBases {
+		for _, c = range possibleBases {
+			for _, b = range possibleBases {
+				for _, g = range possibleBases {
+					for _, o = range possibleBases {
+						hum.Seq = append(hum.Seq, h)
+						chi.Seq = append(chi.Seq, c)
+						bon.Seq = append(bon.Seq, b)
+						gor.Seq = append(gor.Seq, g)
+						ora.Seq = append(ora.Seq, o)
+					}
 				}
 			}
 		}
@@ -134,11 +136,11 @@ func TestAllPossibleOneHumanGenericNames(t *testing.T) {
 	species = []fasta.Fasta{hum, chi, bon, gor, ora}
 	fasta.Write("testdata/allPossible.oneHuman.fa", species)
 
-	primateReconHcaMle("testdata/allPossible.oneHuman.fa", "testdata/4d.genericNames.mod", true, false, 0.0, 0.99, true, "testdata/out.humanBiasedMle99.fa")
-	if !fileio.AreEqual("testdata/out.humanBiasedMle99.fa", "testdata/expected.humanBiasedMle99.genericNames.fa") {
+	primateReconHcaMle("testdata/allPossible.oneHuman.fa", "testdata/4d.genericNames.mod", true, false, 0.0, 0.99, true, "testdata/out.humanBiasedMle99.genericNames.fa")
+	if !fileio.AreEqual("testdata/out.humanBiasedMle99.genericNames.fa", "testdata/expected.humanBiasedMle99.genericNames.fa") {
 		t.Errorf("Error in primateRecon, human biased version nonHumanProb 99. Output was not as expected.")
 	} else {
-		err = os.Remove("testdata/out.humanBiasedMle99.fa")
+		err = os.Remove("testdata/out.humanBiasedMle99.genericNames.fa")
 		exception.PanicOnErr(err)
 	}
 }
