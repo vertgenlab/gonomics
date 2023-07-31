@@ -14,11 +14,11 @@ func ExplicitBinomialDist(n int, k int, p float64) float64 {
 
 func TestBinomialDist(t *testing.T) {
 	input1 := ExplicitBinomialDist(20, 4, 0.6)
-	expected1, _ := BinomialDist(20, 4, 0.6)
+	expected1, _ := BinomialDist(20, 4, 0.6, false)
 	input2 := ExplicitBinomialDist(20, 20, 0.6)
-	expected2, _ := BinomialDist(20, 20, 0.6)
+	expected2, _ := BinomialDist(20, 20, 0.6, false)
 	input3 := ExplicitBinomialDist(20, 0, 0.6)
-	expected3, _ := BinomialDist(20, 0, 0.6)
+	expected3, _ := BinomialDist(20, 0, 0.6, false)
 	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
@@ -31,13 +31,13 @@ func TestBinomialDist(t *testing.T) {
 }
 
 func TestBinomialSum(t *testing.T) {
-	input1 := BinomialLeftSummation(20, 1, 0.6)
+	input1 := BinomialLeftSummation(20, 1, 0.6, false)
 	expected1 := 3.408486e-07
-	input2 := BinomialLeftSummation(20, 20, 0.6)
+	input2 := BinomialLeftSummation(20, 20, 0.6, false)
 	expected2 := 1.000000e+00
-	input3 := BinomialRightSummation(20, 4, 0.6)
+	input3 := BinomialRightSummation(20, 4, 0.6, false)
 	expected3 := 9.999527e-01
-	input4 := BinomialRightSummation(20, 16, 0.4)
+	input4 := BinomialRightSummation(20, 16, 0.4, false)
 	expected4 := 3.170311e-04
 	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)

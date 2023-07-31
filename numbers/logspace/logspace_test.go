@@ -5,6 +5,17 @@ import (
 	"testing"
 )
 
+func TestToBase10(t *testing.T) {
+	var inputs = []float64{0, 1.5}
+	var observed float64
+	for _, v := range inputs {
+		observed = ToBase10(math.Log(v))
+		if observed != math.Log10(v) {
+			t.Errorf("Error in ToBase10. Expected: %v. Observed: %v.\n", math.Log10(v), observed)
+		}
+	}
+}
+
 var PowTests = []struct {
 	x      float64
 	y      float64
