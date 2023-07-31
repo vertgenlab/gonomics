@@ -8,10 +8,11 @@ import (
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
+	"sort"
 	"strings"
 )
 
-//inputNormalize takes in the psuedobulk map and an input normalization table and normalizes all the raw count values in the map
+// inputNormalize takes in the psuedobulk map and an input normalization table and normalizes all the raw count values in the map
 func inputNormalize(mp map[string]float64, normalize string) {
 	var total float64
 	var found bool
@@ -36,19 +37,25 @@ func inputNormalize(mp map[string]float64, normalize string) {
 	}
 }
 
-//writeMap simply writes out the pseudobulk and/or input normalized values to an io.writer
+// writeMap simply writes out the pseudobulk and/or input normalized values to an io.writer
 func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 	var total float64
 	var write string
+	var writeSlice []string
 	for i := range mp {
 		total, _ = mp[i]
 		write = fmt.Sprintf("%s\t%f", i, total)
-		fileio.WriteToFileHandle(writer, write)
+		writeSlice = append(writeSlice, write)
+	}
+	sort.Strings(writeSlice)
+
+	for _, i := range writeSlice {
+		fileio.WriteToFileHandle(writer, i)
 	}
 }
 
-//parseBam takes in a cellranger bam and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
-func parseBam(inSam string, outTable string, pb bool, normalize string) {
+// parseBam takes in a cellranger bam and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
+func cellrangerBam(inSam string, outTable string, pb bool, normalize string) {
 	var k int = 0
 	var bit int32
 	var constructName, cellString, write string
@@ -64,7 +71,7 @@ func parseBam(inSam string, outTable string, pb bool, normalize string) {
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags
 		bit = num.(int32)
 
-		if bit&8 == 8 { // bit 8 is the flag for UMI used in final count.
+		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count.
 			k++
 			construct, _, _ := sam.QueryTag(i, "GX") // gene associated with UMI
 			constructName = construct.(string)
@@ -128,5 +135,5 @@ func main() {
 	a := flag.Arg(0)
 	b := flag.Arg(1)
 
-	parseBam(a, b, *pseudobulk, *normalize)
+	cellrangerBam(a, b, *pseudobulk, *normalize)
 }
