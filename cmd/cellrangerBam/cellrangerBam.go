@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
@@ -32,7 +33,9 @@ func parseBam(inSam string, outTable string) {
 		}
 	}
 	fmt.Println("Found this many valid UMIs: ", k)
-	fileio.Write(outTable, output)
+	
+	err := out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
