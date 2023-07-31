@@ -13,7 +13,6 @@ func parseBam(inSam string, outTable string) {
 	var k int = 0
 	var bit int32
 	var constructName, cellString string
-	var output []string
 
 	ch, _ := sam.GoReadToChan(inSam)
 	out := fileio.EasyCreate(outTable)
@@ -33,7 +32,7 @@ func parseBam(inSam string, outTable string) {
 		}
 	}
 	fmt.Println("Found this many valid UMIs: ", k)
-	
+
 	err := out.Close()
 	exception.PanicOnErr(err)
 }
