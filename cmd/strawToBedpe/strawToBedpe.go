@@ -14,18 +14,20 @@ import (
 
 func strawToBedpe(strawFile string, outFile string, chrom string, binSize int, interChrom string) {
 	straw := hic.Read(strawFile)
-	var out = make([]bedpe.BedPe, len(straw))
+	var thisRec bedpe.BedPe
+	var out []bedpe.BedPe
 
 	if interChrom == "" {
 		for s := range straw {
-			out[s] = bedpe.BedPe{bed.Bed{Chrom: chrom, ChromStart: straw[s].Bin1Start, ChromEnd: straw[s].Bin1Start + binSize, Score: straw[s].ContactScore}, bed.Bed{Chrom: chrom, ChromStart: straw[s].Bin2Start, ChromEnd: straw[s].Bin2Start + binSize, Score: straw[s].ContactScore}}
+			thisRec = bedpe.BedPe{A: bed.Bed{Chrom: chrom, ChromStart: straw[s].Bin1Start, ChromEnd: straw[s].Bin1Start + binSize, Score: straw[s].ContactScore, FieldsInitialized: 8}, B: bed.Bed{Chrom: chrom, ChromStart: straw[s].Bin2Start, ChromEnd: straw[s].Bin2Start + binSize, Score: straw[s].ContactScore, FieldsInitialized: 8}}
+			out = append(out, thisRec)
 		}
 	} else {
 		for s := range straw {
-			out[s] = bedpe.BedPe{bed.Bed{Chrom: chrom, ChromStart: straw[s].Bin1Start, ChromEnd: straw[s].Bin1Start + binSize, Score: straw[s].ContactScore}, bed.Bed{Chrom: interChrom, ChromStart: straw[s].Bin2Start, ChromEnd: straw[s].Bin2Start + binSize, Score: straw[s].ContactScore}}
+			thisRec = bedpe.BedPe{A: bed.Bed{Chrom: chrom, ChromStart: straw[s].Bin1Start, ChromEnd: straw[s].Bin1Start + binSize, Score: straw[s].ContactScore, FieldsInitialized: 8}, B: bed.Bed{Chrom: interChrom, ChromStart: straw[s].Bin2Start, ChromEnd: straw[s].Bin2Start + binSize, Score: straw[s].ContactScore, FieldsInitialized: 8}}
+			out = append(out, thisRec)
 		}
 	}
-
 	bedpe.Write(outFile, out)
 }
 
