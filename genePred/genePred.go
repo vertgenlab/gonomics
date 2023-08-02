@@ -1,13 +1,14 @@
-// genePred is a package for reading, writing, and manipulating genePred structs
+// Package genePred is a package for reading, writing, and manipulating genePred structs
 package genePred
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
 
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -42,16 +43,16 @@ func WriteToFileHandle(file io.Writer, records []GenePred) {
 		var err error
 		_, err = fmt.Fprintf(file, "%s\n", GenePredToString(rec))
 		//TODO: fmt.Fprintf is slow
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 }
 
 // Write writes a slice of GenePred structs with a specified number of fields to a specified filename.
 func Write(filename string, records []GenePred) {
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
-
 	WriteToFileHandle(file, records)
+	err := file.Close()
+	exception.PanicOnErr(err)
 }
 
 // Read reads a file and processes it into a genePred.
@@ -61,12 +62,14 @@ func Read(filename string) []GenePred {
 	var doneReading = false
 
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		current := processGenePredLine(line)
 		answer = append(answer, current)
 	}
+	err := file.Close()
+	exception.PanicOnErr(err)
+
 	return answer
 }
 
@@ -87,11 +90,11 @@ func processGenePredLine(line string) GenePred {
 	} else {
 		log.Fatal("no strand specified")
 	}
-	current.TxStart = common.StringToInt(words[3])
-	current.TxEnd = common.StringToInt(words[4])
-	current.CdsStart = common.StringToInt(words[5])
-	current.CdsEnd = common.StringToInt(words[6])
-	current.ExonNum = common.StringToInt(words[7])
+	current.TxStart = parse.StringToInt(words[3])
+	current.TxEnd = parse.StringToInt(words[4])
+	current.CdsStart = parse.StringToInt(words[5])
+	current.CdsEnd = parse.StringToInt(words[6])
+	current.ExonNum = parse.StringToInt(words[7])
 	if !strings.HasSuffix(words[8], ",") {
 		log.Fatal("Exon Starts slice doesn't end in empty string.")
 	}
@@ -121,12 +124,12 @@ func StringToIntSlice(text string) []int {
 	var answer = make([]int, len(values)-1)
 
 	for i := 0; i < len(values)-1; i++ {
-		answer[i] = common.StringToInt(values[i])
+		answer[i] = parse.StringToInt(values[i])
 	}
 	return answer
 }
 
-// CaclExonFame calculates the frame of each exon in a genePred based on the information in the fields for exonStarts, exonStops and cdsStarts
+// CalcExonFrame calculates the frame of each exon in a genePred based on the information in the fields for exonStarts, exonStops and cdsStarts
 // TODO: May not work with - strand transcripts.
 func CalcExonFrame(gene GenePred) []int {
 	exonStarts := gene.ExonStarts

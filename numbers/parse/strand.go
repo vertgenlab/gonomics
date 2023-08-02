@@ -1,10 +1,10 @@
-package common
+package parse
 
 import (
 	"log"
 )
 
-// true if '+', false if '-', and fatal error otherwise.
+// StringToStrand returns true if s is '+', false if '-', and fatal error otherwise.
 func StringToStrand(s string) bool {
 	switch s {
 	case "+":
@@ -17,6 +17,7 @@ func StringToStrand(s string) bool {
 	}
 }
 
+// StrandToRune returns '+' if true, and otherwise '-'.
 func StrandToRune(strand bool) rune {
 	if strand {
 		return '+'

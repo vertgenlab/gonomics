@@ -1,5 +1,6 @@
 // Command Group: "Statistics & Population Genetics"
 
+// Performs velocity and acceleration on a four way multiple alignment in multiFa format
 package main
 
 import (

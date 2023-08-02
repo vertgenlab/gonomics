@@ -4,18 +4,17 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io"
-	"log"
-	"strings"
-
 	"github.com/vertgenlab/gonomics/bgzf"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaThreeBit"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
+	"io"
+	"log"
+	"strings"
 )
 
 // The BinReader struct wraps the bgzf reader from the biogo repository with a bytes buffer to store encoded giraf records.
@@ -44,21 +43,23 @@ func DecompressGiraf(infilename string, outfilename string, graph *genomeGraph.G
 
 	// Initialize outfile
 	outfile := fileio.EasyCreate(outfilename)
-	defer outfile.Close()
 
 	// Read info until EOF
 	var curr giraf.Giraf
 	for curr, err = ReadGiraf(reader, graph); err != io.EOF; curr, err = ReadGiraf(reader, graph) {
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 		giraf.WriteGirafToFileHandle(outfile, &curr)
 	}
 
 	// Close reader
 	err = reader.bg.Close()
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
+
+	err = outfile.Close()
+	exception.PanicOnErr(err)
 }
 
-// The Read method for the BinWriter struct decompresses a single giraf record and writes to file.
+// ReadGiraf is a method for the BinWriter struct decompresses a single giraf record and writes to file.
 func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	var answer giraf.Giraf
 	var bytesRead int
@@ -74,7 +75,7 @@ func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	if bytesRead != 4 {
 		return answer, io.ErrUnexpectedEOF
 	}
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	blockSize := int(binary.LittleEndian.Uint32(buffer[:4]))
 
 	// check cap of readBffr. Either make new slice, or re-slice as needed
@@ -89,7 +90,7 @@ func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	if err == io.ErrUnexpectedEOF || bytesRead != blockSize {
 		log.Fatalln("ERROR: truncated record")
 	}
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	br.currData.Write(br.readBffr) // copy data from intermediate buffer to bytes buffer
 
 	// qNameLen (uint8)

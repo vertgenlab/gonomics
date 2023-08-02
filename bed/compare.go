@@ -24,6 +24,9 @@ func SortByChromEndByChrom(bedFile []Bed) {
 	sort.Slice(bedFile, func(i, j int) bool { return CompareChromEndByChrom(bedFile[i], bedFile[j]) == -1 })
 }
 
+// MergeBeds takes a slice of beds and returns a slice of beds where overlapping entries have
+// been merged into a single entry.  The input slice of beds can no longer be used as its memory
+// will have been reused.
 func MergeBeds(bedFile []Bed) []Bed {
 	SortByCoord(bedFile)
 	var i, j int

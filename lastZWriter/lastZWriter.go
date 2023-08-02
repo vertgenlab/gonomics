@@ -1,16 +1,16 @@
+// Package lastZWriter takes in alignment information and creates a file that contains all necessary lastz jobs with all required parameters for any species listed, as well as creating all the directories where data will be stored when those jobs are run.
 package lastZWriter
 
 import (
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// AlignSetUp takes in a the path to the parent directory where all the individual fastas for alignment are being held.
+// AlignSetUp takes in the path to the parent directory where all the individual fastas for alignment are being held.
 // In this context the directory below "pairwise" is labeled by a species name, which then contains all the fastas for
 // alignment. It also takes a single aligning species and reference species, as well as a text file that describes the
 // distance between all species in the alignment from all other species in the alignment. This file is make with
@@ -23,8 +23,8 @@ func AlignSetUp(pairwise string, species string, reference string, allDists stri
 	return parameters, matrix
 }
 
-// AlignSetup_Simple creates a different output file name structure: ref.species/qName/tName.qName.axt
-// AlignSetup_Simple does not generate parameter, matrix
+// AlignSetUpSimple creates a different output file name structure: ref.species/qName/tName.qName.axt
+// AlignSetupSimple does not generate parameter, matrix
 func AlignSetUpSimple(pairwise string, species string, reference string) {
 	outDir := pairwise + "/" + reference + "." + species
 	// AlignSetUp_Simple makeOutDir input is (species,reference), unlike AlignSetUp makeOutDir (reference,species)
@@ -108,7 +108,7 @@ func findParameters(reference string, species string, distsFile string, m bool, 
 				dist = 2
 				done = true
 			} else {
-				dist = common.StringToFloat64(words[2])
+				dist = parse.StringToFloat64(words[2])
 				switch {
 				case dist <= 0.2: //closest
 					answer = append(answer, "O=600", "E=150", "H=2000", "T=2", "M=254", "K=4500", "L=3000", "Y=15000")

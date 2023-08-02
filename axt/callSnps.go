@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-// ToVcfFile takes a.
-func ToVcfFile(filename string, axtList []Axt, fa []fasta.Fasta) {
+// ToVcfFile creates a new vcf file (i.e. filename) and writes all mutations
+// observed in the slice of Axts to this vcf file.
+func ToVcfFile(filename string, axtList []Axt) {
 	var records []vcf.Vcf
 	for i := range axtList {
 		records = append(records, ToVcf(axtList[i])...)
@@ -24,6 +24,7 @@ func info(input Axt) string {
 	return text
 }
 
+// ToVcf takes an Axt and returns all mutations observed in it as a slice of vcf records.
 func ToVcf(axtFile Axt) []vcf.Vcf {
 	var answer []vcf.Vcf
 	var curr vcf.Vcf

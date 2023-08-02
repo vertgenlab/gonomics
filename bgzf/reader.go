@@ -1,3 +1,5 @@
+// Package bgzf provides functions for reading and writing files in
+// the BGZF compression format.
 package bgzf
 
 import (

@@ -1,3 +1,4 @@
+// Package graphReconstruct (WIP) has tools to reconstruct ancient genomes using extant descendants, but utilizes graph genomes instead of linear genomes.
 package graphReconstruct
 
 import (

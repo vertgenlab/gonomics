@@ -1,5 +1,6 @@
 // Command Group: "VCF Tools"
 
+// Options alter VCF formatting
 package main
 
 import (

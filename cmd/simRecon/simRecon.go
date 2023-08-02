@@ -1,6 +1,7 @@
 // Command Group: "Sequence Evolution & Reconstruction"
 // Command Usage: "Simulate evolution along a tree and perform ancestral reconstruction"
 
+// Simulates evolution from the root of a newick tree to the extant species of the trees and then uses the leaf nodes to reconstruct the ancestral nodes and compares the answers for percent accuracy.
 package main
 
 import (

@@ -1,5 +1,6 @@
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Reformat the sequences in a fasta file
 package main
 
 import (

@@ -1,4 +1,4 @@
-package simulate
+package main
 
 import (
 	"fmt"
@@ -11,10 +11,11 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/popgen"
+	"github.com/vertgenlab/gonomics/simulate"
 )
 
-// Main function to be called in simulateWrightFisher.gp.
-func SimulateWrightFisher(set popgen.WrightFisherSettings) popgen.WrightFisherPopData {
+// SimMain function to be called in simulateWrightFisher.go.
+func simMain(set popgen.WrightFisherSettings) popgen.WrightFisherPopData {
 	checkValidInput(set)                          // Check various inputs
 	set.AncestralAllele = setAncestralAllele(set) // Set ancestral allele if given by input
 
@@ -114,7 +115,7 @@ func makeInitialPop(set popgen.WrightFisherSettings) ([]fasta.Fasta, []fasta.Fas
 
 	// Case I: No ancestral allele is specified. Random generate sequence.
 	if set.AncestralAllele == "" {
-		initialSeq := RandIntergenicSeq(set.GcContent, set.GenomeSize)
+		initialSeq := simulate.RandIntergenicSeq(set.GcContent, set.GenomeSize)
 		for i = 0; i < set.PopSize; i++ {
 			curFasta[i].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(i))
 			curFasta[i].Seq = make([]dna.Base, set.GenomeSize)
@@ -400,10 +401,10 @@ There exists the similar function in simulate.go, but that function doesn't allo
 me to choose GC content (it was set to 0.41 by default and not mutable).
 */
 func mutate(originalBase dna.Base, GC float64) dna.Base {
-	newBase := chooseRandomBase(GC)
+	newBase := simulate.ChooseRandomBase(GC)
 
 	for newBase == originalBase {
-		newBase = chooseRandomBase(GC)
+		newBase = simulate.ChooseRandomBase(GC)
 	}
 	return newBase
 }

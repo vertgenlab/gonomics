@@ -1,23 +1,23 @@
 // Command Group: "Data Conversion"
 
+// Generates a VCF file from an input pairwise multiFa alignment with the first entry as the reference
 package main
 
 import (
 	"flag"
 	"fmt"
-	"log"
-
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
 )
 
 func multiFaToVcf(inFile string, chr string, outFile string, substitutionsOnly bool, retainN bool) {
 	f := fasta.Read(inFile)
 	out := fileio.EasyCreate(outFile)
-	header := vcf.NewHeader("")
+	header := vcf.NewHeader()
 	vcf.NewWriteHeader(out, header)
 	convert.PairwiseFaToVcf(f, chr, out, substitutionsOnly, retainN)
 	err := out.Close()

@@ -1,5 +1,6 @@
 // Command Group: "Deep Learning"
 
+// Make deep learning prediction TSV files from input fasta format data
 package main
 
 import (

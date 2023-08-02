@@ -1,5 +1,6 @@
 // Command Group: "Sequence Evolution & Reconstruction"
 
+// Returns maximum likelihood sequence from an HBCGO primate alignment
 package main
 
 import (
@@ -74,11 +75,11 @@ func baseIsPresent(b dna.Base) bool {
 	return false
 }
 
-func hcaIsPresent(human, bonobo, chimp, gorilla, organutan dna.Base) bool {
+func hcaIsPresent(human, bonobo, chimp, gorilla, orangutan dna.Base) bool {
 	if baseIsPresent(human) && (baseIsPresent(bonobo) || baseIsPresent(chimp)) {
 		return true
 	}
-	if (baseIsPresent(human) || baseIsPresent(bonobo) || baseIsPresent(chimp)) && (baseIsPresent(gorilla) || baseIsPresent(organutan)) {
+	if (baseIsPresent(human) || baseIsPresent(bonobo) || baseIsPresent(chimp)) && (baseIsPresent(gorilla) || baseIsPresent(orangutan)) {
 		return true
 	}
 	return false
@@ -118,32 +119,55 @@ func reconHgaBase(root, gorillaNode, nodeToRecon *expandedTree.ETree, position i
 	nodeToRecon.Fasta.Seq = append(nodeToRecon.Fasta.Seq, nextBase)
 }
 
-func primateReconHcaMle(inFastaFilename string, inTreeFilename string, humanBias bool, chimpBias bool, probThreshold float64, nonHumanProbThreshold float64, outputFastaFilename string) {
+func primateReconHcaMle(inFastaFilename string, inTreeFilename string, humanBias bool, chimpBias bool, probThreshold float64, nonHumanProbThreshold float64, useGenericNames bool, outputFastaFilename string) {
 	var tree, humanNode, humanAltNode, bonoboNode, chimpNode, gorillaNode, orangutanNode, hcaNode *expandedTree.ETree
 	var err error
 	var i int
 
 	tree, err = expandedTree.ReadTree(inTreeFilename, inFastaFilename)
 	exception.FatalOnErr(err)
-	humanNode = expandedTree.FindNodeName(tree, "hg38")
-	if humanNode == nil {
-		log.Fatalf("Didn't find hg38 in the tree\n")
-	}
-	bonoboNode = expandedTree.FindNodeName(tree, "panPan2")
-	if bonoboNode == nil {
-		log.Fatalf("Didn't find panPan2 in the tree\n")
-	}
-	chimpNode = expandedTree.FindNodeName(tree, "panTro6")
-	if chimpNode == nil {
-		log.Fatalf("Didn't find panTro6 in the tree\n")
-	}
-	gorillaNode = expandedTree.FindNodeName(tree, "gorGor5")
-	if gorillaNode == nil {
-		log.Fatalf("Didn't find gorGor5 in the tree\n")
-	}
-	orangutanNode = expandedTree.FindNodeName(tree, "ponAbe3")
-	if orangutanNode == nil {
-		log.Fatalf("Didn't find ponAbe3 in the tree\n")
+	if useGenericNames {
+		humanNode = expandedTree.FindNodeName(tree, "human")
+		if humanNode == nil {
+			log.Fatalf("Didn't find human in the tree\n")
+		}
+		bonoboNode = expandedTree.FindNodeName(tree, "bonobo")
+		if bonoboNode == nil {
+			log.Fatalf("Didn't find bonobo in the tree\n")
+		}
+		chimpNode = expandedTree.FindNodeName(tree, "chimp")
+		if chimpNode == nil {
+			log.Fatalf("Didn't find chimp in the tree\n")
+		}
+		gorillaNode = expandedTree.FindNodeName(tree, "gorilla")
+		if gorillaNode == nil {
+			log.Fatalf("Didn't find gorilla in the tree\n")
+		}
+		orangutanNode = expandedTree.FindNodeName(tree, "orangutan")
+		if orangutanNode == nil {
+			log.Fatalf("Didn't find orangutan in the tree\n")
+		}
+	} else {
+		humanNode = expandedTree.FindNodeName(tree, "hg38")
+		if humanNode == nil {
+			log.Fatalf("Didn't find hg38 in the tree\n")
+		}
+		bonoboNode = expandedTree.FindNodeName(tree, "panPan2")
+		if bonoboNode == nil {
+			log.Fatalf("Didn't find panPan2 in the tree\n")
+		}
+		chimpNode = expandedTree.FindNodeName(tree, "panTro6")
+		if chimpNode == nil {
+			log.Fatalf("Didn't find panTro6 in the tree\n")
+		}
+		gorillaNode = expandedTree.FindNodeName(tree, "gorGor5")
+		if gorillaNode == nil {
+			log.Fatalf("Didn't find gorGor5 in the tree\n")
+		}
+		orangutanNode = expandedTree.FindNodeName(tree, "ponAbe3")
+		if orangutanNode == nil {
+			log.Fatalf("Didn't find ponAbe3 in the tree\n")
+		}
 	}
 	hcaNode = expandedTree.FindNodeName(tree, "hca")
 	if hcaNode == nil {
@@ -171,32 +195,55 @@ func primateReconHcaMle(inFastaFilename string, inTreeFilename string, humanBias
 	}
 }
 
-func primateReconHgaMle(inFile string, inTreeFileName string, probThreshold float64, nonBiasProbThreshold float64, outFile string) {
+func primateReconHgaMle(inFile string, inTreeFileName string, probThreshold float64, nonBiasProbThreshold float64, useGenericNames bool, outFile string) {
 	var tree, humanNode, bonoboNode, chimpNode, gorillaNode, orangutanNode, hgaNode *expandedTree.ETree
 	var err error
 	var i int
 
 	tree, err = expandedTree.ReadTree(inTreeFileName, inFile)
 	exception.FatalOnErr(err)
-	humanNode = expandedTree.FindNodeName(tree, "hg38")
-	if humanNode == nil {
-		log.Fatalf("Didn't find hg38 in the tree\n")
-	}
-	bonoboNode = expandedTree.FindNodeName(tree, "panPan2")
-	if bonoboNode == nil {
-		log.Fatalf("Didn't find panPan2 in the tree\n")
-	}
-	chimpNode = expandedTree.FindNodeName(tree, "panTro6")
-	if chimpNode == nil {
-		log.Fatalf("Didn't find panTro6 in the tree\n")
-	}
-	gorillaNode = expandedTree.FindNodeName(tree, "gorGor5")
-	if gorillaNode == nil {
-		log.Fatalf("Didn't find gorGor5 in the tree\n")
-	}
-	orangutanNode = expandedTree.FindNodeName(tree, "ponAbe3")
-	if orangutanNode == nil {
-		log.Fatalf("Didn't find ponAbe3 in the tree\n")
+	if useGenericNames {
+		humanNode = expandedTree.FindNodeName(tree, "human")
+		if humanNode == nil {
+			log.Fatalf("Didn't find human in the tree\n")
+		}
+		bonoboNode = expandedTree.FindNodeName(tree, "bonobo")
+		if bonoboNode == nil {
+			log.Fatalf("Didn't find bonobo in the tree\n")
+		}
+		chimpNode = expandedTree.FindNodeName(tree, "chimp")
+		if chimpNode == nil {
+			log.Fatalf("Didn't find chimp in the tree\n")
+		}
+		gorillaNode = expandedTree.FindNodeName(tree, "gorilla")
+		if gorillaNode == nil {
+			log.Fatalf("Didn't find gorilla in the tree\n")
+		}
+		orangutanNode = expandedTree.FindNodeName(tree, "orangutan")
+		if orangutanNode == nil {
+			log.Fatalf("Didn't find orangutan in the tree\n")
+		}
+	} else {
+		humanNode = expandedTree.FindNodeName(tree, "hg38")
+		if humanNode == nil {
+			log.Fatalf("Didn't find hg38 in the tree\n")
+		}
+		bonoboNode = expandedTree.FindNodeName(tree, "panPan2")
+		if bonoboNode == nil {
+			log.Fatalf("Didn't find panPan2 in the tree\n")
+		}
+		chimpNode = expandedTree.FindNodeName(tree, "panTro6")
+		if chimpNode == nil {
+			log.Fatalf("Didn't find panTro6 in the tree\n")
+		}
+		gorillaNode = expandedTree.FindNodeName(tree, "gorGor5")
+		if gorillaNode == nil {
+			log.Fatalf("Didn't find gorGor5 in the tree\n")
+		}
+		orangutanNode = expandedTree.FindNodeName(tree, "ponAbe3")
+		if orangutanNode == nil {
+			log.Fatalf("Didn't find ponAbe3 in the tree\n")
+		}
 	}
 	hgaNode = expandedTree.FindNodeName(tree, "hga")
 	if hgaNode == nil {
@@ -238,6 +285,7 @@ func main() {
 	var tree *string = flag.String("mle", "", "Filename for newick tree with branch lengths.  Must have the anticipated assembly names and the hca.")
 	var probThreshold *float64 = flag.Float64("probThreshold", 0.0, "The probability that a base other than human must pass to be considered a true change in the hca.")
 	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasProbThreshold", 0.0, "The summation of all bases (other than the biased species) must pass this threshold for a non-biased species base to be considered in the hca.")
+	var useGenericNames *bool = flag.Bool("useGenericNames", false, "Use generic names (human, bonobo, chimp, gorilla, orangutan) instead of assembly names (hg38, panPan2, panTro6, gorGor5, ponAbe3)")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -276,9 +324,9 @@ func main() {
 
 	if *mleHcaUnbiased || *mleHcaHumanBiased || *mleHcaChimpBiased {
 		// at this point we know that xor of the mleFlags is true, so we only pass mleHumanBiased and mleChimpBiased
-		primateReconHcaMle(inFile, *tree, *mleHcaHumanBiased, *mleHcaChimpBiased, *probThreshold, *nonBiasProbThreshold, outFile)
+		primateReconHcaMle(inFile, *tree, *mleHcaHumanBiased, *mleHcaChimpBiased, *probThreshold, *nonBiasProbThreshold, *useGenericNames, outFile)
 	} else if *mleHgaGorillaBiased {
-		primateReconHgaMle(inFile, *tree, *probThreshold, *nonBiasProbThreshold, outFile)
+		primateReconHgaMle(inFile, *tree, *probThreshold, *nonBiasProbThreshold, *useGenericNames, outFile)
 	} else {
 		primateRecon(inFile, outFile, *messyToN)
 	}

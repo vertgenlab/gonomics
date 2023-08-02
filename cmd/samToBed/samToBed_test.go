@@ -1,12 +1,10 @@
 package main
 
 import (
-	//"github.com/vertgenlab/gonomics/bed" //will only use when bed.AllAreEqual can accommodate comparing not just the first 3 fields in the future.
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var SamToBedTests = []struct {
@@ -25,8 +23,6 @@ func TestSamToBed(t *testing.T) {
 			t.Errorf("Error in samToBed")
 		}
 		err := os.Remove("outFile_tmp.bed")
-		if err != nil {
-			common.ExitIfError(err)
-		}
+		exception.PanicOnErr(err)
 	}
 }

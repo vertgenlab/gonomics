@@ -10,7 +10,7 @@ func ReverseComplement(record Fastq) {
 	ReverseQualUint8Record(record.Qual)
 }
 
-// ReverseComplementAll reverses each sequence and quality score for an input slice of Fastq records.
+// ReverseComplementAll reverse complements each sequence and reverses the quality scores for an input slice of Fastq records.
 func ReverseComplementAll(records []Fastq) {
 	for idx := range records {
 		ReverseComplement(records[idx])

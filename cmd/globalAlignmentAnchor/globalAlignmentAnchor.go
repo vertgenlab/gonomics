@@ -1,5 +1,6 @@
 // Command Group: "Linear Alignment Tools"
 
+// Operates on 2 species, takes alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)
 package main
 
 import (

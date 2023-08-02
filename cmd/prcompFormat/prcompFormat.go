@@ -1,5 +1,6 @@
 // Command Group: "Statistics & Population Genetics"
 
+// Generates a binary input matrix for PCA
 package main
 
 import (
