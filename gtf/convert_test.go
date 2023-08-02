@@ -90,7 +90,7 @@ func TestGenesToTssBed(t *testing.T) {
 	for _, v := range GenesToTssBedTests {
 		genes = Read(v.gFile)
 		c = chromInfo.ReadToMap(v.cFile)
-		answer = GenesToTssBed(genes, c)
+		answer = GenesToTssBed(genes, c, false)
 		bed.SortByCoord(answer)
 		bed.Write(v.outFile, answer)
 		if !fileio.AreEqual(v.outFile, v.expectedFile) {
