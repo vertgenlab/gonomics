@@ -411,7 +411,7 @@ func DescendentBaseExists(node *expandedTree.ETree, pos int) {
 // LoopNodes performs ancestral sequence reconstruction for all nodes of an input tree, specified by an input root node,
 // at a user-specified alignment position.
 // Options: the user may specify a 'biasLeafName'. When specified, the reconstruction of this sequence's immediate ancestor
-// will be biased towards that descendent. Teh degree of this bias is controlled by the option 'nonBiasBaseThreshold'.
+// will be biased towards that descendent. The degree of this bias is controlled by the option 'nonBiasBaseThreshold'.
 // The user may also specify a 'highestProbThreshold'. If the program is uncertain about ancestral reconstruction for a particular
 // node, this option will allow LoopNodes to return an 'N' for that node instead.
 func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64) {
@@ -425,6 +425,9 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 		if biasLeafNode == nil {
 			log.Fatalf("Didn't find %v in tree.\n", biasLeafName)
 		}
+		if biasLeafNode.Up == nil {
+			log.Fatalf("Error: Bias reconstruction node was specified as the root node.")
+		}
 		biasParentName = biasLeafNode.Up.Name
 	}
 
@@ -436,7 +439,7 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 		fix = FixFc(root, internalNodes[k])
 
 		if internalNodes[k].BasePresent {
-			if internalNodes[k].Name == biasParentName {
+			if biasParentName != "" && internalNodes[k].Name == biasParentName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
 			} else {
