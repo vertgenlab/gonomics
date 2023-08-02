@@ -2,23 +2,23 @@
 
 //TODO: Input-normalization.
 
+// Generate count matrix from single-cell sequencing data
 package main
 
 import (
 	"flag"
 	"fmt"
-	"io"
-	"log"
-	"sort"
-	"strings"
-
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
+	"io"
+	"log"
+	"sort"
+	"strings"
 )
 
 func scCount(s Settings) {
@@ -123,7 +123,7 @@ func parseNormMap(normFile string) map[string]float64 {
 		if len(words) != 2 {
 			log.Fatalf("Expression normalization input file must be a tab-separated file with two columns per line.")
 		}
-		normalizationMap[words[0]] = common.StringToFloat64(words[1])
+		normalizationMap[words[0]] = parse.StringToFloat64(words[1])
 	}
 	err = exp.Close()
 	exception.PanicOnErr(err)

@@ -1,5 +1,6 @@
 // Command Group: "Statistics & Population Genetics"
 
+// Returns values sampled from the probability distribution of the mean selection coefficient for a given set of bed regions
 package main
 
 import (

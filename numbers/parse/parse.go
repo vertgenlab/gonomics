@@ -1,4 +1,4 @@
-package common
+package parse
 
 import (
 	"log"
@@ -23,7 +23,7 @@ func StringToInt(s string) int {
 	return n
 }
 
-// StringToFloat64 parses a string into a float64 and will exit on error.
+// StringToFloat32 parses a string into a float32 and will exit on error.
 func StringToFloat32(s string) float32 {
 	n, err := strconv.ParseFloat(s, 32)
 	if err != nil {

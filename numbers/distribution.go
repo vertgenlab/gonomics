@@ -1,11 +1,10 @@
 package numbers
 
 import (
+	"github.com/vertgenlab/gonomics/numbers/logspace"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"math"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
 // NormalDist returns the normal distribution value x for a distribution with mean mu and standard deviation sigma.
@@ -124,14 +123,14 @@ func NormalAdaptiveIntegral(left string, right string, mu float64, sigma float64
 	if leftInf && rightInf {
 		return 1.0
 	} else if !leftInf && !rightInf {
-		l := common.StringToFloat64(left)
-		r := common.StringToFloat64(right)
+		l := parse.StringToFloat64(left)
+		r := parse.StringToFloat64(right)
 		//if l > mu+10*sigma || r < mu-10*sigma {
 		//	return DefiniteSmallIntegral(f, l, r)
 		//}
 		return DefiniteSmallIntegral(f, l, r)
 	} else if leftInf {
-		r := common.StringToFloat64(right)
+		r := parse.StringToFloat64(right)
 		if r > mu+6*sigma { //Romberg can fail if a large right tail is evaluated in this case. R returns 1.0 for normal values over 6.
 			return 1.0
 		}
@@ -144,7 +143,7 @@ func NormalAdaptiveIntegral(left string, right string, mu float64, sigma float64
 			return DefiniteSmallIntegral(f, r-10*sigma, r)
 		}
 	} else if rightInf {
-		l := common.StringToFloat64(left)
+		l := parse.StringToFloat64(left)
 		if l < mu-6*sigma {
 			return 1.0 //same as above
 		}

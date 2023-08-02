@@ -61,6 +61,10 @@ func insertMafBlockIntoFasta(aln []fasta.Fasta, m *Maf) []fasta.Fasta {
 	return aln
 }
 
+// ToFasta converts a slice of maf blocks to a multi-fasta alignment.
+// Along with the slice of maf blocks, it also needs the reference genome/chromosome
+// as an input and a slice of the other species/assemblies to include
+// in the multi-fasta output alignment
 func ToFasta(m []*Maf, ref fasta.Fasta, species []string) []fasta.Fasta {
 	if len(ref.Seq) != m[0].Species[0].SLine.SrcSize {
 		log.Fatalf("Error: ref seq supplied as fasta should match the length of the first seq in the first maf block\n")

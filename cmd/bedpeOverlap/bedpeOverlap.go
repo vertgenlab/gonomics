@@ -1,3 +1,6 @@
+// Command Group: "BED Tools"
+
+// Filters bedpe entries based on overlaps from the select file.
 package main
 
 import (
@@ -39,42 +42,6 @@ func overlapPercent(possOverlaps interval.Interval, halfBedPe bed.Bed) float64 {
 	answer = float64(overlapSize) / float64(halfBedPeEnd-halfBedPeStart)
 	return answer
 }
-
-// func overlapPercentBedPeSelect (leftSideA interval.Interval, leftSideB interval.Interval, rightSideA interval.Interval, rightSideB interval.Interval) float64 {
-//	var rightSideStartA int
-//	var rightSideEndA int
-//	var rightSideStartB int
-//	var rightSideEndB int
-//	var leftSideStartA int
-//	var leftSideEndA int
-//	var leftSideStartB int
-//	var leftSideEndB int
-//	var overlapSizeRight int
-//	var overlapSizeLeft int
-//	var overlapPercentLeft float64
-//	var overlapPercentRight float64
-//
-//	rightSideStartA = rightSideA.GetChromStart()
-//	rightSideEndA = rightSideA.GetChromEnd()
-//	rightSideStartB = rightSideB.GetChromStart()
-//	rightSideEndB = rightSideB.GetChromEnd()
-//
-//	leftSideStartA = leftSideA.GetChromStart()
-//	leftSideEndA = leftSideA.GetChromEnd()
-//	leftSideStartB = leftSideB.GetChromStart()
-//	leftSideEndB = leftSideB.GetChromEnd()
-//
-//	overlapSizeRight = lift.MatchOverlapLen(rightSideStartA, rightSideEndA, rightSideStartB, rightSideEndB)
-//
-//	overlapSizeLeft = lift.MatchOverlapLen(leftSideStartA, leftSideEndA, leftSideStartB, leftSideEndB)
-//
-//need to resolve this by integrating which is the select bedpe vs the in bedpe. in bedpe should be the denominator?
-//	overlapPercentRight = float64(overlapSizeRight) / float64()
-//	overlapPercentLeft = float64(overlapSizeRight) / float64()
-//
-//	return math.Min(overlapPercentRight, overlapPercentLeft)
-//}
-///
 
 // SelectIsBed checks for the case where the select file is a bed.
 // input bedpe entries are retained if either end overlaps one of the bedSelectFile entries.
@@ -129,6 +96,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 	exception.PanicOnErr(err)
 }
 
+// SelectIsBedBoth checks if any of the select files overlap either bedpe foot from the input and outputs the whole bedpe if there is overlap
 func SelectIsBedBoth(bedSelectFile string, bedpeInFile string, overlapThreshold float64, contactOutFile string) {
 	var selectIntervals = make([]interval.Interval, 0)
 	var aOverlaps []interval.Interval

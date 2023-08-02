@@ -22,6 +22,7 @@ func colTypeToRune(a ColType) rune {
 	}
 }
 
+// PrintCigar returns the slice of cigar operations as a human-readable string
 func PrintCigar(operations []Cigar) string {
 	var buffer bytes.Buffer
 	for _, curr := range operations {
@@ -31,6 +32,8 @@ func PrintCigar(operations []Cigar) string {
 	return buffer.String()
 }
 
+// View takes two sequences and a cigar describing their alignment and returns a
+// human-readable alignment of the two sequences.
 func View(alpha []dna.Base, beta []dna.Base, operations []Cigar) string {
 	var seqOne, seqTwo bytes.Buffer
 	var i, j int
@@ -56,6 +59,8 @@ func View(alpha []dna.Base, beta []dna.Base, operations []Cigar) string {
 	return seqOne.String() + "\n" + seqTwo.String() + "\n"
 }
 
+// LocalView returns a human-readable local alignment of two DNA sequences (alpha, beta)
+// given the cigar of that alignment and the last aligning base position in alpha.
 func LocalView(alpha []dna.Base, beta []dna.Base, operations []Cigar, maxI int64) string {
 	var seqOne, seqTwo bytes.Buffer
 	var i, j int

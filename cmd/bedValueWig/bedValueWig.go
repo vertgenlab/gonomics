@@ -1,5 +1,6 @@
 // Command Group: "BED Tools"
 
+// Returns bed file with entries annotated based on the values corresponding to the region in a wig file
 package main
 
 import (

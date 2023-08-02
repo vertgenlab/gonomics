@@ -1,6 +1,6 @@
 package wig
 
-// Smooth performs moving average smoothing on an input Wig struct using a user-specified windowSize.
+// Smooth performs moving average smoothing on an input Wig struct using a user-specified windowSize and a value that represents missing data in the Wig.
 func Smooth(w Wig, windowSize int, missing float64) Wig {
 	var j, k, midPoint int
 	var sum float64
@@ -30,7 +30,7 @@ func Smooth(w Wig, windowSize int, missing float64) Wig {
 	return answer
 }
 
-// SmoothSlice performs moving average smoothing on an input slice of Wig structs using a user-specified windowSize.
+// SmoothSlice performs moving average smoothing on an input slice of Wig structs using a user-specified windowSize and a value that represents missing data in the Wig.
 func SmoothSlice(w []Wig, windowSize int, missing float64) []Wig {
 	var answer = make([]Wig, len(w))
 	for i := range w {

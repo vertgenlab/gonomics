@@ -1,5 +1,6 @@
 // Command Group: "SAM Tools"
 
+// Calculates genome coverage as the quotient of aligned bases in a sequencing dataset to the total length of ungapped genomic regions in the reference genome
 package main
 
 import (

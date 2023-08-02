@@ -4,18 +4,6 @@ import (
 	"math"
 )
 
-/*
-func branchHeight(node *Tree) float64 {
-	if node == nil {
-		return 0
-	} else if node.OnlyTopology == true {
-		return 1
-	} else {
-		return node.BranchLength
-	}
-}
-*/
-
 func numLeaves(node *Tree) int {
 	if node == nil {
 		return 0
@@ -24,6 +12,7 @@ func numLeaves(node *Tree) int {
 	}
 }
 
+// Height returns the maximum cumulative branch length from the input tree node to a leaf node.
 func Height(node *Tree) float64 {
 	if node == nil {
 		return 0

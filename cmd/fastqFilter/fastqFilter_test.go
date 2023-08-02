@@ -1,12 +1,11 @@
 package main
 
 import (
-	"os"
-	"testing"
-
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"os"
+	"testing"
 )
 
 var FastqFilterTests = []struct {
@@ -73,21 +72,15 @@ func TestFastqFilter(t *testing.T) {
 				t.Errorf("Error in fastqFilter, paired reads, read 2.")
 			}
 			err = os.Remove(v.R1OutFile)
-			if err != nil {
-				common.ExitIfError(err)
-			}
+			exception.PanicOnErr(err)
 			err = os.Remove(v.R2OutFile)
-			if err != nil {
-				common.ExitIfError(err)
-			}
+			exception.PanicOnErr(err)
 		} else {
 			if !fileio.AreEqual(v.outputFile, v.expectedFile) {
 				t.Errorf("Error in fastqFilter, unpaired reads.")
 			}
 			err = os.Remove(v.outputFile)
-			if err != nil {
-				common.ExitIfError(err)
-			}
+			exception.PanicOnErr(err)
 		}
 	}
 }

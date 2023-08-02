@@ -17,6 +17,7 @@ func (a *AggregateInterval) GetChromEnd() int {
 	return a.end
 }
 
+// MergeIntervals takes a slice of type Interval and returns a slice of type Interval in which all overlapping entries have been merged together.
 func MergeIntervals(intervals []Interval) []Interval {
 	m := splitIntervalsByChr(intervals)
 	answer := make([]Interval, 0, len(intervals))

@@ -1,5 +1,6 @@
 // Command Group: "Sequence Evolution & Reconstruction"
 
+// Reconstruct ancient sequences using extant genomes and a newick tree with branch lengths
 package main
 
 import (

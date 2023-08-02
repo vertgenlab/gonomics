@@ -1,5 +1,6 @@
 // Command Group: "FASTQ Tools"
 
+// Options alter fastq file formatting
 package main
 
 import (

@@ -1,3 +1,6 @@
+// Command Group: "Deep Learning"
+
+// Converts a wig to a training, validation, and testing set for the GenomeSequenceConvNet
 package main
 
 import (

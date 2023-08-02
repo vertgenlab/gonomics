@@ -9,6 +9,9 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
+// FastqBig holds normal fastq info, as well as the reverse complement of the sequence
+// and two rainbow tables where every possible offset of Seq and SeqRc are stored
+// in TwoBit format.
 type FastqBig struct {
 	Name      string
 	Seq       []dna.Base
@@ -18,6 +21,7 @@ type FastqBig struct {
 	RainbowRc []dnaTwoBit.TwoBit
 }
 
+// ReadBigToChan reads a given fastq file into FastqBig structs and sends them into the provided channel.
 func ReadBigToChan(filename string, output chan<- FastqBig) {
 	var curr Fastq
 	var currBig FastqBig
@@ -31,6 +35,7 @@ func ReadBigToChan(filename string, output chan<- FastqBig) {
 	close(output)
 }
 
+// ToFastqBig converts a Fastq to FastqBig format.
 func ToFastqBig(a Fastq) FastqBig {
 	answer := FastqBig{}
 	answer.Name = a.Name

@@ -1,3 +1,6 @@
+// Command Group: "FASTA and Multi-FASTA Tools"
+
+// Pull unique sequences from a fasta file
 package main
 
 import (

@@ -1,15 +1,15 @@
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Pull sub-sequence from multiple Fasta alignment for each entry
 package main
 
 import (
 	"flag"
 	"fmt"
-	"log"
-
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/numbers/parse"
+	"log"
 )
 
 func multiFaExtract(s Settings) {
@@ -88,8 +88,8 @@ func main() {
 		s = Settings{
 			InFile:     flag.Arg(0),
 			OutFile:    flag.Arg(1),
-			Start:      common.StringToInt(flag.Arg(2)),
-			End:        common.StringToInt(flag.Arg(3)),
+			Start:      parse.StringToInt(flag.Arg(2)),
+			End:        parse.StringToInt(flag.Arg(3)),
 			Bed:        *bed,
 			RemoveGaps: *removeGaps,
 		}

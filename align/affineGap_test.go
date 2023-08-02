@@ -2,11 +2,10 @@ package align
 
 import (
 	"fmt"
-	"testing"
-
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
+	"testing"
 )
 
 var affineAlignTests = []struct {
@@ -113,7 +112,7 @@ func TestAffineScore(t *testing.T) {
 		aln := fasta.Read(test.filename)
 		//common.ExitIfError(err)
 		score, err := scoreAffineAln(aln[0], aln[1], DefaultScoreMatrix, -10, -1)
-		common.ExitIfError(err)
+		exception.FatalOnErr(err)
 		fmt.Printf("Score of alignment in %s is: %d\n", test.filename, score)
 	}
 }

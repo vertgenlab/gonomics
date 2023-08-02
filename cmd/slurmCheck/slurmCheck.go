@@ -1,3 +1,6 @@
+// Command Group: "General Tools"
+
+// Used to check for completion of SLURM job arrays (WIP). Takes in a 'fancy' version of a job array text file (modeled after PARASOL)
 package main
 
 import (
