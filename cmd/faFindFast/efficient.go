@@ -73,8 +73,10 @@ func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Ba
 	var gapOpenCloseRef, gapOpenQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base
 	var err error
 	var percentDiverged, rawPValue float64
-	var scorePValueCache map[int]float64 = make(map[int]float64) //for each score, we cache the RawPValue for performance
-	var foundInMap bool
+	var scorePValueCache map[int]float64
+	if divergenceRate != -1 {
+		scorePValueCache = binomialDistCacheLog10(windowSize, divergenceRate)
+	}
 
 	for lastAlnIdxOfWindow < len(reference) { // this check could also be "!done", I am not sure what is more clear
 		// we always move the lastBaseOfTheWindow (right side) and add on what we find to the counters because
@@ -111,10 +113,6 @@ func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Ba
 					if totalSubst+totalGaps > windowSize {
 						log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.")
 					}
-
-					if _, foundInMap = scorePValueCache[totalSubst+totalGaps]; !foundInMap {
-						scorePValueCache[totalSubst+totalGaps] = -1 * logspace.ToBase10(numbers.BinomialRightSummation(windowSize, totalSubst+totalGaps, divergenceRate, true))
-					}
 					rawPValue = scorePValueCache[totalSubst+totalGaps]
 					_, err = fmt.Fprintf(out, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", refChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, refChrName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
 					exception.PanicOnErr(err)
@@ -125,4 +123,26 @@ func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Ba
 			}
 		}
 	}
+}
+
+// binomialDistCacheLog10 generates a map of form map[int]float64 for a binomial distribution specified by parameters n and k.
+// map[k] returns a float64 representing -log10(BinomialDist(n, k, p, true)), or the -log10pValue.
+func binomialDistCacheLog10(n int, p float64) map[int]float64 {
+	if p < 0 || p > 1 {
+		log.Fatalf("Error: p must be a value between 0 and 1. Found: %v.\n", p)
+	}
+	var answer = make(map[int]float64)
+	answer[n] = numbers.BinomialDistLog(n, n, p)
+
+	for k := n - 1; k >= 0; k-- {
+		answer[k] = logspace.Add(numbers.BinomialDistLog(n, k, p), answer[k+1])
+	}
+
+	// now convert to -log10 space
+	for k := 0; k <= n; k++ {
+		answer[k] = -1 * logspace.ToBase10(answer[k])
+	}
+	answer[0] = 0 //hardcoded to avoid numerical noise
+
+	return answer
 }
