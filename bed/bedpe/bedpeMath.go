@@ -6,6 +6,8 @@ import (
 	"sort"
 )
 
+// this now will return an ordered slice for each of amplitude, mean and standard deviation, where each position
+// corresponds to the bin in the same order on the genome given from a straw file (see hic pakage) that has been turned into a bedpe
 func FindStats(in []BedPe) (x []float64, mu []float64, sigma []float64) {
 	var amp, mean, sd []float64
 	var s []bed.Bed
@@ -31,7 +33,6 @@ func FindStats(in []BedPe) (x []float64, mu []float64, sigma []float64) {
 	}
 
 	sort.Ints(keys)
-	//find mean sd and amplitude for each bin contacted by each bin
 	for k = range keys {
 		c = 0
 		dist = 0
@@ -45,9 +46,8 @@ func FindStats(in []BedPe) (x []float64, mu []float64, sigma []float64) {
 		mean = append(mean, dist/c)
 		sd = append(sd, calculateSd(mean[len(mean)-1], dists))
 		ampRelativePos = float64(matrix[k][n].ChromStart + k)
-		amp = append(amp, findAmplitude(matrix, keys, ampRelativePos, k))
+		amp = append(amp, findAmplitude(matrix, ampRelativePos, k))
 	}
-
 	return amp, mean, sd
 }
 
@@ -60,7 +60,7 @@ func calculateSd(mean float64, values []float64) float64 {
 	return sd
 }
 
-func findAmplitude(m map[int][]bed.Bed, orderedKeys []int, relativePos float64, thisBin int) float64 {
+func findAmplitude(m map[int][]bed.Bed, relativePos float64, thisBin int) float64 {
 	var answer float64
 
 	for i := range m[thisBin] {
