@@ -54,23 +54,31 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 	}
 }
 
-// parseBam takes in a cellranger bam and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
-func cellrangerBam(inSam string, outTable string, pb bool, normalize string) {
+// cellrangerBam takes in a cellranger bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
+func cellrangerBam(inSam string, outTable string, pb bool, normalize string, samOut bool) {
 	var k int = 0
-	var bit int32
 	var constructName, cellString, write string
 	var count float64
 	var found bool
+	var bit int32
+	var norm bool = false
 
-	ch, _ := sam.GoReadToChan(inSam)
+	if normalize != "" {
+		norm = true
+	}
+
+	ch, head := sam.GoReadToChan(inSam)
+
 	out := fileio.EasyCreate(outTable)
 
+	if samOut {
+		sam.WriteHeaderToFileHandle(out, head)
+	}
 	mp := make(map[string]float64)
 
 	for i := range ch {
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags
 		bit = num.(int32)
-
 		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count.
 			k++
 			construct, _, _ := sam.QueryTag(i, "GX") // gene associated with UMI
@@ -78,11 +86,14 @@ func cellrangerBam(inSam string, outTable string, pb bool, normalize string) {
 			cell, _, _ := sam.QueryTag(i, "CB") // cell associated with UMI
 			cellString = cell.(string)
 			write = fmt.Sprintf("%s\t%s", cellString, constructName)
-			if !pb {
+			if !pb && !samOut { //default behavior
 				fileio.WriteToFileHandle(out, write)
 				continue
+			} else if samOut { //write output as sam
+				sam.WriteToFileHandle(out, i)
+				continue
 			}
-
+			//pseudobulk
 			count, found = mp[constructName]
 			if !found {
 				mp[constructName] = 1
@@ -94,7 +105,7 @@ func cellrangerBam(inSam string, outTable string, pb bool, normalize string) {
 
 	fmt.Println("Found this many valid UMIs: ", k)
 
-	if normalize != "" {
+	if norm {
 		inputNormalize(mp, normalize)
 	}
 	if pb {
@@ -114,8 +125,10 @@ func usage() {
 }
 
 func main() {
-	var pseudobulk *bool = flag.Bool("pseudobulk", false, "Sum up all the UMI per constructs")
-	var normalize *string = flag.String("normalize", "", "Takes in a tab delimited table with construct name and input normalization value. Must be used with -pseudobulk")
+	var pseudobulk *bool = flag.Bool("pseudobulk", false, "Sum up all the UMI per constructs.")
+	var normalize *string = flag.String("normalize", "", "Takes in a tab delimited table with construct name and input normalization value. Must be used with -pseudobulk.")
+	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
+
 	var expectedNumArgs int = 2
 
 	flag.Usage = usage
@@ -124,6 +137,14 @@ func main() {
 
 	if !*pseudobulk && *normalize != "" {
 		log.Fatalf("Error: normalize must be used with pseudobulk.")
+	}
+
+	if *pseudobulk && *samOut {
+		log.Fatalf("Error: pseudobulk and samOut cannot be used together.")
+	}
+
+	if *normalize != "" && *samOut {
+		log.Fatalf("Error: normalize and samOut cannot be used together.")
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
@@ -135,5 +156,5 @@ func main() {
 	a := flag.Arg(0)
 	b := flag.Arg(1)
 
-	cellrangerBam(a, b, *pseudobulk, *normalize)
+	cellrangerBam(a, b, *pseudobulk, *normalize, *samOut)
 }
