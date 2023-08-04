@@ -51,6 +51,7 @@ func FindStats(in []BedPe) (x []float64, mu []float64, sigma []float64) {
 	return amp, mean, sd
 }
 
+// calculateSd will determine the standard deviation for a set of values
 func calculateSd(mean float64, values []float64) float64 {
 	var sd float64
 	for s := range values {
@@ -60,6 +61,7 @@ func calculateSd(mean float64, values []float64) float64 {
 	return sd
 }
 
+// findAmplitude will determine the score of the bedpe which contains the mean distance from thisBin
 func findAmplitude(m map[int][]bed.Bed, relativePos float64, thisBin int) float64 {
 	var answer float64
 
