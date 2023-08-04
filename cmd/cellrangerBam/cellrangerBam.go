@@ -18,22 +18,19 @@ func inputNormalize(mp map[string]float64, normalize string) {
 	var found bool
 	var columns []string
 
-	if normalize != "" {
-		inputNormValues := fileio.Read(normalize)
-		if len(inputNormValues) != len(mp) {
-			fmt.Println("The input normalization table doesn't have the same number of constructs as was found in the input bam.")
-			// trying to find the best way to throw an error if there is a raw count value that doesn't get normalized
+	inputNormValues := fileio.Read(normalize)
+	if len(inputNormValues) != len(mp) {
+		fmt.Println("The input normalization table doesn't have the same number of constructs as was found in the input bam.")
+		// trying to find the best way to throw an error if there is a raw count value that doesn't get normalized
+	}
+	for _, i := range inputNormValues {
+		columns = strings.Split(i, "\t")
+		total, found = mp[columns[0]]
+		if found {
+			mp[columns[0]] = total * parse.StringToFloat64(columns[1])
+		} else {
+			fmt.Println("Construct not found in map for normalization: ", columns[0])
 		}
-		for _, i := range inputNormValues {
-			columns = strings.Split(i, "\t")
-			total, found = mp[columns[0]]
-			if found {
-				mp[columns[0]] = total * parse.StringToFloat64(columns[1])
-			} else {
-				fmt.Println("Construct not found in map for normalization: ", columns[0])
-			}
-		}
-
 	}
 }
 
@@ -55,12 +52,12 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 }
 
 // cellrangerBam takes in a cellranger bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
-func cellrangerBam(inSam string, outTable string, pb bool, normalize string, samOut bool) {
+func cellrangerBam(inSam string, outTable string, byCell bool, normalize string, samOut bool) {
 	var k int = 0
 	var constructName, cellString, write string
 	var count float64
 	var found bool
-	var bit int32
+	var bit uint8
 	var norm bool = false
 
 	if normalize != "" {
@@ -78,22 +75,22 @@ func cellrangerBam(inSam string, outTable string, pb bool, normalize string, sam
 
 	for i := range ch {
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags
-		bit = num.(int32)
+		bit = num.(uint8)
 		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count.
 			k++
 			construct, _, _ := sam.QueryTag(i, "GX") // gene associated with UMI
 			constructName = construct.(string)
-			cell, _, _ := sam.QueryTag(i, "CB") // cell associated with UMI
-			cellString = cell.(string)
-			write = fmt.Sprintf("%s\t%s", cellString, constructName)
-			if !pb && !samOut { //default behavior
+			if byCell { //byCell
+				cell, _, _ := sam.QueryTag(i, "CB") // cell associated with UMI
+				cellString = cell.(string)
+				write = fmt.Sprintf("%s\t%s", cellString, constructName)
 				fileio.WriteToFileHandle(out, write)
 				continue
 			} else if samOut { //write output as sam
 				sam.WriteToFileHandle(out, i)
 				continue
 			}
-			//pseudobulk
+			//pseudobulk, default behavior
 			count, found = mp[constructName]
 			if !found {
 				mp[constructName] = 1
@@ -102,15 +99,11 @@ func cellrangerBam(inSam string, outTable string, pb bool, normalize string, sam
 			}
 		}
 	}
-
 	fmt.Println("Found this many valid UMIs: ", k)
-
 	if norm {
 		inputNormalize(mp, normalize)
 	}
-	if pb {
-		writeMap(mp, out)
-	}
+	writeMap(mp, out)
 
 	err := out.Close()
 	exception.PanicOnErr(err)
@@ -118,7 +111,7 @@ func cellrangerBam(inSam string, outTable string, pb bool, normalize string, sam
 
 func usage() {
 	fmt.Print("cellrangerBam -- Takes in a cellranger bam file of STARR-seq reads and parses the extra flags field to pull out the" +
-		"representative read for each UMI and which construct it belongs to. It will also report the cell which it was found in.\n" +
+		"representative read for each UMI and which construct it belongs to. The output is a tab-delimited table of read-counts for each constructs.\n" +
 		"NOTE: This function works best with STARR-seq libraries where constructs don't have much similarity with each other.\n" +
 		"For libraries that need barcoding (like GWAS or cross-species comparisons) it is best practice to use samFilter and scCount" +
 		"with a GTF corresponding to construct barcodes. \n" +
@@ -128,7 +121,7 @@ func usage() {
 }
 
 func main() {
-	var pseudobulk *bool = flag.Bool("pseudobulk", false, "Sum up all the UMI per constructs.")
+	var byCell *bool = flag.Bool("byCell", false, "Will report the construct that each UMI belongs to and which cell in which it was found in a tab-delimited table.")
 	var normalize *string = flag.String("normalize", "", "Takes in a tab delimited table with construct name and input normalization value. Must be used with -pseudobulk.")
 	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
 
@@ -138,12 +131,12 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-	if !*pseudobulk && *normalize != "" {
-		log.Fatalf("Error: normalize must be used with pseudobulk.")
+	if *byCell && *normalize != "" {
+		log.Fatalf("Error: byCell and normalize cannot be used together.")
 	}
 
-	if *pseudobulk && *samOut {
-		log.Fatalf("Error: pseudobulk and samOut cannot be used together.")
+	if *byCell && *samOut {
+		log.Fatalf("Error: byCell and samOut cannot be used together.")
 	}
 
 	if *normalize != "" && *samOut {
@@ -159,5 +152,5 @@ func main() {
 	a := flag.Arg(0)
 	b := flag.Arg(1)
 
-	cellrangerBam(a, b, *pseudobulk, *normalize, *samOut)
+	cellrangerBam(a, b, *byCell, *normalize, *samOut)
 }
