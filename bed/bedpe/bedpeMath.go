@@ -4,7 +4,6 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"log"
 	"math"
-	"sort"
 )
 
 //TODO:maybe to do the whole chrom at once I find the mode of the start positions and then calculate just for that spot?
@@ -18,24 +17,25 @@ func FindStats(in []BedPe) (x []float64, mu []float64, sigma []float64) {
 	var i, n, k int
 	var keys []int
 	var dist, c, ampRelativePos float64
-	var matrix map[int][]bed.Bed //chrom start of bin1 to []bed corresponds to all data in bedpe.B
+	matrix := make(map[int][]bed.Bed, 0) //chrom start of bin1 to []bed corresponds to all data in bedpe.B
 
 	for i = range in {
 		s, ok = matrix[in[i].A.ChromStart]
 		if !ok {
-			s = append(s, in[i].B)
+			matrix[in[i].A.ChromStart] = append(matrix[in[i].A.ChromStart], in[i].B)
 			keys = append(keys, in[i].A.ChromStart)
 		} else {
 			for b := range s {
 				if s[b].ChromStart == in[i].B.ChromStart {
 					s[b].Score += in[i].B.Score
+				} else {
+					matrix[in[i].A.ChromStart] = append(matrix[in[i].A.ChromStart], in[i].B)
 				}
 			}
 		}
 	}
 
-	sort.Ints(keys)
-	for k = range keys {
+	for _, k = range keys {
 		c = 0
 		dist = 0
 		var dists []float64
@@ -72,8 +72,12 @@ func findAmplitude(m map[int][]bed.Bed, relativePos float64, thisBin int) float6
 	var answer float64
 
 	for i := range m[thisBin] {
-		if thisBin-m[thisBin][i].ChromStart <= int(relativePos) && int(relativePos) <= thisBin-m[thisBin][i+1].ChromStart {
+		if i == len(m[thisBin])-1 {
 			return float64(m[thisBin][i].Score)
+		} else {
+			if thisBin-m[thisBin][i].ChromStart <= int(relativePos) && int(relativePos) <= thisBin-m[thisBin][i+1].ChromStart {
+				return float64(m[thisBin][i].Score)
+			}
 		}
 	}
 
