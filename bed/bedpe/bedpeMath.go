@@ -2,9 +2,12 @@ package bedpe
 
 import (
 	"github.com/vertgenlab/gonomics/bed"
+	"log"
 	"math"
 	"sort"
 )
+
+//TODO:maybe to do the whole chrom at once I find the mode of the start positions and then calculate just for that spot?
 
 // FindStats will return an ordered slice for each of amplitude, mean and standard deviation, where each position
 // corresponds to the bin in the same order on the genome given from a straw file (see hic package) that has been turned into a bedpe
@@ -16,7 +19,6 @@ func FindStats(in []BedPe) (x []float64, mu []float64, sigma []float64) {
 	var keys []int
 	var dist, c, ampRelativePos float64
 	var matrix map[int][]bed.Bed //chrom start of bin1 to []bed corresponds to all data in bedpe.B
-	SortByCoord(in)
 
 	for i = range in {
 		s, ok = matrix[in[i].A.ChromStart]
@@ -38,16 +40,20 @@ func FindStats(in []BedPe) (x []float64, mu []float64, sigma []float64) {
 		dist = 0
 		var dists []float64
 		for n = range matrix[k] {
-			//score += float64(matrix[k][n].Score)
 			dist = float64(matrix[k][n].ChromStart-k) * float64(matrix[k][n].Score)
 			dists = append(dists, dist)
-			c += float64(matrix[k][n].Score) //number of contacts for denominator to mean
+			c += float64(matrix[k][n].Score) //number of contacts for denominator of mean calculation
 		}
 		mean = append(mean, dist/c)
 		sd = append(sd, calculateSd(mean[len(mean)-1], dists))
 		ampRelativePos = float64(matrix[k][n].ChromStart + k)
 		amp = append(amp, findAmplitude(matrix, ampRelativePos, k))
 	}
+
+	if len(amp) != len(mean) || len(amp) != len(sd) || len(mean) != len(sd) || len(mean) != len(keys) {
+		log.Fatalf("Amplitude, mean or standard deviation are not of the correct length.\n amp=%v \n mu=%v \n sd =%v\n All Should be length=%v", len(amp), len(mean), len(sd), len(keys))
+	}
+
 	return amp, mean, sd
 }
 

@@ -1,6 +1,7 @@
 package bedpe
 
 import (
+	"os"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/bed"
@@ -24,7 +25,7 @@ func TestEqual(t *testing.T) {
 	for _, v := range EqualTests {
 		actual = Equal(v.a, v.b)
 		if actual != v.Expected {
-			t.Errorf("ERror in bedPe package Equal function.")
+			t.Errorf("Error in bedPe package Equal function.")
 		}
 	}
 }
@@ -47,4 +48,19 @@ func TestAllAreEqual(t *testing.T) {
 			t.Errorf("Error in bedPe package AllAreEqual function.")
 		}
 	}
+}
+
+func TestSortByCoord(t *testing.T) {
+	recs := Read("testdata/sortTest.bedpe")
+	SortByCoord(recs)
+	Write("testdata/tmp.sortOut.bedpe", recs)
+	expected := Read("testdata/expectedSort.bedpe")
+	results := Read("testdata/tmp.sortOut.bedpe")
+
+	if !AllAreEqual(expected, results) {
+		t.Errorf("Error: sort was not successful.")
+	} else {
+		os.Remove("testdata/tmp.sortOut.bedpe")
+	}
+
 }
