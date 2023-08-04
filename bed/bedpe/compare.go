@@ -2,6 +2,8 @@ package bedpe
 
 import (
 	"github.com/vertgenlab/gonomics/bed"
+	"sort"
+	"strings"
 )
 
 func AllAreEqual(a []BedPe, b []BedPe) bool {
@@ -25,4 +27,30 @@ func Equal(a BedPe, b BedPe) bool {
 		return false
 	}
 	return true
+}
+
+// SortByCoord will return a bedpe sorted by the A half
+func SortByCoord(bedpeFile []BedPe) {
+	sort.Slice(bedpeFile, func(i, j int) bool { return Compare(bedpeFile[i], bedpeFile[j]) == -1 })
+}
+
+// Compare returns zero for equal BedPes and otherwise returns the ordering of the two BedPe entries. Used for SortByCoord.
+func Compare(one BedPe, two BedPe) int {
+	chromComp := strings.Compare(one.A.Chrom, two.A.Chrom)
+	if chromComp != 0 {
+		return chromComp
+	}
+	if one.A.ChromStart < two.A.ChromStart {
+		return -1
+	}
+	if one.A.ChromStart > two.A.ChromStart {
+		return 1
+	}
+	if one.A.ChromEnd < two.A.ChromEnd {
+		return -1
+	}
+	if one.A.ChromEnd > two.A.ChromEnd {
+		return 1
+	}
+	return 0
 }

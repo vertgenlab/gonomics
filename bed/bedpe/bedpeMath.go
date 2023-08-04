@@ -6,8 +6,8 @@ import (
 	"sort"
 )
 
-// this now will return an ordered slice for each of amplitude, mean and standard deviation, where each position
-// corresponds to the bin in the same order on the genome given from a straw file (see hic pakage) that has been turned into a bedpe
+// FindStats will return an ordered slice for each of amplitude, mean and standard deviation, where each position
+// corresponds to the bin in the same order on the genome given from a straw file (see hic package) that has been turned into a bedpe
 func FindStats(in []BedPe) (x []float64, mu []float64, sigma []float64) {
 	var amp, mean, sd []float64
 	var s []bed.Bed
@@ -15,8 +15,8 @@ func FindStats(in []BedPe) (x []float64, mu []float64, sigma []float64) {
 	var i, n, k int
 	var keys []int
 	var dist, c, ampRelativePos float64
-	var matrix map[int][]bed.Bed //chrom start of bin to []bed
-	//TODO: sort bedpe by start of bed A
+	var matrix map[int][]bed.Bed //chrom start of bin1 to []bed corresponds to all data in bedpe.B
+	SortByCoord(in)
 
 	for i = range in {
 		s, ok = matrix[in[i].A.ChromStart]
