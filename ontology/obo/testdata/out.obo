@@ -1,0 +1,220 @@
+format-version: 1.2
+data-version: releases/2023-07-27
+subsetdef: chebi_ph7_3 "Rhea list of ChEBI terms representing the major species at pH 7.3."
+subsetdef: gocheck_do_not_annotate "Term not to be used for direct annotation"
+subsetdef: gocheck_do_not_manually_annotate "Term not to be used for direct manual annotation"
+subsetdef: goslim_agr "AGR slim"
+subsetdef: goslim_aspergillus "Aspergillus GO slim"
+subsetdef: goslim_candida "Candida GO slim"
+subsetdef: goslim_chembl "ChEMBL protein targets summary"
+subsetdef: goslim_drosophila "Drosophila GO slim"
+subsetdef: goslim_flybase_ribbon "FlyBase Drosophila GO ribbon slim"
+subsetdef: goslim_generic "Generic GO slim"
+subsetdef: goslim_metagenomics "Metagenomics GO slim"
+subsetdef: goslim_mouse "Mouse GO slim"
+subsetdef: goslim_pir "PIR GO slim"
+subsetdef: goslim_plant "Plant GO slim"
+subsetdef: goslim_pombe "Fission yeast GO slim"
+subsetdef: goslim_synapse "synapse GO slim"
+subsetdef: goslim_yeast "Yeast GO slim"
+subsetdef: prokaryote_subset "GO subset for prokaryotes"
+synonymtypedef: syngo_official_label "label approved by the SynGO project"
+synonymtypedef: systematic_synonym "Systematic synonym" EXACT
+default-namespace: gene_ontology
+ontology: go
+property_value: has_ontology_root_term GO:0003674
+property_value: has_ontology_root_term GO:0005575
+property_value: has_ontology_root_term GO:0008150
+property_value: http://purl.org/dc/elements/1.1/description "The Gene Ontology (GO) provides a framework and set of concepts for describing the functions of gene products from all organisms." xsd:string
+property_value: http://purl.org/dc/elements/1.1/title "Gene Ontology" xsd:string
+property_value: http://purl.org/dc/terms/license http://creativecommons.org/licenses/by/4.0/
+property_value: owl:versionInfo "2023-07-27" xsd:string
+
+[Term]
+id: GO:0000001
+name: mitochondrion inheritance
+namespace: biological_process
+def: "The distribution of mitochondria, including the mitochondrial genome, into daughter cells after mitosis or meiosis, mediated by interactions between mitochondria and the cytoskeleton." [GOC:mcc, PMID:10873824, PMID:11389764]
+is_a: GO:0048308 ! organelle inheritance
+is_a: GO:0048311 ! mitochondrion distribution
+synonym: "mitochondrial inheritance" EXACT []
+
+[Term]
+id: GO:0000002
+name: mitochondrial genome maintenance
+namespace: biological_process
+def: "The maintenance of the structure and integrity of the mitochondrial genome; includes replication and segregation of the mitochondrial chromosome." [GOC:ai, GOC:vw]
+is_a: GO:0007005 ! mitochondrion organization
+
+[Term]
+id: GO:0000003
+name: reproduction
+namespace: biological_process
+def: "The production of new individuals that contain some portion of genetic material inherited from one or more parent organisms." [GOC:go_curators, GOC:isa_complete, GOC:jl, ISBN:0198506732]
+is_a: GO:0008150 ! biological_process
+synonym: "reproductive physiological process" EXACT []
+xref: Wikipedia:Reproduction
+alt_id: GO:0019952
+alt_id: GO:0050876
+subset: goslim_agr
+subset: goslim_chembl
+subset: goslim_flybase_ribbon
+subset: goslim_pir
+subset: goslim_plant
+disjoint_from: GO:0044848 ! biological phase
+
+[Term]
+id: GO:0000005
+name: obsolete ribosomal chaperone activity
+namespace: molecular_function
+def: "OBSOLETE. Assists in the correct assembly of ribosomes or ribosomal subunits in vivo, but is not a component of the assembled ribosome when performing its normal biological function." [GOC:jl, PMID:12150913]
+is_obsolete: true
+synonym: "ribosomal chaperone activity" EXACT []
+comment: This term was made obsolete because it refers to a class of gene products and a biological process rather than a molecular function.
+consider: GO:0042254
+consider: GO:0044183
+consider: GO:0051082
+
+[Term]
+id: GO:0000006
+name: high-affinity zinc transmembrane transporter activity
+namespace: molecular_function
+def: "Enables the transfer of zinc ions (Zn2+) from one side of a membrane to the other, probably powered by proton motive force. In high-affinity transport the transporter is able to bind the solute even if it is only present at very low concentrations." [TC:2.A.5.1.1]
+is_a: GO:0005385 ! zinc ion transmembrane transporter activity
+synonym: "high affinity zinc uptake transmembrane transporter activity" EXACT []
+synonym: "high-affinity zinc uptake transmembrane transporter activity" RELATED []
+
+[Term]
+id: GO:0000007
+name: low-affinity zinc ion transmembrane transporter activity
+namespace: molecular_function
+def: "Enables the transfer of a solute or solutes from one side of a membrane to the other according to the reaction
+is_a: GO:0005385 ! zinc ion transmembrane transporter activity
+
+[Term]
+id: GO:0000008
+name: obsolete thioredoxin
+namespace: molecular_function
+def: "OBSOLETE. A small disulfide-containing redox protein that serves as a general protein disulfide oxidoreductase. Interacts with a broad range of proteins by a redox mechanism, based on the reversible oxidation of 2 cysteine thiol groups to a disulfide, accompanied by the transfer of 2 electrons and 2 protons. The net result is the covalent interconversion of a disulfide and a dithiol." [GOC:kd]
+is_obsolete: true
+synonym: "thioredoxin" EXACT []
+alt_id: GO:0000013
+comment: This term was made obsolete because it represents gene products.
+consider: GO:0003756
+consider: GO:0015036
+
+[Term]
+id: GO:0000009
+name: alpha-1,6-mannosyltransferase activity
+namespace: molecular_function
+def: "Catalysis of the transfer of a mannose residue to an oligosaccharide, forming an alpha-(1->6) linkage." [GOC:mcc, PMID:2644248]
+is_a: GO:0000030 ! mannosyltransferase activity
+synonym: "1,6-alpha-mannosyltransferase activity" EXACT []
+xref: Reactome:R-HSA-449718 "Addition of a third mannose to the N-glycan precursor by ALG2"
+property_value: term_tracker_item https://github.com/geneontology/go-ontology/issues/19075 xsd:anyURI
+
+[Term]
+id: GO:0000010
+name: trans-hexaprenyltranstransferase activity
+namespace: molecular_function
+def: "Catalysis of the reaction
+is_a: GO:0004659 ! prenyltransferase activity
+synonym: "all-trans-heptaprenyl-diphosphate synthase activity" RELATED [EC:2.5.1.30]
+synonym: "HepPP synthase activity" RELATED [EC:2.5.1.30]
+synonym: "heptaprenyl diphosphate synthase activity" RELATED []
+synonym: "heptaprenyl pyrophosphate synthase activity" RELATED [EC:2.5.1.30]
+synonym: "heptaprenyl pyrophosphate synthetase activity" RELATED [EC:2.5.1.30]
+xref: EC:2.5.1.30
+xref: MetaCyc:TRANS-HEXAPRENYLTRANSTRANSFERASE-RXN
+xref: RHEA:27794
+alt_id: GO:0036422
+property_value: term_tracker_item https://github.com/geneontology/go-ontology/issues/23472 xsd:anyURI
+created_by: bf
+creation_date: 2013-09-16T11:50:41Z
+
+[Term]
+id: GO:0000011
+name: vacuole inheritance
+namespace: biological_process
+def: "The distribution of vacuoles into daughter cells after mitosis or meiosis, mediated by interactions between vacuoles and the cytoskeleton." [GOC:mcc, PMID:10873824, PMID:14616069]
+is_a: GO:0007033 ! vacuole organization
+is_a: GO:0048308 ! organelle inheritance
+property_value: RO:0002161 NCBITaxon:4896
+
+[Term]
+id: GO:0000012
+name: single strand break repair
+namespace: biological_process
+def: "The repair of single strand breaks in DNA. Repair of such breaks is mediated by the same enzyme systems as are used in base excision repair." [PMID:18626472]
+is_a: GO:0006281 ! DNA repair
+
+[Term]
+id: GO:0000014
+name: single-stranded DNA endodeoxyribonuclease activity
+namespace: molecular_function
+def: "Catalysis of the hydrolysis of ester linkages within a single-stranded deoxyribonucleic acid molecule by creating internal breaks." [GOC:mah]
+is_a: GO:0004520 ! DNA endonuclease activity
+synonym: "single-stranded DNA specific endodeoxyribonuclease activity" RELATED []
+synonym: "ssDNA-specific endodeoxyribonuclease activity" RELATED [GOC:mah]
+
+[Term]
+id: GO:0000015
+name: phosphopyruvate hydratase complex
+namespace: cellular_component
+def: "A multimeric enzyme complex, usually a dimer or an octamer, that catalyzes the conversion of 2-phospho-D-glycerate to phosphoenolpyruvate and water." [GOC:jl, ISBN:0198506732]
+is_a: GO:1902494 ! catalytic complex
+synonym: "enolase complex" EXACT []
+relationship: part_of GO:0005829 ! cytosol
+subset: goslim_metagenomics
+
+[Term]
+id: GO:0000016
+name: lactase activity
+namespace: molecular_function
+def: "Catalysis of the reaction
+is_a: GO:0004553 ! hydrolase activity, hydrolyzing O-glycosyl compounds
+synonym: "lactose galactohydrolase activity" EXACT []
+xref: EC:3.2.1.108
+xref: MetaCyc:LACTASE-RXN
+xref: Reactome:R-HSA-189062 "lactose + H2O => D-glucose + D-galactose"
+xref: Reactome:R-HSA-5658001 "Defective LCT does not hydrolyze Lac"
+xref: RHEA:10076
+
+[Term]
+id: GO:0000017
+name: alpha-glucoside transport
+namespace: biological_process
+def: "The directed movement of alpha-glucosides into, out of or within a cell, or between cells, by means of some agent such as a transporter or pore. Alpha-glucosides are glycosides in which the sugar group is a glucose residue, and the anomeric carbon of the bond is in an alpha configuration." [GOC:jl, ISBN:0198506732, PMID:9919658]
+is_a: GO:0042946 ! glucoside transport
+
+[Term]
+id: GO:0000018
+name: regulation of DNA recombination
+namespace: biological_process
+def: "Any process that modulates the frequency, rate or extent of DNA recombination, a DNA metabolic process in which a new genotype is formed by reassortment of genes resulting in gene combinations different from those that were present in the parents." [GOC:go_curators, ISBN:0198506732]
+is_a: GO:0051052 ! regulation of DNA metabolic process
+relationship: regulates GO:0006310 ! DNA recombination
+intersection_of: GO:0065007 ! biological regulation
+intersection_of: regulates GO:0006310 ! DNA recombination
+
+[Term]
+id: GO:0000019
+name: regulation of mitotic recombination
+namespace: biological_process
+def: "Any process that modulates the frequency, rate or extent of DNA recombination during mitosis." [GOC:go_curators]
+is_a: GO:0000018 ! regulation of DNA recombination
+synonym: "regulation of recombination within rDNA repeats" NARROW []
+relationship: regulates GO:0006312 ! mitotic recombination
+intersection_of: GO:0065007 ! biological regulation
+intersection_of: regulates GO:0006312 ! mitotic recombination
+
+[Term]
+id: GO:0000020
+name: obsolete negative regulation of recombination within rDNA repeats
+namespace: biological_process
+def: "OBSOLETE. Any process that stops, prevents, or reduces the frequency, rate or extent of genetic recombination within the DNA of the genes coding for ribosomal RNA." [GOC:go_curators, ISBN:0198506732]
+is_obsolete: true
+synonym: "negative regulation of recombination within rDNA repeats" EXACT []
+comment: This term was made obsolete because it describes a substrate-specific process.
+consider: GO:0045950
+
