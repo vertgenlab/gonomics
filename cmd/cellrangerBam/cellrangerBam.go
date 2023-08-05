@@ -12,6 +12,55 @@ import (
 	"strings"
 )
 
+// singleCellAnalysis will create a count for each construct in each cell type. This function takes
+func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstructs []string, normalize string, writer *fileio.EasyWriter) {
+	var found, found2 bool
+	var cellType, j, m, cluster string
+	var count float64
+	var outMatrix, columns, columns2 []string
+
+	cellTypeMap := make(map[string]string) // [cellBarcode]cellType
+	allCellTypes := make(map[string]int)   // [cellType]placeholderInt
+
+	cto := fileio.Read(cellTypeInfo) // read in the tab delimited file with cell and cell type info
+	for _, i := range cto {          //make a map where the cell barcode is the key and the cell type is the value
+		columns = strings.Split(i, "\t")
+		cellTypeMap[columns[0]] = columns[1]
+		_, found2 = allCellTypes[columns[1]] // also make a map that contains a list of all cell types
+		if !found2 {
+			allCellTypes[columns[1]] = 1
+		}
+	}
+	for cellType = range allCellTypes { //loop over the list of cell types
+		var a int = 0
+		singleCellTypeMap := make(map[string]float64) // make a map which will hold the construct counts for the current cell type ([construct]counts)
+		for _, j = range allConstructs {              // loop over all construct that were found in the bam file to make every construct start at 0 reads
+			singleCellTypeMap[j] = 0
+		}
+		for _, i := range cellTypeSlice { //loop over the slice created in cellrangerBam() that that contains: cellBarcode \t construct
+			columns2 = strings.Split(i, "\t")
+			cluster, found = cellTypeMap[columns2[0]] //search for that cell barcode in the cellType map
+			if found && cluster == cellType {         // if that cell is found and the cell type in the map matches the cell type we are looping through, search for the construct corresponding with that cellBarcode in the singleCellCount map and add one to the value
+				count, _ = singleCellTypeMap[columns2[1]]
+				singleCellTypeMap[columns2[1]] = count + 1
+				a++
+			}
+		}
+		if normalize != "" { // normalize the singleCellCount map if needed
+			inputNormalize(singleCellTypeMap, normalize)
+		}
+		for m = range singleCellTypeMap { // write out the results from that cell type
+			write := fmt.Sprintf("%s\t%s\t%f", cellType, m, singleCellTypeMap[m]) //cell type \t construct \t count
+			outMatrix = append(outMatrix, write)
+		}
+		fmt.Println(fmt.Sprintf("Found %d raw counts in the cell type: %s", a, cellType))
+	}
+	sort.Strings(outMatrix)       //sort the slice before writing
+	for _, i := range outMatrix { //once all cell types have been looped through, write out the total count matrix
+		fileio.WriteToFileHandle(writer, i)
+	}
+}
+
 // inputNormalize takes in the psuedobulk map and an input normalization table and normalizes all the raw count values in the map
 func inputNormalize(mp map[string]float64, normalize string) {
 	var total float64
@@ -23,7 +72,7 @@ func inputNormalize(mp map[string]float64, normalize string) {
 		fmt.Println("The input normalization table doesn't have the same number of constructs as was found in the input bam.")
 		// trying to find the best way to throw an error if there is a raw count value that doesn't get normalized
 	}
-	for _, i := range inputNormValues {
+	for _, i := range inputNormValues { //iterate over the table with input normalization values and use those to edit the counts in the map
 		columns = strings.Split(i, "\t")
 		total, found = mp[columns[0]]
 		if found {
@@ -45,23 +94,27 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 		writeSlice = append(writeSlice, write)
 	}
 	sort.Strings(writeSlice)
-
 	for _, i := range writeSlice {
 		fileio.WriteToFileHandle(writer, i)
 	}
 }
 
 // cellrangerBam takes in a cellranger bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
-func cellrangerBam(inSam string, outTable string, byCell bool, normalize string, samOut bool) {
+func cellrangerBam(inSam string, outTable string, byCell bool, normalize string, samOut bool, cellTypeAnalysis string) {
 	var k int = 0
-	var constructName, cellString, write string
+	var constructName, cellString, cellByConstructName string
 	var count float64
 	var found bool
-	var bit uint8
+	var bit int32
 	var norm bool = false
+	var sc bool = false
+	var allConstructs, cellTypeSlice []string
 
-	if normalize != "" {
+	if normalize != "" { //create a bool for normalize
 		norm = true
+	}
+	if cellTypeAnalysis != "" { //create a bool for cellTypeAnalysis
+		sc = true
 	}
 
 	ch, head := sam.GoReadToChan(inSam)
@@ -71,39 +124,51 @@ func cellrangerBam(inSam string, outTable string, byCell bool, normalize string,
 	if samOut {
 		sam.WriteHeaderToFileHandle(out, head)
 	}
-	mp := make(map[string]float64)
 
-	for i := range ch {
-		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags
-		bit = num.(uint8)
-		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count.
+	pseudobulkMap := make(map[string]float64)
+
+	for i := range ch { //interate of over the chanel of sam.Sam
+		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
+		bit = num.(int32)
+		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count (I call these "valid" UMIs.
 			k++
-			construct, _, _ := sam.QueryTag(i, "GX") // gene associated with UMI
+			construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
 			constructName = construct.(string)
-			if byCell { //byCell
-				cell, _, _ := sam.QueryTag(i, "CB") // cell associated with UMI
+			if byCell || sc { //byCell or singleCellAnalysis
+				cell, _, _ := sam.QueryTag(i, "CB") // get the cell barcode associated with valid UMI
 				cellString = cell.(string)
-				write = fmt.Sprintf("%s\t%s", cellString, constructName)
-				fileio.WriteToFileHandle(out, write)
+				cellByConstructName = fmt.Sprintf("%s\t%s", cellString, constructName) //list of all construct reads and what cell barcodes they belong to
+				if byCell {                                                            //if you only want to print out the construct and the cell it was found in
+					fileio.WriteToFileHandle(out, cellByConstructName)
+				}
+				if sc { //get some data for the singleCellAnalysis function
+					allConstructs = append(allConstructs, constructName) //list of all constructs found in the bam
+					cellTypeSlice = append(cellTypeSlice, cellByConstructName)
+				}
 				continue
 			} else if samOut { //write output as sam
 				sam.WriteToFileHandle(out, i)
 				continue
 			}
-			//pseudobulk, default behavior
-			count, found = mp[constructName]
+			//pseudobulk, default behavior. Use a map with thats [constructName]rawCount to add up reads per construct
+			count, found = pseudobulkMap[constructName]
 			if !found {
-				mp[constructName] = 1
+				pseudobulkMap[constructName] = 1
 			} else {
-				mp[constructName] = count + 1
+				pseudobulkMap[constructName] = count + 1
 			}
 		}
 	}
 	fmt.Println("Found this many valid UMIs: ", k)
-	if norm {
-		inputNormalize(mp, normalize)
+	if sc { //singleCellAnalysis, handles all the writing as well
+		singleCellAnalysis(cellTypeSlice, cellTypeAnalysis, allConstructs, normalize, out)
 	}
-	writeMap(mp, out)
+	if norm && !sc { //normalize pseudobulk
+		inputNormalize(pseudobulkMap, normalize)
+	}
+	if !sc { //write out pseudobulk
+		writeMap(pseudobulkMap, out)
+	}
 
 	err := out.Close()
 	exception.PanicOnErr(err)
@@ -124,6 +189,7 @@ func main() {
 	var byCell *bool = flag.Bool("byCell", false, "Will report the construct that each UMI belongs to and which cell in which it was found in a tab-delimited table.")
 	var normalize *string = flag.String("normalize", "", "Takes in a tab delimited table with construct name and input normalization value. Must be used with -pseudobulk.")
 	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
+	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
 
 	var expectedNumArgs int = 2
 
@@ -131,16 +197,16 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-	if *byCell && *normalize != "" {
-		log.Fatalf("Error: byCell and normalize cannot be used together.")
-	}
-
-	if *byCell && *samOut {
-		log.Fatalf("Error: byCell and samOut cannot be used together.")
+	if *byCell && (*normalize != "" || *samOut) {
+		log.Fatalf("Error: byCell cannot be used with normalize or samOut.")
 	}
 
 	if *normalize != "" && *samOut {
 		log.Fatalf("Error: normalize and samOut cannot be used together.")
+	}
+
+	if (*byCell || *samOut) && *cellTypeAnalysis != "" {
+		log.Fatalf("Error: cellTypeAnalysis is incompatable with byCell and samOut.")
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
@@ -152,5 +218,5 @@ func main() {
 	a := flag.Arg(0)
 	b := flag.Arg(1)
 
-	cellrangerBam(a, b, *byCell, *normalize, *samOut)
+	cellrangerBam(a, b, *byCell, *normalize, *samOut, *cellTypeAnalysis)
 }
