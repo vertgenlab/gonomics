@@ -117,6 +117,8 @@ func SubtreeToDot(outFile string, nodeId string, termMap map[string]*Obo) {
 	exception.PanicOnErr(err)
 }
 
+// NumberOfDescendents edits the field SubTreeSize of input Obo structs
+// to the number of descendent nodes in a subtree rooted on a particular node.
 func NumberOfDescendents(termMap map[string]*Obo) {
 	var visitedNode = make(map[string]bool)
 	for _, i := range termMap {
@@ -124,6 +126,9 @@ func NumberOfDescendents(termMap map[string]*Obo) {
 	}
 }
 
+// numberOfDescendentsRecursive is a helper function of NumberOfDescendents, which
+// calculates the size of subtrees rooted on a particular Obo struct in a larger
+// Obo tree.
 func numberOfDescendentsRecursive(term *Obo, visitedNode map[string]bool) {
 	if _, foundInMap := visitedNode[term.Id]; foundInMap {
 		return
@@ -141,7 +146,9 @@ func numberOfDescendentsRecursive(term *Obo, visitedNode map[string]bool) {
 	}
 }
 
-func SubtreeReport(outFile string, records []Obo) {
+// SubTreeReport writes out the number of descendent nodes for each node in an Obo tree.
+// This is used for debugging, and for picking subtrees to visualize based on size.
+func SubTreeReport(outFile string, records []Obo) {
 	var err error
 	out := fileio.EasyCreate(outFile)
 	for i := range records {

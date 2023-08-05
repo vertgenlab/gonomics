@@ -51,6 +51,8 @@ func Equal(a Obo, b Obo) bool {
 	return true
 }
 
+// isAEqual determines the equality of a slice of []IsADescription structs,
+// which are the building blocks of the Obo field IsA.
 func isAEqual(a []IsADescription, b []IsADescription) bool {
 	var i, j int
 	if len(a) != len(b) {
@@ -72,6 +74,8 @@ func isAEqual(a []IsADescription, b []IsADescription) bool {
 	return true
 }
 
+// stringSliceEqual is a helper function of Equal. It returns true if two input slice of
+// strings are equal.
 func stringSliceEqual(a []string, b []string) bool {
 	if len(a) != len(b) {
 		return false
@@ -84,6 +88,8 @@ func stringSliceEqual(a []string, b []string) bool {
 	return true
 }
 
+// otherFieldsEqual is a helper function of Equal. It compares the OtherFields field of
+// an Obo struct, which are of form map[string][]string, for equality.
 func otherFieldsEqual(a map[string][]string, b map[string][]string) bool {
 	if len(a) != len(b) {
 		return false

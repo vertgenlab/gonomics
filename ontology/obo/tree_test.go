@@ -28,7 +28,7 @@ func TestToDot(t *testing.T) {
 	}
 }
 
-var SubtreeReportTests = []struct {
+var SubTreeReportTests = []struct {
 	InFile       string
 	OutFile      string
 	ExpectedFile string
@@ -38,14 +38,14 @@ var SubtreeReportTests = []struct {
 		ExpectedFile: "testdata/expected.report.txt"},
 }
 
-func TestSubtreeReport(t *testing.T) {
+func TestSubTreeReport(t *testing.T) {
 	var records []Obo
 	var termMap map[string]*Obo
-	for _, v := range SubtreeReportTests {
+	for _, v := range SubTreeReportTests {
 		records, _ = Read(v.InFile)
 		termMap = BuildTree(records)
 		NumberOfDescendents(termMap)
-		SubtreeReport(v.OutFile, records)
+		SubTreeReport(v.OutFile, records)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: output was not as expected in SubtreeReport.")
 		}

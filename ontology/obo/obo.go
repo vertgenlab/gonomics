@@ -45,6 +45,7 @@ type IsADescription struct {
 	ParentInfo []string
 }
 
+// String is a method for IsADescription which formats an input struct as a string.
 func (d IsADescription) String() string {
 	return IsADescriptionToString(d)
 }
@@ -135,7 +136,7 @@ func processOboTerm(lines []string) Obo {
 		}
 		if len(words) == 1 {
 			if words[0] != "[Term]" {
-				log.Fatalf("Error: unrecognized line in the following entry:\n%v", lines)
+				log.Fatalf("Error: Unrecognized line in the following entry:\n%v", lines)
 			}
 		} else {
 			switch words[0] {
