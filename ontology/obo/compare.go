@@ -27,7 +27,7 @@ func Equal(a Obo, b Obo) bool {
 	if a.Def != b.Def {
 		return false
 	}
-	if !stringSliceEqual(a.IsA, b.IsA) {
+	if !isAEqual(a.IsA, b.IsA) {
 		return false
 	}
 	if !stringSliceEqual(a.Synonyms, b.Synonyms) {
@@ -47,6 +47,27 @@ func Equal(a Obo, b Obo) bool {
 	}
 	if !otherFieldsEqual(a.OtherFields, b.OtherFields) {
 		return false
+	}
+	return true
+}
+
+func isAEqual(a []IsADescription, b []IsADescription) bool {
+	var i, j int
+	if len(a) != len(b) {
+		return false
+	}
+	for i = range a {
+		if a[i].ParentId != b[i].ParentId {
+			return false
+		}
+		if len(a[i].ParentInfo) != len(b[i].ParentInfo) {
+			return false
+		}
+		for j = range a[i].ParentInfo {
+			if a[i].ParentInfo[j] != b[i].ParentInfo[j] {
+				return false
+			}
+		}
 	}
 	return true
 }

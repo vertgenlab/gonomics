@@ -21,7 +21,7 @@ type Obo struct {
 	NameSpace     string              // Required, can only appear once. The category or domain of the term. Ex. biological_process
 	Def           string              // Required, can only appear once. Sentence definition of the term.
 	IsObsolete    bool                // Optional. Can only appear once. Specifies obsolete ontology labels, which can be filtered downstream.
-	IsA           []string            // Optional. Can appear multiple times in an entry. Specifies parent nodes. Ex. is_a: GO:0048308 ! organelle inheritance // is_a: GO:0048311 ! mitochondrion distribution
+	IsA           []IsADescription    // Optional. Can appear multiple times in an entry. Specifies parent nodes. Ex. is_a: GO:0048308 ! organelle inheritance // is_a: GO:0048311 ! mitochondrion distribution
 	Synonyms      []string            // Optional. Can appear multiple times in an entry. Specifies alternative names for term.
 	XRefs         []string            // Optional. Can appear multiple times in an entry. Specifies an external reference about the term. Ex. Wikipedia:Reproduction
 	AltIds        []string            // Optional. Can appear multiple times in an entry. Specify an alternative GO ID that also points to this entry.
@@ -30,12 +30,33 @@ type Obo struct {
 	OtherFields   map[string][]string // Catch all for other field names.
 	Parents       []*Obo              // Parent nodes of this ontology.
 	Children      []*Obo              // Child nodes of this ontology.
+	SubTreeSize   int                 //Total number of descendents.
 }
 
 // Header encodes the header of an Obo file. Header lines are not marked by a leading character,
 // but are defined as lines preceding the first instance of '[Term]'.
 type Header struct {
 	Text []string
+}
+
+// IsADescription contains the information in the "IsA" field of an Obo record.
+type IsADescription struct {
+	ParentId   string
+	ParentInfo []string
+}
+
+func (d IsADescription) String() string {
+	return IsADescriptionToString(d)
+}
+
+// IsADescriptionToString converts an IsADescription struct into a string.
+func IsADescriptionToString(d IsADescription) string {
+	var answer = ""
+	answer = answer + d.ParentId
+	for i := range d.ParentInfo {
+		answer = answer + " " + d.ParentInfo[i]
+	}
+	return answer
 }
 
 // ReadHeader processes the contiguous header from an EasyReader
@@ -103,7 +124,8 @@ func NextObo(reader *fileio.EasyReader) (Obo, bool) {
 
 // processOboTerm is a helper function of NextObo that parses an Obo struct from a set of input lines.
 func processOboTerm(lines []string) Obo {
-	var words []string
+	var words, isAWords []string
+	var isAStruct IsADescription
 	var answer Obo
 	answer.OtherFields = make(map[string][]string)
 	for i := range lines {
@@ -144,7 +166,12 @@ func processOboTerm(lines []string) Obo {
 					log.Fatalf("Error: Unrecognized entry after is_obsolete in this Obo entry:\n%v", lines)
 				}
 			case "is_a":
-				answer.IsA = append(answer.IsA, words[1])
+				isAWords = strings.Split(words[1], " ")
+				isAStruct = IsADescription{
+					ParentId:   isAWords[0],
+					ParentInfo: isAWords[1:],
+				}
+				answer.IsA = append(answer.IsA, isAStruct)
 			case "synonym":
 				answer.Synonyms = append(answer.Synonyms, words[1])
 			case "xref":
