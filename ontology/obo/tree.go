@@ -22,7 +22,6 @@ func BuildTree(terms []Obo) map[string]*Obo {
 		term := &terms[i] //get a memory copy
 		for _, isAItem = range term.IsA {
 			parentId = isAItem.ParentId
-			//fmt.Printf("parentId: %v\n", parentId)
 			if parentTerm, foundInMap = termMap[parentId]; foundInMap {
 				term.Parents = append(term.Parents, parentTerm)
 				parentTerm.Children = append(parentTerm.Children, term)
@@ -102,7 +101,7 @@ func SubtreeToDot(outFile string, nodeId string, termMap map[string]*Obo) {
 	var err error
 	out := fileio.EasyCreate(outFile)
 	//write header line for Dot
-	_, err = fmt.Fprintf(out, "digraph G{\n")
+	_, err = fmt.Fprintf(out, "digraph G {\n")
 	exception.PanicOnErr(err)
 
 	var visitedNode = make(map[string]bool)
