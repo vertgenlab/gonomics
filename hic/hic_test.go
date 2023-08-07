@@ -16,10 +16,23 @@ var readStrawTests = []struct {
 }
 
 func TestRead(t *testing.T) {
+	var actual []Straw
+	var ch <-chan Straw
+	var index int
 	for _, test := range readStrawTests {
-		actual := Read(test.filename)
+		actual = Read(test.filename)
 		if !AllAreEqual(test.data, actual) {
 			t.Errorf("The test data does not match the data in the file %s", test.filename)
 		}
+
+		index = 0
+		ch = GoReadToChan(test.filename)
+		for i := range ch {
+			if !Equal(i, test.data[index]) {
+				t.Errorf("Error: GoReadToChan output does not match expected.\n")
+			}
+			index++
+		}
+
 	}
 }

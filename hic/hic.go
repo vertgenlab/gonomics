@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strings"
+	"sync"
 )
 
 // Straw stores the output from juicer tools straw command, start of bin 1, start of bin 2 and the contacts between them, to convert to bedpe
@@ -75,4 +76,39 @@ func AllAreEqual(a []Straw, b []Straw) bool {
 	}
 
 	return true
+}
+
+// NextStraw returns a Bed struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
+func NextStraw(reader *fileio.EasyReader) (Straw, bool) {
+	line, done := fileio.EasyNextRealLine(reader)
+	if done {
+		return Straw{}, true
+	}
+	return processStrawLine(line), false
+}
+
+// ReadToChan reads from a fileio.EasyReader to send Bed structs to a chan<- Straw.
+func ReadToChan(file *fileio.EasyReader, data chan<- Straw, wg *sync.WaitGroup) {
+	for curr, done := NextStraw(file); !done; curr, done = NextStraw(file) {
+		data <- curr
+	}
+	err := file.Close()
+	exception.PanicOnErr(err)
+	wg.Done()
+}
+
+// GoReadToChan reads Straw entries from an input filename to a <- chan Straw
+func GoReadToChan(filename string) <-chan Straw {
+	file := fileio.EasyOpen(filename)
+	var wg sync.WaitGroup
+	data := make(chan Straw, 1000)
+	wg.Add(1)
+	go ReadToChan(file, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data
 }

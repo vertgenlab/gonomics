@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-func gtfToBed(fileName string, outFile string, tss bool, chromSizeFile string) {
+func gtfToBed(fileName string, outFile string, tss bool, chromSizeFile string, merge bool) {
 	var err error
 	var line string
 	var nameString string
@@ -26,7 +26,7 @@ func gtfToBed(fileName string, outFile string, tss bool, chromSizeFile string) {
 	if tss {
 		g := gtf.Read(fileName)
 		sizes := chromInfo.ReadToMap(chromSizeFile)
-		beds := gtf.GenesToTssBed(g, sizes)
+		beds := gtf.GenesToTssBed(g, sizes, merge)
 		bed.Write(outFile, beds)
 	} else {
 		file := fileio.EasyOpen(fileName)
@@ -62,6 +62,7 @@ func usage() {
 func main() {
 	var tss *bool = flag.Bool("tss", false, "Return a bed of tss positions annotated only with the geneName. Must provide chrom sizes file.")
 	var chromSizeFile *string = flag.String("chromSizeFile", "", "Specifies the name of a chrom.sizes file.")
+	var merge *bool = flag.Bool("merge", false, "Merge overlapping entries after converting all records to beds. Available with tss only.")
 	var expectedNumArgs int = 2
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -76,5 +77,5 @@ func main() {
 	fileName := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	gtfToBed(fileName, outFile, *tss, *chromSizeFile)
+	gtfToBed(fileName, outFile, *tss, *chromSizeFile, *merge)
 }
