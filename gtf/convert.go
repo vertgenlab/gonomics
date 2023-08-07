@@ -12,13 +12,18 @@ func GeneToTssBed(g Gene, c map[string]chromInfo.ChromInfo) []bed.Bed {
 }
 
 // GenesToTssBed returns the position of all TSSs from a Gene map as a slice of single base-pair bed entries.
-func GenesToTssBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo) []bed.Bed {
+func GenesToTssBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo, merge bool) []bed.Bed {
 	var answer = make([]bed.Bed, 0)
 	var currPromoters []bed.Bed
 	for _, i := range g {
 		currPromoters = GeneToTssBed(*i, c)
 		answer = append(answer, currPromoters...)
 	}
+
+	if merge {
+		answer = bed.MergeBeds(answer)
+	}
+
 	return answer
 }
 
