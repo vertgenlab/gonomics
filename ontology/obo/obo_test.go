@@ -9,9 +9,9 @@ import (
 // I/O fidelity test.
 func TestOboReadAndWrite(t *testing.T) {
 	var failed bool = false
-	records1, header1 := Read("testdata/test.obo")
+	records1, header1 := Read("testdata/test.obo", true)
 	Write("testdata/out.obo", records1, header1)
-	records2, header2 := Read("testdata/out.obo")
+	records2, header2 := Read("testdata/out.obo", true)
 	if !EqualHeader(header1, header2) {
 		failed = true
 		t.Errorf("Error: Obo package failed I/0 fidelity test for header.")

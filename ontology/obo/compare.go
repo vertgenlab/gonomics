@@ -1,13 +1,18 @@
 package obo
 
 // AllAreEqual returns true if two input slices of Obo structs are identical.
-func AllAreEqual(a []Obo, b []Obo) bool {
+func AllAreEqual(a map[string]*Obo, b map[string]*Obo) bool {
+	var foundInMap bool
 	if len(a) != len(b) {
 		return false
 	}
 	for i := range a {
-		if !Equal(a[i], b[i]) {
+		if _, foundInMap = b[i]; !foundInMap {
 			return false
+		} else {
+			if !Equal(*a[i], *b[i]) {
+				return false
+			}
 		}
 	}
 	return true

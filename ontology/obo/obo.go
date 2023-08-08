@@ -90,23 +90,25 @@ func peekIsTermLine(peek []byte) bool {
 }
 
 // Read creates a slice of Obo structs and a Header struct from an input filename.
-func Read(filename string) ([]Obo, Header) {
-	var curr Obo
+func Read(filename string, force bool) (map[string]*Obo, Header) {
+	var curr *Obo
 	var done bool
-	var answer []Obo = make([]Obo, 0)
+	var answer = make(map[string]*Obo, 0)
 
 	file := fileio.EasyOpen(filename)
 	header := ReadHeader(file)
 	for curr, done = NextObo(file); !done; curr, done = NextObo(file) {
-		answer = append(answer, curr)
+		answer[curr.Id] = curr
 	}
+	buildTree(answer, force)
 	return answer, header
 }
 
-// NextObo is a helper function of Read and GoReadToChan. NextObo checks a reader for additional lines of data
+// NextObo is a helper function of Read. NextObo checks a reader for additional lines of data
 // and returns an Obo struct and a bool telling the caller if it is done reading from the file.
-func NextObo(reader *fileio.EasyReader) (Obo, bool) {
+func NextObo(reader *fileio.EasyReader) (*Obo, bool) {
 	var currLine string
+	var answer Obo
 	var done, endOfEntry bool = false, false
 	var lines []string = make([]string, 0)
 	for !done && !endOfEntry {
@@ -121,10 +123,12 @@ func NextObo(reader *fileio.EasyReader) (Obo, bool) {
 			lines = append(lines, currLine)
 		}
 	}
+	//fmt.Printf("DONE: %t.\n%s\n\n", done, lines)
 	if done {
-		return Obo{}, true
+		return nil, true
 	}
-	return processOboTerm(lines), false
+	answer = processOboTerm(lines)
+	return &answer, false
 }
 
 // processOboTerm is a helper function of NextObo that parses an Obo struct from a set of input lines.
@@ -264,12 +268,12 @@ func WriteHeaderToFileHandle(file io.Writer, header Header) {
 }
 
 // Write writes a slice of Obo structs to a specified filename.
-func Write(filename string, records []Obo, header Header) {
+func Write(filename string, records map[string]*Obo, header Header) {
 	var err error
 	file := fileio.EasyCreate(filename)
 	WriteHeaderToFileHandle(file, header)
 	for i := range records {
-		WriteObo(file, records[i])
+		WriteObo(file, *records[i])
 	}
 	err = file.Close()
 	exception.PanicOnErr(err)

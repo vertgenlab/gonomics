@@ -1,48 +1,48 @@
-0	Id: GO:0000001. Name: mitochondrion inheritance. Descendents: 0
-0	Id: GO:0000002. Name: mitochondrial genome maintenance. Descendents: 0
-0	Id: GO:0000003. Name: reproduction. Descendents: 0
-0	Id: GO:0000005. Name: obsolete ribosomal chaperone activity. Descendents: 0
-0	Id: GO:0000006. Name: high-affinity zinc transmembrane transporter activity. Descendents: 0
-0	Id: GO:0000007. Name: low-affinity zinc ion transmembrane transporter activity. Descendents: 0
-0	Id: GO:0000008. Name: obsolete thioredoxin. Descendents: 0
-0	Id: GO:0000009. Name: alpha-1,6-mannosyltransferase activity. Descendents: 0
-0	Id: GO:0000010. Name: trans-hexaprenyltranstransferase activity. Descendents: 0
-0	Id: GO:0000011. Name: vacuole inheritance. Descendents: 0
-0	Id: GO:0000012. Name: single strand break repair. Descendents: 0
-0	Id: GO:0000014. Name: single-stranded DNA endodeoxyribonuclease activity. Descendents: 0
-0	Id: GO:0000015. Name: phosphopyruvate hydratase complex. Descendents: 0
-0	Id: GO:0000016. Name: lactase activity. Descendents: 0
-0	Id: GO:0000017. Name: alpha-glucoside transport. Descendents: 0
-1	Id: GO:0000018. Name: regulation of DNA recombination. Descendents: 1
-0	Id: GO:0000019. Name: regulation of mitotic recombination. Descendents: 0
-0	Id: GO:0000020. Name: obsolete negative regulation of recombination within rDNA repeats. Descendents: 0
-0	Id: GO:0000022. Name: mitotic spindle elongation. Descendents: 0
-2	Id: GO:0000023. Name: maltose metabolic process. Descendents: 2
-0	Id: GO:0000024. Name: maltose biosynthetic process. Descendents: 0
-0	Id: GO:0000025. Name: maltose catabolic process. Descendents: 0
-0	Id: GO:0000026. Name: alpha-1,2-mannosyltransferase activity. Descendents: 0
-0	Id: GO:0000027. Name: ribosomal large subunit assembly. Descendents: 0
-0	Id: GO:0000028. Name: ribosomal small subunit assembly. Descendents: 0
-3	Id: GO:0000030. Name: mannosyltransferase activity. Descendents: 3
-0	Id: GO:0000031. Name: mannosylphosphate transferase activity. Descendents: 0
-0	Id: GO:0000032. Name: cell wall mannoprotein biosynthetic process. Descendents: 0
-0	Id: GO:0000033. Name: alpha-1,3-mannosyltransferase activity. Descendents: 0
-0	Id: GO:0000034. Name: adenine deaminase activity. Descendents: 0
-0	Id: GO:0000035. Name: acyl binding. Descendents: 0
-0	Id: GO:0000036. Name: acyl carrier activity. Descendents: 0
-0	Id: GO:0000038. Name: very long-chain fatty acid metabolic process. Descendents: 0
-0	Id: GO:0000039. Name: obsolete plasma membrane long-chain fatty acid transporter. Descendents: 0
-0	Id: GO:0000041. Name: transition metal ion transport. Descendents: 0
-0	Id: GO:0000044. Name: obsolete ascorbate stabilization. Descendents: 0
-0	Id: GO:0000045. Name: autophagosome assembly. Descendents: 0
-0	Id: GO:0000047. Name: obsolete Rieske iron-sulfur protein. Descendents: 0
-0	Id: GO:0000048. Name: peptidyltransferase activity. Descendents: 0
-0	Id: GO:0000049. Name: tRNA binding. Descendents: 0
-0	Id: GO:0000050. Name: urea cycle. Descendents: 0
-0	Id: GO:0000051. Name: obsolete urea cycle intermediate metabolic process. Descendents: 0
-0	Id: GO:0000052. Name: citrulline metabolic process. Descendents: 0
-0	Id: GO:0000053. Name: argininosuccinate metabolic process. Descendents: 0
-2	Id: GO:0000054. Name: ribosomal subunit export from nucleus. Descendents: 2
-0	Id: GO:0000055. Name: ribosomal large subunit export from nucleus. Descendents: 0
-0	Id: GO:0000056. Name: ribosomal small subunit export from nucleus. Descendents: 0
-0	Id: GO:0000059. Name: obsolete protein import into nucleus, docking. Descendents: 0
+1	Id: GO:0000001. Name: mitochondrion inheritance. Descendents: 1
+1	Id: GO:0000002. Name: mitochondrial genome maintenance. Descendents: 1
+1	Id: GO:0000003. Name: reproduction. Descendents: 1
+1	Id: GO:0000005. Name: obsolete ribosomal chaperone activity. Descendents: 1
+1	Id: GO:0000006. Name: high-affinity zinc transmembrane transporter activity. Descendents: 1
+1	Id: GO:0000007. Name: low-affinity zinc ion transmembrane transporter activity. Descendents: 1
+1	Id: GO:0000008. Name: obsolete thioredoxin. Descendents: 1
+1	Id: GO:0000009. Name: alpha-1,6-mannosyltransferase activity. Descendents: 1
+1	Id: GO:0000010. Name: trans-hexaprenyltranstransferase activity. Descendents: 1
+1	Id: GO:0000011. Name: vacuole inheritance. Descendents: 1
+1	Id: GO:0000012. Name: single strand break repair. Descendents: 1
+1	Id: GO:0000014. Name: single-stranded DNA endodeoxyribonuclease activity. Descendents: 1
+1	Id: GO:0000015. Name: phosphopyruvate hydratase complex. Descendents: 1
+1	Id: GO:0000016. Name: lactase activity. Descendents: 1
+1	Id: GO:0000017. Name: alpha-glucoside transport. Descendents: 1
+2	Id: GO:0000018. Name: regulation of DNA recombination. Descendents: 2
+1	Id: GO:0000019. Name: regulation of mitotic recombination. Descendents: 1
+1	Id: GO:0000020. Name: obsolete negative regulation of recombination within rDNA repeats. Descendents: 1
+1	Id: GO:0000022. Name: mitotic spindle elongation. Descendents: 1
+3	Id: GO:0000023. Name: maltose metabolic process. Descendents: 3
+1	Id: GO:0000024. Name: maltose biosynthetic process. Descendents: 1
+1	Id: GO:0000025. Name: maltose catabolic process. Descendents: 1
+1	Id: GO:0000026. Name: alpha-1,2-mannosyltransferase activity. Descendents: 1
+1	Id: GO:0000027. Name: ribosomal large subunit assembly. Descendents: 1
+1	Id: GO:0000028. Name: ribosomal small subunit assembly. Descendents: 1
+4	Id: GO:0000030. Name: mannosyltransferase activity. Descendents: 4
+1	Id: GO:0000031. Name: mannosylphosphate transferase activity. Descendents: 1
+1	Id: GO:0000032. Name: cell wall mannoprotein biosynthetic process. Descendents: 1
+1	Id: GO:0000033. Name: alpha-1,3-mannosyltransferase activity. Descendents: 1
+1	Id: GO:0000034. Name: adenine deaminase activity. Descendents: 1
+1	Id: GO:0000035. Name: acyl binding. Descendents: 1
+1	Id: GO:0000036. Name: acyl carrier activity. Descendents: 1
+1	Id: GO:0000038. Name: very long-chain fatty acid metabolic process. Descendents: 1
+1	Id: GO:0000039. Name: obsolete plasma membrane long-chain fatty acid transporter. Descendents: 1
+1	Id: GO:0000041. Name: transition metal ion transport. Descendents: 1
+1	Id: GO:0000044. Name: obsolete ascorbate stabilization. Descendents: 1
+1	Id: GO:0000045. Name: autophagosome assembly. Descendents: 1
+1	Id: GO:0000047. Name: obsolete Rieske iron-sulfur protein. Descendents: 1
+1	Id: GO:0000048. Name: peptidyltransferase activity. Descendents: 1
+1	Id: GO:0000049. Name: tRNA binding. Descendents: 1
+1	Id: GO:0000050. Name: urea cycle. Descendents: 1
+1	Id: GO:0000051. Name: obsolete urea cycle intermediate metabolic process. Descendents: 1
+1	Id: GO:0000052. Name: citrulline metabolic process. Descendents: 1
+1	Id: GO:0000053. Name: argininosuccinate metabolic process. Descendents: 1
+3	Id: GO:0000054. Name: ribosomal subunit export from nucleus. Descendents: 3
+1	Id: GO:0000055. Name: ribosomal large subunit export from nucleus. Descendents: 1
+1	Id: GO:0000056. Name: ribosomal small subunit export from nucleus. Descendents: 1
+1	Id: GO:0000059. Name: obsolete protein import into nucleus, docking. Descendents: 1

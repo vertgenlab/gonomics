@@ -18,12 +18,12 @@ var ToDotTests = []struct {
 }
 
 func TestToDot(t *testing.T) {
-	var records []Obo
+	var records map[string]*Obo
 	var err error
 	for _, v := range ToDotTests {
-		records, _ = Read(v.InFile)
+		records, _ = Read(v.InFile, true)
 		ToDot(v.OutFile, records)
-		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+		if !fileio.AreEqualIgnoreOrder(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: ToDot output was not as expected.")
 		} else {
 			err = os.Remove(v.OutFile)
@@ -43,15 +43,13 @@ var SubTreeReportTests = []struct {
 }
 
 func TestSubTreeReport(t *testing.T) {
-	var records []Obo
+	var records map[string]*Obo
 	var err error
-	var termMap map[string]*Obo
 	for _, v := range SubTreeReportTests {
-		records, _ = Read(v.InFile)
-		termMap = BuildTree(records)
-		NumberOfDescendents(termMap)
+		records, _ = Read(v.InFile, true)
+		NumberOfDescendents(records)
 		SubTreeReport(v.OutFile, records)
-		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+		if !fileio.AreEqualIgnoreOrder(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: output was not as expected in SubtreeReport.")
 		} else {
 			err = os.Remove(v.OutFile)
@@ -78,17 +76,41 @@ var SubTreeToDotTests = []struct {
 
 func TestSubtreeToDot(t *testing.T) {
 	var err error
-	var termMap map[string]*Obo
-	var records []Obo
+	var records map[string]*Obo
 	for _, v := range SubTreeToDotTests {
-		records, _ = Read(v.InFile)
-		termMap = BuildTree(records)
-		SubtreeToDot(v.OutFile, v.NodeId, termMap)
-		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+		records, _ = Read(v.InFile, true)
+		SubtreeToDot(v.OutFile, v.NodeId, records)
+		if !fileio.AreEqualIgnoreOrder(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: output not as expected in TestSubtreeToDot.")
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)
+		}
+	}
+}
+
+var FindTreeRootsTests = []struct {
+	InFile        string
+	ExpectedRoots map[string]bool
+}{
+	{InFile: "testdata/microTest.obo",
+		ExpectedRoots: map[string]bool{"GO:1": true}},
+}
+
+func TestFindTreeRoots(t *testing.T) {
+	var foundInMap bool
+	var roots []*Obo
+	var records map[string]*Obo
+	for _, v := range FindTreeRootsTests {
+		records, _ = Read(v.InFile, true)
+		roots = findTreeRoots(records)
+		if len(roots) != len(v.ExpectedRoots) {
+			t.Errorf("Error: number of roots found: %v, did not match expected: %v.\n", len(roots), len(v.ExpectedRoots))
+		}
+		for i := range roots {
+			if _, foundInMap = v.ExpectedRoots[roots[i].Id]; !foundInMap {
+				t.Errorf("Error: root with ID: \"%v\" and Name:\"%v\" is not an expected root.\n", roots[i].Id, roots[i].Name)
+			}
 		}
 	}
 }

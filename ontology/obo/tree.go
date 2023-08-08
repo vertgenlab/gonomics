@@ -7,11 +7,11 @@ import (
 	"log"
 )
 
-// BuildTree takes a slice of Obo structs and builds a tree, setting
+// buildTree is a helper function of Read that takes a map of string to *Obo structs and builds a tree, setting
 // the Parents and Children fields to point to related nodes.
-func BuildTree(terms []Obo) map[string]*Obo {
-	termMap := makeTermMap(terms)
-
+// If 'force' is true, the program will build a tree even if parent nodes
+// for a given Obo entry do not exist.
+func buildTree(terms map[string]*Obo, force bool) {
 	var parentId string
 	var foundInMap bool
 	var parentTerm *Obo
@@ -19,19 +19,30 @@ func BuildTree(terms []Obo) map[string]*Obo {
 
 	// Now we iterate through terms and set up the tree
 	for i := range terms {
-		term := &terms[i] //get a memory copy
-		for _, isAItem = range term.IsA {
+		for _, isAItem = range terms[i].IsA {
 			parentId = isAItem.ParentId
-			if parentTerm, foundInMap = termMap[parentId]; foundInMap {
-				term.Parents = append(term.Parents, parentTerm)
-				parentTerm.Children = append(parentTerm.Children, term)
-			} else {
-				//log.Fatalf("Error: The term with ID \"%s\" has a parent with ID \"%s\" that "+
-				//	"is not found in the Obo file.\n", term.Id, parentId)
+			if parentTerm, foundInMap = terms[parentId]; foundInMap {
+				terms[i].Parents = append(terms[i].Parents, parentTerm)
+				parentTerm.Children = append(parentTerm.Children, terms[i])
+			} else if !force {
+				log.Fatalf("Error: The term with ID \"%s\" has a parent with ID \"%s\" that "+
+					"is not found in the Obo file.\n", terms[i].Id, parentId)
 			}
 		}
 	}
-	return termMap
+}
+
+// findTreeRoots takes a map[string]*Obo and returns a slice of pointers to all root nodes.
+// This function assumes BuildTree has already been called.
+func findTreeRoots(records map[string]*Obo) []*Obo {
+	var roots []*Obo
+	for i := range records {
+		if len(records[i].Parents) == 0 {
+			roots = append(roots, records[i])
+		}
+	}
+
+	return roots
 }
 
 // termToDot is a helper function of ToDot that converts and individual Obo struct to a
@@ -53,10 +64,11 @@ func termToDot(term Obo, out *fileio.EasyWriter, visitedNode map[string]bool) {
 }
 
 // ToDot formats an input Obo slice as a tree and writes the resulting tree to a file in DOT format.
-func ToDot(outFile string, terms []Obo) {
+// If "force" is true, we will build a tree from the Obo even in the case of a nil parent pointer
+// for an individual Obo element.
+func ToDot(outFile string, terms map[string]*Obo) {
 	var err error
 	out := fileio.EasyCreate(outFile)
-	BuildTree(terms)
 
 	//write header line for Dot
 	_, err = fmt.Fprintf(out, "digraph G{\n")
@@ -65,7 +77,7 @@ func ToDot(outFile string, terms []Obo) {
 	var visitedNode = make(map[string]bool)
 
 	for _, term := range terms {
-		termToDot(term, out, visitedNode)
+		termToDot(*term, out, visitedNode)
 	}
 
 	//write tail line for Dot and close file
@@ -133,21 +145,22 @@ func numberOfDescendentsRecursive(term *Obo, visitedNode map[string]bool) {
 		return
 	}
 	visitedNode[term.Id] = true
+	term.SubTreeSize = 1 // subtrees include the node itself, so leafs will have SubTreeSize = 1
 	//leaf case
 	if len(term.Children) == 0 {
-		term.SubTreeSize = 0
 		return
 	}
+
 	for i := range term.Children {
 		numberOfDescendentsRecursive(term.Children[i], visitedNode)
-		//subtree size is the number of children plus the size of each child's subtree
-		term.SubTreeSize += 1 + term.Children[i].SubTreeSize
+		//subtree size is the sum of each child's SubTreeSize (child SubTreeSize includes the child itself)
+		term.SubTreeSize += term.Children[i].SubTreeSize
 	}
 }
 
 // SubTreeReport writes out the number of descendent nodes for each node in an Obo tree.
 // This is used for debugging, and for picking subtrees to visualize based on size.
-func SubTreeReport(outFile string, records []Obo) {
+func SubTreeReport(outFile string, records map[string]*Obo) {
 	var err error
 	out := fileio.EasyCreate(outFile)
 	for i := range records {
