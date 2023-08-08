@@ -32,7 +32,7 @@ jobs:
           git config user.name "NAME"
           git config user.email "$EMAIL"
           if git diff-index --quiet HEAD --; then
-            git add -A
+            git add -A ':!${{ GITHUB_WORKSPACE }}/cmd/gonomics/command_cache.txt'
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
             git commit -am "style: automated go lint ./... && go fmt ./..."
             git push
