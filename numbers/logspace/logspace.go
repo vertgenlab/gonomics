@@ -5,6 +5,11 @@ import (
 	"math"
 )
 
+// ToBase10 takes in a logspace number (base e is assumed within this package), and converts it to a base 10 log transformed number.
+func ToBase10(lnX float64) float64 {
+	return lnX * math.Log10(math.E)
+}
+
 // CanConvert returns true if the input logSpace number can be converted to a number in normal space without overflow or underflow.
 func CanConvert(x float64) bool {
 	return x < 709.4 && x > -745.1
@@ -76,8 +81,9 @@ func Divide(x float64, y float64) float64 {
 // Pow returns log(exp(x)**y) where log is the natural logarithm.
 // This function returns the log-space answer to x**y where x is already in log-space
 // y is NOT in log-space.
+// 0 ^ 0 returns 0 == log(1).
 func Pow(x float64, y float64) float64 {
-	// anything to the zero power is 1, so we return 0 == log(1).  0^0 is what this catches
+	// anything to the zero power is 1, so we return 0 == log(1). 0^0 is what this catches
 	if y == 0.0 {
 		return 0.0
 	}

@@ -80,7 +80,7 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 	for line, err = reader.ReadString('\n'); err == nil && strings.HasPrefix(line, "#"); line, err = reader.ReadString('\n') {
 	}
 	if err != nil && err != io.EOF {
-		log.Panic()
+		log.Panic(err)
 	}
 	if err == io.EOF {
 		if line != "" {

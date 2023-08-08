@@ -19,8 +19,12 @@ func StandardNormalDist(x float64) float64 {
 
 // BinomialDist returns the probability mass from a binomial distribution with k successes out of n observations with success probability p.
 // The second return is false if no overflow/underflow was detected. If underflow was detected, the program returns 0 and true.
-func BinomialDist(n int, k int, p float64) (float64, bool) {
+// If logOutput is true, answer will be returned as log(answer).
+func BinomialDist(n int, k int, p float64, logOutput bool) (float64, bool) {
 	logAnswer := BinomialDistLog(n, k, p)
+	if logOutput {
+		return logAnswer, false
+	}
 	if logspace.CanConvert(logAnswer) {
 		return math.Exp(logAnswer), false
 	}
@@ -224,75 +228,73 @@ func PoissonSum(left int, right int, lambda float64) float64 {
 }
 
 // BinomialLeftSummation calculates the sum of binomial probabilities to the left of k successes for a binomial distribution with n experiments and a success probability of p, inclusive.
-func BinomialLeftSummation(n int, k int, p float64) float64 {
-	if k <= n/2 {
-		return evaluateLeftBinomialSum(n, k, p)
-	} else {
-		return 1 - evaluateRightBinomialSum(n, k+1, p)
+func BinomialLeftSummation(n int, k int, p float64, logOutput bool) float64 {
+	if n == k {
+		if logOutput {
+			return 0
+		} else {
+			return 1
+		}
 	}
+	return evaluateLeftBinomialSum(n, k, p, logOutput)
 }
 
 // BinomialRightSummation calculates the sum of binomial probabilities to the right of k successes for a binomial distribution with n experiments and a success probability of p, inclusive.
-func BinomialRightSummation(n int, k int, p float64) float64 {
-	if k > n/2 {
-		return evaluateRightBinomialSum(n, k, p)
-	} else {
-		return 1 - evaluateLeftBinomialSum(n, k-1, p)
+func BinomialRightSummation(n int, k int, p float64, logOutput bool) float64 {
+	if k == 0 {
+		if logOutput {
+			return 0
+		} else {
+			return 1
+		}
 	}
+	return evaluateRightBinomialSum(n, k, p, logOutput)
 }
 
 // BinomialSum calculates the sum of probabilities in a binomial distribution with n experiments and success probability p between two input k values. Inclusive on both ends.
-func BinomialSum(left int, right int, n int, p float64) float64 {
+func BinomialSum(left int, right int, n int, p float64, logOutput bool) float64 {
 	if right < left {
 		log.Fatalf("BinomialSum failed. Right side value must be greater than the left side value.")
 	}
-	var answer float64 = 0
+	var answer, _ = BinomialDist(n, left, p, logOutput)
 	var curr float64
 	for i := left; i <= right; i++ {
-		curr, _ = BinomialDist(n, i, p)
-		answer += curr
+		curr, _ = BinomialDist(n, i, p, logOutput)
+		if logOutput {
+			answer = logspace.Add(answer, curr)
+		} else {
+			answer += curr
+		}
 	}
 	return answer
 }
 
 // evaluateRightBinomialSum is a helper function that calculates the sum of probabilities under a binomial distribution with parameters n and p to the right of an input k value, inclusive.
-func evaluateRightBinomialSum(n int, k int, p float64) float64 {
-	var answer float64 = 0
+func evaluateRightBinomialSum(n int, k int, p float64, logOutput bool) float64 {
 	var curr float64
-	for i := k; i <= n; i++ {
-		curr, _ = BinomialDist(n, i, p)
-		answer += curr
+	var answer, _ = BinomialDist(n, k, p, logOutput)
+	for i := k + 1; i <= n; i++ {
+		curr, _ = BinomialDist(n, i, p, logOutput)
+		if logOutput {
+			answer = logspace.Add(answer, curr)
+		} else {
+			answer += curr
+		}
 	}
 	return answer
 }
 
 // evaluateLeftBinomialSum is a helper function that calculates the sum of probabilities under a binomial distribution with parameters n and p to the left of an input k value, inclusive.
-func evaluateLeftBinomialSum(n int, k int, p float64) float64 {
-	var answer float64 = 0
+func evaluateLeftBinomialSum(n int, k int, p float64, logOutput bool) float64 {
 	var curr float64
-	for i := 0; i < k+1; i++ {
-		curr, _ = BinomialDist(n, i, p)
-		answer += curr
-	}
-	return answer
-}
-
-// ContinuousKullbackLeiblerDivergence measures the divergence between two continuous probability distributions between a specified start and end position.
-func ContinuousKullbackLeiblerDivergence(p func(float64) float64, q func(float64) float64, start float64, end float64) float64 {
-	f := func(x float64) float64 {
-		return p(x) * math.Log2(p(x)/q(x))
-	}
-	return DefiniteIntegral(f, start, end)
-}
-
-// DiscreteKullbackLeiblerDivergence measures the divergence between two discrete probability distributions between a specified start and end integer. Inclusive range.
-func DiscreteKullbackLeiblerDivergence(p func(int) float64, q func(int) float64, start int, end int) float64 {
-	f := func(x int) float64 {
-		return p(x) * math.Log2(p(x)/q(x))
-	}
-	var answer float64 = 0
-	for i := start; i < end+1; i++ {
-		answer = answer + f(i)
+	var answer, _ = BinomialDist(n, k, p, logOutput)
+	for i := 0; i < k; i++ {
+		curr, _ = BinomialDist(n, i, p, logOutput)
+		if logOutput {
+			answer = logspace.Add(answer, curr)
+		} else {
+			answer += curr
+		}
 	}
 	return answer
 }

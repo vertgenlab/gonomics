@@ -14,11 +14,11 @@ func ExplicitBinomialDist(n int, k int, p float64) float64 {
 
 func TestBinomialDist(t *testing.T) {
 	input1 := ExplicitBinomialDist(20, 4, 0.6)
-	expected1, _ := BinomialDist(20, 4, 0.6)
+	expected1, _ := BinomialDist(20, 4, 0.6, false)
 	input2 := ExplicitBinomialDist(20, 20, 0.6)
-	expected2, _ := BinomialDist(20, 20, 0.6)
+	expected2, _ := BinomialDist(20, 20, 0.6, false)
 	input3 := ExplicitBinomialDist(20, 0, 0.6)
-	expected3, _ := BinomialDist(20, 0, 0.6)
+	expected3, _ := BinomialDist(20, 0, 0.6, false)
 	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
@@ -30,26 +30,68 @@ func TestBinomialDist(t *testing.T) {
 	}
 }
 
+var BinomialSumTests = []struct {
+	N                int
+	K                int
+	P                float64
+	ExpectedLeft     float64
+	ExpectedRight    float64
+	ExpectedLeftLog  float64
+	ExpectedRightLog float64
+}{
+	{N: 20,
+		K:                1,
+		P:                0.6,
+		ExpectedLeft:     3.408486e-07,
+		ExpectedRight:    1,
+		ExpectedLeftLog:  -14.891827432997957,
+		ExpectedRightLog: -1.0995117537615571e-08,
+	},
+	{N: 20,
+		K:                20,
+		P:                0.6,
+		ExpectedLeft:     1,
+		ExpectedRight:    3.656158440062977e-05,
+		ExpectedLeftLog:  0,
+		ExpectedRightLog: -10.216512475319814,
+	},
+	{N: 20,
+		K:                4,
+		P:                0.6,
+		ExpectedLeft:     0.0003170311211686297,
+		ExpectedRight:    0.9999526550293069,
+		ExpectedLeftLog:  -8.056510614872215,
+		ExpectedRightLog: -4.734609150160962e-05,
+	},
+	{N: 20,
+		K:                16,
+		P:                0.4,
+		ExpectedLeft:     0.9999526550293069,
+		ExpectedRight:    0.0003170311211686297,
+		ExpectedLeftLog:  -4.7346091501568885e-05,
+		ExpectedRightLog: -8.056510614872217,
+	},
+}
+
 func TestBinomialSum(t *testing.T) {
-	input1 := BinomialLeftSummation(20, 1, 0.6)
-	expected1 := 3.408486e-07
-	input2 := BinomialLeftSummation(20, 20, 0.6)
-	expected2 := 1.000000e+00
-	input3 := BinomialRightSummation(20, 4, 0.6)
-	expected3 := 9.999527e-01
-	input4 := BinomialRightSummation(20, 16, 0.4)
-	expected4 := 3.170311e-04
-	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
-		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
-	}
-	if fmt.Sprintf("%e", input2) != fmt.Sprintf("%e", expected2) {
-		t.Errorf("Do not match. Input : %e. Expected: %e.", input2, expected2)
-	}
-	if fmt.Sprintf("%e", input3) != fmt.Sprintf("%e", expected3) {
-		t.Errorf("Do not match. Input : %e. Expected: %e.", input3, expected3)
-	}
-	if fmt.Sprintf("%e", input4) != fmt.Sprintf("%e", expected4) {
-		t.Errorf("Do not match. Input : %e. Expected: %e.", input4, expected4)
+	var observed float64
+	for _, v := range BinomialSumTests {
+		observed = BinomialLeftSummation(v.N, v.K, v.P, false)
+		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedLeft) {
+			t.Errorf("Error: in BinomialSum Left Sum. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedLeft)
+		}
+		observed = BinomialRightSummation(v.N, v.K, v.P, false)
+		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedRight) {
+			t.Errorf("Error: in BinomialSum Right Sum. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedRight)
+		}
+		observed = BinomialLeftSummation(v.N, v.K, v.P, true)
+		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedLeftLog) {
+			t.Errorf("Error: in BinomialSum Left Sum Logspace. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedLeftLog)
+		}
+		observed = BinomialRightSummation(v.N, v.K, v.P, true)
+		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedRightLog) {
+			t.Errorf("Error: in BinomialSum Right Sum Logspace. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedRightLog)
+		}
 	}
 }
 
