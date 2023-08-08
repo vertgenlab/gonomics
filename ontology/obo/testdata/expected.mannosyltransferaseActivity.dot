@@ -1,4 +1,4 @@
-digraph G{
+digraph G {
 "GO:0000030" [label = "mannosyltransferase activity"];
 "GO:0000030" -> "GO:0000009";
 "GO:0000009" [label = "alpha-1,6-mannosyltransferase activity"];

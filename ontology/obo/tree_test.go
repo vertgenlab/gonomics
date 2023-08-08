@@ -19,11 +19,15 @@ var ToDotTests = []struct {
 
 func TestToDot(t *testing.T) {
 	var records []Obo
+	var err error
 	for _, v := range ToDotTests {
 		records, _ = Read(v.InFile)
 		ToDot(v.OutFile, records)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: ToDot output was not as expected.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
 		}
 	}
 }
@@ -40,6 +44,7 @@ var SubTreeReportTests = []struct {
 
 func TestSubTreeReport(t *testing.T) {
 	var records []Obo
+	var err error
 	var termMap map[string]*Obo
 	for _, v := range SubTreeReportTests {
 		records, _ = Read(v.InFile)
@@ -48,6 +53,9 @@ func TestSubTreeReport(t *testing.T) {
 		SubTreeReport(v.OutFile, records)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: output was not as expected in SubtreeReport.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
 		}
 	}
 }
@@ -58,9 +66,12 @@ var SubTreeToDotTests = []struct {
 	OutFile      string
 	ExpectedFile string
 }{
+	//{InFile: "testdata/go.obo",
 	{InFile: "testdata/test.obo",
-		NodeId:       "GO:0000030",
-		OutFile:      "testdata/out.mannosyltransferaseActivity.dot",
+		NodeId: "GO:0000030",
+		//NodeId: "GO:0042110",
+		OutFile: "testdata/out.mannosyltransferaseActivity.dot",
+		//OutFile:      "testdata/out.tCellActivation.dot",
 		ExpectedFile: "testdata/expected.mannosyltransferaseActivity.dot",
 	},
 }

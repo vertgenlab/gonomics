@@ -112,7 +112,11 @@ func NextObo(reader *fileio.EasyReader) (Obo, bool) {
 	for !done && !endOfEntry {
 		currLine, done = fileio.EasyNextRealLine(reader)
 		if currLine == "" {
-			endOfEntry = true
+			if len(lines) > 0 && lines[0] == "[Typedef]" {
+				lines = lines[:0] //clear the slice, we ignore Typedef entries.
+			} else {
+				endOfEntry = true
+			}
 		} else {
 			lines = append(lines, currLine)
 		}
