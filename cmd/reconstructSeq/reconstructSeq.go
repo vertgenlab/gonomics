@@ -30,6 +30,10 @@ func ReconstructSeq(s Settings) {
 		log.Fatalf("Error: nonBiasProbThreshold must be a value between 0 and 1. Found: %v.\n", s.NonBiasProbThreshold)
 	}
 
+	if s.NonBiasProbThreshold > 0 && s.BiasLeafName == "" {
+		log.Fatalf("Error: nonBiasProbThreshold was set, but no BiasLeafName was provided.\n")
+	}
+
 	if s.HighestProbThreshold < 0 || s.HighestProbThreshold > 1 {
 		log.Fatalf("Error: highestProbThreshold must be a value between 0 and 1. Found: %v.\n", s.HighestProbThreshold)
 	}

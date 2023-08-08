@@ -355,10 +355,16 @@ func FixFc(root *expandedTree.ETree, node *expandedTree.ETree) []float64 {
 	return ans
 }
 
-// BaseExists determines, for a particular node at a particular position, whether a base exists (A, C, G, T, N)
+func BaseExistsAtNodes(root *expandedTree.ETree, pos int) {
+	descendentBaseExists(root, pos)
+	baseExistsRecursive(root, pos)
+}
+
+// baseExistsRecursive is a helper function of BaseExistsAtNodes that determines, for a particular node at a particular
+// position, whether a base exists (A, C, G, T, N)
 // or not (node.Fasta.Seq[position] == dna.Gap). This information is stored as a bool in the field node.BasePresent.
 // This function recursively searches descendent nodes and updates the BasePresent field.
-func BaseExists(node *expandedTree.ETree, pos int) {
+func baseExistsRecursive(node *expandedTree.ETree, pos int) {
 	var count int = 0
 	if node.Left != nil && node.Right == nil {
 		log.Fatalf("Error: tree is not a well-formed binary tree. For node: %v, left is not nil but right is nil.\n", node.Name)
@@ -377,17 +383,18 @@ func BaseExists(node *expandedTree.ETree, pos int) {
 	}
 	node.BasePresent = count >= 2
 	if node.Left != nil {
-		BaseExists(node.Left, pos)
+		baseExistsRecursive(node.Left, pos)
 	}
 	if node.Right != nil {
-		BaseExists(node.Right, pos)
+		baseExistsRecursive(node.Right, pos)
 	}
 }
 
-// DescendentBaseExists determines whether, for a given node, any descendent nodes contain a base.
+// descendentBaseExists is a helper function of BaseExistsAtNodes that determines whether, for a given node,
+// any descendent nodes contain a base.
 // This bool output is stored in node.DescendentBasePresent.
 // This function recursively updates this field for all descendent nodes of the input node.
-func DescendentBaseExists(node *expandedTree.ETree, pos int) {
+func descendentBaseExists(node *expandedTree.ETree, pos int) {
 	if node.Left != nil && node.Right == nil {
 		log.Fatalf("Error: tree is not a well-formed binary tree. For node: %v, left is not nil but right is nil.\n", node.Name)
 	}
@@ -399,10 +406,10 @@ func DescendentBaseExists(node *expandedTree.ETree, pos int) {
 		node.DescendentBasePresent = node.Fasta.Seq[pos] != dna.Gap
 	} else { //if we are not a leaf
 		if node.Left != nil {
-			DescendentBaseExists(node.Left, pos)
+			descendentBaseExists(node.Left, pos)
 		}
 		if node.Right != nil {
-			DescendentBaseExists(node.Right, pos)
+			descendentBaseExists(node.Right, pos)
 		}
 		node.DescendentBasePresent = node.Left.DescendentBasePresent || node.Right.DescendentBasePresent
 	}
@@ -423,7 +430,7 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 	if biasLeafName != "" {
 		biasLeafNode = expandedTree.FindNodeName(root, biasLeafName)
 		if biasLeafNode == nil {
-			log.Fatalf("Didn't find %v in tree.\n", biasLeafName)
+			log.Fatalf("Didn't find %s in tree.\n", biasLeafName)
 		}
 		if biasLeafNode.Up == nil {
 			log.Fatalf("Error: Bias reconstruction node was specified as the root node.")
@@ -433,8 +440,7 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 
 	internalNodes := expandedTree.GetBranch(root)
 	SetState(root, position)
-	DescendentBaseExists(root, position)
-	BaseExists(root, position)
+	BaseExistsAtNodes(root, position)
 	for k := range internalNodes {
 		fix = FixFc(root, internalNodes[k])
 
@@ -449,6 +455,6 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 			answerBase = dna.Gap
 		}
 
-		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, []dna.Base{answerBase}...)
+		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)
 	}
 }
