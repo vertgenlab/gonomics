@@ -69,7 +69,7 @@ func usage() {
 
 func main() {
 	var biasLeafName *string = flag.String("biasLeafName", "", "Specify an extant (leaf) sequence towards which we will bias reconstruction for the immediate ancestor (parent node).")
-	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasBaseThreshold", 0, "When biasing reconstruction for a leaf, this parameter sets the sum of probabilities for non-leaf bases. TODO: make this more clear")
+	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasBaseThreshold", 0, "Given that a biasLeafName specifies a reference species, when reconstructing the sequence of a non-reference species, unless the sum of probabilities for all non-reference bases is above this value, the reference base is returned.")
 	var highestProbThreshold *float64 = flag.Float64("highestProbThreshold", 0, "The highest probability base must be above this value to be accepted for reconstruction. Otherwise, dna.N will be returned.")
 
 	var expectedNumArgs = 3
