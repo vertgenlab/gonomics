@@ -66,6 +66,9 @@ func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdxOrig int) (
 	return
 }
 
+// speedyWindowDifference is a helper function of faFindFast that calculates the divergence between two input sequences for every position using a sliding window.
+// optional arguments longOutput and divergenceRate allow the user to report a -log10pValue corresponding to the p value of observing a level of divergence for a given
+// window under a null binomial model of neutral evolution.
 func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Base, refChrName string, noPrintIfN bool, longOutput bool, divergenceRate float64, out io.Writer) {
 	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                   // these are the two edges of the sliding window in "alignment coordinates"
 	var refIdxBeforeWindow, lastRefIdxOfWindow int = -1, -1                                                   // these are the two edges of the sliding window in "reference (no gaps) coordinates"
@@ -73,7 +76,12 @@ func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Ba
 	var gapOpenCloseRef, gapOpenQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base
 	var err error
 	var percentDiverged, rawPValue float64
+
+	// this caches map[k] to -log10(BinomialDist(n, k, p, true)), which is the -log10 p Value.
 	var scorePValueCache map[int]float64
+
+	// divergenceRate = -1 is a reserved value that signifies that the user has not set a divergence rate. If divergenceRate != -1,
+	// we initialize the scorePValueCache.
 	if divergenceRate != -1 {
 		scorePValueCache = binomialDistCacheLog10(windowSize, divergenceRate)
 	}
