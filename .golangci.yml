@@ -15,8 +15,6 @@ linters:
   disable-all: true
   fast: false
   enable:
-    - decorder
+    - asciicheck
     - gofmt
     - gosimple
-    - goprintffuncname
-    - whitespace
