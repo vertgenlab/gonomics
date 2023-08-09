@@ -53,7 +53,7 @@ var SimulateSamTests = []struct {
 		Coverage:      10,
 		ReadLength:    150,
 		FlatErrorRate: 0,
-		InsertLength:  50,
+		InsertLength:  500,
 		InsertStdDev:  10,
 		SetSeed:       1,
 		ExpectedFile:  "testdata/expected.10xCoverage.sam"},
@@ -63,7 +63,7 @@ var SimulateSamTests = []struct {
 		Coverage:      100,
 		ReadLength:    150,
 		FlatErrorRate: 0,
-		InsertLength:  50,
+		InsertLength:  500,
 		InsertStdDev:  10,
 		SetSeed:       1,
 		ExpectedFile:  "testdata/expected.100xCoverage.sam"},
@@ -153,6 +153,9 @@ func TestSimulateSam(t *testing.T) {
 		if v.ExpectedDeaminationDistribution != "" {
 			if !fileio.AreEqual(v.DeaminationDistribution, v.ExpectedDeaminationDistribution) {
 				t.Errorf("Error: deamination distribution file did not match expected.")
+			} else {
+				err = os.Remove(v.DeaminationDistribution)
+				exception.PanicOnErr(err)
 			}
 		}
 
