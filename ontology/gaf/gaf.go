@@ -63,7 +63,6 @@ func ToString(g Gaf) string {
 		g.AnnotationExtension,
 		g.GeneProductFormId,
 	)
-
 }
 
 // ReadHeader processes the contiguous header from an EasyReader

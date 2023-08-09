@@ -58,7 +58,6 @@ func Equal(a Straw, b Straw) bool {
 	} else {
 		return false
 	}
-
 }
 
 // AllAreEqual compares two slices of Straw structs to see if the values are identical and returns a bool

@@ -19,5 +19,4 @@ func TestContactsToMidpoints(t *testing.T) {
 	} else {
 		os.Remove("testdata/temp.ContactMidpoints.bedpe")
 	}
-
 }
