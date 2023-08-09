@@ -1,4 +1,5 @@
-##SourceDir:/Users/cfauci/go/src/github.com/vertgenlab/gonomics/cmd/
+##SourceDir:/Users/dickinsonia/go/src/github.com/vertgenlab/gonomics/cmd/
+##CmdName:DEPRECATED
 ##CmdName:alleleSplit
 ##CmdName:assemblyStats
 ##CmdName:axTools
@@ -62,7 +63,6 @@
 ##CmdName:mcmcTraceStats
 ##CmdName:mergeMultiFa
 ##CmdName:mergesort
-##CmdName:mouseRecon
 ##CmdName:multFaVisualizeBeds
 ##CmdName:multFaVisualizer
 ##CmdName:multiFaAcceleration
@@ -74,7 +74,6 @@
 ##CmdName:pileup
 ##CmdName:plotFunctions
 ##CmdName:prcompFormat
-##CmdName:primateRecon
 ##CmdName:proximityBlockVcf
 ##CmdName:quickOrthologs
 ##CmdName:randSeq
@@ -128,11 +127,11 @@
                                             
 [31mData Conversion[0m                        
      [32maxtSam[0m                        [36mconvert axt alignments to sam format[0m
-     [32mbedToAminoAcid[0m                [36mtakes a bed and fasta and converts the bed sequences into amino acid sequences[0m
+     [32mbedToAminoAcid[0m                [36m[0m
      [32mbedToFasta[0m                    [36mExtracts sequences from a fasta file from regions specified by an input bed.[0m
      [32mbedToWig[0m                      [36mConverts bed score to wig[0m
      [32mcigarToBed[0m                    [36m./cigarToBed[0m
-     [32mgeneIdToName[0m                  [36mfind and replace gene IDs with gene names according to an input table or preset NCBI RefSeq / ENSEMBL ID conversion tables[0m
+     [32mgeneIdToName[0m                  [36m[0m
      [32mgtfToBed[0m                      [36mConverts a gtf file into bed format.[0m
      [32mmafToBed[0m                      [36mconvert a maf alignment into a bed, where the bed score is the alignment score. The Bed Name field will include a semicolon delimited list of references found in that maf block.[0m
      [32mmafToMultiFa[0m                  [36mconvert a maf alignment into a multiple fasta alignment[0m
@@ -141,7 +140,7 @@
      [32msamAssembler[0m                  [36mReference-based diploid assembly of aligned short reads.Can be used in two modes: 'build' generates diploid assemblies.'score' validates assembly accuracy with a five way alignment including the known divergent sequencesIn 'score', the user specifies a list of filenames, corresponding to each multiFa to score together (usually one file per chromosome).For score, type may be chosen from the following: baseMatrix, baseMatrixByRefBase[0m
      [32msamConsensus[0m                  [36mGenerates a fasta file from a sam over a reference sequence.[0m
      [32msamToBed[0m                      [36mConverts sam to bed[0m
-     [32msamToWig[0m                      [36mConverts sam or bam to wig[0m
+     [32msamToWig[0m                      [36mConverts sam to wig[0m
                                             
 [31mData Simulation[0m                        
      [32mgirafSimulate[0m                 [36mReturns a file of giraf alignments for a input genome graph.[0m
@@ -160,20 +159,20 @@
 [31mFASTA and Multi-FASTA Tools[0m            
      [32mbranchLengthsMultiFaBed[0m       [36mUsing a four-way multiple alignment (including the reference species followed by three successive outgroups),[0m
      [32mcatMultiFa[0m                    [36mConcatenate multiFa alignment files by sequence. Accepts an arbitrary number of input fasta files. Input multiFa files must have the same number and order of records. Additional sequence from each file is appended onto the sequence of each entry.For large number of files, use the list option to avoid the command character limit. Default to standard output.[0m
-     [32mfaBin[0m                         [36mtakes a descending size ordered fasta and returns either a specified number of fastas that are either an entire fasta entry from the input or multiple records from the input (binNum option) or multiple fastas which have a minimum sequence size of specified length (minSize). The number of bins specified must be at most equal to the number of entries in the input fasta. These options cannot be combined.[0m
+     [32mfaBin[0m                         [36m[0m
      [32mfaChunkAlign[0m                  [36m[0m
      [32mfaDrawAlnChunks[0m               [36m[0m
      [32mfaFilter[0m                      [36mReturns a filtered fasta based on option parameters.[0m
      [32mfaFormat[0m                      [36mreformat the sequences in a fasta file[0m
      [32mfaInfo[0m                        [36mReturns summary statistics to standard out for an[0m
-     [32mfaUniq[0m                        [36mPull unique sequences from a fasta file.[0m
+     [32mfaUniq[0m                        [36m[0m
      [32mmafFilter[0m                     [36mFilter a maf file to remove entries below a score threshold[0m
      [32mmafIndels[0m                     [36mtakes pairwise alignment maf and finds insertions in species_ins not present in species_del but flanked by continuous alignments[0m
      [32mmergeMultiFa[0m                  [36mMerge two multiFa files on a shared reference. Does not perform local realignment on INDELs.[0m
      [32mmultFaVisualizeBeds[0m           [36mProvides human-readable multiple alignments for all entries in a bed file.[0m
      [32mmultFaVisualizer[0m              [36mProvides human-readable multiple alignment from a given multiFa.[0m
      [32mmultiFaExtract[0m                [36mPull sub-sequence from multiple Fasta alignment for each entry. Uses reference indices, treating the first sequence as the reference.[0m
-     [32mmultiFaReduce[0m                 [36mmfaReduce removes all columns in an multi fasta alignment that are not variable[0m
+     [32mmultiFaReduce[0m                 [36m[0m
                                             
 [31mFASTQ Tools[0m                            
      [32mfastqFilter[0m                   [36mReturns a filtered fastq based on option parameters.[0m
@@ -183,6 +182,10 @@
      [32maxTools[0m                       [36mutilities for axt alignments[0m
      [32mfindAndReplace[0m                [36mfinds values in a file and replaces them, processes the input as a string.[0m
      [32mgoFetchCat[0m                    [36mview http url links and print data stream to stdout[0m
+     [32mintervalContacts[0m              [36m[0m
+     [32mintervalOverlap[0m               [36mA tool to find non/overlapping genomic regions[0m
+     [32mintervalSubsetMatrix[0m          [36mProduces a binary matrix for accessibility breadth analysis.[0m
+     [32mlastZWriter[0m                   [36m[0m
      [32mgreat3d[0m                       [36m[0m
      [32mintervalContacts[0m              [36mReturns all regions that contact input genomic regions. Contacts are specified by an input bedpe file.[0m
      [32mintervalOverlap[0m               [36mA tool to find non/overlapping genomic regions[0m
@@ -198,7 +201,7 @@
                                             
 [31mLinear Alignment Tools[0m                 
      [32mglobalAlignment[0m               [36mchelsea's global alignment[0m
-     [32mglobalAlignmentAnchor[0m         [36moperates on 2 species, takes alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)[0m
+     [32mglobalAlignmentAnchor[0m         [36mtakes pairwise alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)[0m
                                             
 [31mSAM Tools[0m                              
      [32mpileup[0m                        [36mCount bases from sequencing data[0m
@@ -206,12 +209,10 @@
      [32mscCount[0m                       [36mGenerate count matrix from single-cell sequencing data.[0m
                                             
 [31mSequence Evolution & Reconstruction[0m    
-     [32mdivergenceSpectrum[0m            [36mDetermine the mutation spectrum for divergent sites in each region of an input bed file.[0m
+     [32mdivergenceSpectrum[0m            [36m[0m
      [32mdotToNewick[0m                   [36mGenerates a newick tree file from an input dot format tree.[0m
      [32mdrawNewickTree[0m                [36mCreate PNG of Newick tree[0m
      [32mfaFindFast[0m                    [36mReturns number of mutations that separate two sequences for a given window size[0m
-     [32mmouseRecon[0m                    [36mReturns maximum likelihood ancestral sequences from a Mouse-Rat-ChineseHamster-Squirrel multiple alignment in multiFa format.[0m
-     [32mprimateRecon[0m                  [36mReturns maximum likelihood sequence from an HBCGO primate alignment[0m
      [32mreconstructSeq[0m                [36mreconstructSeq takes in a newick tree file and a fasta file containing fastas for all leaf nodes and returns a fasta file containing fastas for all nodes of the tree[0m
      [32msimRecon[0m                      [36mSimulate evolution along a tree and perform ancestral reconstruction[0m
      [32msimulateEvol[0m                  [36msimulateEvol simulates sequence evolution on an input fasta.[0m
@@ -224,7 +225,7 @@
 [31mStatistics & Population Genetics[0m       
      [32massemblyStats[0m                 [36mProvides information about the number of scaffolds, including the N50, number of scaffolds, and distribution of lengths of assembled scaffolds.[0m
      [32mdunnIndex[0m                     [36mComputes the Dunn Index based on variable SNPs for each input bed region of a multiple alignment.[0m
-     [32mhaplotypeGenerator[0m            [36mGenerate unique haplotypes for provided regions from genetic variation data.[0m
+     [32mhaplotypeGenerator[0m            [36m[0m
      [32mmcmcTraceStats[0m                [36mReturns summary statistics on an MCMC trace file produced by selectionMCMC.[0m
      [32mmultiFaAcceleration[0m           [36mPerforms velocity and acceleration on a four way multiple alignment in multiFa format.A four way multiple alignment must contain four species (index 0 to 3) in the topology that aln[0] is the most derived and species 1 to 3 are successive outgroups.[0m
      [32moverlapEnrichments[0m            [36mReturns the p-value of enrichment and depletion for overlaps between the elements in two input files.[0m
@@ -237,7 +238,7 @@
      [32mvcfAfs[0m                        [36mReturns allele frequency spectrum information in a text file for graphing.[0m
                                             
 [31mVCF Tools[0m                              
-     [32mfilterGenotypes[0m               [36mfilter genotyped Vcfs containing at least 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents[0m
+     [32mfilterGenotypes[0m               [36mfilter genotyped Vcfs containing at leaste 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents[0m
      [32msampleVcf[0m                     [36mReturns a sample from a VCF file with a specified number of results.[0m
      [32mvcfFilter[0m                     [36mFilter vcf records.[0m
      [32mvcfFormat[0m                     [36mOptions alter VCF formatting.[0m
@@ -252,10 +253,11 @@
      [32mvcfWebAnnotate[0m                [36mAnnotate a vcf file by querying various databases via CellBase.[0m
                                             
 [31mWIG Tools[0m                              
-     [32mwigFilter[0m                     [36mReturns a filtered wig based on option parameters.[0m
+     [32mwigFilter[0m                     [36m[0m
      [32mwigMath[0m                       [36mPerform mathematical operations on wig format data.[0m
      [32mwigPeaks[0m                      [36mIdentifies peaks in a WIG file[0m
-     [32mwigStats[0m                      [36mprovide coverage histogram for WIG format visualization files.[0m
+     [32mwigStats[0m                      [36m[0m
                                             
 [31mUncategorized[0m                          
+     [32mDEPRECATED[0m                    [36m[0m
      [32mbedShear[0m                      [36m[0m
