@@ -4,12 +4,12 @@ import (
 	"io"
 )
 
-// GetChrom returns the name of the target chromosome
+// GetChrom returns the name of the target chromosome.
 func (ch Chain) GetChrom() string {
 	return ch.TName
 }
 
-// GetChromStart returns the starting position on the target chromosome
+// GetChromStart returns the starting position on the target chromosome.
 func (ch Chain) GetChromStart() int {
 	if ch.TStrand {
 		return ch.TStart
@@ -18,7 +18,7 @@ func (ch Chain) GetChromStart() int {
 	}
 }
 
-// GetChromEnd returns the ending position on the target chromosome
+// GetChromEnd returns the ending position on the target chromosome.
 func (ch Chain) GetChromEnd() int {
 	if ch.TStrand {
 		return ch.TEnd
@@ -33,7 +33,7 @@ func (ch Chain) WriteToFileHandle(file io.Writer) {
 	WriteToFileHandle(file, ch)
 }
 
-// SwapBoth swaps the target and query and returns the chain after the swap
+// SwapBoth swaps the target and query and returns the chain after the swap.
 func (ch Chain) SwapBoth() Chain {
 	return SwapBoth(ch)
 }

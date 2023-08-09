@@ -14,7 +14,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// A Tree is a node in a binary tree
+// A Tree is a node in a binary tree.
 type Tree struct {
 	Name         string
 	OnlyTopology bool

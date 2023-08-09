@@ -2,11 +2,12 @@ package fasta
 
 import (
 	"fmt"
+	"log"
+	"sort"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"sort"
 )
 
 // AssemblyStats takes the path to a fasta file and a flag for whether lower case letters

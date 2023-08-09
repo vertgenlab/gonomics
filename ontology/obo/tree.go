@@ -2,9 +2,10 @@ package obo
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 // buildTree is a helper function of Read that takes a map of string to *Obo structs and builds a tree, setting
@@ -86,7 +87,7 @@ func ToDot(outFile string, terms map[string]*Obo) {
 	exception.PanicOnErr(err)
 }
 
-// makeTermMap creates a map to find nodes based on their ID and AltIDs
+// makeTermMap creates a map to find nodes based on their ID and AltIDs.
 func makeTermMap(terms []Obo) map[string]*Obo {
 	var altId string
 	termMap := make(map[string]*Obo)

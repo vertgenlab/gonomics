@@ -106,7 +106,7 @@ func AffineGapLocal(target []dna.Base, query []dna.Base, scores [][]int64, gapOp
 	return affineGap_highMem(target, query, scores, gapOpen, gapExtend, true)
 }
 
-// TargetQueryPair holds two sequences, their alignment score, and the cigar describing their alignment
+// TargetQueryPair holds two sequences, their alignment score, and the cigar describing their alignment.
 type TargetQueryPair struct {
 	Target []dna.Base
 	Query  []dna.Base

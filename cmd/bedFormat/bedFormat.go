@@ -6,6 +6,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math"
+	"os"
+	"sort"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
@@ -13,10 +18,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
-	"math"
-	"os"
-	"sort"
 )
 
 type Settings struct {
@@ -36,7 +37,7 @@ type Settings struct {
 	LogTransformPValue       bool
 }
 
-// FdrConverter contains a RawPValue and Rank, which are used to calculate an AdjPValue
+// FdrConverter contains a RawPValue and Rank, which are used to calculate an AdjPValue.
 type FdrConverter struct {
 	Count     int
 	RawPValue float64
@@ -175,7 +176,6 @@ func bedFormat(s Settings) {
 			fdrSlice[i].RawPValue = fdrSlice[i].RawPValue * -1                                                          //from log10p to -log10p
 			fdrSlice[i].AdjPValue = math.Max(fdrSlice[i].AdjPValue*-1, 0)                                               //from log10p to -log10p
 			fdrMap[fdrSlice[i].RawPValue] = fdrSlice[i]
-
 		}
 
 		ch = bed.GoReadToChan(s.OutFile + ".tmp")

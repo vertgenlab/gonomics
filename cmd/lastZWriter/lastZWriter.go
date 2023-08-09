@@ -16,7 +16,7 @@ import (
 )
 
 // MakeArray generates a lastZ alignment scoring matrix from user-specified path if needed,
-// and calls helper functions (lastZWriter.AlignSetUp, writeFile) to build the lastZ output directory tree and write all lastZ commands
+// and calls helper functions (lastZWriter.AlignSetUp, writeFile) to build the lastZ output directory tree and write all lastZ commands.
 func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFile string, allDists string, outText string, m bool, mPath string, targetModifier string) {
 	if !m {
 		lastZWriter.BuildMatrices(mPath)
@@ -41,7 +41,7 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 	fileio.Write(outText, allLines)
 }
 
-// MakeArraySimple has no allDists, m, or mPath (will not generate matrix), and parameters is directly input as 1 string not generated as []string
+// MakeArraySimple has no allDists, m, or mPath (will not generate matrix), and parameters is directly input as 1 string not generated as []string.
 func MakeArraySimple(lastZ string, pairwise string, speciesListFile string, refListFile string, parameters string, outText string, targetModifier string) {
 	speciesList := fileio.Read(speciesListFile)
 	refList := fileio.Read(refListFile)
@@ -64,7 +64,7 @@ func MakeArraySimple(lastZ string, pairwise string, speciesListFile string, refL
 // reference: target in lastZ alignment, species: query in lastZ alignment
 // parameters: lastZ alignment parameters, e.g. masking score M=254
 // matrix: lastZ alignment scoring matrix
-// targetModifier: modifier on the target in lastZ alignment, e.g. [unmask]
+// targetModifier: modifier on the target in lastZ alignment, e.g. [unmask].
 func writeFile(lastZ string, pairwise string, reference string, species string, parameters []string, matrix string, targetModifier string, allLines []string) (lines []string) {
 	var currLines []string
 	par := fmt.Sprintf("%s %s %s %s %s %s %s %s ", parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5], parameters[6], parameters[7])
@@ -74,7 +74,7 @@ func writeFile(lastZ string, pairwise string, reference string, species string, 
 	return allLines
 }
 
-// writeFileSimple has no matrix string, and parameters is 1 string not []string
+// writeFileSimple has no matrix string, and parameters is 1 string not []string.
 func writeFileSimple(lastZ string, pairwise string, reference string, species string, parameters string, targetModifier string, allLines []string) (lines []string) {
 	var currLines []string
 	currLines = fastaFinderSimple(lastZ, pairwise, reference, species, parameters, targetModifier)
@@ -82,7 +82,7 @@ func writeFileSimple(lastZ string, pairwise string, reference string, species st
 	return allLines
 }
 
-// fastaFinder writes each individual lastZ command
+// fastaFinder writes each individual lastZ command.
 func fastaFinder(lastZ string, pairwise string, reference string, species string, par string, matrix string, targetModifier string) (lines []string) {
 	var currLine string
 	var theseLines []string
@@ -136,7 +136,7 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 }
 
 // fastaFinderSimple has no matrix string
-// fastaFinderSimple has a different output file name structure: ref.species/qName/tName.qName.axt
+// fastaFinderSimple has a different output file name structure: ref.species/qName/tName.qName.axt.
 func fastaFinderSimple(lastZ string, pairwise string, reference string, species string, par string, targetModifier string) (lines []string) {
 	var currLine string
 	var theseLines []string

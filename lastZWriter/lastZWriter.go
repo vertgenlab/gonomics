@@ -2,12 +2,13 @@
 package lastZWriter
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // AlignSetUp takes in the path to the parent directory where all the individual fastas for alignment are being held.
@@ -24,7 +25,7 @@ func AlignSetUp(pairwise string, species string, reference string, allDists stri
 }
 
 // AlignSetUpSimple creates a different output file name structure: ref.species/qName/tName.qName.axt
-// AlignSetupSimple does not generate parameter, matrix
+// AlignSetupSimple does not generate parameter, matrix.
 func AlignSetUpSimple(pairwise string, species string, reference string) {
 	outDir := pairwise + "/" + reference + "." + species
 	// AlignSetUp_Simple makeOutDir input is (species,reference), unlike AlignSetUp makeOutDir (reference,species)

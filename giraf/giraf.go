@@ -3,12 +3,13 @@ package giraf
 
 import (
 	"fmt"
+	"io"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"io"
-	"sync"
 )
 
 // Giraf struct contains data fields that describes query sequences aligned to a genome graph reference.

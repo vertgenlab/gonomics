@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed/bedpe"
 )
 
 var test = []struct {
@@ -27,5 +28,4 @@ func TestStrawToBedpe(t *testing.T) {
 			os.Remove(test[i].outFile)
 		}
 	}
-
 }

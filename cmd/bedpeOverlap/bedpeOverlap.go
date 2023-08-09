@@ -96,7 +96,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 	exception.PanicOnErr(err)
 }
 
-// SelectIsBedBoth checks if any of the select files overlap either bedpe foot from the input and outputs the whole bedpe if there is overlap
+// SelectIsBedBoth checks if any of the select files overlap either bedpe foot from the input and outputs the whole bedpe if there is overlap.
 func SelectIsBedBoth(bedSelectFile string, bedpeInFile string, overlapThreshold float64, contactOutFile string) {
 	var selectIntervals = make([]interval.Interval, 0)
 	var aOverlaps []interval.Interval

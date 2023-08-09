@@ -33,7 +33,7 @@ func SortTranscripts(g *Gene) {
 	sort.Slice(g.Transcripts, func(i, j int) bool { return isLonger(g.Transcripts[i], g.Transcripts[j]) })
 }
 
-// SortAllTranscripts applies SortTranscripts to every value in the map
+// SortAllTranscripts applies SortTranscripts to every value in the map.
 func SortAllTranscripts(m map[string]*Gene) {
 	for _, g := range m {
 		SortTranscripts(g)
@@ -50,7 +50,7 @@ func MoveCanonicalToZero(g *Gene) {
 	}
 }
 
-// MoveAllCanonicalToZero applies MoveCanonicalToZero to every value in the map
+// MoveAllCanonicalToZero applies MoveCanonicalToZero to every value in the map.
 func MoveAllCanonicalToZero(m map[string]*Gene) {
 	for _, g := range m {
 		MoveCanonicalToZero(g)

@@ -1,9 +1,10 @@
 package bed
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 // FillSpaceNoHiddenValue accepts a bed of single point tss positions and reference genome as a map[string]chromInfo.ChromInfo and returns a bed
@@ -47,7 +48,7 @@ func FillSpaceNoHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo
 	return answer
 }
 
-// removeRecordsOnMissingChrom will remove any gene records that exist on a chromosome that isn't in the chrom.sizes file provided
+// removeRecordsOnMissingChrom will remove any gene records that exist on a chromosome that isn't in the chrom.sizes file provided.
 func removeRecordsOnMissingChrom(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 	var out = make([]Bed, 0)
 	var exist bool
@@ -64,7 +65,7 @@ func removeRecordsOnMissingChrom(records []Bed, genome map[string]chromInfo.Chro
 // FillSpaceHiddenValue accepts a slice of Bed structs and a reference genome as a map[string]chromInfo.ChromInfo and returns a
 // slice of Bed structs that assigns each genomic position to the nearest feature in 3D space from the input bed, using
 // the input bed scores to represent "hidden values", or the distance from that position to its nearest TSS in 3D space.
-// bed that is passed here from Fill3dSpace has gene positions and bedpe positions already filled in
+// bed that is passed here from Fill3dSpace has gene positions and bedpe positions already filled in.
 func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) []Bed {
 	records = removeRecordsOnMissingChrom(records, genome)
 	records = runUntilNoNewHidden(records)
@@ -114,7 +115,7 @@ func FillSpaceHiddenValue(records []Bed, genome map[string]chromInfo.ChromInfo) 
 }
 
 // runUntilNoNewHidden directs our mergeKeepLowNameAndScore function to keep updating until no changes occur,
-// meaning everything is assigned the smallest possible distance to a gene
+// meaning everything is assigned the smallest possible distance to a gene.
 func runUntilNoNewHidden(records []Bed) []Bed {
 	var newHidden bool
 	records, newHidden = mergeKeepLowScoreAndName(records)
@@ -163,7 +164,7 @@ func mergeKeepLowScoreAndName(records []Bed) (out []Bed, newHidden bool) {
 }
 
 // helper fucntion of FillSpaceHiddenValue. Define the 3dMidpoint between bed entries A and B (with hidden values
-// Ha and Hb) as (A.ChromEnd-Ha + B.ChromStart+Hb) / 2. If the midpoint is left of end of record A, then A is removed from the output
+// Ha and Hb) as (A.ChromEnd-Ha + B.ChromStart+Hb) / 2. If the midpoint is left of end of record A, then A is removed from the output.
 func removeBedsWithNoTerritory(records []Bed) ([]Bed, bool) {
 	var answer []Bed
 	var threeDMidpoint int

@@ -1,10 +1,11 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"math"
+
+	"github.com/vertgenlab/gonomics/numbers/logspace"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // NormalDist returns the normal distribution value x for a distribution with mean mu and standard deviation sigma.

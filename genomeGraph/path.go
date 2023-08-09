@@ -3,12 +3,13 @@ package genomeGraph
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
-	"strings"
 )
 
 func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {

@@ -5,7 +5,7 @@ import (
 )
 
 // KellyPalette contains a set of high-contrast colors from:
-// K. Kelly (1965): Twenty-two colors of maximum contrast. Color Eng., 3(6)
+// K. Kelly (1965): Twenty-two colors of maximum contrast. Color Eng., 3(6).
 var KellyPalette = color.Palette{
 	color.RGBA{0xF2, 0xF3, 0xF4, 0xff},
 	color.RGBA{0x22, 0x22, 0x22, 0xff},

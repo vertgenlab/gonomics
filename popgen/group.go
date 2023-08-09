@@ -2,9 +2,9 @@
 package popgen
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
 	"strings"
 
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 )

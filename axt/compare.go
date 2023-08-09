@@ -48,7 +48,7 @@ func compareRNameCoord(alpha Axt, beta Axt) int {
 	}
 }
 
-// SortByRNameCoord sorts a slice of Axts by the reference chrom name and then genomic position
+// SortByRNameCoord sorts a slice of Axts by the reference chrom name and then genomic position.
 func SortByRNameCoord(axts []Axt) {
 	sort.Slice(axts, func(i, j int) bool { return compareRNameCoord(axts[i], axts[j]) == -1 })
 }

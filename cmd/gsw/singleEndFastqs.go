@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"

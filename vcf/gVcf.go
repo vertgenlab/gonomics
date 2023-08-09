@@ -30,7 +30,7 @@ func BuildGenotypeMap(v Vcf, names map[string]int16, mapToVcf map[uint64]Vcf) ma
 	return mapToVcf
 }
 
-// ChromPosToUInt64 takes a chromosome number and a start position and encodes them both as a uint64
+// ChromPosToUInt64 takes a chromosome number and a start position and encodes them both as a uint64.
 func ChromPosToUInt64(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)
 	chromCode = chromCode << 32
@@ -38,7 +38,7 @@ func ChromPosToUInt64(chrom int, start int) uint64 {
 	return answer
 }
 
-// PrintSampleNames takes a vcf header and prints the sample names from the "#CHROM" line
+// PrintSampleNames takes a vcf header and prints the sample names from the "#CHROM" line.
 func PrintSampleNames(header Header) string {
 	var ans string = ""
 	for _, line := range header.Text {
@@ -55,7 +55,7 @@ func PrintSampleNames(header Header) string {
 }
 
 // GetAltBases converts a slice of DNA sequenes encoded as strings into a slice
-// of DNA sequences encoded as slices of dna.Base
+// of DNA sequences encoded as slices of dna.Base.
 func GetAltBases(words []string) [][]dna.Base {
 	var answer [][]dna.Base = make([][]dna.Base, len(words))
 	for i := 0; i < len(words); i++ {
@@ -83,7 +83,7 @@ func ReorderSampleColumns(input Vcf, samples []int16) Vcf {
 	return input
 }
 
-// SamplesToString has been deprecated
+// SamplesToString has been deprecated.
 func SamplesToString(sample []Sample) string {
 	var answer string = ""
 	for i := 0; i < len(sample); i++ {

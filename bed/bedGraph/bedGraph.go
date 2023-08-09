@@ -2,12 +2,13 @@ package bedGraph
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // BedGraph stores information about genomic regions, including their location and an associated float DataValue.

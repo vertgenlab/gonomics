@@ -8,7 +8,7 @@ import (
 )
 
 // MafSLinesAreEqual returns true if, and only if, the values
-// in two "S" lines are identical
+// in two "S" lines are identical.
 func MafSLinesAreEqual(a MafSLine, b MafSLine) bool {
 	if a.Src != b.Src {
 		return false
@@ -32,7 +32,7 @@ func MafSLinesAreEqual(a MafSLine, b MafSLine) bool {
 }
 
 // MafILinesAreEqual returns true if, and only if, the values
-// in two "I" lines are identical
+// in two "I" lines are identical.
 func MafILinesAreEqual(a MafILine, b MafILine) bool {
 	if a.Src != b.Src {
 		return false
@@ -53,7 +53,7 @@ func MafILinesAreEqual(a MafILine, b MafILine) bool {
 }
 
 // MafELinesAreEqual returns true if, and only if, the values
-// in two "E" lines are identical
+// in two "E" lines are identical.
 func MafELinesAreEqual(a MafELine, b MafELine) bool {
 	if a.Src != b.Src {
 		return false
@@ -158,7 +158,7 @@ func SortByPosRev(m []*Maf) {
 	sort.Slice(m, func(i, j int) bool { return comparePos(m[i], m[j]) == 1 })
 }
 
-// SortScore will sort a slice of maf blocks by their score
+// SortScore will sort a slice of maf blocks by their score.
 func SortScore(m []*Maf) {
 	sort.Slice(m, func(i, j int) bool { return compareScore(m[i], m[j]) == 1 })
 }

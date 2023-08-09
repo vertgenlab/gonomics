@@ -1,10 +1,11 @@
 package bedpe
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/chromInfo"
 )
 
 var genes = []bed.Bed{{Chrom: "chr1", ChromStart: 2, ChromEnd: 3, Name: "first", Score: 0}, {Chrom: "chr1", ChromStart: 13, ChromEnd: 14, Name: "second", Score: 0}, {Chrom: "chr1", ChromStart: 500, ChromEnd: 501, Name: "third", Score: 0}, {Chrom: "chr2", ChromStart: 10, ChromEnd: 40, Name: "fourth", Score: 0}}

@@ -1,10 +1,10 @@
 package binaryGiraf
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"sync"
 
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"

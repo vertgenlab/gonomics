@@ -3,11 +3,12 @@ package motif
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
-	"strings"
 )
 
 type PositionMatrixType byte

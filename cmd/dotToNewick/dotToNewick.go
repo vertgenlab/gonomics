@@ -6,9 +6,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/tree"
-	"log"
 )
 
 func dotToNewick(inFile string, outFile string, verbose bool) {

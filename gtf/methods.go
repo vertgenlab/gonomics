@@ -19,7 +19,7 @@ func (g *Gene) GetChromEnd() int {
 	return g.Transcripts[0].End
 }
 
-// WriteToFileHandle writes the gene to an io.Writer
+// WriteToFileHandle writes the gene to an io.Writer.
 func (g *Gene) WriteToFileHandle(file io.Writer) {
 	WriteToFileHandle(file, g)
 }

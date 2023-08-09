@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"io"
-	"log"
 )
 
 // incrementWindowEdge takes two aligned fasta sequences and a current index into the alignment.

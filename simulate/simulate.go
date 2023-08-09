@@ -24,7 +24,7 @@ type BaseExt struct {
 	SeqPos int
 }
 
-// GC is the expected GC-content
+// GC is the expected GC-content.
 var GC float64 = 0.42
 
 // RandGene takes a gene name, length (in bp) and expected GC content and
@@ -138,7 +138,7 @@ func changeBase(originalBase dna.Base) dna.Base {
 }
 
 // mutateBase takes a base, a position, and a branch length and returns the base (possibily mutated)
-// along with its position
+// along with its position.
 func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 	r := rand.Float64()
 
@@ -451,7 +451,7 @@ func PickStop(codon CodonExt) CodonExt {
 	return codon
 }
 
-// copySeq makes a copy of a []dna.Base
+// copySeq makes a copy of a []dna.Base.
 func copySeq(seq []dna.Base) []dna.Base {
 	original := make([]dna.Base, len(seq))
 	copy(original, seq)

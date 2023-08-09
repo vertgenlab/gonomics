@@ -1,8 +1,9 @@
 package bed
 
 import (
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
+
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // Trim shortens bed entries on the left and right side by an input-specified number of bases. These values must not exceed the length of the bed entry and must be non-negative.

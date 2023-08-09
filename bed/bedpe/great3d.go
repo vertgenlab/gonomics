@@ -1,12 +1,11 @@
 package bedpe
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/interval"
-	"log"
-	//TODO: Reintroduce when bug is fixed "log"
-	//"fmt"
 )
 
 // Fill3dSpace takes in a set of Bedpe format contact points, single-base pair []bed.Bed representing
@@ -95,7 +94,7 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 	return bed.FillSpaceHiddenValue(answer, sizes)
 }
 
-// makeChromSlice is a helper function of Fill3dSpace that makes a list of all the chroms in the set of genes
+// makeChromSlice is a helper function of Fill3dSpace that makes a list of all the chroms in the set of genes.
 func makeChromSlice(records []bed.Bed) []string {
 	var chroms []string
 	var inChroms bool
@@ -118,7 +117,7 @@ func makeChromSlice(records []bed.Bed) []string {
 	return chroms
 }
 
-// checkGeneFileForChrom is a helper function for fill3dSpace and checks the contacts bedpe to make sure that the chromosome is in the gene set as well
+// checkGeneFileForChrom is a helper function for fill3dSpace and checks the contacts bedpe to make sure that the chromosome is in the gene set as well.
 func checkGeneFileForChrom(a BedPe, b []string) bool {
 	chromInFile := false
 

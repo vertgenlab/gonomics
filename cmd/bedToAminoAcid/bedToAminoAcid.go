@@ -6,11 +6,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 // bedToAminoAcid is a complete function made from gonomics packages, it takes a bed and a fasta and returns the amino acid sequence of all the beds together.
@@ -37,10 +38,9 @@ func bedToAminoAcid(b string, f string, output string) {
 	}
 
 	fileio.Write(output, outRecord) //write the contents of the outRecord variable to the file specified in the arguments.
-
 }
 
-// example of usage functions for commands in the gonomics/cmd directory
+// example of usage functions for commands in the gonomics/cmd directory.
 func usage() {
 	fmt.Print(
 		"bedToAminoAcid - takes a bed and fasta and converts the bed sequences into amino acid sequences\n" +
@@ -50,7 +50,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-// example main function for gonomics/cmd directory
+// example main function for gonomics/cmd directory.
 func main() {
 	var expectedNumArgs int = 3 //this line specifies the expected number of arguments for the function. Any deviation from this (not including options) will produce an error that prints the usage statement
 

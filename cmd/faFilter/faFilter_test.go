@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
 	"os"
 	"testing"
 
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 )
 

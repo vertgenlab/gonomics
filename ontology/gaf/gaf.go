@@ -4,12 +4,13 @@ package gaf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 type Gaf struct {
@@ -63,7 +64,6 @@ func ToString(g Gaf) string {
 		g.AnnotationExtension,
 		g.GeneProductFormId,
 	)
-
 }
 
 // ReadHeader processes the contiguous header from an EasyReader

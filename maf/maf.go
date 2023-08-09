@@ -4,15 +4,16 @@ package maf
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"strings"
+	"unicode/utf8"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"io"
-	"log"
-	"strings"
-	"unicode/utf8"
 )
 
 // MafSLine holds the information stored in an "S" line of the maf format.
@@ -44,7 +45,7 @@ type MafELine struct {
 	Status  rune
 }
 
-// MafSpecies holds the info for a given species in a given maf block
+// MafSpecies holds the info for a given species in a given maf block.
 type MafSpecies struct {
 	Src   string
 	SLine *MafSLine
@@ -181,7 +182,7 @@ func parseMafELine(line string) *MafELine {
 // to match.  If the source of the maf block is exactly equal to the
 // input string than a pointer to the info for that species is returned,
 // and otherwise nil is returned.  For example, hg38 would find a maf
-// block with hg38 as the source of a sequence, but not hg38.chr7
+// block with hg38 as the source of a sequence, but not hg38.chr7.
 func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 	for i := 0; i < len(m.Species); i++ {
 		if m.Species[i].Src == src {
@@ -193,7 +194,7 @@ func FindSpeciesExactMatch(m *Maf, src string) *MafSpecies {
 
 // FindSpeciesBeforeDot is similar to FindSpeciesExactMatch, but
 // in this case searching hg38 will find blocks with hg38, hg38.chr6
-// or hg38.chr22
+// or hg38.chr22.
 func FindSpeciesBeforeDot(m *Maf, assembly string) *MafSpecies {
 	for i := 0; i < len(m.Species); i++ {
 		currAssembly, _ := SrcToAssemblyAndChrom(m.Species[i].Src)
@@ -315,7 +316,7 @@ func calculateFieldSizes(m *Maf) (int, int, int, int) {
 	return srcLen, startLen, sizeLen, srcSizeLen
 }
 
-// WriteToFileHandle writes a single maf block to an io.Writer
+// WriteToFileHandle writes a single maf block to an io.Writer.
 func WriteToFileHandle(file io.Writer, m *Maf) {
 	_, err := fmt.Fprintf(file, "a score=%.1f\n", m.Score)
 	exception.PanicOnErr(err)
@@ -342,7 +343,7 @@ func WriteToFileHandle(file io.Writer, m *Maf) {
 	exception.PanicOnErr(err)
 }
 
-// Write writes an entire slice of maf blocks to a file specified by the given filename
+// Write writes an entire slice of maf blocks to a file specified by the given filename.
 func Write(filename string, data []*Maf) {
 	var err error
 	file := fileio.EasyCreate(filename)

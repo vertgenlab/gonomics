@@ -88,7 +88,7 @@ func transform(query Interval, op string) (x1, x2, y1, y2 float64) {
 	return x1, x2, y1, y2
 }
 
-// PrintRelationships is used to print the supported overlap relationships as part of the usage message
+// PrintRelationships is used to print the supported overlap relationships as part of the usage message.
 func PrintRelationships() {
 	o := "\t*------*\n\t    *------*\n\n\n"
 	oi := "\t    *------*\n\t*------*\n\n\n"

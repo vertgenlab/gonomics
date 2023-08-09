@@ -1,9 +1,10 @@
 package bedpe
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func TestContactsToMidpoints(t *testing.T) {
@@ -19,5 +20,4 @@ func TestContactsToMidpoints(t *testing.T) {
 	} else {
 		os.Remove("testdata/temp.ContactMidpoints.bedpe")
 	}
-
 }

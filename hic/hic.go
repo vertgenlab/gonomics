@@ -4,22 +4,23 @@
 package hic
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
-// Straw stores the output from juicer tools straw command, start of bin 1, start of bin 2 and the contacts between them, to convert to bedpe
+// Straw stores the output from juicer tools straw command, start of bin 1, start of bin 2 and the contacts between them, to convert to bedpe.
 type Straw struct {
 	Bin1Start    int
 	Bin2Start    int
 	ContactScore int
 }
 
-// Read returns a slice of straw structs from the straw input file
+// Read returns a slice of straw structs from the straw input file.
 func Read(filename string) []Straw {
 	var line string
 	var answer []Straw
@@ -37,7 +38,7 @@ func Read(filename string) []Straw {
 	return answer
 }
 
-// processStrawLine is a helper function to read a straw file into a straw struct
+// processStrawLine is a helper function to read a straw file into a straw struct.
 func processStrawLine(line string) Straw {
 	words := strings.Split(line, "\t")
 	startBin1 := parse.StringToInt(words[0])
@@ -49,7 +50,7 @@ func processStrawLine(line string) Straw {
 	return current
 }
 
-// Equal compares two Straw structs to see if the values are identical and returns a bool
+// Equal compares two Straw structs to see if the values are identical and returns a bool.
 func Equal(a Straw, b Straw) bool {
 	if a.Bin1Start == b.Bin1Start && a.Bin2Start == b.Bin2Start && a.ContactScore == b.ContactScore {
 		return true
@@ -58,10 +59,9 @@ func Equal(a Straw, b Straw) bool {
 	} else {
 		return false
 	}
-
 }
 
-// AllAreEqual compares two slices of Straw structs to see if the values are identical and returns a bool
+// AllAreEqual compares two slices of Straw structs to see if the values are identical and returns a bool.
 func AllAreEqual(a []Straw, b []Straw) bool {
 	var i int
 
@@ -97,7 +97,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Straw, wg *sync.WaitGroup) 
 	wg.Done()
 }
 
-// GoReadToChan reads Straw entries from an input filename to a <- chan Straw
+// GoReadToChan reads Straw entries from an input filename to a <- chan Straw.
 func GoReadToChan(filename string) <-chan Straw {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup

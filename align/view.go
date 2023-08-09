@@ -22,7 +22,7 @@ func colTypeToRune(a ColType) rune {
 	}
 }
 
-// PrintCigar returns the slice of cigar operations as a human-readable string
+// PrintCigar returns the slice of cigar operations as a human-readable string.
 func PrintCigar(operations []Cigar) string {
 	var buffer bytes.Buffer
 	for _, curr := range operations {

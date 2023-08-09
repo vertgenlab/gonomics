@@ -3,13 +3,14 @@ package axt
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"io"
-	"log"
-	"strings"
 )
 
 // Axt struct: Naming convention is hard here because UCSC website does not

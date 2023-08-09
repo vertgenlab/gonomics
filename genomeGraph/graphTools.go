@@ -1,13 +1,14 @@
 package genomeGraph
 
 import (
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
-	"strings"
 )
 
 func VariantGraph(ref <-chan fasta.Fasta, vcfMap map[string][]vcf.Vcf) *GenomeGraph {

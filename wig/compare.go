@@ -106,7 +106,7 @@ func Pearson(alpha []Wig, beta []Wig, missing float64, samplingFrequency float64
 
 // getChromIndex takes a slice of Wig structs and the name of a chromosome.  The function
 // returns the index in the first Wig struct in the slice with a chromosome name equal to the
-// search string provided
+// search string provided.
 func getChromIndex(w []Wig, chrom string) int {
 	for i := range w {
 		if w[i].Chrom == chrom {

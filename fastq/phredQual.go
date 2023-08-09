@@ -1,9 +1,10 @@
 package fastq
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
 	"math"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // SAM format uses ascii offset of 33 to make everything start with individual characters
@@ -28,7 +29,7 @@ func ToQual(qual []byte) []uint8 {
 	return answer
 }
 
-// ReverseQualUint8Record reverses the elements of the slice
+// ReverseQualUint8Record reverses the elements of the slice.
 func ReverseQualUint8Record(qualScore []uint8) {
 	var i, off int
 	for i = len(qualScore)/2 - 1; i >= 0; i-- {
@@ -49,14 +50,14 @@ func QualString(qual []uint8) string {
 	return str.String()
 }
 
-// PhredToPError converts a base quality in uint8 format to an error rate
+// PhredToPError converts a base quality in uint8 format to an error rate.
 func PhredToPError(baseQual uint8) float32 {
 	q := float64(baseQual)
 	p := math.Pow(10, -q/10)
 	return float32(p)
 }
 
-// ErrorRate converts a slice of base qualities in uint8 format to an error rate
+// ErrorRate converts a slice of base qualities in uint8 format to an error rate.
 func ErrorRate(baseQual []uint8) []float32 {
 	var answer []float32 = make([]float32, len(baseQual))
 	for i := 0; i < len(baseQual); i++ {

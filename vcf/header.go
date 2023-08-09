@@ -2,13 +2,14 @@ package vcf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Header contains all information present in the header section of a VCF.
@@ -26,7 +27,7 @@ type Header struct {
 // InfoType stores the type of variable that a field in the Header holds.
 type InfoType byte
 
-// String converts the InfoType value as a human-readable string
+// String converts the InfoType value as a human-readable string.
 func (t InfoType) String() string {
 	switch t {
 	case Integer:
@@ -296,7 +297,7 @@ func parseHeaderFields(line string) (Id string, Number string, Type InfoType, De
 	return
 }
 
-// NewHeader creates a new minimal header for a vcf file
+// NewHeader creates a new minimal header for a vcf file.
 func NewHeader() Header {
 	var header Header
 	header.Text = append(header.Text, "##fileformat=VCFv4.2")
@@ -305,7 +306,7 @@ func NewHeader() Header {
 }
 
 // NewWriteHeader writes the value of header.Text to the
-// provided io.Writer
+// provided io.Writer.
 func NewWriteHeader(file io.Writer, header Header) {
 	var err error
 	for h := 0; h < len(header.Text); h++ {
@@ -332,7 +333,7 @@ func WriteMultiSamplesHeader(file io.Writer, header Header, listNames []string) 
 	}
 }
 
-// HeaderToMaps uses a Vcf header to create a pointer to a SampleHash
+// HeaderToMaps uses a Vcf header to create a pointer to a SampleHash.
 func HeaderToMaps(header Header) *SampleHash {
 	var name string
 	var index, hapIdx int16

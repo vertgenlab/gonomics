@@ -1,6 +1,6 @@
 package bedpe
 
-// contactsToMidpoints returns a bedpe where the contacts have been collapsed to their midpoints
+// contactsToMidpoints returns a bedpe where the contacts have been collapsed to their midpoints.
 func contactsToMidpoints(bps []BedPe) {
 	var aMidpoint, bMidpoint int
 	for i := range bps {

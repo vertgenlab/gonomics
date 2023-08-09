@@ -4,13 +4,13 @@ package sort
 import (
 	"container/heap"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"os"
 	"sort"
 	"strconv"
 	"sync"
 
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 )

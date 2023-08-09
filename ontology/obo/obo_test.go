@@ -1,9 +1,10 @@
 package obo
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // I/O fidelity test.

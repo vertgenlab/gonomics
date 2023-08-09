@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func TestExampleTool(t *testing.T) { //compare the output results made from the predetermined files and see if the program gives th expected result

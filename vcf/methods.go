@@ -40,7 +40,7 @@ func (v Vcf) GetChrom() string {
 // and adjust accordingly.
 
 // GetChromStart returns the start position of a variant. Since VCF is 1-base, GetChromStart of a SNP variant will return v.Pos - 1.
-// VCF format defines the first base of an indel as the base prior to the change, so for indels, GetChromStart will simply return v.Pos
+// VCF format defines the first base of an indel as the base prior to the change, so for indels, GetChromStart will simply return v.Pos.
 func (v Vcf) GetChromStart() int {
 	refBases := dna.StringToBases(v.Ref)
 	if len(refBases) == 1 {

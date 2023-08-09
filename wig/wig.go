@@ -5,13 +5,14 @@ package wig
 import (
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // Wig stores information on the chromosome location and step properties of Wig data. Individual wig values
@@ -146,7 +147,7 @@ func Write(filename string, rec []Wig) {
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle is an helper function for Write that writes the Wig data structure to an io.Writer
+// WriteToFileHandle is an helper function for Write that writes the Wig data structure to an io.Writer.
 func WriteToFileHandle(file io.Writer, rec Wig) {
 	var err error
 	if rec.StepType == "fixedStep" {

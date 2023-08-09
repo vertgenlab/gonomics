@@ -3,18 +3,19 @@ package chain
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"strings"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"io"
-	"log"
-	"strings"
-	"sync"
 )
 
-// Chain represents an alignment block based on the UCSC file format for chain
+// Chain represents an alignment block based on the UCSC file format for chain.
 type Chain struct {
 	Score     int
 	TName     string
@@ -122,7 +123,7 @@ func WriteToFile(filename string, chaining <-chan Chain, comments HeaderComments
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle writes a chain record to an io.Writer
+// WriteToFileHandle writes a chain record to an io.Writer.
 func WriteToFileHandle(file io.Writer, rec Chain) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", ToString(rec))

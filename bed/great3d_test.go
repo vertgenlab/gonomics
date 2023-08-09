@@ -1,11 +1,12 @@
 package bed
 
 import (
+	"os"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"os"
-	"testing"
 )
 
 var FillSpaceTests = []struct {
