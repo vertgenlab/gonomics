@@ -8,9 +8,103 @@ import (
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
+	"math/rand"
 	"sort"
 	"strings"
 )
+
+func binnedPseudobulk(inSlices [][]string, out *fileio.EasyWriter, norm string) {
+	var j, i string
+	var count float64
+	var found bool
+	var columns []string
+
+	whichBin := 'A'
+
+	for _, bin := range inSlices {
+		mp := make(map[string]float64)
+		var toWrite []string
+		for _, j = range bin {
+			columns = strings.Split(j, "\t")
+			count, found = mp[columns[1]]
+			if !found {
+				mp[columns[1]] = 1
+			} else {
+				mp[columns[1]] = count + 1
+			}
+		}
+		if norm != "" {
+			inputNormalize(mp, norm)
+		}
+		for i = range mp {
+			toWrite = append(toWrite, fmt.Sprintf("%s\t%f\t%c", i, mp[i], whichBin))
+		}
+		sort.Strings(toWrite)
+		for _, i = range toWrite {
+			fileio.WriteToFileHandle(out, i)
+		}
+		whichBin++
+	}
+}
+
+// determineBin takes in an int and the probablity of any given bin and determines the bin the cell belongs to.
+func determineBin(numBins int, prob float64) int {
+	var randNum float64
+	var bin int
+
+	for j := 0; j < numBins; j++ { //iterate over the number of bins
+		if j == numBins { //if we've gotten to the last bin and the cell still hasn't been partitioned, we don't have to check anything else we can just put it there.
+			return j
+		}
+		randNum = rand.Float64()                                       // draw a random number
+		if randNum >= prob*float64(j) && randNum < prob*float64(j+1) { // check to see if our random number belongs to that bin
+			bin = j
+		}
+	}
+	return bin
+}
+
+// distributeCells takes in a slice of string that is created in parseBam that has a list of cellBarcodes and constructs. It will partition those cells and constructs into separate slices. The number of bins is a user-input variable
+func distributeCells(cellTypeSlice []string, numBins int) [][]string {
+	var currCell string
+	var columns []string
+	var bin, count int
+	var found bool
+	whichBin := 'A'                   //for counting cells per bin
+	whichBinMap := make(map[rune]int) //for counting cells per bin
+
+	binnedCells := make([][]string, numBins) //make a slicce of slice of string with the size of the user-specified number of bins
+	prob := 1.0 / float64(numBins)           // determine the probablity that the cell belongs to a particular bin
+
+	sort.Strings(cellTypeSlice) //sort the slice of strings containing (cellBarcode \t construct) so that indentical cell barcodes line up next to one annother
+
+	for _, i := range cellTypeSlice {
+		columns = strings.Split(i, "\t")
+		if columns[0] == currCell { // if the cell barcode is the same as the one the loop just saw, partition that cell-construct pair into the same bin as the one before
+			binnedCells[bin] = append(binnedCells[bin], i)
+			continue
+		}
+		bin = determineBin(numBins, prob)              //function to determine which bin to put the new cell into.
+		binnedCells[bin] = append(binnedCells[bin], i) //put cell into correct bin
+		currCell = columns[0]                          //set the cell barcode that was just partitioned to current cell for the next iteration
+		// next part of the code is just to count how many cells which into each bin and print out those values. May keep it in, but it is also a check to make sure things are running correctly
+		count, found = whichBinMap[whichBin+rune(bin)]
+		if !found {
+			whichBinMap[whichBin+rune(bin)] = 1
+		} else {
+			whichBinMap[whichBin+rune(bin)] = count + 1
+		}
+	}
+	var outSlice []string
+	for i := range whichBinMap {
+		outSlice = append(outSlice, fmt.Sprintf("Bin: %c\tcells: %d", i, whichBinMap[i]))
+	}
+	sort.Strings(outSlice)
+	for _, i := range outSlice {
+		fmt.Println(i)
+	}
+	return binnedCells
+}
 
 // singleCellAnalysis will create a count for each construct in each cell type. This function takes
 func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstructs []string, normalize string, writer *fileio.EasyWriter) {
@@ -26,7 +120,7 @@ func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstruc
 	for _, i := range cto {          //make a map where the cell barcode is the key and the cell type is the value
 		columns = strings.Split(i, "\t")
 		cellTypeMap[columns[0]] = columns[1]
-		_, found2 = allCellTypes[columns[1]] // also make a map that contains a list of all cell types
+		_, found2 = allCellTypes[columns[1]] // also populate a map that contains a list of all cell types
 		if !found2 {
 			allCellTypes[columns[1]] = 1
 		}
@@ -99,8 +193,8 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 	}
 }
 
-// cellrangerBam takes in a cellranger bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
-func cellrangerBam(inSam string, outTable string, byCell bool, normalize string, samOut bool, cellTypeAnalysis string) {
+// parseBam takes in a cellranger bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
+func parseBam(inSam string, outTable string, byCell bool, normalize string, samOut bool, cellTypeAnalysis string, numBins int) {
 	var k int = 0
 	var constructName, cellString, cellByConstructName string
 	var count float64
@@ -108,6 +202,7 @@ func cellrangerBam(inSam string, outTable string, byCell bool, normalize string,
 	var bit int32
 	var norm bool = false
 	var sc bool = false
+	var noSettings bool = false
 	var allConstructs, cellTypeSlice []string
 
 	if normalize != "" { //create a bool for normalize
@@ -115,6 +210,9 @@ func cellrangerBam(inSam string, outTable string, byCell bool, normalize string,
 	}
 	if cellTypeAnalysis != "" { //create a bool for cellTypeAnalysis
 		sc = true
+	}
+	if !sc && numBins < 1 && !samOut && !byCell {
+		noSettings = true
 	}
 
 	ch, head := sam.GoReadToChan(inSam)
@@ -134,14 +232,14 @@ func cellrangerBam(inSam string, outTable string, byCell bool, normalize string,
 			k++
 			construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
 			constructName = construct.(string)
-			if byCell || sc { //byCell or singleCellAnalysis
+			if byCell || sc || numBins > 0 { //byCell or singleCellAnalysis or binCells
 				cell, _, _ := sam.QueryTag(i, "CB") // get the cell barcode associated with valid UMI
 				cellString = cell.(string)
 				cellByConstructName = fmt.Sprintf("%s\t%s", cellString, constructName) //list of all construct reads and what cell barcodes they belong to
 				if byCell {                                                            //if you only want to print out the construct and the cell it was found in
 					fileio.WriteToFileHandle(out, cellByConstructName)
 				}
-				if sc { //get some data for the singleCellAnalysis function
+				if sc || numBins > 0 { //get some data for the singleCellAnalysis and distributeCells functions
 					allConstructs = append(allConstructs, constructName) //list of all constructs found in the bam
 					cellTypeSlice = append(cellTypeSlice, cellByConstructName)
 				}
@@ -149,8 +247,10 @@ func cellrangerBam(inSam string, outTable string, byCell bool, normalize string,
 			} else if samOut { //write output as sam
 				sam.WriteToFileHandle(out, i)
 				continue
+			} else if numBins > 0 {
+				continue
 			}
-			//pseudobulk, default behavior. Use a map with thats [constructName]rawCount to add up reads per construct
+			//pseudobulk, default behavior. Use a map [constructName]rawCount to add up reads per construct
 			count, found = pseudobulkMap[constructName]
 			if !found {
 				pseudobulkMap[constructName] = 1
@@ -163,13 +263,16 @@ func cellrangerBam(inSam string, outTable string, byCell bool, normalize string,
 	if sc { //singleCellAnalysis, handles all the writing as well
 		singleCellAnalysis(cellTypeSlice, cellTypeAnalysis, allConstructs, normalize, out)
 	}
-	if norm && !sc { //normalize pseudobulk
+	if numBins > 0 { //goes to binning and pseudobulk. Handles normalization and writing as well
+		binnedCells := distributeCells(cellTypeSlice, numBins)
+		binnedPseudobulk(binnedCells, out, normalize)
+	}
+	if norm && noSettings { //normalize pseudobulk
 		inputNormalize(pseudobulkMap, normalize)
 	}
-	if !sc { //write out pseudobulk
+	if noSettings { //write out pseudobulk
 		writeMap(pseudobulkMap, out)
 	}
-
 	err := out.Close()
 	exception.PanicOnErr(err)
 }
@@ -190,6 +293,7 @@ func main() {
 	var normalize *string = flag.String("normalize", "", "Takes in a tab delimited table with construct name and input normalization value. Must be used with -pseudobulk.")
 	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
 	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
+	var binCells *int = flag.Int("binCells", 0, "Number of bins to randomly assign cells to. The output will be a psudobulk table for each bin")
 
 	var expectedNumArgs int = 2
 
@@ -209,14 +313,17 @@ func main() {
 		log.Fatalf("Error: cellTypeAnalysis is incompatable with byCell and samOut.")
 	}
 
+	if *binCells < 0 {
+		log.Fatalf("Error: -binCells must be a positive intiger")
+	}
+
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(flag.Args()))
 	}
-
 	a := flag.Arg(0)
 	b := flag.Arg(1)
 
-	cellrangerBam(a, b, *byCell, *normalize, *samOut, *cellTypeAnalysis)
+	parseBam(a, b, *byCell, *normalize, *samOut, *cellTypeAnalysis, *binCells)
 }
