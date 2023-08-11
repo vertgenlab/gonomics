@@ -51,12 +51,11 @@ func binnedPseudobulk(inSlices [][]string, out *fileio.EasyWriter, norm string) 
 func determineBin(numBins int, prob float64) int {
 	var randNum float64
 	var bin int
-
+	randNum = rand.Float64()       // draw a random number
 	for j := 0; j < numBins; j++ { //iterate over the number of bins
 		if j == numBins { //if we've gotten to the last bin and the cell still hasn't been partitioned, we don't have to check anything else we can just put it there.
 			return j
 		}
-		randNum = rand.Float64()                                       // draw a random number
 		if randNum >= prob*float64(j) && randNum < prob*float64(j+1) { // check to see if our random number belongs to that bin
 			bin = j
 		}
