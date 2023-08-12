@@ -9,9 +9,41 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"math/rand"
+	"os"
 	"sort"
 	"strings"
 )
+
+func combineBams(a string, out *fileio.EasyWriter, iteration *int, length int, bw *sam.BamWriter) *sam.BamWriter {
+	var err error
+	var columns, columns2, columns3 []string
+	var j string
+	var n int
+
+	inChan, head := sam.GoReadToChan(a)
+	if *iteration == 1 {
+		bw = sam.NewBamWriter(out, head)
+	}
+	for i := range inChan {
+		err = sam.ParseExtra(&i)
+		columns = strings.Split(i.Extra, "\t")
+		for n, j = range columns {
+			columns2 = strings.Split(j, ":")
+			if columns2[0] == "CB" {
+				columns3 = strings.Split(j, "-")
+				columns3[1] = fileio.IntToString(*iteration)
+				join := strings.Join(columns3, "-")
+				columns[n] = join
+				join3 := strings.Join(columns, "\t")
+				i.Extra = join3
+			}
+		}
+		sam.WriteToBamFileHandle(bw, i, 0)
+	}
+	exception.PanicOnErr(err)
+	*iteration++
+	return bw
+}
 
 func binnedPseudobulk(inSlices [][]string, out *fileio.EasyWriter, norm string) {
 	var j, i string
@@ -49,9 +81,9 @@ func binnedPseudobulk(inSlices [][]string, out *fileio.EasyWriter, norm string) 
 
 // determineBin takes in an int and the probablity of any given bin and determines the bin the cell belongs to.
 func determineBin(numBins int, prob float64) int {
-	var randNum float64
 	var bin int
-	randNum = rand.Float64()       // draw a random number
+
+	randNum := rand.Float64()      // draw a random number
 	for j := 0; j < numBins; j++ { //iterate over the number of bins
 		if j == numBins { //if we've gotten to the last bin and the cell still hasn't been partitioned, we don't have to check anything else we can just put it there.
 			return j
@@ -86,7 +118,7 @@ func distributeCells(cellTypeSlice []string, numBins int) [][]string {
 		bin = determineBin(numBins, prob)              //function to determine which bin to put the new cell into.
 		binnedCells[bin] = append(binnedCells[bin], i) //put cell into correct bin
 		currCell = columns[0]                          //set the cell barcode that was just partitioned to current cell for the next iteration
-		// next part of the code is just to count how many cells which into each bin and print out those values. May keep it in, but it is also a check to make sure things are running correctly
+		// next part of the code is just to count how many cells went into each bin and print out those values. May keep it in, but it is also a check to make sure things are running correctly
 		count, found = whichBinMap[whichBin+rune(bin)]
 		if !found {
 			whichBinMap[whichBin+rune(bin)] = 1
@@ -293,6 +325,7 @@ func main() {
 	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
 	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
 	var binCells *int = flag.Int("binCells", 0, "Number of bins to randomly assign cells to. The output will be a psudobulk table for each bin")
+	var combineGEMs *string = flag.String("combineGEMs", "", "Combine multiple GEM wells from the same experiment STARR-seq experiment to be analysed together. Will accept a comma separated list of bam files. The header from the argument 1 bam file input will be the one used. NOTE: This should only be used as an input for this program, not before any Seurat or similar analyses.")
 
 	var expectedNumArgs int = 2
 
@@ -316,6 +349,10 @@ func main() {
 		log.Fatalf("Error: -binCells must be a positive intiger")
 	}
 
+	if *cellTypeAnalysis != "" && *combineGEMs != "" {
+		log.Fatalf("Error: cellTypeAnalysis and combineGEMs cannot be used together currently.")
+	}
+
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
@@ -324,5 +361,39 @@ func main() {
 	a := flag.Arg(0)
 	b := flag.Arg(1)
 
+	var bw *sam.BamWriter
+	var combineBamWriter *fileio.EasyWriter
+	var err error
+	var path []string
+	if *combineGEMs != "" {
+		var tmpFileSlice []string
+		tmpFileSlice = append(tmpFileSlice, a)
+		bams := strings.Split(*combineGEMs, ",")
+		for _, i := range bams {
+			path = strings.Split(i, "/")
+			tmpFileSlice = append(tmpFileSlice, path[len(path)-1])
+		}
+		tmpFileSlice = append(tmpFileSlice, ".bam")
+		tmpFileName := strings.Join(tmpFileSlice, "_")
+		combineBamWriter = fileio.EasyCreate(tmpFileName)
+		p := 1
+		bw = combineBams(a, combineBamWriter, &p, len(bams), bw)
+		for _, i := range bams {
+			combineBams(i, combineBamWriter, &p, len(bams), bw)
+		}
+		a = tmpFileName
+
+		err = bw.Close()
+		exception.PanicOnErr(err)
+		err = combineBamWriter.Close()
+		exception.PanicOnErr(err)
+
+	}
+
 	parseBam(a, b, *byCell, *normalize, *samOut, *cellTypeAnalysis, *binCells)
+
+	if *combineGEMs != "" {
+		err = os.Remove(a)
+		exception.PanicOnErr(err)
+	}
 }
