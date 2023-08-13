@@ -204,7 +204,7 @@ func inputNormalize(mp map[string]float64, normalize string) {
 		if found {
 			mp[columns[0]] = total * parse.StringToFloat64(columns[1])
 		} else {
-			fmt.Println("Construct not found in map for normalization: ", columns[0])
+			mp[columns[0]] = 0.0 //user wants to normalize this construct meaning that it was in the library. however, no reads were recovered for that construct so we add it to the map and set the value to zero
 		}
 	}
 }
