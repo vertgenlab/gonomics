@@ -309,7 +309,8 @@ func parseBam(inSam string, outTable string, byCell bool, normalize string, samO
 
 func usage() {
 	fmt.Print("cellrangerBam -- Takes in a cellranger bam file of STARR-seq reads and parses the extra flags field to pull out the" +
-		"representative read for each UMI and which construct it belongs to. The output is a tab-delimited table of read-counts for each constructs.\n" +
+		"representative read for each UMI and which construct it belongs to. Multiple GEM wells from the same STARR-seq experiment can be provided in a comma-delimited list" +
+		"in the 'inFile' field. The output is a tab-delimited table of read-counts for each constructs.\n" +
 		"NOTE: This function works best with STARR-seq libraries where constructs don't have much similarity with each other.\n" +
 		"For libraries that need barcoding (like GWAS or cross-species comparisons) it is best practice to use samFilter and scCount" +
 		"with a GTF corresponding to construct barcodes. \n" +
