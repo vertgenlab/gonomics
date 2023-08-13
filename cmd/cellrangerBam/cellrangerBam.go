@@ -16,8 +16,8 @@ import (
 
 func combineBams(a string, out *fileio.EasyWriter, iteration *int, length int, bw *sam.BamWriter) *sam.BamWriter {
 	var err error
-	var columns, columns2, columns3 []string
-	var j string
+	var columns, columns2 []string
+	var j, join string
 	var n int
 
 	inChan, head := sam.GoReadToChan(a)
@@ -30,12 +30,9 @@ func combineBams(a string, out *fileio.EasyWriter, iteration *int, length int, b
 		for n, j = range columns {
 			columns2 = strings.Split(j, ":")
 			if columns2[0] == "CB" {
-				columns3 = strings.Split(j, "-")
-				columns3[1] = fileio.IntToString(*iteration)
-				join := strings.Join(columns3, "-")
-				columns[n] = join
-				join3 := strings.Join(columns, "\t")
-				i.Extra = join3
+				columns[n] = fmt.Sprintf("%s_%d", j, *iteration)
+				join = strings.Join(columns, "\t")
+				i.Extra = join
 			}
 		}
 		sam.WriteToBamFileHandle(bw, i, 0)
@@ -327,7 +324,6 @@ func main() {
 	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
 	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
 	var binCells *int = flag.Int("binCells", 0, "Number of bins to randomly assign cells to. The output will be a psudobulk table for each bin")
-	var combineGEMs *string = flag.String("combineGEMs", "", "Combine multiple GEM wells from the same experiment STARR-seq experiment to be analysed together. Will accept a comma separated list of bam files. The header from the argument 1 bam file input will be the one used. NOTE: This should only be used as an input for this program, not before any Seurat or similar analyses.")
 
 	var expectedNumArgs int = 2
 
@@ -351,10 +347,6 @@ func main() {
 		log.Fatalf("Error: -binCells must be a positive intiger")
 	}
 
-	if *cellTypeAnalysis != "" && *combineGEMs != "" {
-		log.Fatalf("Error: cellTypeAnalysis and combineGEMs cannot be used together currently.")
-	}
-
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
@@ -366,12 +358,15 @@ func main() {
 	var bw *sam.BamWriter
 	var combineBamWriter *fileio.EasyWriter
 	var err error
-	var path []string
-	if *combineGEMs != "" {
-		var tmpFileSlice []string
-		tmpFileSlice = append(tmpFileSlice, a)
-		bams := strings.Split(*combineGEMs, ",")
-		for _, i := range bams {
+	inFiles := strings.Split(a, ",")
+	if len(inFiles) > 1 {
+		var path, tmpFileSlice []string
+		if *cellTypeAnalysis != "" {
+			fmt.Println("*** WARNING *** You are using multiple GEM wells with -cellTypeAnalysis. Using multiple GEM wells will add an additional suffix to cell barcodes to reinforce cell barcode uniqueness." +
+				"The first bam file provided will have the '_1' suffix, the second bam file '_2' and so on. This mirrors the default behavior of both Seurat merge() and integrate() functions." +
+				"If multiple GEM wells haven't be processed in the same way in Seurat and in the cellrangerBam programs, cell lookup for -cellTypeAnalysis will be inacurate.")
+		}
+		for _, i := range inFiles {
 			path = strings.Split(i, "/")
 			tmpFileSlice = append(tmpFileSlice, path[len(path)-1])
 		}
@@ -379,22 +374,19 @@ func main() {
 		tmpFileName := strings.Join(tmpFileSlice, "_")
 		combineBamWriter = fileio.EasyCreate(tmpFileName)
 		p := 1
-		bw = combineBams(a, combineBamWriter, &p, len(bams), bw)
-		for _, i := range bams {
-			combineBams(i, combineBamWriter, &p, len(bams), bw)
+		for _, i := range inFiles {
+			bw = combineBams(i, combineBamWriter, &p, len(inFiles), bw)
 		}
 		a = tmpFileName
-
 		err = bw.Close()
 		exception.PanicOnErr(err)
 		err = combineBamWriter.Close()
 		exception.PanicOnErr(err)
 
 	}
-
 	parseBam(a, b, *byCell, *normalize, *samOut, *cellTypeAnalysis, *binCells)
 
-	if *combineGEMs != "" {
+	if len(inFiles) > 1 {
 		err = os.Remove(a)
 		exception.PanicOnErr(err)
 	}
