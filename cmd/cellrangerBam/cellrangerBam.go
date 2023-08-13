@@ -52,7 +52,7 @@ func binnedPseudobulk(inSlices [][]string, out *fileio.EasyWriter, norm string) 
 	var columns []string
 
 	whichBin := 'A'
-
+	fileio.WriteToFileHandle(out, "construct\tcounts\tbin")
 	for _, bin := range inSlices {
 		mp := make(map[string]float64)
 		var toWrite []string
@@ -180,7 +180,8 @@ func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstruc
 		}
 		fmt.Println(fmt.Sprintf("Found %d raw counts in the cell type: %s", a, cellType))
 	}
-	sort.Strings(outMatrix)       //sort the slice before writing
+	sort.Strings(outMatrix) //sort the slice before writing
+	fileio.WriteToFileHandle(writer, "cellCluster\tconstruct\tcounts")
 	for _, i := range outMatrix { //once all cell types have been looped through, write out the total count matrix
 		fileio.WriteToFileHandle(writer, i)
 	}
@@ -219,6 +220,7 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 		writeSlice = append(writeSlice, write)
 	}
 	sort.Strings(writeSlice)
+	fileio.WriteToFileHandle(writer, "construct\tcounts")
 	for _, i := range writeSlice {
 		fileio.WriteToFileHandle(writer, i)
 	}
@@ -256,10 +258,10 @@ func parseBam(inSam string, outTable string, byCell bool, normalize string, samO
 
 	pseudobulkMap := make(map[string]float64)
 
-	for i := range ch { //interate of over the chanel of sam.Sam
+	for i := range ch { //iterate of over the chanel of sam.Sam
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
 		bit = num.(int32)
-		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count (I call these "valid" UMIs.
+		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
 			k++
 			construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
 			constructName = construct.(string)
