@@ -11,6 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/ontology/gaf"
 	"github.com/vertgenlab/gonomics/ontology/obo"
+	"log"
 )
 
 type Ontology struct {
@@ -26,19 +27,21 @@ type Ontology struct {
 func OboToOntology(records map[string]*obo.Obo) map[string]*Ontology {
 	var j int
 	var answer = make(map[string]*Ontology)
+	var currOntology *Ontology
 
 	for i := range records {
 		answer[records[i].Id] = &Ontology{
 			Name: records[i].Name,
-			Id:   records[i].Name,
+			Id:   records[i].Id,
 		}
 	}
 	for i := range records {
+		currOntology = answer[records[i].Id]
 		for j = range records[i].Parents {
-			answer[records[i].Id].Parents = append(answer[records[i].Id].Parents, answer[records[i].Parents[j].Id])
+			currOntology.Parents = append(currOntology.Parents, answer[records[i].Parents[j].Id])
 		}
 		for j = range records[i].Children {
-			answer[records[i].Id].Children = append(answer[records[i].Id].Children, answer[records[i].Children[j].Id])
+			currOntology.Children = append(currOntology.Children, answer[records[i].Children[j].Id])
 		}
 	}
 	return answer
@@ -46,6 +49,7 @@ func OboToOntology(records map[string]*obo.Obo) map[string]*Ontology {
 
 func geneAssignmentsFromGaf(records []gaf.Gaf, terms map[string]*Ontology) {
 	for i := range records {
+		// TODO: what if records[i].GoId not found in map
 		terms[records[i].GoId].Genes = append(terms[records[i].GoId].Genes, records[i].DbObjectSymbol)
 	}
 }
@@ -57,13 +61,15 @@ func genesToOntologies(terms map[string]*Ontology) map[string][]*Ontology {
 	var j int
 	var foundInMap bool
 	var answer = make(map[string][]*Ontology)
+	var currGeneName string
 
 	for i := range terms {
 		for j = range terms[i].Genes {
-			if _, foundInMap = answer[terms[i].Genes[j]]; !foundInMap {
-				answer[terms[i].Genes[j]] = []*Ontology{terms[i]}
+			currGeneName = terms[i].Genes[j]
+			if _, foundInMap = answer[currGeneName]; !foundInMap {
+				answer[currGeneName] = []*Ontology{terms[i]}
 			} else {
-				answer[terms[i].Genes[j]] = append(answer[terms[i].Genes[j]], terms[i])
+				answer[currGeneName] = append(answer[currGeneName], terms[i])
 			}
 		}
 	}
@@ -78,14 +84,10 @@ func geneProportionOfGenome(filledSpace []bed.Bed) map[string]float64 {
 	var answer = make(map[string]float64)
 	var totalBases, currLen int = 0, 0
 	var currGene string
-	var foundInMap bool
 
 	for i := range filledSpace {
 		currLen = filledSpace[i].ChromEnd - filledSpace[i].ChromStart
 		currGene = filledSpace[i].Name
-		if _, foundInMap = answerCounts[currGene]; !foundInMap {
-			answerCounts[currGene] = 0
-		}
 		answerCounts[currGene] += currLen
 		totalBases += currLen
 	}
@@ -116,16 +118,20 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	var queryOverlaps []interval.Interval
 	var kCache = make(map[string]int) //mapping Go Term Names to number of query elements that overlap. This is 'k' in the binomial test.
 	var n = len(queries)              // this stores the number of query elements, which is the number of trials in the binomial test.
-	var currOverlap int
 	var currOverlapGene string
-	var currOntology *Ontology
-	var foundInMap bool
+	var currOntologyIndex int
+	var currOntologyName string
+	var ontologiesForCurrGene []*Ontology
 
 	tssBed := gtf.GenesToTssBed(genes, chromSizes, true)
+	fmt.Printf("Starting filledSpace.\n")
 	filledSpace := Fill3dSpace(contacts, tssBed, chromSizes)
+	fmt.Printf("Filled space. Len(filledSpace): %v.\n", len(filledSpace))
 	ontologies := OboToOntology(oboMap)
+	fmt.Printf("Made ontologies. Len(ontologies: %v.\n", len(ontologies))
 	geneAssignmentsFromGaf(annotations, ontologies)
 	geneOntologies := genesToOntologies(ontologies)
+	fmt.Printf("Made genesToOntologies. Len(genesToOntologies): %v.\n", len(geneOntologies))
 
 	proportionsForGenes := geneProportionOfGenome(filledSpace)
 	proportionsForTerms := termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
@@ -139,21 +145,26 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 
 	for i := range queries {
 		queryOverlaps = interval.Query(tree, queries[i], "any")
-		for currOverlap = range queryOverlaps {
-			currOverlapGene = queryOverlaps[currOverlap].(bed.Bed).Name // type assert as bed and extract name of gene assigned to query
-			for currOntology = range geneOntologies[currOverlapGene] {
-				if _, foundInMap = kCache[currOntology.Name]; !foundInMap {
-					kCache[currOntology.Name] = 0
-				}
-				kCache[currOntology.Name] += 1
-			}
+		if len(queryOverlaps) != 1 {
+			log.Fatalf("Why did this happen?!?")
+		}
+		currOverlapGene = queryOverlaps[0].(bed.Bed).Name // type assert as bed and extract name of gene assigned to query
+		ontologiesForCurrGene = geneOntologies[currOverlapGene]
+		fmt.Printf("Len(ontologiesForrCurrGene: %v.\n", len(ontologiesForCurrGene))
+		for currOntologyIndex = range ontologiesForCurrGene {
+			currOntologyName = ontologiesForCurrGene[currOntologyIndex].Id
+			kCache[currOntologyName] += 1
 		}
 	}
 
 	var enrichment float64
 	for i := range proportionsForTerms {
+		fmt.Printf("i (the ontology name): %v.\n", i)
+		fmt.Printf("ProportionsForTerms[i]: %v.\n", proportionsForTerms[i])
 		enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], true)
-		fmt.Printf("Enrichment: %e. Term: %s.\n", enrichment, i)
+		if kCache[i] > 0 {
+			fmt.Printf("Enrichment: %e. TermID: %s.\n", enrichment, i)
+		}
 	}
 }
 
@@ -164,4 +175,12 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 6. Assign each query bed to gene
 7. Calculate binomial(n, k, p) for each term
 8. Return p value for each Ontology
+
+Note: gene slice must have unique entries.
+
+Other TODO from Craig:
+
+
+minigenome with small toy examples of overlaps we can reason
+
 */
