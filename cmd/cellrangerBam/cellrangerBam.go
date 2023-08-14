@@ -14,6 +14,17 @@ import (
 	"strings"
 )
 
+type Settings struct {
+	inFile     string
+	outFile    string
+	normalize  string
+	byCell     bool
+	samOut     bool
+	scAnalysis string
+	binCells   int
+	umiSat     bool
+}
+
 func combineBams(a string, out *fileio.EasyWriter, iteration *int, length int, bw *sam.BamWriter) *sam.BamWriter {
 	var err error
 	var columns, columns2 []string
@@ -224,32 +235,32 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 }
 
 // parseBam takes in a cellranger bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
-func parseBam(inSam string, outTable string, byCell bool, normalize string, samOut bool, cellTypeAnalysis string, numBins int) {
+func parseBam(s Settings) {
 	var k int = 0
 	var constructName, cellString, cellByConstructName string
 	var count float64
 	var found bool
-	var bit int32
+	var bit uint8
 	var norm bool = false
 	var sc bool = false
 	var noSettings bool = false
 	var allConstructs, cellTypeSlice []string
 
-	if normalize != "" { //create a bool for normalize
+	if s.normalize != "" { //create a bool for normalize
 		norm = true
 	}
-	if cellTypeAnalysis != "" { //create a bool for cellTypeAnalysis
+	if s.scAnalysis != "" { //create a bool for cellTypeAnalysis
 		sc = true
 	}
-	if !sc && numBins < 1 && !samOut && !byCell {
+	if !sc && s.binCells < 1 && !s.samOut && !s.byCell {
 		noSettings = true
 	}
 
-	ch, head := sam.GoReadToChan(inSam)
+	ch, head := sam.GoReadToChan(s.inFile)
 
-	out := fileio.EasyCreate(outTable)
+	out := fileio.EasyCreate(s.outFile)
 
-	if samOut {
+	if s.samOut {
 		sam.WriteHeaderToFileHandle(out, head)
 	}
 
@@ -257,27 +268,27 @@ func parseBam(inSam string, outTable string, byCell bool, normalize string, samO
 
 	for i := range ch { //iterate of over the chanel of sam.Sam
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(int32)
+		bit = num.(uint8)
 		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
 			k++
 			construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
 			constructName = construct.(string)
-			if byCell || sc || numBins > 0 { //byCell or singleCellAnalysis or binCells
+			if s.byCell || sc || s.binCells > 0 { //byCell or singleCellAnalysis or binCells
 				cell, _, _ := sam.QueryTag(i, "CB") // get the cell barcode associated with valid UMI
 				cellString = cell.(string)
 				cellByConstructName = fmt.Sprintf("%s\t%s", cellString, constructName) //list of all construct reads and what cell barcodes they belong to
-				if byCell {                                                            //if you only want to print out the construct and the cell it was found in
+				if s.byCell {                                                          //if you only want to print out the construct and the cell it was found in
 					fileio.WriteToFileHandle(out, cellByConstructName)
 				}
-				if sc || numBins > 0 { //get some data for the singleCellAnalysis and distributeCells functions
+				if sc || s.binCells > 0 { //get some data for the singleCellAnalysis and distributeCells functions
 					allConstructs = append(allConstructs, constructName) //list of all constructs found in the bam
 					cellTypeSlice = append(cellTypeSlice, cellByConstructName)
 				}
 				continue
-			} else if samOut { //write output as sam
+			} else if s.samOut { //write output as sam
 				sam.WriteToFileHandle(out, i)
 				continue
-			} else if numBins > 0 {
+			} else if s.binCells > 0 {
 				continue
 			}
 			//pseudobulk, default behavior. Use a map [constructName]rawCount to add up reads per construct
@@ -291,14 +302,14 @@ func parseBam(inSam string, outTable string, byCell bool, normalize string, samO
 	}
 	fmt.Println("Found this many valid UMIs: ", k)
 	if sc { //singleCellAnalysis, handles all the writing as well
-		singleCellAnalysis(cellTypeSlice, cellTypeAnalysis, allConstructs, normalize, out)
+		singleCellAnalysis(cellTypeSlice, s.scAnalysis, allConstructs, s.normalize, out)
 	}
-	if numBins > 0 { //goes to binning and pseudobulk. Handles normalization and writing as well
-		binnedCells := distributeCells(cellTypeSlice, numBins)
-		binnedPseudobulk(binnedCells, out, normalize)
+	if s.binCells > 0 { //goes to binning and pseudobulk. Handles normalization and writing as well
+		binnedCells := distributeCells(cellTypeSlice, s.binCells)
+		binnedPseudobulk(binnedCells, out, s.normalize)
 	}
 	if norm && noSettings { //normalize pseudobulk
-		inputNormalize(pseudobulkMap, normalize)
+		inputNormalize(pseudobulkMap, s.normalize)
 	}
 	if noSettings { //write out pseudobulk
 		writeMap(pseudobulkMap, out)
@@ -325,6 +336,7 @@ func main() {
 	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
 	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
 	var binCells *int = flag.Int("binCells", 0, "Number of bins to randomly assign cells to. The output will be a psudobulk table for each bin")
+	var umiSat *bool = flag.Bool("umiSat", true, "Create a UMI saturation curve of all reads in the cellrangerBam.")
 
 	var expectedNumArgs int = 2
 
@@ -353,13 +365,21 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(flag.Args()))
 	}
-	a := flag.Arg(0)
-	b := flag.Arg(1)
+	var s Settings = Settings{
+		inFile:     flag.Arg(0),
+		outFile:    flag.Arg(1),
+		normalize:  *normalize,
+		byCell:     *byCell,
+		scAnalysis: *cellTypeAnalysis,
+		binCells:   *binCells,
+		umiSat:     *umiSat,
+		samOut:     *samOut,
+	}
 
 	var bw *sam.BamWriter
 	var combineBamWriter *fileio.EasyWriter
 	var err error
-	inFiles := strings.Split(a, ",")
+	inFiles := strings.Split(s.inFile, ",")
 	if len(inFiles) > 1 {
 		var path, tmpFileSlice []string
 		if *cellTypeAnalysis != "" {
@@ -378,17 +398,17 @@ func main() {
 		for _, i := range inFiles {
 			bw = combineBams(i, combineBamWriter, &p, len(inFiles), bw)
 		}
-		a = tmpFileName
+		s.inFile = tmpFileName
 		err = bw.Close()
 		exception.PanicOnErr(err)
 		err = combineBamWriter.Close()
 		exception.PanicOnErr(err)
 
 	}
-	parseBam(a, b, *byCell, *normalize, *samOut, *cellTypeAnalysis, *binCells)
+	parseBam(s)
 
 	if len(inFiles) > 1 {
-		err = os.Remove(a)
+		err = os.Remove(s.inFile)
 		exception.PanicOnErr(err)
 	}
 }
