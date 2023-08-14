@@ -37,7 +37,6 @@ func bedToAminoAcid(b string, f string, output string) {
 	}
 
 	fileio.Write(output, outRecord) //write the contents of the outRecord variable to the file specified in the arguments.
-
 }
 
 // example of usage functions for commands in the gonomics/cmd directory

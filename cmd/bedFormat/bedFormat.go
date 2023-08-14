@@ -175,7 +175,6 @@ func bedFormat(s Settings) {
 			fdrSlice[i].RawPValue = fdrSlice[i].RawPValue * -1                                                          //from log10p to -log10p
 			fdrSlice[i].AdjPValue = math.Max(fdrSlice[i].AdjPValue*-1, 0)                                               //from log10p to -log10p
 			fdrMap[fdrSlice[i].RawPValue] = fdrSlice[i]
-
 		}
 
 		ch = bed.GoReadToChan(s.OutFile + ".tmp")

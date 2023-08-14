@@ -27,5 +27,4 @@ func TestStrawToBedpe(t *testing.T) {
 			os.Remove(test[i].outFile)
 		}
 	}
-
 }
