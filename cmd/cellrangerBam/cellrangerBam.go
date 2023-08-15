@@ -25,6 +25,7 @@ type Settings struct {
 	umiSat     bool
 }
 
+// umiSaturation randomly subsets the whole bam file (10% to 100% of all reads) and calculates how many UMIs are in those subests. The output is a tab delimited text file.
 func umiSaturation(umiBxSlice []string, out *fileio.EasyWriter) {
 	var perc, randNum float64
 	var j string
@@ -48,6 +49,8 @@ func umiSaturation(umiBxSlice []string, out *fileio.EasyWriter) {
 	}
 }
 
+// combineBams is triggered when there are more than 1 input bams in a comma delimited list. This function appends a "_int" to the back of the cell barcode correstponding to the input file order
+// and then concatenates all bam files together
 func combineBams(a string, out *fileio.EasyWriter, iteration *int, length int, bw *sam.BamWriter) *sam.BamWriter {
 	var err error
 	var columns, columns2 []string
@@ -76,6 +79,7 @@ func combineBams(a string, out *fileio.EasyWriter, iteration *int, length int, b
 	return bw
 }
 
+// binnedPseudobulk is the psuedobulk function if the -binCells option is used. It adds an addition column to the dataframe corresponding to bin identity
 func binnedPseudobulk(inSlices [][]string, out *fileio.EasyWriter, norm string) {
 	var j, i string
 	var count float64
