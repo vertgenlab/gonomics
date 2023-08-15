@@ -25,6 +25,29 @@ type Settings struct {
 	umiSat     bool
 }
 
+func umiSaturation(umiBxSlice []string, out *fileio.EasyWriter) {
+	var perc, randNum float64
+	var j string
+	var count int
+
+	fileio.WriteToFileHandle(out, "totalReads\tumis")
+
+	for i := 1; i <= 10; i++ {
+		perc = float64(i) / 10
+		mp := make(map[string]bool)
+		count = 0
+		for _, j = range umiBxSlice {
+			randNum = rand.Float64()
+			if randNum > perc {
+				continue
+			}
+			count++
+			mp[j] = true
+		}
+		fileio.WriteToFileHandle(out, fmt.Sprintf("%d\t%d", count, len(mp)))
+	}
+}
+
 func combineBams(a string, out *fileio.EasyWriter, iteration *int, length int, bw *sam.BamWriter) *sam.BamWriter {
 	var err error
 	var columns, columns2 []string
@@ -205,7 +228,7 @@ func inputNormalize(mp map[string]float64, normalize string) {
 	if len(inputNormValues) < len(mp) {
 		fmt.Println("The input normalization table has less constructs than were found in the input bam. 1 or more constructs won't be normalized. Please check your input files.")
 	} else if len(inputNormValues) > len(mp) {
-		fmt.Println("The input normalization table has more constructs than were found in the input bam. Those constructs will have 0 counts in the output.")
+		fmt.Println("The input normalization table has more constructs than were found in the input bam. Constructs not found in the bam will have 0 counts in the output.")
 	}
 	for _, i := range inputNormValues { //iterate over the table with input normalization values and use those to edit the counts in the map
 		columns = strings.Split(i, "\t")
@@ -238,14 +261,14 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 // parseBam takes in a cellranger bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
 func parseBam(s Settings) {
 	var k int = 0
-	var constructName, cellString, cellByConstructName string
+	var constructName, cellString, cellByConstructName, umiBx string
 	var count float64
 	var found bool
-	var bit uint8
+	var bit int32
 	var norm bool = false
 	var sc bool = false
 	var noSettings bool = false
-	var allConstructs, cellTypeSlice []string
+	var allConstructs, cellTypeSlice, umiBxSlice []string
 
 	if s.normalize != "" { //create a bool for normalize
 		norm = true
@@ -253,7 +276,7 @@ func parseBam(s Settings) {
 	if s.scAnalysis != "" { //create a bool for cellTypeAnalysis
 		sc = true
 	}
-	if !sc && s.binCells < 1 && !s.samOut && !s.byCell {
+	if !sc && s.binCells < 1 && !s.samOut && !s.byCell && !s.umiSat {
 		noSettings = true
 	}
 
@@ -268,8 +291,14 @@ func parseBam(s Settings) {
 	pseudobulkMap := make(map[string]float64)
 
 	for i := range ch { //iterate of over the chanel of sam.Sam
+		if s.umiSat {
+			umi, _, _ := sam.QueryTag(i, "UB")
+			cb, _, _ := sam.QueryTag(i, "CB")
+			umiBx = fmt.Sprintf("%s_%s", umi, cb)
+			umiBxSlice = append(umiBxSlice, umiBx)
+		}
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(uint8)
+		bit = num.(int32)
 		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
 			k++
 			construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
@@ -300,6 +329,9 @@ func parseBam(s Settings) {
 				pseudobulkMap[constructName] = count + 1
 			}
 		}
+	}
+	if s.umiSat {
+		umiSaturation(umiBxSlice, out)
 	}
 	fmt.Println("Found this many valid UMIs: ", k)
 	if sc { //singleCellAnalysis, handles all the writing as well
