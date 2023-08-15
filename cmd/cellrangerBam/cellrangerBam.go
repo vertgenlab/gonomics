@@ -202,9 +202,10 @@ func inputNormalize(mp map[string]float64, normalize string) {
 	var columns []string
 
 	inputNormValues := fileio.Read(normalize)
-	if len(inputNormValues) != len(mp) {
-		fmt.Println("The input normalization table doesn't have the same number of constructs as was found in the input bam.")
-		// trying to find the best way to throw an error if there is a raw count value that doesn't get normalized
+	if len(inputNormValues) < len(mp) {
+		fmt.Println("The input normalization table has less constructs than were found in the input bam. 1 or more constructs won't be normalized. Please check your input files.")
+	} else if len(inputNormValues) > len(mp) {
+		fmt.Println("The input normalization table has more constructs than were found in the input bam. Those constructs will have 0 counts in the output.")
 	}
 	for _, i := range inputNormValues { //iterate over the table with input normalization values and use those to edit the counts in the map
 		columns = strings.Split(i, "\t")
@@ -319,8 +320,8 @@ func parseBam(s Settings) {
 }
 
 func usage() {
-	fmt.Print("cellrangerBam -- Takes in a cellranger bam file of STARR-seq reads and parses the extra flags field to pull out the" +
-		"representative read for each UMI and which construct it belongs to. Multiple GEM wells from the same STARR-seq experiment can be provided in a comma-delimited list" +
+	fmt.Print("cellrangerBam -- Takes in a cellranger bam file of STARR-seq reads and parses the extra flags field to pull out the " +
+		"representative read for each UMI and which construct it belongs to. Multiple GEM wells from the same STARR-seq experiment can be provided in a comma-delimited list " +
 		"in the 'inFile' field. The output is a tab-delimited table of read-counts for each constructs.\n" +
 		"NOTE: This function works best with STARR-seq libraries where constructs don't have much similarity with each other.\n" +
 		"For libraries that need barcoding (like GWAS or cross-species comparisons) it is best practice to use samFilter and scCount" +
@@ -383,8 +384,8 @@ func main() {
 	if len(inFiles) > 1 {
 		var path, tmpFileSlice []string
 		if *cellTypeAnalysis != "" {
-			fmt.Println("*** WARNING *** You are using multiple GEM wells with -cellTypeAnalysis. Using multiple GEM wells will add an additional suffix to cell barcodes to reinforce cell barcode uniqueness." +
-				"The first bam file provided will have the '_1' suffix, the second bam file '_2' and so on. This mirrors the default behavior of both Seurat merge() and integrate() functions." +
+			fmt.Println("*** WARNING *** You are using multiple GEM wells with -cellTypeAnalysis. Using multiple GEM wells will add an additional suffix to cell barcodes to reinforce cell barcode uniqueness. " +
+				"The first bam file provided will have the '_1' suffix, the second bam file '_2' and so on. This mirrors the default behavior of both Seurat merge() and integrate() functions. " +
 				"If multiple GEM wells haven't be processed in the same way in Seurat and in the cellrangerBam programs, cell lookup for -cellTypeAnalysis will be inacurate.")
 		}
 		for _, i := range inFiles {
