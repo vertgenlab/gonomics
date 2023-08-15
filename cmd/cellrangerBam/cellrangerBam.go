@@ -262,7 +262,7 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 	}
 }
 
-// parseBam takes in a cellranger bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
+// parseBam takes in a cellranger count bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
 func parseBam(s Settings) {
 	var k int = 0
 	var constructName, cellString, cellByConstructName, umiBx string
@@ -373,7 +373,7 @@ func main() {
 	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
 	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
 	var binCells *int = flag.Int("binCells", 0, "Number of bins to randomly assign cells to. The output will be a psudobulk table for each bin")
-	var umiSat *bool = flag.Bool("umiSat", true, "Create a UMI saturation curve of all reads in the cellrangerBam.")
+	var umiSat *bool = flag.Bool("umiSat", false, "Create a UMI saturation curve of all reads in the cellrangerBam.")
 
 	var expectedNumArgs int = 2
 
