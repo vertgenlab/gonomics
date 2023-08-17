@@ -24,6 +24,7 @@ func strawToBedpe(strawFile string, outFile string, chrom string, binSize int, i
 	if interChrom == "" {
 		for s := range straw {
 			thisRec = bedpe.BedPe{A: bed.Bed{Chrom: chrom, ChromStart: s.Bin1Start, ChromEnd: s.Bin1Start + binSize, Score: s.ContactScore, FieldsInitialized: 8}, B: bed.Bed{Chrom: chrom, ChromStart: s.Bin2Start, ChromEnd: s.Bin2Start + binSize, Score: s.ContactScore, FieldsInitialized: 8}}
+			log.Printf("this record: %v", thisRec.B.Chrom)
 			bedpe.WriteToFileHandle(out, thisRec)
 		}
 	} else {
