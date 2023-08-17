@@ -47,40 +47,28 @@ func bedpeFilter(s Settings) {
 		if curr.A.Score < s.MinScore {
 			pass = false
 		}
-
-		log.Printf("pass after score: %v", pass)
-
 		if curr.A.Score > s.MaxScore {
 			pass = false
 		}
-		log.Printf("pass after Maxscore: %v", pass)
-
 		if distance < s.MinDistance {
 			pass = false
 		}
-		log.Printf("pass after minDist: %v", pass)
 		if distance > s.MaxDistance {
 			pass = false
 		}
-		log.Printf("pass after MaxDist: %v", pass)
 		if (curr.A.ChromStart < s.MinStart || curr.A.ChromStart > s.MaxStart) && (curr.B.ChromStart < s.MinStart || curr.B.ChromStart > s.MaxStart) {
 			pass = false
 		}
-		log.Printf("pass after Start: %v", pass)
 		if s.OnlyIntraChrom && curr.A.Chrom != curr.B.Chrom {
 			pass = false
 		}
-		log.Printf("pass after Chriom1: %v", pass)
 		if s.OnlyInterChrom && curr.A.Chrom == curr.B.Chrom {
 			pass = false
 		}
-		log.Printf("pass after Chrom2: %v", pass)
 		if s.Chrom != "" && curr.A.Chrom != s.Chrom && curr.B.Chrom != s.Chrom {
 			pass = false
 		}
-		log.Print(pass)
 		if pass {
-
 			bedpe.WriteToFileHandle(out, curr)
 		}
 	}
