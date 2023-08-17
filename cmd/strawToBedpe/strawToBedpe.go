@@ -42,7 +42,7 @@ func usage() {
 		"strawToBedpe - convert the output of the aidenlab's straw command to a bedpe format." +
 			"\n" +
 			"Usage:\n" +
-			"\n" +
+			"strawToBedpe [options] file.straw out.bedpe chrom\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
