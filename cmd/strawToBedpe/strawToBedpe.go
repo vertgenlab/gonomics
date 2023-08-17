@@ -48,7 +48,7 @@ func usage() {
 }
 
 func main() {
-	var expectedNumArgs int = 4
+	var expectedNumArgs int = 3
 	var binSize *int = flag.Int("binSize", 5000, "A binSize must be provided for the resolution of the straw file output if it is not 5000.")
 	var interChrom *string = flag.String("interChrom", "", "If the straw file contains regions from two different chromosomes, this option should hold the chromosome for the second bin's chromosome name. The argument ''chrom'' should hold the first bin's chromosome name.")
 
