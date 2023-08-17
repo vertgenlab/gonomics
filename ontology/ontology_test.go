@@ -21,9 +21,10 @@ var ThreeDGreatTests = []struct {
 	Force           bool
 }{
 	{QueryFile: "testdata/haqer.bed",
-		ChromSizesFile:  "testdata/hg38.chrom.sizes",
-		GeneFile:        "testdata/gencode.v43.annotation.gtf",
-		ContactsFile:    "testdata/GSE162819_H1_MAPS_chromatin_interactions_5kb.bedpe",
+		ChromSizesFile: "testdata/hg38.chrom.sizes",
+		GeneFile:       "testdata/gencode.v43.annotation.gtf",
+		ContactsFile:   "testdata/GSE162819_GM12878_MAPS_chromatin_interactions_5kb.bedpe",
+		//ContactsFile:    "testdata/GSE162819_H1_MAPS_chromatin_interactions_5kb.bedpe",
 		AnnotationsFile: "testdata/goa_human.gaf",
 		OboFile:         "testdata/go.obo",
 		Force:           false,

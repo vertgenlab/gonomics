@@ -6,6 +6,8 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -48,6 +50,7 @@ func OboToOntology(records map[string]*obo.Obo) map[string]*Ontology {
 }
 
 func geneAssignmentsFromGaf(records []gaf.Gaf, terms map[string]*Ontology) {
+	records = gaf.RemoveDuplicates(records)
 	for i := range records {
 		// TODO: what if records[i].GoId not found in map
 		terms[records[i].GoId].Genes = append(terms[records[i].GoId].Genes, records[i].DbObjectSymbol)
@@ -114,6 +117,7 @@ func termProportionOfGenome(ontologies map[string]*Ontology, geneProportions map
 }
 
 func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, genes map[string]*gtf.Gene, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo) {
+	var err error
 	var filledSpaceIntervals []interval.Interval
 	var queryOverlaps []interval.Interval
 	var kCache = make(map[string]int) //mapping Go Term Names to number of query elements that overlap. This is 'k' in the binomial test.
@@ -134,7 +138,26 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	fmt.Printf("Made genesToOntologies. Len(genesToOntologies): %v.\n", len(geneOntologies))
 
 	proportionsForGenes := geneProportionOfGenome(filledSpace)
+	geneOut := fileio.EasyCreate("proportionsForGenes.txt")
+	_, err = fmt.Fprintf(geneOut, "Gene\tProportion\n")
+	exception.PanicOnErr(err)
+	for i := range proportionsForGenes {
+		_, err = fmt.Fprintf(geneOut, "%s\t%e\n", i, proportionsForGenes[i])
+		exception.PanicOnErr(err)
+	}
+	err = geneOut.Close()
+	exception.PanicOnErr(err)
+
 	proportionsForTerms := termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
+
+	termOut := fileio.EasyCreate("proportionsForTerms.txt")
+	_, err = fmt.Fprintf(termOut, "Term\tName\tProportion\n")
+	exception.PanicOnErr(err)
+	for i := range proportionsForTerms {
+		_, err = fmt.Fprintf(termOut, "%s\t%s\t%e\n", i, ontologies[i].Name, proportionsForTerms[i])
+		exception.PanicOnErr(err)
+	}
+	err = termOut.Close()
 
 	for i := range filledSpace {
 		filledSpaceIntervals = append(filledSpaceIntervals, filledSpace[i])
@@ -150,7 +173,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		}
 		currOverlapGene = queryOverlaps[0].(bed.Bed).Name // type assert as bed and extract name of gene assigned to query
 		ontologiesForCurrGene = geneOntologies[currOverlapGene]
-		fmt.Printf("Len(ontologiesForrCurrGene: %v.\n", len(ontologiesForCurrGene))
+		//fmt.Printf("Len(ontologiesForrCurrGene: %v.\n", len(ontologiesForCurrGene))
 		for currOntologyIndex = range ontologiesForCurrGene {
 			currOntologyName = ontologiesForCurrGene[currOntologyIndex].Id
 			kCache[currOntologyName] += 1
@@ -158,28 +181,30 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	}
 
 	var enrichment float64
+
+	out := fileio.EasyCreate("testOut.txt")
 	for i := range proportionsForTerms {
-		fmt.Printf("i (the ontology name): %v.\n", i)
-		fmt.Printf("ProportionsForTerms[i]: %v.\n", proportionsForTerms[i])
-		enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], true)
-		if kCache[i] > 0 {
-			fmt.Printf("Enrichment: %e. TermID: %s.\n", enrichment, i)
-		}
+		//fmt.Printf("i (the ontology name): %v.\n", i)
+		//fmt.Printf("ProportionsForTerms[i]: %v.\n", proportionsForTerms[i])
+		enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], false)
+		_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
+		exception.PanicOnErr(err)
 	}
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 // BIG TODO LIST
 /*
 1. Filter obsolete Obos and filter "Not" Gaf entries.
 2 1/2: Potentially assigning genes to parent nodes in ontology tree.
-6. Assign each query bed to gene
-7. Calculate binomial(n, k, p) for each term
 8. Return p value for each Ontology
+
+CACHING
 
 Note: gene slice must have unique entries.
 
 Other TODO from Craig:
-
 
 minigenome with small toy examples of overlaps we can reason
 
