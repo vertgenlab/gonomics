@@ -75,20 +75,59 @@ var NegativeBinomialTests = []struct {
 
 func TestNegativeBinomial(t *testing.T) {
 	var variates []float64
+	var lines []string
 	var currR float64
 	var currP float64
 	for _, v := range NegativeBinomialTests {
 		variates = make([]float64, 0)
-		lines := fileio.Read(v.InFile)
+		lines = fileio.Read(v.InFile)
 		for i := range lines {
 			variates = append(variates, parse.StringToFloat64(lines[i]))
-			currR, currP = NegativeBinomial(variates)
 		}
+		currR, currP = NegativeBinomial(variates)
 		if (currR-v.ExpectedR)/v.ExpectedR > 0.05 {
 			t.Errorf("Error: currR: %v not as expected: %v\n", currR, v.ExpectedR)
 		}
 		if (currP-v.ExpectedP)/v.ExpectedP > 0.05 {
 			t.Errorf("Error: currP: %v not as expected: %v\n", currP, v.ExpectedP)
+		}
+	}
+}
+
+var PoissonTests = []struct {
+	InFile         string
+	ExpectedLambda float64
+}{
+	{InFile: "testdata/poissonVariates.lambda.1.txt.gz",
+		ExpectedLambda: 1,
+	},
+	{InFile: "testdata/poissonVariates.lambda.2.txt.gz",
+		ExpectedLambda: 2,
+	},
+	{InFile: "testdata/poissonVariates.lambda.3.txt.gz",
+		ExpectedLambda: 3,
+	},
+	{InFile: "testdata/poissonVariates.lambda.4.txt.gz",
+		ExpectedLambda: 4,
+	},
+	{InFile: "testdata/poissonVariates.lambda.5.txt.gz",
+		ExpectedLambda: 5,
+	},
+}
+
+func TestPoisson(t *testing.T) {
+	var variates []float64
+	var lines []string
+	var currLambda float64
+	for _, v := range PoissonTests {
+		variates = make([]float64, 0)
+		lines = fileio.Read(v.InFile)
+		for i := range lines {
+			variates = append(variates, parse.StringToFloat64(lines[i]))
+		}
+		currLambda = Poisson(variates)
+		if (currLambda-v.ExpectedLambda)/v.ExpectedLambda > 0.05 {
+			t.Errorf("Error: currLambda: %v is not as expected: %v\n", currLambda, v.ExpectedLambda)
 		}
 	}
 }

@@ -33,3 +33,30 @@ grid.arrange(grobs = plotList, ncol=2)
 With these variates in hand, we then fed the variants into fit.NegativeBinomial and evaluated whether the sample estimated
 parameters fell within 5% of the true parameters.
 
+
+## Poisson
+
+Poisson fitting testing followed a similar script as in Negative Binomial testing.
+
+library(gridExtra)
+library(ggplot2)
+
+numVariates <- 10000
+variateList <- list()
+plotList <- list()
+
+for (i in 1:5) {
+	print(i)
+	lambda <- i
+	
+	currVariates <- rpois(numVariates, lambda = lambda)
+	
+	filename <- paste("poissonVariates.lambda.", lambda, ".txt", sep="")
+	writeLines(as.character(currVariates), con=filename)
+	
+	currHist <- ggplot(data.frame(x=currVariates), aes(x)) + geom_histogram(aes(y=..density..), bindwidth=1, fill="lightblue", color="black") + labs(title=paste("lambda=", lambda), x="Values", y=" Frequency") + theme_classic() + xlim(0, 15)
+	plotList[[i]] <- currHist
+}
+
+grid.arrange(grobs = plotList, ncol=2)
+
