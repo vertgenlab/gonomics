@@ -1,0 +1,1 @@
+testdata/in.straw	chr1
