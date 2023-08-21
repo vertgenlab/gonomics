@@ -23,6 +23,50 @@ type Settings struct {
 	scAnalysis string
 	binCells   int
 	umiSat     bool
+	gfpNorm    string
+}
+
+func gfpNormalize(countsMap map[string]float64, normFactor float64) {
+	var counts float64
+	for i := range countsMap {
+		counts, _ = countsMap[i]
+		countsMap[i] = counts * normFactor
+	}
+}
+
+func gfpNormFactor(clusterGFP map[string]int) map[string]float64 {
+	var totalCounts, clusterCounts int
+	var actualPerc float64
+	gfpNormMap := make(map[string]float64)
+	idealPerc := 1.0 / float64(len(clusterGFP))
+	for i := range clusterGFP {
+		clusterCounts, _ = clusterGFP[i]
+		totalCounts = clusterCounts + totalCounts
+	}
+	for i := range clusterGFP {
+		actualPerc = float64(clusterGFP[i]) / float64(totalCounts)
+		gfpNormMap[i] = idealPerc / actualPerc
+	}
+	return gfpNormMap
+}
+
+func parseGfpBam(gfpBam string, cellTypeMap map[string]string, clusterGFP map[string]int) map[string]int {
+	var bit int32
+	var cluster string
+	var count int
+
+	inChan, _ := sam.GoReadToChan(gfpBam)
+	for i := range inChan {
+		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
+		bit = num.(int32)
+		if bit&8 == 8 {
+			cellBx, _, _ := sam.QueryTag(i, "CB")
+			cluster, _ = cellTypeMap[cellBx.(string)]
+			count, _ = clusterGFP[cluster]
+			clusterGFP[cluster] = count + 1
+		}
+	}
+	return clusterGFP
 }
 
 // umiSaturation randomly subsets the whole bam file (10% to 100% of all reads) and calculates how many UMIs are in those subests. The output is a tab delimited text file.
@@ -173,11 +217,12 @@ func distributeCells(cellTypeSlice []string, numBins int) [][]string {
 }
 
 // singleCellAnalysis will create a count for each construct in each cell type. This function takes
-func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstructs []string, normalize string, writer *fileio.EasyWriter) {
+func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstructs []string, normalize string, writer *fileio.EasyWriter, gfpNorm string) {
 	var found, found2 bool
 	var cellType, j, m, cluster string
 	var count float64
 	var outMatrix, columns, columns2 []string
+	var gfpNormFactorMap map[string]float64
 
 	cellTypeMap := make(map[string]string) // [cellBarcode]cellType
 	allCellTypes := make(map[string]int)   // [cellType]placeholderInt
@@ -188,9 +233,14 @@ func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstruc
 		cellTypeMap[columns[0]] = columns[1]
 		_, found2 = allCellTypes[columns[1]] // also populate a map that contains a list of all cell types
 		if !found2 {
-			allCellTypes[columns[1]] = 1
+			allCellTypes[columns[1]] = 0
 		}
 	}
+	if gfpNorm != "" {
+		gfpClusterMap := parseGfpBam(gfpNorm, cellTypeMap, allCellTypes)
+		gfpNormFactorMap = gfpNormFactor(gfpClusterMap)
+	}
+
 	for cellType = range allCellTypes { //loop over the list of cell types
 		var a int = 0
 		singleCellTypeMap := make(map[string]float64) // make a map which will hold the construct counts for the current cell type ([construct]counts)
@@ -208,6 +258,10 @@ func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstruc
 		}
 		if normalize != "" { // normalize the singleCellCount map if needed
 			inputNormalize(singleCellTypeMap, normalize)
+		}
+		if gfpNorm != "" {
+			gfpNormalizationFactor := gfpNormFactorMap[cellType]
+			gfpNormalize(singleCellTypeMap, gfpNormalizationFactor)
 		}
 		for m = range singleCellTypeMap { // write out the results from that cell type
 			write := fmt.Sprintf("%s\t%s\t%f", cellType, m, singleCellTypeMap[m]) //cell type \t construct \t count
@@ -339,7 +393,7 @@ func parseBam(s Settings) {
 	}
 	fmt.Println("Found this many valid UMIs: ", k)
 	if sc { //singleCellAnalysis, handles all the writing as well
-		singleCellAnalysis(cellTypeSlice, s.scAnalysis, allConstructs, s.normalize, out)
+		singleCellAnalysis(cellTypeSlice, s.scAnalysis, allConstructs, s.normalize, out, s.gfpNorm)
 	}
 	if s.binCells > 0 { //goes to binning and pseudobulk. Handles normalization and writing as well
 		binnedCells := distributeCells(cellTypeSlice, s.binCells)
@@ -374,7 +428,8 @@ func main() {
 	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
 	var binCells *int = flag.Int("binCells", 0, "Number of bins to randomly assign cells to. The output will be a psudobulk table for each bin")
 	var umiSat *bool = flag.Bool("umiSat", false, "Create a UMI saturation curve of all reads in the cellrangerBam.")
-
+	var gfpNorm *string = flag.String("gfpNorm", "", "Bam file from the same scSTARR-seq experiment containing cellranger count alignments to GFP for cell cluster GFP normalization. Multiple bam"+
+		"files from different GEM wells can be provided in a comma-separated list")
 	var expectedNumArgs int = 2
 
 	flag.Usage = usage
@@ -411,6 +466,7 @@ func main() {
 		binCells:   *binCells,
 		umiSat:     *umiSat,
 		samOut:     *samOut,
+		gfpNorm:    *gfpNorm,
 	}
 
 	var bw *sam.BamWriter
@@ -422,7 +478,7 @@ func main() {
 		if *cellTypeAnalysis != "" {
 			fmt.Println("*** WARNING *** You are using multiple GEM wells with -cellTypeAnalysis. Using multiple GEM wells will add an additional suffix to cell barcodes to reinforce cell barcode uniqueness. " +
 				"The first bam file provided will have the '_1' suffix, the second bam file '_2' and so on. This mirrors the default behavior of both Seurat merge() and integrate() functions. " +
-				"If multiple GEM wells haven't be processed in the same way in Seurat and in the cellrangerBam programs, cell lookup for -cellTypeAnalysis will be inacurate.")
+				"If multiple GEM wells haven't be processed in the same way in Seurat and in the scStarrSeqAnalysis programs, cell lookup for -cellTypeAnalysis will be impaired.")
 		}
 		for _, i := range inFiles {
 			path = strings.Split(i, "/")
@@ -442,10 +498,45 @@ func main() {
 		exception.PanicOnErr(err)
 
 	}
+
+	var gfpBams []string
+	if *gfpNorm != "" {
+		var bwGFP *sam.BamWriter
+		var combineBamWriterGFP *fileio.EasyWriter
+		gfpBams = strings.Split(*gfpNorm, ",")
+		if len(gfpBams) > 1 {
+			var path, tmpFileSlice []string
+			fmt.Println("*** WARNING *** You are using multiple GEM wells with -gfpNorm. Using multiple GEM wells will add an additional suffix to cell barcodes to reinforce cell barcode uniqueness. " +
+				"The first bam file provided will have the '_1' suffix, the second bam file '_2' and so on. This mirrors the default behavior of both Seurat merge() and integrate() functions. " +
+				"If multiple GEM wells haven't be processed in the same way in Seurat and in the scStarrSeqAnalysis programs, cell lookup for -cellTypeAnalysis will be impaired.")
+			for _, i := range gfpBams {
+				path = strings.Split(i, "/")
+				tmpFileSlice = append(tmpFileSlice, path[len(path)-1])
+			}
+			tmpFileSlice = append(tmpFileSlice, ".bam")
+			tmpFileName := strings.Join(tmpFileSlice, "_")
+			combineBamWriterGFP = fileio.EasyCreate(tmpFileName)
+			p := 1
+			for _, i := range gfpBams {
+				bwGFP = combineBams(i, combineBamWriterGFP, &p, len(gfpBams), bwGFP)
+			}
+			s.gfpNorm = tmpFileName
+			err = bwGFP.Close()
+			exception.PanicOnErr(err)
+			err = combineBamWriterGFP.Close()
+			exception.PanicOnErr(err)
+
+		}
+	}
+
 	parseBam(s)
 
 	if len(inFiles) > 1 {
 		err = os.Remove(s.inFile)
+		exception.PanicOnErr(err)
+	}
+	if len(gfpBams) > 1 {
+		err = os.Remove(s.gfpNorm)
 		exception.PanicOnErr(err)
 	}
 }
