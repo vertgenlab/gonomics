@@ -51,14 +51,14 @@ func gfpNormFactor(clusterGFP map[string]int) map[string]float64 {
 }
 
 func parseGfpBam(gfpBam string, cellTypeMap map[string]string, clusterGFP map[string]int) map[string]int {
-	var bit int32
+	var bit uint8
 	var cluster string
 	var count int
 
 	inChan, _ := sam.GoReadToChan(gfpBam)
 	for i := range inChan {
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(int32)
+		bit = num.(uint8)
 		if bit&8 == 8 {
 			cellBx, _, _ := sam.QueryTag(i, "CB")
 			cluster, _ = cellTypeMap[cellBx.(string)]
@@ -236,6 +236,7 @@ func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstruc
 			allCellTypes[columns[1]] = 0
 		}
 	}
+
 	if gfpNorm != "" {
 		gfpClusterMap := parseGfpBam(gfpNorm, cellTypeMap, allCellTypes)
 		gfpNormFactorMap = gfpNormFactor(gfpClusterMap)
@@ -322,7 +323,7 @@ func parseBam(s Settings) {
 	var constructName, cellString, cellByConstructName, umiBx string
 	var count float64
 	var found bool
-	var bit int32
+	var bit uint8
 	var norm bool = false
 	var sc bool = false
 	var noSettings bool = false
@@ -356,7 +357,7 @@ func parseBam(s Settings) {
 			umiBxSlice = append(umiBxSlice, umiBx)
 		}
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(int32)
+		bit = num.(uint8)
 		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
 			k++
 			construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI

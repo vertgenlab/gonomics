@@ -17,13 +17,15 @@ var cellrangerBamTests = []struct {
 	SingleCell     string
 	BinCells       int
 	UmiSat         bool
+	GfpNorm        string
 }{
-	{"testdata/in.bam", "testdata/out.default.txt", "testdata/expected.default.txt", "", true, false, "", 0, false},
-	{"testdata/in.bam", "testdata/out.pseudobulk.txt", "testdata/expected.pseudobulk.txt", "", false, false, "", 0, false},
-	{"testdata/in.bam", "testdata/out.pseudobulkNormalized.txt", "testdata/expected.pseudobulkNormalized.txt", "testdata/inputNormTable.txt", false, false, "", 0, false},
+	{"testdata/in.bam", "testdata/out.default.txt", "testdata/expected.default.txt", "", true, false, "", 0, false, ""},
+	{"testdata/in.bam", "testdata/out.pseudobulk.txt", "testdata/expected.pseudobulk.txt", "", false, false, "", 0, false, ""},
+	{"testdata/in.bam", "testdata/out.pseudobulkNormalized.txt", "testdata/expected.pseudobulkNormalized.txt", "testdata/inputNormTable.txt", false, false, "", 0, false, ""},
 	//{"testdata/in.bam", "testdata/out.samOut.sam", "testdata/expected.samOut.sam", "", false, true, "", 0, false},
-	{"testdata/in.bam", "testdata/out.singleCell.txt", "testdata/expected.singleCell.txt", "", false, false, "testdata/cellTypes.txt", 0, false},
-	{"testdata/in.bam", "testdata/out.singleCellNormalized.txt", "testdata/expected.singleCellNormalized.txt", "testdata/inputNormTable.txt", false, false, "testdata/cellTypes.txt", 0, false},
+	{"testdata/in.bam", "testdata/out.singleCell.txt", "testdata/expected.singleCell.txt", "", false, false, "testdata/cellTypes.txt", 0, false, ""},
+	{"testdata/in.bam", "testdata/out.singleCellNormalized.txt", "testdata/expected.singleCellNormalized.txt", "testdata/inputNormTable.txt", false, false, "testdata/cellTypes.txt", 0, false, ""},
+	{"testdata/in.bam", "testdata/out.singleCellGfpNormalized.txt", "testdata/expected.singleCellGfpNormalized.txt", "testdata/inputNormTable.txt", false, false, "testdata/cellTypes.txt", 0, false, "testdata/in.gfp.bam"},
 }
 
 func TestCellrangerBam(t *testing.T) {
@@ -39,6 +41,7 @@ func TestCellrangerBam(t *testing.T) {
 			scAnalysis: v.SingleCell,
 			binCells:   v.BinCells,
 			umiSat:     v.UmiSat,
+			gfpNorm:    v.GfpNorm,
 		}
 		parseBam(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

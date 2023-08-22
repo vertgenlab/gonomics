@@ -1,0 +1,5 @@
+cellCluster	construct	counts
+type1	constructA	2.250000
+type1	constructB	0.000000
+type2	constructA	0.000000
+type2	constructB	0.750000
