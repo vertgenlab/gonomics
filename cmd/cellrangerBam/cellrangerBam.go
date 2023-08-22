@@ -51,20 +51,33 @@ func gfpNormFactor(clusterGFP map[string]int) map[string]float64 {
 }
 
 func parseGfpBam(gfpBam string, cellTypeMap map[string]string, clusterGFP map[string]int) map[string]int {
-	var bit uint8
+	var bit int32
 	var cluster string
 	var count int
+	var gfpStats []string
+	var found bool
 
 	inChan, _ := sam.GoReadToChan(gfpBam)
 	for i := range inChan {
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(uint8)
+		bit = num.(int32)
 		if bit&8 == 8 {
 			cellBx, _, _ := sam.QueryTag(i, "CB")
-			cluster, _ = cellTypeMap[cellBx.(string)]
-			count, _ = clusterGFP[cluster]
-			clusterGFP[cluster] = count + 1
+			cluster, found = cellTypeMap[cellBx.(string)]
+			if found {
+				count, _ = clusterGFP[cluster]
+				clusterGFP[cluster] = count + 1
+			}
 		}
+	}
+	//print out some GFP read counts / cluster
+	var gfpReads int
+	for i := range clusterGFP {
+		gfpReads, _ = clusterGFP[i]
+		gfpStats = append(gfpStats, fmt.Sprintf("found %d GFP reads in %s", gfpReads, i))
+	}
+	for _, i := range gfpStats {
+		fmt.Println(i)
 	}
 	return clusterGFP
 }
@@ -183,7 +196,7 @@ func distributeCells(cellTypeSlice []string, numBins int) [][]string {
 	whichBin := 'A'                   //for counting cells per bin
 	whichBinMap := make(map[rune]int) //for counting cells per bin
 
-	binnedCells := make([][]string, numBins) //make a slicce of slice of string with the size of the user-specified number of bins
+	binnedCells := make([][]string, numBins) //make a slice of slice of string with the size of the user-specified number of bins
 	prob := 1.0 / float64(numBins)           // determine the probablity that the cell belongs to a particular bin
 
 	sort.Strings(cellTypeSlice) //sort the slice of strings containing (cellBarcode \t construct) so that indentical cell barcodes line up next to one annother
@@ -323,7 +336,7 @@ func parseBam(s Settings) {
 	var constructName, cellString, cellByConstructName, umiBx string
 	var count float64
 	var found bool
-	var bit uint8
+	var bit int32
 	var norm bool = false
 	var sc bool = false
 	var noSettings bool = false
@@ -357,7 +370,7 @@ func parseBam(s Settings) {
 			umiBxSlice = append(umiBxSlice, umiBx)
 		}
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(uint8)
+		bit = num.(int32)
 		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
 			k++
 			construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
