@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
@@ -24,6 +26,7 @@ type Settings struct {
 	binCells   int
 	umiSat     bool
 	gfpNorm    string
+	bed        string
 }
 
 func gfpNormalize(countsMap map[string]float64, normFactor float64) {
@@ -230,7 +233,7 @@ func distributeCells(cellTypeSlice []string, numBins int) [][]string {
 }
 
 // singleCellAnalysis will create a count for each construct in each cell type. This function takes
-func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstructs []string, normalize string, writer *fileio.EasyWriter, gfpNorm string) {
+func singleCellAnalysis(s Settings, cellTypeSlice []string, allConstructs []string, writer *fileio.EasyWriter) {
 	var found, found2 bool
 	var cellType, j, m, cluster string
 	var count float64
@@ -239,8 +242,9 @@ func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstruc
 
 	cellTypeMap := make(map[string]string) // [cellBarcode]cellType
 	allCellTypes := make(map[string]int)   // [cellType]placeholderInt
+	//countsPerCellType := make(map[string]int)
 
-	cto := fileio.Read(cellTypeInfo) // read in the tab delimited file with cell and cell type info
+	cto := fileio.Read(s.scAnalysis) // read in the tab delimited file with cell and cell type info
 	for _, i := range cto {          //make a map where the cell barcode is the key and the cell type is the value
 		columns = strings.Split(i, "\t")
 		cellTypeMap[columns[0]] = columns[1]
@@ -250,8 +254,8 @@ func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstruc
 		}
 	}
 
-	if gfpNorm != "" {
-		gfpClusterMap := parseGfpBam(gfpNorm, cellTypeMap, allCellTypes)
+	if s.gfpNorm != "" {
+		gfpClusterMap := parseGfpBam(s.gfpNorm, cellTypeMap, allCellTypes)
 		gfpNormFactorMap = gfpNormFactor(gfpClusterMap)
 	}
 
@@ -270,10 +274,10 @@ func singleCellAnalysis(cellTypeSlice []string, cellTypeInfo string, allConstruc
 				a++
 			}
 		}
-		if normalize != "" { // normalize the singleCellCount map if needed
-			inputNormalize(singleCellTypeMap, normalize)
+		if s.normalize != "" { // normalize the singleCellCount map if needed
+			inputNormalize(singleCellTypeMap, s.normalize)
 		}
-		if gfpNorm != "" {
+		if s.gfpNorm != "" {
 			gfpNormalizationFactor := gfpNormFactorMap[cellType]
 			gfpNormalize(singleCellTypeMap, gfpNormalizationFactor)
 		}
@@ -333,14 +337,14 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 // parseBam takes in a cellranger count bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
 func parseBam(s Settings) {
 	var k int = 0
-	var constructName, cellString, cellByConstructName, umiBx string
+	var constructName, cellString, cellByConstructName, umiBx, constructString string
 	var count float64
 	var found bool
 	var bit int32
 	var norm bool = false
 	var sc bool = false
 	var noSettings bool = false
-	var allConstructs, cellTypeSlice, umiBxSlice []string
+	var allConstructs, cellTypeSlice, umiBxSlice, constructSlice []string
 
 	if s.normalize != "" { //create a bool for normalize
 		norm = true
@@ -360,6 +364,16 @@ func parseBam(s Settings) {
 		sam.WriteHeaderToFileHandle(out, head)
 	}
 
+	var tree = make([]interval.Interval, 0)
+	var selectTree map[string]*interval.IntervalNode
+	if s.bed != "" {
+		bedEntries := bed.Read(s.bed)
+		for _, i := range bedEntries {
+			tree = append(tree, i)
+		}
+		selectTree = interval.BuildTree(tree)
+	}
+
 	pseudobulkMap := make(map[string]float64)
 
 	for i := range ch { //iterate of over the chanel of sam.Sam
@@ -373,8 +387,18 @@ func parseBam(s Settings) {
 		bit = num.(int32)
 		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
 			k++
-			construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
-			constructName = construct.(string)
+			if s.bed != "" {
+				overlappedBedEntry := interval.Query(selectTree, i, "any")
+				if len(overlappedBedEntry) != 1 {
+					continue
+				}
+				constructString = fmt.Sprint(overlappedBedEntry[0])
+				constructSlice = strings.Split(constructString, "\t")
+				constructName = constructSlice[3]
+			} else {
+				construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
+				constructName = construct.(string)
+			}
 			if s.byCell || sc || s.binCells > 0 { //byCell or singleCellAnalysis or binCells
 				cell, _, _ := sam.QueryTag(i, "CB") // get the cell barcode associated with valid UMI
 				cellString = cell.(string)
@@ -407,7 +431,7 @@ func parseBam(s Settings) {
 	}
 	fmt.Println("Found this many valid UMIs: ", k)
 	if sc { //singleCellAnalysis, handles all the writing as well
-		singleCellAnalysis(cellTypeSlice, s.scAnalysis, allConstructs, s.normalize, out, s.gfpNorm)
+		singleCellAnalysis(s, cellTypeSlice, allConstructs, out)
 	}
 	if s.binCells > 0 { //goes to binning and pseudobulk. Handles normalization and writing as well
 		binnedCells := distributeCells(cellTypeSlice, s.binCells)
@@ -439,11 +463,15 @@ func main() {
 	var byCell *bool = flag.Bool("byCell", false, "Will report the construct that each UMI belongs to and which cell in which it was found in a tab-delimited table.")
 	var normalize *string = flag.String("normalize", "", "Takes in a tab delimited table with construct name and input normalization value. Must be used with -pseudobulk.")
 	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
-	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
+	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. "+
+		"The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
 	var binCells *int = flag.Int("binCells", 0, "Number of bins to randomly assign cells to. The output will be a psudobulk table for each bin")
-	var umiSat *bool = flag.Bool("umiSat", false, "Create a UMI saturation curve of all reads in the cellrangerBam.")
-	var gfpNorm *string = flag.String("gfpNorm", "", "Bam file from the same scSTARR-seq experiment containing cellranger count alignments to GFP for cell cluster GFP normalization. Multiple bam"+
-		"files from different GEM wells can be provided in a comma-separated list")
+	var umiSat *bool = flag.Bool("umiSat", false, "Create a UMI saturation curve of all reads in the input bam file.")
+	var gfpNorm *string = flag.String("gfpNorm", "", "Bam file from the same scSTARR-seq experiment containing cellranger count alignments to GFP for cell cluster GFP normalization. "+
+		"Multiple bam files from different GEM wells can be provided in a comma-separated list")
+	var bed *string = flag.String("bed", "", "Use a bed file for assigning reads to constructs instead of the GTF that was used in cellranger mkref. The bed file must have the "+
+		"name of the construct in the fourth field")
+
 	var expectedNumArgs int = 2
 
 	flag.Usage = usage
@@ -481,6 +509,7 @@ func main() {
 		umiSat:     *umiSat,
 		samOut:     *samOut,
 		gfpNorm:    *gfpNorm,
+		bed:        *bed,
 	}
 
 	var bw *sam.BamWriter
