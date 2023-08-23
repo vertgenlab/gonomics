@@ -27,7 +27,7 @@ var cellrangerBamTests = []struct {
 	{"testdata/in.bam", "testdata/out.singleCell.txt", "testdata/expected.singleCell.txt", "", false, false, "testdata/cellTypes.txt", 0, false, "", ""},
 	{"testdata/in.bam", "testdata/out.singleCellNormalized.txt", "testdata/expected.singleCellNormalized.txt", "testdata/inputNormTable.txt", false, false, "testdata/cellTypes.txt", 0, false, "", ""},
 	{"testdata/in.bam", "testdata/out.singleCellGfpNormalized.txt", "testdata/expected.singleCellGfpNormalized.txt", "testdata/inputNormTable.txt", false, false, "testdata/cellTypes.txt", 0, false, "testdata/in.gfp.bam", ""},
-	{"testdata/in2.bam", "testdata/out.pseudobulkNormalized.txt", "testdata/expected.pseudobulkNormalized.txt", "testdata/inputNormTable.txt", false, false, "", 0, false, "", "testdata/in.bed"},
+	{"testdata/in.bam", "testdata/out.pseudobulkNormalized.txt", "testdata/expected.pseudobulkNormalized.txt", "testdata/inputNormTable.txt", false, false, "", 0, false, "", "testdata/in.bed"},
 }
 
 func TestCellrangerBam(t *testing.T) {
