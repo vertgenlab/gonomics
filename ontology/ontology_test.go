@@ -46,7 +46,9 @@ func TestThreeDGreat(t *testing.T) {
 		fmt.Printf("Reading genes.\n")
 		genes = gtf.Read(v.GeneFile)
 		fmt.Printf("Reading contacts.\n")
-		contacts = bedpe.Read(v.ContactsFile)
+		if v.ContactsFile != "" {
+			contacts = bedpe.Read(v.ContactsFile)
+		}
 		fmt.Printf("Reading annotations.\n")
 		annotations, _ = gaf.Read(v.AnnotationsFile)
 		fmt.Printf("Reading obos.\n")
