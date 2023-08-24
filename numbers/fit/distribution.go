@@ -3,6 +3,7 @@
 package fit
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
@@ -65,14 +66,104 @@ func zeroInflatedNegativeBinomialLogLikelihood(data []int, R float64, P float64,
 	return likelihood
 }
 
+func plotLossSurfaceZTNB(data []int, Rmin float64, Rmax float64, Rstep float64, Pmin float64, Pmax float64, Pstep float64) [][]float64 {
+	var answer [][]float64 = make([][]float64, int((Pmax-Pmin)/Pstep))
+	for i := range answer {
+		answer[i] = make([]float64, int((Rmax-Rmin)/Rstep))
+		for j := range answer[i] {
+			answer[i][j] = zeroTruncatedNegativeBinomialLogLikelihood(data, Rmin+Rstep*float64(i), Pmin+Pstep*float64(j))
+		}
+	}
+
+	return answer
+}
+
 func zeroTruncatedNegativeBinomialLogLikelihood(data []int, R float64, P float64) float64 {
 	likelihood := 0.0
 	var density float64
 	for i := 1; i < len(data); i++ {
 		density, _ = numbers.NegativeBinomialDist(i, R, P, true)
+		//fmt.Printf("Density: %v. R: %v. P: %v.\n", density, R, P)
 		likelihood += float64(data[i]) * logspace.Divide(density, math.Log(1-math.Pow(P, R)))
 	}
 	return likelihood
+}
+
+func ZeroTruncatedNegativeBinomial(data []int, learningRate float64, delta, epsilon float64) (float64, float64) {
+	var R, P float64 = 1.0, 0.5
+
+	fmt.Printf("Starting.\n")
+
+	//, prevR, prevP
+	var lossPlus, lossMinus float64
+	var gradient = make([]float64, 2)
+	var propDiff float64 = 1
+	var currLoss float64 = 0
+	var prevLoss float64 = zeroTruncatedNegativeBinomialLogLikelihood(data, R, P)
+
+	for propDiff > epsilon {
+		R += delta
+		lossPlus = zeroTruncatedNegativeBinomialLogLikelihood(data, R, P)
+		R -= 2 * delta
+		lossMinus = zeroTruncatedNegativeBinomialLogLikelihood(data, R, P)
+		R += delta
+		gradient[0] = (lossPlus - lossMinus) / (2 * delta)
+
+		P += delta
+		lossPlus = zeroTruncatedNegativeBinomialLogLikelihood(data, R, P)
+		P -= 2 * delta
+		lossMinus = zeroTruncatedNegativeBinomialLogLikelihood(data, R, P)
+		P += delta
+		gradient[1] = (lossPlus - lossMinus) / (2 * delta)
+
+		//prevR, prevP = R, P
+
+		if learningRate*gradient[0] > 0.1 {
+			R += 0.1
+			if R < 0 {
+				R -= 0.1
+			}
+		} else if learningRate*gradient[0] < -0.1 {
+			R += -0.1
+			if R < 0 {
+				R -= -0.1
+			}
+		} else {
+			R += learningRate * gradient[0]
+			if R < 0 {
+				R -= learningRate * gradient[0]
+			}
+		}
+
+		if learningRate*gradient[1] > 0.1 {
+			P += 0.1
+			if P >= 1 || P <= 0 {
+				P -= 0.1
+			}
+		} else if learningRate*gradient[1] < -0.1 {
+			P += -0.1
+			if P > 1 || P < 0 {
+				P -= -0.1
+			}
+		} else {
+			P += learningRate * gradient[1]
+			if P > 1 || P < 0 {
+				P -= learningRate * gradient[1]
+			}
+		}
+
+		currLoss = zeroTruncatedNegativeBinomialLogLikelihood(data, R, P)
+		fmt.Printf("LossFunction:\t%v\tR:\t%v\tP:\t%v\n", currLoss, R, P)
+
+		if currLoss < prevLoss {
+			break
+			//return prevR, prevP
+		}
+		propDiff = math.Abs(math.Abs(currLoss-prevLoss) / prevLoss)
+		prevLoss = currLoss
+	}
+
+	return R, P
 }
 
 func ZeroInflatedNegativeBinomial(data []int, learningRate float64, delta float64, epsilon float64) (float64, float64, float64) {
