@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
@@ -27,6 +28,71 @@ type Settings struct {
 	umiSat     bool
 	gfpNorm    string
 	bed        string
+	ncNorm     string
+}
+
+func getNcAvg(matrix []string, ncSlice []string, ncVals [][]float64) []float64 {
+	var found bool
+	var currCluster string
+	var columns []string
+	var prevCluster string
+	var ncAvg []float64
+
+	columns = strings.Split(matrix[0], "\t")
+	currCluster = columns[0]
+
+	clusterIdx := 0
+	for p, i := range matrix {
+		found = false
+		columns = strings.Split(i, "\t")
+		currCluster = columns[0]
+		if p > 0 && currCluster != prevCluster {
+			clusterIdx++
+		}
+		for _, j := range ncSlice {
+			if j == columns[1] {
+				found = true
+				break
+			}
+		}
+		if found {
+			ncVals[clusterIdx] = append(ncVals[clusterIdx], parse.StringToFloat64(columns[2]))
+		}
+		prevCluster = currCluster
+	}
+	for i, _ := range ncVals {
+		ncAvg = append(ncAvg, numbers.AverageFloat64(ncVals[i]))
+	}
+	return ncAvg
+}
+
+func normScToNegativeCtrls(matrix []string, s Settings, numCellTypes int) []string {
+	var ncSlice, columns []string
+	var prevCluster, newLine string
+
+	ncVals := make([][]float64, numCellTypes)
+	nc := fileio.Read(s.ncNorm)
+	for _, i := range nc {
+		ncSlice = append(ncSlice, i)
+	}
+	ncAvg := getNcAvg(matrix, ncSlice, ncVals)
+
+	columns = strings.Split(matrix[0], "\t")
+	currCluster := columns[0]
+
+	clusterIdx := 0
+	for j, i := range matrix {
+		columns = strings.Split(i, "\t")
+		currCluster = columns[0]
+		if j > 0 && currCluster != prevCluster {
+			clusterIdx++
+		}
+		columns[2] = fmt.Sprintf("%f", parse.StringToFloat64(columns[2])/ncAvg[clusterIdx])
+		newLine = strings.Join(columns, "\t")
+		matrix[j] = newLine
+		prevCluster = currCluster
+	}
+	return matrix
 }
 
 func gfpNormalize(countsMap map[string]float64, normFactor float64) {
@@ -288,7 +354,15 @@ func singleCellAnalysis(s Settings, cellTypeSlice []string, allConstructs []stri
 		fmt.Println(fmt.Sprintf("Found %d raw counts in the cell type: %s", a, cellType))
 	}
 	sort.Strings(outMatrix) //sort the slice before writing
-	fileio.WriteToFileHandle(writer, "cellCluster\tconstruct\tcounts")
+
+	if s.ncNorm != "" {
+		outMatrix = normScToNegativeCtrls(outMatrix, s, len(allCellTypes))
+	}
+	if s.ncNorm != "" {
+		fileio.WriteToFileHandle(writer, "cellCluster\tconstruct\tcounts/ncCounts")
+	} else {
+		fileio.WriteToFileHandle(writer, "cellCluster\tconstruct\tcounts")
+	}
 	for _, i := range outMatrix { //once all cell types have been looped through, write out the total count matrix
 		fileio.WriteToFileHandle(writer, i)
 	}
@@ -460,7 +534,7 @@ func usage() {
 
 func main() {
 	var byCell *bool = flag.Bool("byCell", false, "Will report the construct that each UMI belongs to and which cell in which it was found in a tab-delimited table.")
-	var normalize *string = flag.String("normalize", "", "Takes in a tab delimited table with construct name and input normalization value. Must be used with -pseudobulk.")
+	var normalize *string = flag.String("normalize", "", "Takes in a tab delimited table with construct name and input normalization value")
 	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
 	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. "+
 		"The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
@@ -469,13 +543,23 @@ func main() {
 	var gfpNorm *string = flag.String("gfpNorm", "", "Bam file from the same scSTARR-seq experiment containing cellranger count alignments to GFP for cell cluster GFP normalization. "+
 		"Multiple bam files from different GEM wells can be provided in a comma-separated list")
 	var bed *string = flag.String("bed", "", "Use a bed file for assigning reads to constructs instead of the GTF that was used in cellranger mkref. The bed file must have the "+
-		"name of the construct in the fourth field. Recomended for constructs with barcodes.")
+		"name of the construct in the fourth field. Recammended for constructs with barcodes.")
+	var ncNorm *string = flag.String("ncNorm", "", "Reports single cell data as the ratio the reads for each construct to the negative control reads in the same cell type."+
+		"A file that conatins a line-delimited list of negative controls must be provided.")
 
 	var expectedNumArgs int = 2
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
+
+	if *ncNorm != "" && *gfpNorm != "" {
+		log.Fatalf("Error: only one normalization method for single-cell data must be used")
+	}
+
+	if (*ncNorm != "" || *gfpNorm != "") && *cellTypeAnalysis == "" {
+		log.Fatalf("Error: -ncNorm or -gfpNorm must be used with -cellTypeAnalysis")
+	}
 
 	if *byCell && (*normalize != "" || *samOut) {
 		log.Fatalf("Error: byCell cannot be used with normalize or samOut.")
@@ -509,6 +593,7 @@ func main() {
 		samOut:     *samOut,
 		gfpNorm:    *gfpNorm,
 		bed:        *bed,
+		ncNorm:     *ncNorm,
 	}
 
 	var bw *sam.BamWriter
