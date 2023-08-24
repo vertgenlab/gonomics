@@ -10,56 +10,29 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/hic"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/fit"
 	"log"
 	"math"
 	"strings"
 )
 
 func strawToBedpe(fileList string, outFile string, binSize int) {
-	//var thisRec bedpe.BedPe
-	//var err error
 	var currStrawChan <-chan hic.Straw
 	var words []string
-	//var currAChrom, currBChrom string
 	var binDistance int
 	var currDistance float64
-	var contactScoreCache [][]int = make([][]int, 0)
-	var searchSpaceMins = make(map[string]int)
-	var searchSpaceMaxes = make(map[string]int)
+	var contactScoreCache [][]int = make([][]int, 2)
+	contactScoreCache[0] = make([]int, 1)
+	contactScoreCache[1] = make([]int, 1)
 	var tmpContactScoreCache [][]int
 	var tmpColumn []int
-	var firstTime, foundInMap bool
 
 	lines := fileio.Read(fileList)
 
 	for i := range lines {
 		words = strings.Split(lines[i], "\t")
 		currStrawChan = hic.GoReadToChan(words[0])
-		firstTime = true
 		for s := range currStrawChan {
-			if firstTime {
-				// if we've already had a bedpe file with information from this chromosome.
-				if _, foundInMap = searchSpaceMins[words[1]]; foundInMap {
-					searchSpaceMins[words[1]] = numbers.Min(searchSpaceMins[words[1]], numbers.Min(s.Bin1Start, s.Bin2Start))
-					searchSpaceMaxes[words[1]] = numbers.Max(searchSpaceMaxes[words[1]], numbers.Max(s.Bin1Start, s.Bin2Start))
-				} else {
-					searchSpaceMins[words[1]] = numbers.Min(s.Bin1Start, s.Bin2Start)
-					searchSpaceMaxes[words[1]] = numbers.Max(s.Bin1Start, s.Bin2Start)
-				}
-			}
-
-			if s.Bin1Start < searchSpaceMins[words[1]] {
-				searchSpaceMins[words[1]] = s.Bin1Start
-			}
-			if s.Bin2Start < searchSpaceMins[words[1]] {
-				searchSpaceMins[words[1]] = s.Bin2Start
-			}
-			if s.Bin1Start > searchSpaceMaxes[words[1]] {
-				searchSpaceMaxes[words[1]] = s.Bin1Start
-			}
-			if s.Bin2Start > searchSpaceMaxes[words[1]] {
-				searchSpaceMaxes[words[1]] = s.Bin2Start
-			}
 
 			currDistance = math.Abs(float64(s.Bin1Start) - float64(s.Bin2Start))
 			if int(currDistance)%binSize != 0 {
@@ -67,7 +40,7 @@ func strawToBedpe(fileList string, outFile string, binSize int) {
 			}
 			binDistance = int(currDistance) / binSize
 			// if we need more room in the cache rows, extend the cache
-			if binDistance+1 > len(contactScoreCache) {
+			if binDistance > len(contactScoreCache)-1 {
 				tmpContactScoreCache = make([][]int, binDistance+1)
 				copy(tmpContactScoreCache, contactScoreCache)
 				contactScoreCache = tmpContactScoreCache
@@ -77,7 +50,7 @@ func strawToBedpe(fileList string, outFile string, binSize int) {
 				contactScoreCache[binDistance] = make([]int, 1)
 			}
 			// if we need more room in the cache columns, extend the cache
-			if s.ContactScore+1 > len(contactScoreCache[binDistance]) {
+			if s.ContactScore > len(contactScoreCache[binDistance])-1 {
 				tmpColumn = make([]int, s.ContactScore+1)
 				copy(tmpColumn, contactScoreCache[binDistance])
 				contactScoreCache[binDistance] = tmpColumn
@@ -85,88 +58,126 @@ func strawToBedpe(fileList string, outFile string, binSize int) {
 			contactScoreCache[binDistance][s.ContactScore]++
 		}
 	}
+	//fmt.Print(contactScoreCache)
 
-	var currChrom string
-	var currNumWindows int
-	var currSumNonZeroWindows int
-	for currBinDistance := range contactScoreCache {
-		// get the total numbers of windows at this binDistance by ranging across all chromosomes
-		for currChrom = range searchSpaceMins {
-			// the current number of windows on a chromosome is the size of the search space (the highest window minus the lowest window)
-			// divided by the binSize (this is the number of bins on the chromosome), minus the binDistance ( as the right most
-			// possible start positions will not form a valid window).
-			currNumWindows = (searchSpaceMaxes[currChrom]-searchSpaceMins[currChrom])/binSize - currBinDistance
-		}
-		currSumNonZeroWindows = 0
-		for j := range contactScoreCache[currBinDistance] {
-			currSumNonZeroWindows += contactScoreCache[currBinDistance][j]
-		}
-		if contactScoreCache[currBinDistance] == nil {
-			contactScoreCache[currBinDistance] = make([]int, 1)
-		}
-		contactScoreCache[currBinDistance][0] = currNumWindows - currSumNonZeroWindows
+	distributions := fitNegativeBinomialsToCountData(contactScoreCache)
+	for i := range distributions {
+		fmt.Printf("binDistance: %v. R: %v. P: %v.\n", i, distributions[i].R, distributions[i].P)
 	}
 
-	out := fileio.EasyCreate("5kb.txt")
-	_, err := fmt.Fprintf(out, "Score\tFrequency\n")
-	exception.PanicOnErr(err)
-
-	for i := range contactScoreCache[1] {
-		_, err = fmt.Fprintf(out, "%v\t%v\n", i, contactScoreCache[1][i])
+	var err error
+	for i := 20; i < 40; i += 2 {
+		out := fileio.EasyCreate(fmt.Sprintf("distFiles/%v.txt", i))
+		_, err = fmt.Fprintf(out, "Score\tFrequency\n")
 		exception.PanicOnErr(err)
-	}
-
-	err = out.Close()
-	exception.PanicOnErr(err)
-
-	out = fileio.EasyCreate("0kb.txt")
-	_, err = fmt.Fprintf(out, "Score\tFrequency\n")
-	exception.PanicOnErr(err)
-
-	for i := range contactScoreCache[0] {
-		_, err = fmt.Fprintf(out, "%v\t%v\n", i, contactScoreCache[0][i])
-		exception.PanicOnErr(err)
-	}
-
-	err = out.Close()
-	exception.PanicOnErr(err)
-
-	out = fileio.EasyCreate("10kb.txt")
-	_, err = fmt.Fprintf(out, "Score\tFrequency\n")
-	exception.PanicOnErr(err)
-
-	for i := range contactScoreCache[2] {
-		_, err = fmt.Fprintf(out, "%v\t%v\n", i, contactScoreCache[2][i])
-		exception.PanicOnErr(err)
-	}
-
-	err = out.Close()
-	exception.PanicOnErr(err)
-
-	//fmt.Printf("ChromStarts: %v.\n", searchSpaceMins)
-	//fmt.Printf("ChromEnds: %v.\n", searchSpaceMaxes)
-	//fmt.Printf("ContactScoreCache:\n%v", contactScoreCache)
-
-	/*
-
-		straw := hic.GoReadToChan(strawFile)
-		out := fileio.EasyCreate(outFile)
-
-		if interChrom == "" {
-			for s := range straw {
-				thisRec = bedpe.BedPe{A: bed.Bed{Chrom: chrom, ChromStart: s.Bin1Start, ChromEnd: s.Bin1Start + binSize, Score: s.ContactScore, FieldsInitialized: 8}, B: bed.Bed{Chrom: chrom, ChromStart: s.Bin2Start, ChromEnd: s.Bin2Start + binSize, Score: s.ContactScore, FieldsInitialized: 8}}
-				bedpe.WriteToFileHandle(out, thisRec)
-			}
-		} else {
-			for s := range straw {
-				thisRec = bedpe.BedPe{A: bed.Bed{Chrom: chrom, ChromStart: s.Bin1Start, ChromEnd: s.Bin1Start + binSize, Score: s.ContactScore, FieldsInitialized: 8}, B: bed.Bed{Chrom: interChrom, ChromStart: s.Bin2Start, ChromEnd: s.Bin2Start + binSize, Score: s.ContactScore, FieldsInitialized: 8}}
-				bedpe.WriteToFileHandle(out, thisRec)
-			}
+		for j := range contactScoreCache[i] {
+			_, err = fmt.Fprintf(out, "%v\t%v\n", j, contactScoreCache[i][j])
+			exception.PanicOnErr(err)
 		}
-
 		err = out.Close()
 		exception.PanicOnErr(err)
-	*/
+	}
+}
+
+// NegativeBinomialFit stores the R and P parameter values to specify
+// a negative binomial distribution.
+type NegativeBinomialFit struct {
+	R float64
+	P float64
+}
+
+// fitNegativeBinomialsToCountData takes in the contactScoreCache, imputes missing
+// values at f(0), and fits a negative binomial distribution for each bin distance.
+func fitNegativeBinomialsToCountData(cache [][]int) []NegativeBinomialFit {
+	var answer = make([]NegativeBinomialFit, len(cache))
+	var i int
+	var currSumNonZero int
+	var currMean, currVariance float64
+	var currCount int
+	var iteration int
+	var couldNotFit bool
+	var currDensity float64
+	var lastZeroDensity float64 //last iteration's estimate of the density at f(0)
+
+	for currBinDistance := range cache {
+		if cache[currBinDistance] == nil {
+			cache[currBinDistance] = make([]int, 1)
+		}
+
+		/*
+			// we initialize contactScoreCache[currBinDistance][0] to the LagrangeInterpolation prediction
+			// if we only have two datapoints (f(1) and f(2)), we estimate f(0) by linear interpolation
+			// note that if len(contactScoreCache[curBinDistance]) < 3, we cannot interpolate f(0) and cannot call bedpe peaks for these distances.
+			if len(cache[currBinDistance]) == 3 {
+				cache[currBinDistance][0] = int(fit.LagrangeInterpolation(0.0, [][]float64{
+					{1.0, float64(cache[currBinDistance][1])},
+					{2.0, float64(cache[currBinDistance][2])},
+				},
+				))
+			} else if len(cache[currBinDistance]) > 3 {
+				cache[currBinDistance][0] = int(fit.LagrangeInterpolation(0.0, [][]float64{
+					{1.0, float64(cache[currBinDistance][1])},
+					{2.0, float64(cache[currBinDistance][2])},
+					{3.0, float64(cache[currBinDistance][3])},
+				},
+				))
+			}
+		*/
+
+		//if len(cache[currBinDistance]) > 1 {
+		//	cache[currBinDistance][0] = cache[currBinDistance][1]
+		//}
+
+		// now we fine-tune contactScoreCache[currBinDistance][0] with iterative negative binomial fitting
+		currSumNonZero = 0
+		currCount = 0
+
+		for i = range cache[currBinDistance] {
+			currSumNonZero += cache[currBinDistance][i]
+			currCount += cache[currBinDistance][i] * i
+		}
+		currMean = float64(currCount) / float64(currSumNonZero+cache[currBinDistance][0])
+
+		currVariance = 0
+		for i = range cache[currBinDistance] {
+			currVariance += float64(cache[currBinDistance][i]) * math.Pow(float64(i)-currMean, 2)
+		}
+		currVariance = currVariance / (float64(currSumNonZero+cache[currBinDistance][0]) - 1)
+
+		answer[currBinDistance] = NegativeBinomialFit{-1, -1} // initialize to -1 to denote missing data.
+		// if we have at least 1000 non-zero entries, we can try to fit  negative binomial to the data
+		lastZeroDensity = 0
+		currDensity = 1
+		iteration = 0
+		if currSumNonZero > 1000 {
+			for math.Abs(currDensity-lastZeroDensity)/currDensity > 1e-6 && iteration < 100 {
+				currCount = 0
+				for i = range cache[currBinDistance] {
+					currCount += cache[currBinDistance][i] * i
+				}
+				currMean = float64(currCount) / float64(currSumNonZero+cache[currBinDistance][0])
+
+				currVariance = 0
+				for i = range cache[currBinDistance] {
+					currVariance += float64(cache[currBinDistance][i]) * math.Pow(float64(i)-currMean, 2)
+				}
+				currVariance = currVariance / (float64(currSumNonZero+cache[currBinDistance][0]) - 1)
+				answer[currBinDistance].R, answer[currBinDistance].P, couldNotFit = fit.NegativeBinomialFromSumStats(currMean, currVariance)
+				if couldNotFit {
+					answer[currBinDistance].R = -1
+					answer[currBinDistance].P = -1
+					break
+				}
+				//fmt.Printf("CurrDistance: %v. Iteration: %v. CurrDensity: %v. LastZeroDensity: %v.\n", currBinDistance, iteration, currDensity, lastZeroDensity)
+				lastZeroDensity = currDensity
+				currDensity = numbers.NegativeBinomialDist(0, answer[currBinDistance].R, answer[currBinDistance].P)
+				cache[currBinDistance][0] = int(currDensity * float64(currSumNonZero+cache[currBinDistance][0]))
+				iteration++
+			}
+		}
+	}
+
+	return answer
 }
 
 func usage() {

@@ -31,6 +31,26 @@ func BinomialDist(n int, k int, p float64, logOutput bool) (float64, bool) {
 	return 0, true
 }
 
+// NegativeBinomialDist returns the probability mass of a negative binomial distribution with
+// shape parameter r and success probability p at k. Pr(X = k)
+// the second return is true if overflow/underflow was detected.
+func NegativeBinomialDist(k int, r float64, p float64, logOutput bool) (float64, bool) {
+	numerator, _ := math.Lgamma(float64(k) + r)
+	denominatorLeft, _ := math.Lgamma(float64(k) + 1)
+	denominatorRight, _ := math.Lgamma(r)
+	coefficient := logspace.Divide(numerator, logspace.Multiply(denominatorLeft, denominatorRight))
+	f := logspace.Pow(math.Log(1.0-p), float64(k))
+	s := logspace.Pow(math.Log(p), r)
+	var answer = logspace.Multiply(coefficient, logspace.Multiply(f, s))
+	if logOutput {
+		return answer, false
+	}
+	if !logspace.CanConvert(answer) {
+		return 0, true
+	}
+	return math.Exp(answer), false
+}
+
 // GeometricDist returns the density of the geometric for k failures with success probability p.
 // Note that this is the version of the geometric distribution with support from 0 to +INF.
 func GeometricDist(k int, p float64) float64 {

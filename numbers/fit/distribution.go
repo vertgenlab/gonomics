@@ -65,6 +65,16 @@ func zeroInflatedNegativeBinomialLogLikelihood(data []int, R float64, P float64,
 	return likelihood
 }
 
+func zeroTruncatedNegativeBinomialLogLikelihood(data []int, R float64, P float64) float64 {
+	likelihood := 0.0
+	var density float64
+	for i := 1; i < len(data); i++ {
+		density, _ = numbers.NegativeBinomialDist(i, R, P, true)
+		likelihood += float64(data[i]) * logspace.Divide(density, math.Log(1-math.Pow(P, R)))
+	}
+	return likelihood
+}
+
 func ZeroInflatedNegativeBinomial(data []int, learningRate float64, delta float64, epsilon float64) (float64, float64, float64) {
 	var R, P, Z float64 = 1.0, 0.5, 0.01 //hardcoded initialization
 	var prevR, prevP, prevZ = 1.0, 0.5, 0.01
