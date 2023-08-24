@@ -11,6 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/gtf"
+	"github.com/vertgenlab/gonomics/ontology"
 	"log"
 )
 
@@ -34,10 +35,10 @@ func great3d(s Settings) {
 		tss = gtf.GenesToTssBed(genes, sizes, true) //always want this merged
 	}
 	if s.Output1d != "" {
-		proximityFile := bed.FillSpaceNoHiddenValue(tss, sizes)
+		proximityFile := ontology.FillSpaceNoHiddenValue(tss, sizes)
 		bed.Write(s.Output1d, proximityFile)
 	}
-	nearestGenes := bedpe.Fill3dSpace(contacts, tss, sizes)
+	nearestGenes := ontology.Fill3dSpace(contacts, tss, sizes)
 	if s.NearestGeneBed != "" {
 		bed.Write(s.NearestGeneBed, nearestGenes)
 	}

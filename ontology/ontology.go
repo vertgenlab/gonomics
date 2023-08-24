@@ -50,7 +50,7 @@ func OboToOntology(records map[string]*obo.Obo) map[string]*Ontology {
 }
 
 func geneAssignmentsFromGaf(records []gaf.Gaf, terms map[string]*Ontology) {
-	records = gaf.RemoveDuplicates(records)
+	//records = gaf.RemoveDuplicates(records)
 	for i := range records {
 		// TODO: what if records[i].GoId not found in map
 		terms[records[i].GoId].Genes = append(terms[records[i].GoId].Genes, records[i].DbObjectSymbol)
