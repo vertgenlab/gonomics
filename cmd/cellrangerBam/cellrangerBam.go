@@ -29,6 +29,7 @@ type Settings struct {
 	gfpNorm        string
 	bed            string
 	ncNorm         string
+	determineBins  string
 }
 
 // getNcAvg takes in the input normalized matrix of single cell data, the list of negative control sequences and an empty slice of slices and will return the average negative control reads for each
@@ -249,6 +250,53 @@ func binnedPseudobulk(inSlices [][]string, out *fileio.EasyWriter, norm string) 
 	}
 }
 
+// determine ideal bins will determine how many bins should be used for the pseudobulk -binCells option
+func determineIdealBins(s Settings, cellTypeSlice []string) int {
+	var count, j int
+	var found, stop bool
+	var z, l, m string
+	var binSlice []int
+	var matrix [][]string
+
+	nc := fileio.Read(s.determineBins)
+
+	for i := 0; i <= 10; i++ { //do this whole loop 10 times (essentially 10 replicates)
+		stop = false
+		for j = 1; j <= 100; j++ { //loop from bins 1 to 100 (j)
+			s.binCells = j                                   //set the binCells parameter to j
+			matrix = distributeCells(s, cellTypeSlice, true) //run distributeCells with that value of j
+			for k := range matrix {                          //loop through bins in matrix
+				ncMap := make(map[string]int) //create a map that has ncConstructName--counts
+				for _, z = range nc {         //populate the map
+					ncMap[z] = 0
+				}
+				for _, l = range matrix[k] { //loop through the constructs in a particular bin
+					columns := strings.Split(l, "\t") //split an entry in from the matrix
+					count, found = ncMap[columns[1]]  //search the 2nd column to see if it is a negative control
+					if found {                        //if it is, add a count to the map for that particular negative control
+						ncMap[columns[1]] = count + 1
+					}
+				}
+				for m = range ncMap {
+					count, _ = ncMap[m]
+					if count < 1 {
+						binSlice = append(binSlice, j-1)
+						stop = true
+						break
+					}
+				}
+				if stop == true {
+					break
+				}
+			}
+			if stop == true {
+				break
+			}
+		}
+	}
+	return int(numbers.AverageInt(binSlice))
+}
+
 // determineBin takes in an int and the probablity of any given bin and determines the bin the cell belongs to.
 func determineBin(numBins int, prob float64) int {
 	var bin int
@@ -266,18 +314,19 @@ func determineBin(numBins int, prob float64) int {
 }
 
 // distributeCells takes in a slice of string that is created in parseBam that has a list of cellBarcodes and constructs. It will partition those cells and constructs into separate slices. The number of bins is a user-input variable
-func distributeCells(cellTypeSlice []string, numBins int) [][]string {
+func distributeCells(s Settings, cellTypeSlice []string, fromDB bool) [][]string {
 	var currCell string
 	var columns []string
 	var bin, count int
 	var found bool
+
 	whichBin := 'A'                   //for counting cells per bin
 	whichBinMap := make(map[rune]int) //for counting cells per bin
 
-	binnedCells := make([][]string, numBins) //make a slice of slice of string with the size of the user-specified number of bins
-	prob := 1.0 / float64(numBins)           // determine the probablity that the cell belongs to a particular bin
+	binnedCells := make([][]string, s.binCells) //make a slice of slice of string with the size of the user-specified number of bins
+	prob := 1.0 / float64(s.binCells)           // determine the probability that the cell belongs to a particular bin
 
-	sort.Strings(cellTypeSlice) //sort the slice of strings containing (cellBarcode \t construct) so that indentical cell barcodes line up next to one annother
+	sort.Strings(cellTypeSlice) //sort the slice of strings containing (cellBarcode \t construct) so that indentical cell barcodes line up next to one another
 
 	for _, i := range cellTypeSlice {
 		columns = strings.Split(i, "\t")
@@ -285,10 +334,9 @@ func distributeCells(cellTypeSlice []string, numBins int) [][]string {
 			binnedCells[bin] = append(binnedCells[bin], i)
 			continue
 		}
-		bin = determineBin(numBins, prob)              //function to determine which bin to put the new cell into.
+		bin = determineBin(s.binCells, prob)           //function to determine which bin to put the new cell into.
 		binnedCells[bin] = append(binnedCells[bin], i) //put cell into correct bin
 		currCell = columns[0]                          //set the cell barcode that was just partitioned to current cell for the next iteration
-		// next part of the code is just to count how many cells went into each bin and print out those values. May keep it in, but it is also a check to make sure things are running correctly
 		count, found = whichBinMap[whichBin+rune(bin)]
 		if !found {
 			whichBinMap[whichBin+rune(bin)] = 1
@@ -296,13 +344,16 @@ func distributeCells(cellTypeSlice []string, numBins int) [][]string {
 			whichBinMap[whichBin+rune(bin)] = count + 1
 		}
 	}
+
 	var outSlice []string
-	for i := range whichBinMap {
-		outSlice = append(outSlice, fmt.Sprintf("Bin: %c\tcells: %d", i, whichBinMap[i]))
-	}
-	sort.Strings(outSlice)
-	for _, i := range outSlice {
-		fmt.Println(i)
+	if !fromDB {
+		for i := range whichBinMap {
+			outSlice = append(outSlice, fmt.Sprintf("Bin: %c\tcells: %d", i, whichBinMap[i]))
+		}
+		sort.Strings(outSlice)
+		for _, i := range outSlice {
+			fmt.Println(i)
+		}
 	}
 	return binnedCells
 }
@@ -482,14 +533,14 @@ func parseBam(s Settings) {
 				construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
 				constructName = construct.(string)
 			}
-			if s.byCell || sc || s.binCells > 0 { //byCell or singleCellAnalysis or binCells
+			if s.byCell || sc || s.binCells > 0 || s.determineBins != "" {
 				cell, _, _ := sam.QueryTag(i, "CB") // get the cell barcode associated with valid UMI
 				cellString = cell.(string)
 				cellByConstructName = fmt.Sprintf("%s\t%s", cellString, constructName) //list of all construct reads and what cell barcodes they belong to
 				if s.byCell {                                                          //if you only want to print out the construct and the cell it was found in
 					fileio.WriteToFileHandle(out, cellByConstructName)
 				}
-				if sc || s.binCells > 0 { //get some data for the singleCellAnalysis and distributeCells functions
+				if sc || s.binCells > 0 || s.determineBins != "" { //get some data for the singleCellAnalysis and distributeCells functions
 					allConstructs = append(allConstructs, constructName) //list of all constructs found in the bam
 					cellTypeSlice = append(cellTypeSlice, cellByConstructName)
 				}
@@ -516,8 +567,12 @@ func parseBam(s Settings) {
 	if sc { //singleCellAnalysis, handles all the writing as well
 		singleCellAnalysis(s, cellTypeSlice, allConstructs, out)
 	}
+	if s.determineBins != "" {
+		s.binCells = determineIdealBins(s, cellTypeSlice)
+		fmt.Printf("Using %d bins\n", s.binCells)
+	}
 	if s.binCells > 0 { //goes to binning and pseudobulk. Handles normalization and writing as well
-		binnedCells := distributeCells(cellTypeSlice, s.binCells)
+		binnedCells := distributeCells(s, cellTypeSlice, false)
 		binnedPseudobulk(binnedCells, out, s.inputNormalize)
 	}
 	if norm && noSettings { //normalize pseudobulk
@@ -554,6 +609,9 @@ func main() {
 	var bed *string = flag.String("bed", "", "Use a bed file for assigning reads to constructs instead of the GTF that was used in cellranger mkref. The bed file must have the "+
 		"name of the construct in the fourth field. Recammended for constructs with barcodes.")
 	var ncNorm *string = flag.String("ncNorm", "", "Reports single cell data as the ratio of reads for each construct to negative control reads in the same cell type."+
+		"A file that contains a line-delimited list of negative control construct names must be provided.")
+	var determineBins *string = flag.String("determineBins", "", "Determine the ideal number of pseudobulk bins to use. "+
+		"The ideal number of bins will be determined to be the number where all bins have at least 1 read from all negative control constructs. "+
 		"A file that contains a line-delimited list of negative control construct names must be provided.")
 
 	var expectedNumArgs int = 2
@@ -603,6 +661,7 @@ func main() {
 		gfpNorm:        *gfpNorm,
 		bed:            *bed,
 		ncNorm:         *ncNorm,
+		determineBins:  *determineBins,
 	}
 
 	var bw *sam.BamWriter
