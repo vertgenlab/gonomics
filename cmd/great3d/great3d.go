@@ -51,7 +51,7 @@ func usage() {
 		"great3d - Perform functional enrichment analysis by associating genomic regions\n" +
 			"with their nearest gene in 3d space using bedPe contact sites.\n" +
 			"Usage:\n" +
-			" great3d genes.gtf contacts.bedpe genome.chrom.sizes output?\n" +
+			" great3d genes.gtf genome.chrom.sizes output?\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
