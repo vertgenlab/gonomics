@@ -31,8 +31,8 @@ type Settings struct {
 	ncNorm         string
 }
 
-//getNcAvg takes in the input normalized matrix of single cell data, the list of negative control sequences and an empty slice of slices and will return the average negative control reads for each
-//cell type
+// getNcAvg takes in the input normalized matrix of single cell data, the list of negative control sequences and an empty slice of slices and will return the average negative control reads for each
+// cell type
 func getNcAvg(matrix []string, ncSlice []string, ncVals [][]float64) []float64 {
 	var found bool
 	var currCluster string
@@ -68,8 +68,8 @@ func getNcAvg(matrix []string, ncSlice []string, ncVals [][]float64) []float64 {
 	return ncAvg
 }
 
-//normScToNegativeCtrls is the initial function to normalize single-cell data to negative control reads in the same cell type. It takes in a matrix that is the input-normalized, the settings struct,
-//the number of cell types and returns the negative control normalized read counts
+// normScToNegativeCtrls is the initial function to normalize single-cell data to negative control reads in the same cell type. It takes in a matrix that is the input-normalized, the settings struct,
+// the number of cell types and returns the negative control normalized read counts
 func normScToNegativeCtrls(matrix []string, s Settings, numCellTypes int) []string {
 	var ncSlice, columns []string
 	var prevCluster, newLine string
@@ -99,7 +99,7 @@ func normScToNegativeCtrls(matrix []string, s Settings, numCellTypes int) []stri
 	return matrix
 }
 
-//gfpNormalize iterates over a single-cell counts map and applies a GFP normalization factor.
+// gfpNormalize iterates over a single-cell counts map and applies a GFP normalization factor.
 func gfpNormalize(countsMap map[string]float64, normFactor float64) {
 	var counts float64
 	for i := range countsMap {
@@ -108,8 +108,8 @@ func gfpNormalize(countsMap map[string]float64, normFactor float64) {
 	}
 }
 
-//gfpNormFactor takes in a map of cellType-gfpReads and returns a map with cellType-gfpNormalizationValue. Normalization value is calculated by the percentage of GFP reads if all
-//cell types were equal, and dividing it by the observed percentage of GFP reads in a given cell type
+// gfpNormFactor takes in a map of cellType-gfpReads and returns a map with cellType-gfpNormalizationValue. Normalization value is calculated by the percentage of GFP reads if all
+// cell types were equal, and dividing it by the observed percentage of GFP reads in a given cell type
 func gfpNormFactor(clusterGFP map[string]int) map[string]float64 {
 	var totalCounts, clusterCounts int
 	var actualPerc float64
@@ -126,8 +126,8 @@ func gfpNormFactor(clusterGFP map[string]int) map[string]float64 {
 	return gfpNormMap
 }
 
-//parseGfpBam is similar to the parseBam function but handles bams containing GFP reads. This function also takes in a map of cellBx-cellType and an empty map containing each cellType
-//It returns a map that contains [cellType] = gfpReads
+// parseGfpBam is similar to the parseBam function but handles bams containing GFP reads. This function also takes in a map of cellBx-cellType and an empty map containing each cellType
+// It returns a map that contains [cellType] = gfpReads
 func parseGfpBam(gfpBam string, cellTypeMap map[string]string, clusterGFP map[string]int) map[string]int {
 	var bit int32
 	var cluster string
@@ -553,8 +553,8 @@ func main() {
 		"Multiple bam files from different GEM wells can be provided in a comma-separated list")
 	var bed *string = flag.String("bed", "", "Use a bed file for assigning reads to constructs instead of the GTF that was used in cellranger mkref. The bed file must have the "+
 		"name of the construct in the fourth field. Recammended for constructs with barcodes.")
-	var ncNorm *string = flag.String("ncNorm", "", "Reports single cell data as the ratio the reads for each construct to the negative control reads in the same cell type."+
-		"A file that conatins a line-delimited list of negative controls must be provided.")
+	var ncNorm *string = flag.String("ncNorm", "", "Reports single cell data as the ratio of reads for each construct to negative control reads in the same cell type."+
+		"A file that contains a line-delimited list of negative control construct names must be provided.")
 
 	var expectedNumArgs int = 2
 
