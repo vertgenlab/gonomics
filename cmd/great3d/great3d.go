@@ -26,25 +26,19 @@ type Settings struct {
 func great3d(s Settings) {
 	var tss []bed.Bed
 	contacts := bedpe.Read(s.ContactFile)
-	log.Print("Contacts processed")
 	sizes := chromInfo.ReadToMap(s.SizesFile)
 	if s.GeneBed {
 		tss = bed.Read(s.GeneFile)
-		log.Print("geneBed made")
 	} else {
 		genes := gtf.Read(s.GeneFile)
 		tss = gtf.GenesToTssBed(genes, sizes, true) //always want this merged
 	}
 	if s.Output1d != "" {
-		log.Print("Proximity File Start")
 		proximityFile := bed.FillSpaceNoHiddenValue(tss, sizes)
 		bed.Write(s.Output1d, proximityFile)
-		log.Print("Proximity File Start")
 	}
-	log.Print("running Fill3dSpace")
 	nearestGenes := bedpe.Fill3dSpace(contacts, tss, sizes)
 	if s.NearestGeneBed != "" {
-		log.Print("Nearest Write File Start")
 		bed.Write(s.NearestGeneBed, nearestGenes)
 	}
 }

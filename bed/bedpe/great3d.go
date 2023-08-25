@@ -35,14 +35,11 @@ func Fill3dSpace(contacts []BedPe, tss []bed.Bed, sizes map[string]chromInfo.Chr
 		//this is just a check to make sure that for any new chromosomes we encounter that they exist in the gene file, so we don't throw an error.
 		if j == 0 {
 			chromInFile = checkGeneFileForChrom(contacts[j], geneChroms)
-			if !chromInFile {
-				continue
-			}
 		} else if contacts[j].A.Chrom != contacts[j-1].A.Chrom { // only check when we encounter a new chrom in the bedpe file
 			chromInFile = checkGeneFileForChrom(contacts[j], geneChroms)
-			if !chromInFile {
-				continue
-			}
+		}
+		if !chromInFile {
+			continue
 		}
 		currNearest = interval.Query(closest1dGeneTree, contacts[j].A, "any")
 		if len(currNearest) > 1 || len(currNearest) == 0 {
