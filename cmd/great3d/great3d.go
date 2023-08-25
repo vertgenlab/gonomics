@@ -26,7 +26,6 @@ type Settings struct {
 
 func great3d(s Settings) {
 	var tss []bed.Bed
-	contacts := bedpe.Read(s.ContactFile)
 	sizes := chromInfo.ReadToMap(s.SizesFile)
 	if s.GeneBed {
 		tss = bed.Read(s.GeneFile)
@@ -38,9 +37,12 @@ func great3d(s Settings) {
 		proximityFile := ontology.FillSpaceNoHiddenValue(tss, sizes)
 		bed.Write(s.Output1d, proximityFile)
 	}
-	nearestGenes := ontology.Fill3dSpace(contacts, tss, sizes)
-	if s.NearestGeneBed != "" {
-		bed.Write(s.NearestGeneBed, nearestGenes)
+	if s.ContactFile != "" {
+		contacts := bedpe.Read(s.ContactFile)
+		nearestGenes := ontology.Fill3dSpace(contacts, tss, sizes)
+		if s.NearestGeneBed != "" {
+			bed.Write(s.NearestGeneBed, nearestGenes)
+		}
 	}
 }
 
@@ -55,10 +57,11 @@ func usage() {
 }
 
 func main() {
-	var expectedNumArgs = 4
+	var expectedNumArgs = 3
 	var nearestGeneBed *string = flag.String("nearestGeneBed", "", "Write a bed representing the nearest genes in 3d space to every position in the genome.")
 	var geneBed *bool = flag.Bool("geneBed", false, "If set to true user has provided a bed in place of a gtf for te first argument that contains information about a gene TSS already spanning a single bp distance, and therefore GTF processing can be skipped.")
-	var proximityFile *string = flag.String("proximity", "", "If given a file name the program will output a file that contains the closest gene to a bp based only on proximity as well as any other file requested.")
+	var proximityFile *string = flag.String("proximity", "", "If given a file name the program will output a file that contains the closest gene to a bp based only on proximity as well as any other file requested. No bedpe file necessary if this is your only desired output.")
+	var contactFile *string = flag.String("contactFile", "", "If desired output is a 3D contact aware nearest gene, then provide a bedpe file with this option.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -68,13 +71,12 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 	geneFile := flag.Arg(0)
-	contactFile := flag.Arg(1)
-	sizesFile := flag.Arg(2)
+	sizesFile := flag.Arg(1)
 
 	s := Settings{
 		GeneFile:       geneFile,
-		ContactFile:    contactFile,
 		SizesFile:      sizesFile,
+		ContactFile:    *contactFile,
 		NearestGeneBed: *nearestGeneBed,
 		GeneBed:        *geneBed,
 		Output1d:       *proximityFile,
