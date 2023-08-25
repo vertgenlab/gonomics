@@ -18,19 +18,21 @@ import (
 )
 
 type Settings struct {
-	inFile     string
-	outFile    string
-	normalize  string
-	byCell     bool
-	samOut     bool
-	scAnalysis string
-	binCells   int
-	umiSat     bool
-	gfpNorm    string
-	bed        string
-	ncNorm     string
+	inFile         string
+	outFile        string
+	inputNormalize string
+	byCell         bool
+	samOut         bool
+	scAnalysis     string
+	binCells       int
+	umiSat         bool
+	gfpNorm        string
+	bed            string
+	ncNorm         string
 }
 
+//getNcAvg takes in the input normalized matrix of single cell data, the list of negative control sequences and an empty slice of slices and will return the average negative control reads for each
+//cell type
 func getNcAvg(matrix []string, ncSlice []string, ncVals [][]float64) []float64 {
 	var found bool
 	var currCluster string
@@ -66,6 +68,8 @@ func getNcAvg(matrix []string, ncSlice []string, ncVals [][]float64) []float64 {
 	return ncAvg
 }
 
+//normScToNegativeCtrls is the initial function to normalize single-cell data to negative control reads in the same cell type. It takes in a matrix that is the input-normalized, the settings struct,
+//the number of cell types and returns the negative control normalized read counts
 func normScToNegativeCtrls(matrix []string, s Settings, numCellTypes int) []string {
 	var ncSlice, columns []string
 	var prevCluster, newLine string
@@ -95,6 +99,7 @@ func normScToNegativeCtrls(matrix []string, s Settings, numCellTypes int) []stri
 	return matrix
 }
 
+//gfpNormalize iterates over a single-cell counts map and applies a GFP normalization factor.
 func gfpNormalize(countsMap map[string]float64, normFactor float64) {
 	var counts float64
 	for i := range countsMap {
@@ -103,6 +108,8 @@ func gfpNormalize(countsMap map[string]float64, normFactor float64) {
 	}
 }
 
+//gfpNormFactor takes in a map of cellType-gfpReads and returns a map with cellType-gfpNormalizationValue. Normalization value is calculated by the percentage of GFP reads if all
+//cell types were equal, and dividing it by the observed percentage of GFP reads in a given cell type
 func gfpNormFactor(clusterGFP map[string]int) map[string]float64 {
 	var totalCounts, clusterCounts int
 	var actualPerc float64
@@ -119,6 +126,8 @@ func gfpNormFactor(clusterGFP map[string]int) map[string]float64 {
 	return gfpNormMap
 }
 
+//parseGfpBam is similar to the parseBam function but handles bams containing GFP reads. This function also takes in a map of cellBx-cellType and an empty map containing each cellType
+//It returns a map that contains [cellType] = gfpReads
 func parseGfpBam(gfpBam string, cellTypeMap map[string]string, clusterGFP map[string]int) map[string]int {
 	var bit int32
 	var cluster string
@@ -340,8 +349,8 @@ func singleCellAnalysis(s Settings, cellTypeSlice []string, allConstructs []stri
 				a++
 			}
 		}
-		if s.normalize != "" { // normalize the singleCellCount map if needed
-			inputNormalize(singleCellTypeMap, s.normalize)
+		if s.inputNormalize != "" { // normalize the singleCellCount map if needed
+			inputNormalize(singleCellTypeMap, s.inputNormalize)
 		}
 		if s.gfpNorm != "" {
 			gfpNormalizationFactor := gfpNormFactorMap[cellType]
@@ -420,7 +429,7 @@ func parseBam(s Settings) {
 	var noSettings bool = false
 	var allConstructs, cellTypeSlice, umiBxSlice, constructSlice []string
 
-	if s.normalize != "" { //create a bool for normalize
+	if s.inputNormalize != "" { //create a bool for normalize
 		norm = true
 	}
 	if s.scAnalysis != "" { //create a bool for cellTypeAnalysis
@@ -509,10 +518,10 @@ func parseBam(s Settings) {
 	}
 	if s.binCells > 0 { //goes to binning and pseudobulk. Handles normalization and writing as well
 		binnedCells := distributeCells(cellTypeSlice, s.binCells)
-		binnedPseudobulk(binnedCells, out, s.normalize)
+		binnedPseudobulk(binnedCells, out, s.inputNormalize)
 	}
 	if norm && noSettings { //normalize pseudobulk
-		inputNormalize(pseudobulkMap, s.normalize)
+		inputNormalize(pseudobulkMap, s.inputNormalize)
 	}
 	if noSettings { //write out pseudobulk
 		writeMap(pseudobulkMap, out)
@@ -534,7 +543,7 @@ func usage() {
 
 func main() {
 	var byCell *bool = flag.Bool("byCell", false, "Will report the construct that each UMI belongs to and which cell in which it was found in a tab-delimited table.")
-	var normalize *string = flag.String("normalize", "", "Takes in a tab delimited table with construct name and input normalization value")
+	var inputNorm *string = flag.String("inputNorm", "", "Takes in a tab delimited table with construct name and input normalization value")
 	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
 	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. "+
 		"The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
@@ -561,11 +570,11 @@ func main() {
 		log.Fatalf("Error: -ncNorm or -gfpNorm must be used with -cellTypeAnalysis")
 	}
 
-	if *byCell && (*normalize != "" || *samOut) {
+	if *byCell && (*inputNorm != "" || *samOut) {
 		log.Fatalf("Error: byCell cannot be used with normalize or samOut.")
 	}
 
-	if *normalize != "" && *samOut {
+	if *inputNorm != "" && *samOut {
 		log.Fatalf("Error: normalize and samOut cannot be used together.")
 	}
 
@@ -583,17 +592,17 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 	var s Settings = Settings{
-		inFile:     flag.Arg(0),
-		outFile:    flag.Arg(1),
-		normalize:  *normalize,
-		byCell:     *byCell,
-		scAnalysis: *cellTypeAnalysis,
-		binCells:   *binCells,
-		umiSat:     *umiSat,
-		samOut:     *samOut,
-		gfpNorm:    *gfpNorm,
-		bed:        *bed,
-		ncNorm:     *ncNorm,
+		inFile:         flag.Arg(0),
+		outFile:        flag.Arg(1),
+		inputNormalize: *inputNorm,
+		byCell:         *byCell,
+		scAnalysis:     *cellTypeAnalysis,
+		binCells:       *binCells,
+		umiSat:         *umiSat,
+		samOut:         *samOut,
+		gfpNorm:        *gfpNorm,
+		bed:            *bed,
+		ncNorm:         *ncNorm,
 	}
 
 	var bw *sam.BamWriter
