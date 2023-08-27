@@ -32,6 +32,87 @@ type Settings struct {
 	determineBins  string
 }
 
+func calculateNormFactor(countsMap map[string]float64, outFile string) {
+	var totalReads float64 = 0
+	var line string
+	var percentLib float64
+
+	out := fileio.EasyCreate(outFile)
+	fileio.WriteToFileHandle(out, "construct\treadsPer500bp\tpercentLibrary\tnormFactor")
+
+	numConstructs := len(countsMap)
+	idealPerc := 100.0 / float64(numConstructs)
+
+	for i := range countsMap {
+		totalReads = countsMap[i] + totalReads
+	}
+
+	for i := range countsMap {
+		percentLib = (countsMap[i] / totalReads) * 100
+		line = fmt.Sprintf("%s\t%f\t%f\t%f", i, countsMap[i], percentLib, idealPerc/percentLib)
+		fileio.WriteToFileHandle(out, line)
+	}
+	err := out.Close()
+	exception.PanicOnErr(err)
+}
+
+func readInputSequencingSam(s Settings) {
+	var tree = make([]interval.Interval, 0)
+	var bedSizeMap = make(map[string]int)
+	var selectTree map[string]*interval.IntervalNode
+	var constructString, constructName string
+	var constructSlice []string
+	var counts float64
+	var found bool
+	var currEntry sam.Sam
+
+	inChan, _ := sam.GoReadToChan(s.inFile)
+
+	bedEntries := bed.Read(s.bed)
+	for _, i := range bedEntries {
+		tree = append(tree, i)
+		bedSizeMap[i.Name] = bed.Size(i)
+	}
+	selectTree = interval.BuildTree(tree)
+
+	countsMap := make(map[string]float64)
+
+	currEntry = <-inChan
+
+	for i := range inChan {
+		//remove PCR duplicates
+		if interval.AreEqual(currEntry, i) {
+			if currEntry.Qual >= i.Qual {
+				continue
+			} else {
+				currEntry = i
+				continue
+			}
+		}
+
+		overlappedBedEntry := interval.Query(selectTree, currEntry, "any")
+		if len(overlappedBedEntry) != 1 {
+			continue
+		}
+		constructString = fmt.Sprint(overlappedBedEntry[0])
+		constructSlice = strings.Split(constructString, "\t")
+		constructName = constructSlice[3]
+		counts, found = countsMap[constructName]
+		if found {
+			countsMap[constructName] = counts + 1
+		} else {
+			countsMap[constructName] = 1
+		}
+		currEntry = i
+	}
+	//normalize reads to 500bp
+	for i := range countsMap {
+		counts, _ = countsMap[i]
+		countsMap[i] = counts / (float64((bedSizeMap[i]) / 500.0))
+	}
+	calculateNormFactor(countsMap, s.outFile)
+}
+
 // getNcAvg takes in the input normalized matrix of single cell data, the list of negative control sequences and an empty slice of slices and will return the average negative control reads for each
 // cell type
 func getNcAvg(matrix []string, ncSlice []string, ncVals [][]float64) []float64 {
@@ -607,12 +688,15 @@ func main() {
 	var gfpNorm *string = flag.String("gfpNorm", "", "Bam file from the same scSTARR-seq experiment containing cellranger count alignments to GFP for cell cluster GFP normalization. "+
 		"Multiple bam files from different GEM wells can be provided in a comma-separated list")
 	var bed *string = flag.String("bed", "", "Use a bed file for assigning reads to constructs instead of the GTF that was used in cellranger mkref. The bed file must have the "+
-		"name of the construct in the fourth field. Recammended for constructs with barcodes.")
+		"name of the construct in the fourth field. Recommended for constructs with barcodes.")
 	var ncNorm *string = flag.String("ncNorm", "", "Reports single cell data as the ratio of reads for each construct to negative control reads in the same cell type."+
 		"A file that contains a line-delimited list of negative control construct names must be provided.")
 	var determineBins *string = flag.String("determineBins", "", "Determine the ideal number of pseudobulk bins to use. "+
 		"The ideal number of bins will be determined to be the number where all bins have at least 1 read from all negative control constructs. "+
 		"A file that contains a line-delimited list of negative control construct names must be provided.")
+	var inputSequencing *string = flag.String("inputSequencing", "", "Returns library statistics (Reads per 500bp, percent of each construct in library, and input normalization factor"+
+		"for an input library sequencing sam/bam file. A bed file corresponding to constructs on the reference that the input file is aligned to must be provided and the name of the construct must"+
+		"be in the 4th field. The input alignment file must be sorted by position. PCR duplicates will be removed.")
 
 	var expectedNumArgs int = 2
 
@@ -722,6 +806,10 @@ func main() {
 			exception.PanicOnErr(err)
 
 		}
+	}
+
+	if *inputSequencing != "" {
+		readInputSequencingSam(s)
 	}
 
 	parseBam(s)

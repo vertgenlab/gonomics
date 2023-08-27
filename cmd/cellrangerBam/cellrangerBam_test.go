@@ -35,16 +35,16 @@ func TestCellrangerBam(t *testing.T) {
 	var s Settings
 	for _, v := range cellrangerBamTests {
 		s = Settings{
-			inFile:     v.InFile,
-			outFile:    v.OutFile,
-			normalize:  v.InputNormTable,
-			byCell:     v.ByCell,
-			samOut:     v.SamOut,
-			scAnalysis: v.SingleCell,
-			binCells:   v.BinCells,
-			umiSat:     v.UmiSat,
-			gfpNorm:    v.GfpNorm,
-			bed:        v.BedRegion,
+			inFile:         v.InFile,
+			outFile:        v.OutFile,
+			inputNormalize: v.InputNormTable,
+			byCell:         v.ByCell,
+			samOut:         v.SamOut,
+			scAnalysis:     v.SingleCell,
+			binCells:       v.BinCells,
+			umiSat:         v.UmiSat,
+			gfpNorm:        v.GfpNorm,
+			bed:            v.BedRegion,
 		}
 		parseBam(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

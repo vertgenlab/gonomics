@@ -61,3 +61,8 @@ func IsSelfOverlapping(b []Bed, verbose int) bool {
 	}
 	return false
 }
+
+// Size returns the size of a singular bed entry as an int
+func Size(b Bed) int {
+	return b.ChromEnd - b.ChromStart
+}
