@@ -53,8 +53,12 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 
 	selectRecords := bed.Read(bedSelectFile)
 	if selectRecords[0].Name == "" && keepNames {
+		keepNames = false
 		log.Panic("keepNames option was set to true, but there was no name field on select file bed. Output will not have name field.")
 	}
+
+	log.Print(keepNames)
+
 	inBedPe := bedpe.Read(bedpeInFile)
 	out := fileio.EasyCreate(contactOutFile)
 
