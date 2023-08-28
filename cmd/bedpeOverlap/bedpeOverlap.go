@@ -76,7 +76,11 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 						if c == 0 {
 							i.A.Name = currOverlaps[c].(bed.Bed).Name
 						} else {
-							i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+							if i.A.Name == currOverlaps[c].(bed.Bed).Name {
+								continue
+							} else {
+								i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+							}
 						}
 					}
 				}
@@ -92,7 +96,11 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 								if c == 0 {
 									i.A.Name = currOverlaps[c].(bed.Bed).Name
 								} else {
-									i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+									if i.A.Name == currOverlaps[c].(bed.Bed).Name {
+										continue
+									} else {
+										i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+									}
 								}
 							}
 						}
@@ -111,7 +119,11 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 							if c == 0 {
 								i.A.Name = currOverlaps[c].(bed.Bed).Name
 							} else {
-								i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+								if i.A.Name == currOverlaps[c].(bed.Bed).Name {
+									continue
+								} else {
+									i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+								}
 							}
 						}
 					}
@@ -126,7 +138,11 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 									if c == 0 {
 										i.A.Name = currOverlaps[c].(bed.Bed).Name
 									} else {
-										i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+										if i.A.Name == currOverlaps[c].(bed.Bed).Name {
+											continue
+										} else {
+											i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+										}
 									}
 								}
 							}
