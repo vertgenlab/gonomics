@@ -32,6 +32,7 @@ type Settings struct {
 	determineBins  string
 }
 
+//calculateNormFactor takes the countsMap created in readInputSequencingSam and writes out a data frame with the name of the construct, counts per 500bp, percent abundance, and normalization factor
 func calculateNormFactor(countsMap map[string]float64, outFile string) {
 	var totalReads float64 = 0
 	var line string
@@ -56,14 +57,15 @@ func calculateNormFactor(countsMap map[string]float64, outFile string) {
 	exception.PanicOnErr(err)
 }
 
+//readInputSequencingSam reads and parses an alignemnt file for an input library sequencing run. It creates a read-count map for all constructs in the provided GTF
 func readInputSequencingSam(s Settings) {
 	var tree = make([]interval.Interval, 0)
 	var bedSizeMap = make(map[string]int)
+	var countsMap = make(map[string]float64)
 	var selectTree map[string]*interval.IntervalNode
 	var constructString, constructName string
 	var constructSlice []string
 	var counts float64
-	var found bool
 	var currEntry sam.Sam
 
 	inChan, _ := sam.GoReadToChan(s.inFile)
@@ -72,10 +74,9 @@ func readInputSequencingSam(s Settings) {
 	for _, i := range bedEntries {
 		tree = append(tree, i)
 		bedSizeMap[i.Name] = bed.Size(i)
+		countsMap[i.Name] = 0
 	}
 	selectTree = interval.BuildTree(tree)
-
-	countsMap := make(map[string]float64)
 
 	currEntry = <-inChan
 
@@ -97,12 +98,8 @@ func readInputSequencingSam(s Settings) {
 		constructString = fmt.Sprint(overlappedBedEntry[0])
 		constructSlice = strings.Split(constructString, "\t")
 		constructName = constructSlice[3]
-		counts, found = countsMap[constructName]
-		if found {
-			countsMap[constructName] = counts + 1
-		} else {
-			countsMap[constructName] = 1
-		}
+		counts, _ = countsMap[constructName]
+		countsMap[constructName] = counts + 1
 		currEntry = i
 	}
 	//normalize reads to 500bp
