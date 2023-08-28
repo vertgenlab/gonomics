@@ -74,6 +74,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 			if overlapThreshold == 0 {
 				if keepNames {
 					for c := range currOverlaps {
+						log.Print(currOverlaps[c].(bed.Bed).Name)
 						if c == 0 {
 							i.A.Name = currOverlaps[c].(bed.Bed).Name
 						} else {
