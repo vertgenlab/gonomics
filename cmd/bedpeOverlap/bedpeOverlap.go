@@ -57,8 +57,6 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 		log.Panic("keepNames option was set to true, but there was no name field on select file bed. Output will not have name field.")
 	}
 
-	log.Print(keepNames)
-
 	inBedPe := bedpe.Read(bedpeInFile)
 	out := fileio.EasyCreate(contactOutFile)
 
@@ -74,7 +72,6 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 			if overlapThreshold == 0 {
 				if keepNames {
 					for c := range currOverlaps {
-						log.Print(currOverlaps[c].(bed.Bed).Name)
 						if c == 0 {
 							i.A.Name = currOverlaps[c].(bed.Bed).Name
 						} else {
@@ -82,6 +79,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 						}
 					}
 				}
+				log.Print(i.A.Name)
 				bedpe.WriteToFileHandle(out, i)
 			} else {
 				found = false
