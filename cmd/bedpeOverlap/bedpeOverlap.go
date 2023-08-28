@@ -17,11 +17,11 @@ import (
 )
 
 // bedpeOverlap will work with either a bedpe select file or a bed select file. First we determine which program to run.
-func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, bedSelect bool, overlapThreshold float64, overlapBoth bool) {
+func bedpeOverlap(selectFile string, bedpeInFile string, contactOutFile string, bedSelect bool, overlapThreshold float64, overlapBoth bool, keepNames bool) {
 	if bedSelect && overlapBoth {
 		SelectIsBedBoth(selectFile, bedpeInFile, overlapThreshold, contactOutFile)
 	} else if bedSelect {
-		SelectIsBed(selectFile, bedpeInFile, overlapThreshold, contactOutFile)
+		SelectIsBed(selectFile, bedpeInFile, overlapThreshold, contactOutFile, keepNames)
 	} else {
 		SelectIsBedPe(selectFile, bedpeInFile, contactOutFile)
 	}
@@ -45,13 +45,16 @@ func overlapPercent(possOverlaps interval.Interval, halfBedPe bed.Bed) float64 {
 
 // SelectIsBed checks for the case where the select file is a bed.
 // input bedpe entries are retained if either end overlaps one of the bedSelectFile entries.
-func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold float64, contactOutFile string) {
+func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold float64, contactOutFile string, keepNames bool) {
 	var selectIntervals = make([]interval.Interval, 0)
 	var currOverlaps []interval.Interval
 	var err error
 	var found bool
 
 	selectRecords := bed.Read(bedSelectFile)
+	if selectRecords[0].Name == "" && keepNames {
+		log.Panic("keepNames option was set to true, but there was no name field on select file bed. Output will not have name field.")
+	}
 	inBedPe := bedpe.Read(bedpeInFile)
 	out := fileio.EasyCreate(contactOutFile)
 
@@ -65,12 +68,30 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 		// if A, the left side of the input bedpe, overlaps any of the select beds, write the bedpe to output.
 		if len(currOverlaps) > 0 {
 			if overlapThreshold == 0 {
+				if keepNames {
+					for c := range currOverlaps {
+						if c == 0 {
+							i.A.Name = currOverlaps[c].(bed.Bed).Name
+						} else {
+							i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+						}
+					}
+				}
 				bedpe.WriteToFileHandle(out, i)
 			} else {
 				found = false
 				for _, j := range currOverlaps {
 					if !found && overlapPercent(j, i.A) >= overlapThreshold {
 						found = true
+						if keepNames {
+							for c := range currOverlaps {
+								if c == 0 {
+									i.A.Name = currOverlaps[c].(bed.Bed).Name
+								} else {
+									i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+								}
+							}
+						}
 						bedpe.WriteToFileHandle(out, i)
 					}
 				}
@@ -80,11 +101,29 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 			currOverlaps = interval.Query(selectTree, i.B, "any")
 			if len(currOverlaps) > 0 {
 				if overlapThreshold == 0 {
+					if keepNames {
+						for c := range currOverlaps {
+							if c == 0 {
+								i.A.Name = currOverlaps[c].(bed.Bed).Name
+							} else {
+								i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+							}
+						}
+					}
 					bedpe.WriteToFileHandle(out, i)
 				} else {
 					found = false
 					for _, j := range currOverlaps {
 						if !found && overlapPercent(j, i.B) >= overlapThreshold {
+							if keepNames {
+								for c := range currOverlaps {
+									if c == 0 {
+										i.A.Name = currOverlaps[c].(bed.Bed).Name
+									} else {
+										i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
+									}
+								}
+							}
 							bedpe.WriteToFileHandle(out, i)
 						}
 					}
@@ -209,6 +248,7 @@ func main() {
 	var bedSelect *bool = flag.Bool("bedSelect", false, "Set select file to be a BED file instead of a bedpe.")
 	var overlapThreshold *float64 = flag.Float64("overlapThreshold", 0, "threshold that the percent overlap of a bedpe half to the select bed must satisfy. Must be a value between 0 and 1.")
 	var overlapBoth *bool = flag.Bool("overlapBoth", false, "restricts outputs of -bedSelect to bedpe entries where both ends overlap a selectBed entry")
+	var keepNames *bool = flag.Bool("keepNames", false, "When set to true, selectBed option will return the name field from the bed file if there is one in the name field for the bedpe output.")
 
 	var expectedNumArgs int = 3
 	flag.Usage = usage
@@ -237,5 +277,5 @@ func main() {
 		log.Fatalf("Error: overlapBoth must be used with bedSelect")
 	}
 
-	bedpeOverlap(SelectFile, bedpeInFile, contactOutFile, *bedSelect, *overlapThreshold, *overlapBoth)
+	bedpeOverlap(SelectFile, bedpeInFile, contactOutFile, *bedSelect, *overlapThreshold, *overlapBoth, *keepNames)
 }
