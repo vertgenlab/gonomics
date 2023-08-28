@@ -71,7 +71,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 		if len(currOverlaps) > 0 {
 			if overlapThreshold == 0 {
 				if keepNames {
-					i.A.FieldsInitialized = 8
+					i.A.FieldsInitialized = 7
 					for c := range currOverlaps {
 						if c == 0 {
 							i.A.Name = currOverlaps[c].(bed.Bed).Name
@@ -87,7 +87,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 					if !found && overlapPercent(j, i.A) >= overlapThreshold {
 						found = true
 						if keepNames {
-							i.A.FieldsInitialized = 8
+							i.A.FieldsInitialized = 7
 							for c := range currOverlaps {
 								if c == 0 {
 									i.A.Name = currOverlaps[c].(bed.Bed).Name
@@ -106,7 +106,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 			if len(currOverlaps) > 0 {
 				if overlapThreshold == 0 {
 					if keepNames {
-						i.A.FieldsInitialized = 8
+						i.A.FieldsInitialized = 7
 						for c := range currOverlaps {
 							if c == 0 {
 								i.A.Name = currOverlaps[c].(bed.Bed).Name
@@ -121,7 +121,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 					for _, j := range currOverlaps {
 						if !found && overlapPercent(j, i.B) >= overlapThreshold {
 							if keepNames {
-								i.A.FieldsInitialized = 8
+								i.A.FieldsInitialized = 7
 								for c := range currOverlaps {
 									if c == 0 {
 										i.A.Name = currOverlaps[c].(bed.Bed).Name
