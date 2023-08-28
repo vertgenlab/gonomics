@@ -80,6 +80,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 					}
 				}
 				log.Print(i.A.Name)
+				log.Print(i.A.FieldsInitialized)
 				bedpe.WriteToFileHandle(out, i)
 			} else {
 				found = false
