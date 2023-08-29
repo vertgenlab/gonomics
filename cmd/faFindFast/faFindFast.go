@@ -6,6 +6,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"math"
 
@@ -17,16 +18,37 @@ import (
 func faFindFast(inFile string, outFile string, windowSize int, chromName string, removeN bool, longOutput bool, divergenceRate float64) {
 	records := fasta.Read(inFile)
 
-	if len(records) != 2 {
-		log.Fatalf("Wrong number of sequences, expecting two, found %d.\n", len(records))
+	// TODO: rather than records[0].Seq, records[1].Seq, specify which sequences by string
+	// TODO: change from strings "Human" "Chimp" to accepting variables from command-line file
+	// TODO: if no specifications from the command-line file, then reference = records[0].seq, query = records[1].seq
+	// TODO: update other functions like usage and main
+
+	var reference, query []dna.Base
+	referenceCount := 0
+	queryCount := 0
+
+	for i := 0; i < len(records); i++ { //for each fasta record, check if name matches reference or query
+		if records[i].Name == "Human" { //if name matches reference, extract reference sequence
+			if referenceCount == 1 { //however, if name has already appeared once before, fatal error for non-unique names
+				log.Fatalf("Reference sequence name is not unique")
+			}
+			reference = records[i].Seq
+			referenceCount += 1
+		} else if records[i].Name == "Chimp" {
+			if queryCount == 1 {
+				log.Fatalf("Query sequence name is not unique")
+			}
+			query = records[i].Seq
+			queryCount += 1
+		}
 	}
 
-	if len(records[0].Seq) != len(records[1].Seq) {
-		log.Fatalf("Sequences are not of equal length")
+	if len(reference) != len(query) {
+		log.Fatalf("Reference and query sequences are not of equal length")
 	}
 
 	file := fileio.EasyCreate(outFile)
-	speedyWindowDifference(windowSize, records[0].Seq, records[1].Seq, chromName, removeN, longOutput, divergenceRate, file)
+	speedyWindowDifference(windowSize, reference, query, chromName, removeN, longOutput, divergenceRate, file)
 	err := file.Close()
 	exception.PanicOnErr(err)
 }
