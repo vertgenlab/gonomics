@@ -18,25 +18,27 @@ import (
 )
 
 type Settings struct {
-	inFile         string
-	outFile        string
-	inputNormalize string
-	byCell         bool
-	samOut         bool
-	scAnalysis     string
-	binCells       int
-	umiSat         bool
-	gfpNorm        string
-	bed            string
-	ncNorm         string
-	determineBins  string
+	inFile          string
+	outFile         string
+	inputNormalize  string
+	byCell          bool
+	samOut          bool
+	scAnalysis      string
+	binCells        int
+	umiSat          bool
+	gfpNorm         string
+	bed             string
+	ncNorm          string
+	determineBins   string
+	inputSequencing string
 }
 
-//calculateNormFactor takes the countsMap created in readInputSequencingSam and writes out a data frame with the name of the construct, counts per 500bp, percent abundance, and normalization factor
+// calculateNormFactor takes the countsMap created in readInputSequencingSam and writes out a data frame with the name of the construct, counts per 500bp, percent abundance, and normalization factor
 func calculateNormFactor(countsMap map[string]float64, outFile string) {
 	var totalReads float64 = 0
 	var line string
 	var percentLib float64
+	var matrix []string
 
 	out := fileio.EasyCreate(outFile)
 	fileio.WriteToFileHandle(out, "construct\treadsPer500bp\tpercentLibrary\tnormFactor")
@@ -51,26 +53,29 @@ func calculateNormFactor(countsMap map[string]float64, outFile string) {
 	for i := range countsMap {
 		percentLib = (countsMap[i] / totalReads) * 100
 		line = fmt.Sprintf("%s\t%f\t%f\t%f", i, countsMap[i], percentLib, idealPerc/percentLib)
-		fileio.WriteToFileHandle(out, line)
+		matrix = append(matrix, line)
+	}
+	sort.Strings(matrix)
+	for _, i := range matrix {
+		fileio.WriteToFileHandle(out, i)
 	}
 	err := out.Close()
 	exception.PanicOnErr(err)
 }
 
-//readInputSequencingSam reads and parses an alignemnt file for an input library sequencing run. It creates a read-count map for all constructs in the provided GTF
+// readInputSequencingSam reads and parses an alignment file for an input library sequencing run. It creates a read-count map for all constructs in the provided GTF
 func readInputSequencingSam(s Settings) {
 	var tree = make([]interval.Interval, 0)
 	var bedSizeMap = make(map[string]int)
 	var countsMap = make(map[string]float64)
 	var selectTree map[string]*interval.IntervalNode
-	var constructString, constructName string
-	var constructSlice []string
+	var constructName string
 	var counts float64
 	var currEntry sam.Sam
 
 	inChan, _ := sam.GoReadToChan(s.inFile)
+	bedEntries := bed.Read(s.inputSequencing)
 
-	bedEntries := bed.Read(s.bed)
 	for _, i := range bedEntries {
 		tree = append(tree, i)
 		bedSizeMap[i.Name] = bed.Size(i)
@@ -79,10 +84,15 @@ func readInputSequencingSam(s Settings) {
 	selectTree = interval.BuildTree(tree)
 
 	currEntry = <-inChan
-
+	var p = 0
+	var j = 0
+	var k = 0
+	var l = 0
 	for i := range inChan {
+		p++
 		//remove PCR duplicates
 		if interval.AreEqual(currEntry, i) {
+			k++
 			if currEntry.Qual >= i.Qual {
 				continue
 			} else {
@@ -90,14 +100,14 @@ func readInputSequencingSam(s Settings) {
 				continue
 			}
 		}
-
 		overlappedBedEntry := interval.Query(selectTree, currEntry, "any")
 		if len(overlappedBedEntry) != 1 {
+			j++
+			currEntry = i
 			continue
 		}
-		constructString = fmt.Sprint(overlappedBedEntry[0])
-		constructSlice = strings.Split(constructString, "\t")
-		constructName = constructSlice[3]
+		l++
+		constructName = overlappedBedEntry[0].(bed.Bed).Name
 		counts, _ = countsMap[constructName]
 		countsMap[constructName] = counts + 1
 		currEntry = i
@@ -105,8 +115,12 @@ func readInputSequencingSam(s Settings) {
 	//normalize reads to 500bp
 	for i := range countsMap {
 		counts, _ = countsMap[i]
-		countsMap[i] = counts / (float64((bedSizeMap[i]) / 500.0))
+		countsMap[i] = counts / (float64(bedSizeMap[i]) / 500.0)
 	}
+	fmt.Println("total reads", p)
+	fmt.Println("PCR duplicates", k)
+	fmt.Println("no overlapping bed entries", j)
+	fmt.Println("one bed entry", l)
 	calculateNormFactor(countsMap, s.outFile)
 }
 
@@ -549,14 +563,14 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 // parseBam takes in a cellranger count bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
 func parseBam(s Settings) {
 	var k int = 0
-	var constructName, cellString, cellByConstructName, umiBx, constructString string
+	var constructName, cellString, cellByConstructName, umiBx string
 	var count float64
 	var found bool
 	var bit int32
 	var norm bool = false
 	var sc bool = false
 	var noSettings bool = false
-	var allConstructs, cellTypeSlice, umiBxSlice, constructSlice []string
+	var allConstructs, cellTypeSlice, umiBxSlice []string
 
 	if s.inputNormalize != "" { //create a bool for normalize
 		norm = true
@@ -604,9 +618,7 @@ func parseBam(s Settings) {
 				if len(overlappedBedEntry) != 1 {
 					continue
 				}
-				constructString = fmt.Sprint(overlappedBedEntry[0])
-				constructSlice = strings.Split(constructString, "\t")
-				constructName = constructSlice[3]
+				constructName = overlappedBedEntry[0].(bed.Bed).Name
 			} else {
 				construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
 				constructName = construct.(string)
@@ -731,18 +743,19 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 	var s Settings = Settings{
-		inFile:         flag.Arg(0),
-		outFile:        flag.Arg(1),
-		inputNormalize: *inputNorm,
-		byCell:         *byCell,
-		scAnalysis:     *cellTypeAnalysis,
-		binCells:       *binCells,
-		umiSat:         *umiSat,
-		samOut:         *samOut,
-		gfpNorm:        *gfpNorm,
-		bed:            *bed,
-		ncNorm:         *ncNorm,
-		determineBins:  *determineBins,
+		inFile:          flag.Arg(0),
+		outFile:         flag.Arg(1),
+		inputNormalize:  *inputNorm,
+		byCell:          *byCell,
+		scAnalysis:      *cellTypeAnalysis,
+		binCells:        *binCells,
+		umiSat:          *umiSat,
+		samOut:          *samOut,
+		gfpNorm:         *gfpNorm,
+		bed:             *bed,
+		ncNorm:          *ncNorm,
+		determineBins:   *determineBins,
+		inputSequencing: *inputSequencing,
 	}
 
 	var bw *sam.BamWriter
@@ -807,9 +820,9 @@ func main() {
 
 	if *inputSequencing != "" {
 		readInputSequencingSam(s)
+	} else {
+		parseBam(s)
 	}
-
-	parseBam(s)
 
 	if len(inFiles) > 1 {
 		err = os.Remove(s.inFile)
