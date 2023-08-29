@@ -84,15 +84,9 @@ func readInputSequencingSam(s Settings) {
 	selectTree = interval.BuildTree(tree)
 
 	currEntry = <-inChan
-	var p = 0
-	var j = 0
-	var k = 0
-	var l = 0
 	for i := range inChan {
-		p++
 		//remove PCR duplicates
 		if interval.AreEqual(currEntry, i) {
-			k++
 			if currEntry.Qual >= i.Qual {
 				continue
 			} else {
@@ -102,11 +96,9 @@ func readInputSequencingSam(s Settings) {
 		}
 		overlappedBedEntry := interval.Query(selectTree, currEntry, "any")
 		if len(overlappedBedEntry) != 1 {
-			j++
 			currEntry = i
 			continue
 		}
-		l++
 		constructName = overlappedBedEntry[0].(bed.Bed).Name
 		counts, _ = countsMap[constructName]
 		countsMap[constructName] = counts + 1
@@ -117,10 +109,6 @@ func readInputSequencingSam(s Settings) {
 		counts, _ = countsMap[i]
 		countsMap[i] = counts / (float64(bedSizeMap[i]) / 500.0)
 	}
-	fmt.Println("total reads", p)
-	fmt.Println("PCR duplicates", k)
-	fmt.Println("no overlapping bed entries", j)
-	fmt.Println("one bed entry", l)
 	calculateNormFactor(countsMap, s.outFile)
 }
 
