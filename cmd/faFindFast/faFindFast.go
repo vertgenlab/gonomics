@@ -15,28 +15,28 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-func faFindFast(inFile string, outFile string, windowSize int, chromName string, removeN bool, longOutput bool, divergenceRate float64) {
+func faFindFast(inFile string, outFile string, referenceName string, queryName string, windowSize int, chromName string, removeN bool, longOutput bool, divergenceRate float64) {
 	records := fasta.Read(inFile)
 
-	// TODO: rather than records[0].Seq, records[1].Seq, specify which sequences by string
-	// TODO: change from strings "Human" "Chimp" to accepting variables from command-line file
-	// TODO: if no specifications from the command-line file, then reference = records[0].seq, query = records[1].seq
+	// TODO: if no specifications from the command-line file, then reference = records[0].seq, query = records[1].seq. Should be this instead of "Human" and "Chimp"
 	// TODO: update other functions like usage and main
+	// TODO: does chromName option need to change/be used?
+	// TODO: add more tests for names
 
 	var reference, query []dna.Base
 	referenceCount := 0
 	queryCount := 0
 
 	for i := 0; i < len(records); i++ { //for each fasta record, check if name matches reference or query
-		if records[i].Name == "Human" { //if name matches reference, extract reference sequence
+		if records[i].Name == referenceName { //if name matches reference, extract reference sequence
 			if referenceCount == 1 { //however, if name has already appeared once before, fatal error for non-unique names
-				log.Fatalf("Reference sequence name is not unique")
+				log.Fatalf("Reference sequence name is not unique in the input file")
 			}
 			reference = records[i].Seq
 			referenceCount += 1
-		} else if records[i].Name == "Chimp" {
+		} else if records[i].Name == queryName {
 			if queryCount == 1 {
-				log.Fatalf("Query sequence name is not unique")
+				log.Fatalf("Query sequence name is not unique in the input file")
 			}
 			query = records[i].Seq
 			queryCount += 1
@@ -64,6 +64,8 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
+	var referenceName *string = flag.String("referenceName", "Human", "Specify the name of the reference sequence") //TODO: change referenceName and queryName defaults!
+	var queryName *string = flag.String("queryName", "Chimp", "Specify the name of the query sequence")
 	var windowSize *int = flag.Int("windowSize", 1000, "Specify the window size")
 	var chromName *string = flag.String("chrom", "", "Specify the chrom name")
 	var removeN *bool = flag.Bool("removeN", false, "Excludes bed regions with Ns in the reference from the output.")
@@ -93,5 +95,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFindFast(inFile, outFile, *windowSize, *chromName, *removeN, *longOutput, *divergenceRate)
+	faFindFast(inFile, outFile, *referenceName, *queryName, *windowSize, *chromName, *removeN, *longOutput, *divergenceRate)
 }
