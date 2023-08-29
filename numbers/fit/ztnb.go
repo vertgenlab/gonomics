@@ -1,6 +1,7 @@
 package fit
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
@@ -54,6 +55,9 @@ func zeroTruncatedNegativeBinomialLogLikelihood(data []int, R float64, P float64
 	var density float64
 	for i := 1; i < len(data); i++ {
 		density, _ = numbers.NegativeBinomialDist(i, R, P, true)
+		if 1-math.Pow(P, R) == 0 {
+			fmt.Printf("Found it! P: %v. R: %v.\n", P, R)
+		}
 		likelihood += float64(data[i]) * logspace.Divide(density, math.Log(1-math.Pow(P, R)))
 	}
 	return likelihood
@@ -72,7 +76,7 @@ func checkNorth(data []int, R float64, P float64, rStep float64, pStep float64, 
 // checkNorthEast is a helper function of nextDirection and firstDirection. This function checks the likelihood in the 'northeast'
 // direction, when R and P are higher than the current parameter set by rStep and pStep.
 func checkNorthEast(data []int, R float64, P float64, rStep float64, pStep float64, currDirection direction, currLikelihood float64) (direction, float64) {
-	if P+pStep >= 1 {
+	if P+pStep > 0.999 {
 		return currDirection, currLikelihood
 	}
 	nextLikelihood := zeroTruncatedNegativeBinomialLogLikelihood(data, R+rStep, P+pStep)
@@ -85,7 +89,7 @@ func checkNorthEast(data []int, R float64, P float64, rStep float64, pStep float
 // checkEast is a helper function of nextDirection and firstDirection. This function checks the likelihood in the 'east'
 // direction, when P is higher than the current parameter set by pStep.
 func checkEast(data []int, R float64, P float64, rStep float64, pStep float64, currDirection direction, currLikelihood float64) (direction, float64) {
-	if P+pStep >= 1 {
+	if P+pStep > 0.999 {
 		return currDirection, currLikelihood
 	}
 	nextLikelihood := zeroTruncatedNegativeBinomialLogLikelihood(data, R, P+pStep)
@@ -98,7 +102,7 @@ func checkEast(data []int, R float64, P float64, rStep float64, pStep float64, c
 // checkSouthEast is a helper function of nextDirection and firstDirection. This function checks the likelihood in the 'southeast'
 // direction, when P is higher by pStep and R is lower by rStep.
 func checkSouthEast(data []int, R float64, P float64, rStep float64, pStep float64, currDirection direction, currLikelihood float64) (direction, float64) {
-	if P+pStep >= 1 || R-rStep < 0 {
+	if P+pStep > 0.999 || R-rStep < 0.001 {
 		return currDirection, currLikelihood
 	}
 	nextLikelihood := zeroTruncatedNegativeBinomialLogLikelihood(data, R-rStep, P+pStep)
@@ -111,7 +115,7 @@ func checkSouthEast(data []int, R float64, P float64, rStep float64, pStep float
 // checkSouth is a helper function of nextDirection and firstDirection. This function checks the likelihood in the 'south'
 // direction, when R is lower by rStep.
 func checkSouth(data []int, R float64, P float64, rStep float64, pStep float64, currDirection direction, currLikelihood float64) (direction, float64) {
-	if R-rStep < 0 {
+	if R-rStep < 0.001 {
 		return currDirection, currLikelihood
 	}
 	nextLikelihood := zeroTruncatedNegativeBinomialLogLikelihood(data, R-rStep, P)
@@ -122,7 +126,7 @@ func checkSouth(data []int, R float64, P float64, rStep float64, pStep float64, 
 }
 
 func checkSouthWest(data []int, R float64, P float64, rStep float64, pStep float64, currDirection direction, currLikelihood float64) (direction, float64) {
-	if R-rStep < 0 || P-pStep <= 0 {
+	if R-rStep < 0.001 || P-pStep < 0.001 {
 		return currDirection, currLikelihood
 	}
 	nextLikelihood := zeroTruncatedNegativeBinomialLogLikelihood(data, R-rStep, P-pStep)
@@ -133,7 +137,7 @@ func checkSouthWest(data []int, R float64, P float64, rStep float64, pStep float
 }
 
 func checkWest(data []int, R float64, P float64, rStep float64, pStep float64, currDirection direction, currLikelihood float64) (direction, float64) {
-	if P-pStep <= 0 {
+	if P-pStep < 0.001 {
 		return currDirection, currLikelihood
 	}
 	nextLikelihood := zeroTruncatedNegativeBinomialLogLikelihood(data, R, P-pStep)
@@ -144,7 +148,7 @@ func checkWest(data []int, R float64, P float64, rStep float64, pStep float64, c
 }
 
 func checkNorthWest(data []int, R float64, P float64, rStep float64, pStep float64, currDirection direction, currLikelihood float64) (direction, float64) {
-	if P-pStep <= 0 {
+	if P-pStep < 0.001 {
 		return currDirection, currLikelihood
 	}
 	nextLikelihood := zeroTruncatedNegativeBinomialLogLikelihood(data, R+rStep, P-pStep)
@@ -248,7 +252,7 @@ func moveInDirection(R float64, P float64, rStep float64, pStep float64, currDir
 	case north:
 		return R + rStep, P
 	case northeast:
-		if P+pStep <= 1 {
+		if P+pStep < 0.999 {
 			return R + rStep, P + pStep
 		}
 		return R + rStep, P
@@ -258,26 +262,26 @@ func moveInDirection(R float64, P float64, rStep float64, pStep float64, currDir
 		}
 		log.Panic("Error: direct collision with paramter space barrier.\n")
 	case southeast:
-		if R-rStep <= 0 && P+pStep >= 1 {
+		if R-rStep < 0.001 && P+pStep > 0.999 {
 			log.Panic("Error: direct collision with parameter space barrier.\n")
 		}
-		if R-rStep <= 0 {
+		if R-rStep < 0.001 {
 			return R, P + pStep
 		}
-		if P+pStep >= 1 {
+		if P+pStep > 0.999 {
 			return R - rStep, P
 		}
 		return R - rStep, P + pStep
 	case south:
-		if R-rStep <= 0 {
+		if R-rStep < 0.001 {
 			log.Panic("Error: direct collision with parameter space barrier.\n")
 		}
 		return R - rStep, P
 	case southwest:
-		if R-rStep <= 0 && P-pStep <= 0 {
+		if R-rStep < 0.001 && P-pStep < 0.001 {
 			log.Panic("Error: direct collision with parameter space barrier.\n")
 		}
-		if R-rStep <= 0 {
+		if R-rStep < 0.001 {
 			return R, P - pStep
 		}
 		return R - rStep, P - pStep
@@ -311,7 +315,9 @@ func ZeroTruncatedNegativeBinomial(data []int, R float64, P float64, rStep float
 		log.Fatalf("Error: initial P value must a valid probability. Found: %v.\n", P)
 	}
 
+	//fmt.Printf("Getting first direction.\n")
 	currDirection, currLikelihood := firstDirection(data, R, P, rStep, pStep)
+	//fmt.Printf("Got first direction.\n")
 
 	for currDirection != neutral {
 		R, P = moveInDirection(R, P, rStep, pStep, currDirection)
@@ -321,6 +327,8 @@ func ZeroTruncatedNegativeBinomial(data []int, R float64, P float64, rStep float
 	return R, P
 }
 
+// randNegativeBinomial is a function used only in testing. It generates negative binomial distributed random variates
+// from a distribution defined by parameters r and p.
 func randNegativeBinomial(r float64, p float64) int {
 	s := 0           //successes
 	f := 0           //failures

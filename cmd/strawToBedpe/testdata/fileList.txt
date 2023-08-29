@@ -1,1 +1,1 @@
-testdata/in.straw	chr1
+testdata/chr1.straw.gz	chr1

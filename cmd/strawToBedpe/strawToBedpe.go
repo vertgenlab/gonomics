@@ -6,6 +6,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/hic"
@@ -16,7 +18,20 @@ import (
 	"strings"
 )
 
-func strawToBedpe(fileList string, outFile string, binSize int) {
+type Settings struct {
+	FileList     string
+	OutFile      string
+	BinSize      int
+	RStart       float64
+	PStart       float64
+	RStep        float64
+	PStep        float64
+	MinCutoff    int
+	Fdr          float64
+	FitStatsFile string
+}
+
+func strawToBedpe(s Settings) {
 	var currStrawChan <-chan hic.Straw
 	var words []string
 	var binDistance int
@@ -26,19 +41,49 @@ func strawToBedpe(fileList string, outFile string, binSize int) {
 	contactScoreCache[1] = make([]int, 1)
 	var tmpContactScoreCache [][]int
 	var tmpColumn []int
+	var err error
+	var firstTime, foundInMap bool
+	var currChrom string
+	var searchSpaceMins = make(map[string]int)
+	var searchSpaceMaxes = make(map[string]int)
+	var currBedPe bedpe.BedPe
 
-	lines := fileio.Read(fileList)
-
+	lines := fileio.Read(s.FileList)
 	for i := range lines {
 		words = strings.Split(lines[i], "\t")
 		currStrawChan = hic.GoReadToChan(words[0])
-		for s := range currStrawChan {
-
-			currDistance = math.Abs(float64(s.Bin1Start) - float64(s.Bin2Start))
-			if int(currDistance)%binSize != 0 {
-				log.Fatalf("Error: Distance between two straw ends: %v is not a multiple of the bin size: %v.\n", currDistance, binSize)
+		currChrom = words[1]
+		firstTime = true
+		for currStraw := range currStrawChan {
+			if firstTime {
+				if _, foundInMap = searchSpaceMins[currChrom]; foundInMap {
+					searchSpaceMins[currChrom] = numbers.Min(searchSpaceMins[currChrom], numbers.Min(currStraw.Bin1Start, currStraw.Bin2Start))
+					searchSpaceMaxes[currChrom] = numbers.Max(searchSpaceMaxes[currChrom], numbers.Max(currStraw.Bin1Start, currStraw.Bin2Start))
+				} else {
+					searchSpaceMins[currChrom] = numbers.Min(currStraw.Bin1Start, currStraw.Bin2Start)
+					searchSpaceMaxes[currChrom] = numbers.Max(currStraw.Bin1Start, currStraw.Bin2Start)
+				}
+				firstTime = false
+			} else {
+				if currStraw.Bin1Start < searchSpaceMins[currChrom] {
+					searchSpaceMins[currChrom] = currStraw.Bin1Start
+				}
+				if currStraw.Bin2Start < searchSpaceMins[currChrom] {
+					searchSpaceMins[currChrom] = currStraw.Bin2Start
+				}
+				if currStraw.Bin1Start > searchSpaceMaxes[currChrom] {
+					searchSpaceMaxes[currChrom] = currStraw.Bin1Start
+				}
+				if currStraw.Bin2Start > searchSpaceMaxes[currChrom] {
+					searchSpaceMaxes[currChrom] = currStraw.Bin2Start
+				}
 			}
-			binDistance = int(currDistance) / binSize
+
+			currDistance = math.Abs(float64(currStraw.Bin1Start) - float64(currStraw.Bin2Start))
+			if int(currDistance)%s.BinSize != 0 {
+				log.Fatalf("Error: Distance between two straw ends: %v is not a multiple of the bin size: %v.\n", currDistance, s.BinSize)
+			}
+			binDistance = int(currDistance) / s.BinSize
 			// if we need more room in the cache rows, extend the cache
 			if binDistance > len(contactScoreCache)-1 {
 				tmpContactScoreCache = make([][]int, binDistance+1)
@@ -50,144 +95,133 @@ func strawToBedpe(fileList string, outFile string, binSize int) {
 				contactScoreCache[binDistance] = make([]int, 1)
 			}
 			// if we need more room in the cache columns, extend the cache
-			if s.ContactScore > len(contactScoreCache[binDistance])-1 {
-				tmpColumn = make([]int, s.ContactScore+1)
+			if currStraw.ContactScore > len(contactScoreCache[binDistance])-1 {
+				tmpColumn = make([]int, currStraw.ContactScore+1)
 				copy(tmpColumn, contactScoreCache[binDistance])
 				contactScoreCache[binDistance] = tmpColumn
 			}
-			contactScoreCache[binDistance][s.ContactScore]++
+			contactScoreCache[binDistance][currStraw.ContactScore]++
 		}
 	}
-	//fmt.Print(contactScoreCache)
 
-	distributions := fitNegativeBinomialsToCountData(contactScoreCache)
-	for i := range distributions {
-		fmt.Printf("binDistance: %v. R: %v. P: %v.\n", i, distributions[i].R, distributions[i].P)
+	// this cache stores in comparisonCountCache[i] the total number of bins at each bin distance i.
+	// Used for FDR correction as the number of comparisons.
+	comparisonCountCache := makeComparisonCountCache(contactScoreCache, searchSpaceMins, searchSpaceMaxes, s)
+	cutoffCache := calculateBenjamaniHochbergCutoff(contactScoreCache, s, comparisonCountCache)
+
+	out := fileio.EasyCreate(s.OutFile)
+	// now we read all the straw files again and filter based on our cutoff.
+	for i := range lines {
+		words = strings.Split(lines[i], "\t")
+		currStrawChan = hic.GoReadToChan(words[0])
+		currChrom = words[1]
+		for currStraw := range currStrawChan {
+			currDistance = math.Abs(float64(currStraw.Bin1Start) - float64(currStraw.Bin2Start))
+			if int(currDistance)%s.BinSize != 0 {
+				log.Fatalf("Error: Distance between two straw ends: %v is not a multiple of the bin size: %v.\n", currDistance, s.BinSize)
+			}
+			binDistance = int(currDistance) / s.BinSize
+			if currStraw.ContactScore > cutoffCache[binDistance] {
+				currBedPe = bedpe.BedPe{
+					A: bed.Bed{Chrom: currChrom,
+						ChromStart:        currStraw.Bin1Start,
+						ChromEnd:          currStraw.Bin1Start + s.BinSize,
+						Score:             currStraw.ContactScore,
+						FieldsInitialized: 8,
+					},
+					B: bed.Bed{Chrom: currChrom,
+						ChromStart:        currStraw.Bin2Start,
+						ChromEnd:          currStraw.Bin2Start + s.BinSize,
+						Score:             currStraw.ContactScore,
+						FieldsInitialized: 8,
+					},
+				}
+				bedpe.WriteToFileHandle(out, currBedPe)
+			}
+		}
 	}
 
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+func makeComparisonCountCache(contactScoreCache [][]int, searchSpaceMaxes map[string]int, searchSpaceMins map[string]int, s Settings) []int {
+	var totalWindows int
+	var currKey string
+	var comparisonCountCache []int = make([]int, len(contactScoreCache))
+	for i := range comparisonCountCache {
+		totalWindows = 0
+		for currKey, _ = range searchSpaceMins {
+			// this calculation is the number of valid contact windows on a chromosome. ChromSize/binSize is windows
+			// on chromosome, minus i, the binDistance.
+			totalWindows += (searchSpaceMaxes[currKey]-searchSpaceMins[currKey])/s.BinSize - i
+		}
+		comparisonCountCache[i] = totalWindows
+	}
+	return comparisonCountCache
+}
+
+// calculateBenjamaniHochbergCutoff takes in the contactScoreCache, and number of comparisons defined in the comparisonCountCache
+// to return the cutoff point for each binDistance where the FDR-adjusted p value falls below the user-defined FDR.
+func calculateBenjamaniHochbergCutoff(contactScoreCache [][]int, s Settings, comparisonCountCache []int) []int {
+	var cutoffCache = make([]int, len(contactScoreCache))
 	var err error
-	for i := 20; i < 40; i += 2 {
-		out := fileio.EasyCreate(fmt.Sprintf("distFiles/%v.txt", i))
-		_, err = fmt.Fprintf(out, "Score\tFrequency\n")
+	var currScore int
+	var currQValue, currR, currP float64
+	var out *fileio.EasyWriter
+	var currRank int
+	for i := range cutoffCache {
+		cutoffCache[i] = s.MinCutoff
+	}
+
+	if s.FitStatsFile != "" {
+		out = fileio.EasyCreate(s.FitStatsFile)
+		_, err = fmt.Fprintf(out, "BinDistance\tR\tP\tCutoff\n")
 		exception.PanicOnErr(err)
-		for j := range contactScoreCache[i] {
-			_, err = fmt.Fprintf(out, "%v\t%v\n", j, contactScoreCache[i][j])
+	}
+
+	for currBinDistance := range contactScoreCache {
+		currRank = 0
+		currR, currP = fit.ZeroTruncatedNegativeBinomial(contactScoreCache[currBinDistance], s.RStart, s.PStart, s.RStep, s.PStep)
+		for currScore = len(contactScoreCache[currBinDistance]) - 1; currScore > s.MinCutoff; currScore-- {
+			currRank += contactScoreCache[currBinDistance][currScore]
+			//fmt.Printf("CurrRank: %v. Comparisons: %v.\n", currRank, float64(comparisonCountCache[currBinDistance]))
+			currQValue = (1 - numbers.NegativeBinomialCdf(float64(currScore), currR, currP)) * float64(comparisonCountCache[currBinDistance]) / float64(currRank)
+			//fmt.Printf("CurrBinDistance: %v. CurrScore: %v. CurrQValue: %v.\n", currBinDistance, currScore, currQValue)
+			if !math.IsNaN(currQValue) && !math.IsInf(currQValue, 1) && !math.IsInf(currQValue, -1) && currQValue > s.Fdr {
+				cutoffCache[currBinDistance] = currScore
+				break
+			}
+		}
+		if s.FitStatsFile != "" {
+			_, err = fmt.Fprintf(out, "%v\t%v\t%v\t%v\n", currBinDistance, currR, currP, cutoffCache[currBinDistance])
 			exception.PanicOnErr(err)
 		}
+		if cutoffCache[currBinDistance] == s.MinCutoff {
+			break
+		}
+	}
+
+	if s.FitStatsFile != "" {
 		err = out.Close()
 		exception.PanicOnErr(err)
 	}
-}
 
-// NegativeBinomialFit stores the R and P parameter values to specify
-// a negative binomial distribution.
-type NegativeBinomialFit struct {
-	R float64
-	P float64
-}
-
-// fitNegativeBinomialsToCountData takes in the contactScoreCache, imputes missing
-// values at f(0), and fits a negative binomial distribution for each bin distance.
-func fitNegativeBinomialsToCountData(cache [][]int) []NegativeBinomialFit {
-	var answer = make([]NegativeBinomialFit, len(cache))
-	var i int
-	var currSumNonZero int
-	var currMean, currVariance float64
-	var currCount int
-	var iteration int
-	var couldNotFit bool
-	var currDensity float64
-	var lastZeroDensity float64 //last iteration's estimate of the density at f(0)
-
-	for currBinDistance := range cache {
-		if cache[currBinDistance] == nil {
-			cache[currBinDistance] = make([]int, 1)
-		}
-
-		/*
-			// we initialize contactScoreCache[currBinDistance][0] to the LagrangeInterpolation prediction
-			// if we only have two datapoints (f(1) and f(2)), we estimate f(0) by linear interpolation
-			// note that if len(contactScoreCache[curBinDistance]) < 3, we cannot interpolate f(0) and cannot call bedpe peaks for these distances.
-			if len(cache[currBinDistance]) == 3 {
-				cache[currBinDistance][0] = int(fit.LagrangeInterpolation(0.0, [][]float64{
-					{1.0, float64(cache[currBinDistance][1])},
-					{2.0, float64(cache[currBinDistance][2])},
-				},
-				))
-			} else if len(cache[currBinDistance]) > 3 {
-				cache[currBinDistance][0] = int(fit.LagrangeInterpolation(0.0, [][]float64{
-					{1.0, float64(cache[currBinDistance][1])},
-					{2.0, float64(cache[currBinDistance][2])},
-					{3.0, float64(cache[currBinDistance][3])},
-				},
-				))
-			}
-		*/
-
-		//if len(cache[currBinDistance]) > 1 {
-		//	cache[currBinDistance][0] = cache[currBinDistance][1]
-		//}
-
-		// now we fine-tune contactScoreCache[currBinDistance][0] with iterative negative binomial fitting
-		currSumNonZero = 0
-		currCount = 0
-
-		for i = range cache[currBinDistance] {
-			currSumNonZero += cache[currBinDistance][i]
-			currCount += cache[currBinDistance][i] * i
-		}
-		currMean = float64(currCount) / float64(currSumNonZero+cache[currBinDistance][0])
-
-		currVariance = 0
-		for i = range cache[currBinDistance] {
-			currVariance += float64(cache[currBinDistance][i]) * math.Pow(float64(i)-currMean, 2)
-		}
-		currVariance = currVariance / (float64(currSumNonZero+cache[currBinDistance][0]) - 1)
-
-		answer[currBinDistance] = NegativeBinomialFit{-1, -1} // initialize to -1 to denote missing data.
-		// if we have at least 1000 non-zero entries, we can try to fit  negative binomial to the data
-		lastZeroDensity = 0
-		currDensity = 1
-		iteration = 0
-		if currSumNonZero > 1000 {
-			for math.Abs(currDensity-lastZeroDensity)/currDensity > 1e-6 && iteration < 100 {
-				currCount = 0
-				for i = range cache[currBinDistance] {
-					currCount += cache[currBinDistance][i] * i
-				}
-				currMean = float64(currCount) / float64(currSumNonZero+cache[currBinDistance][0])
-
-				currVariance = 0
-				for i = range cache[currBinDistance] {
-					currVariance += float64(cache[currBinDistance][i]) * math.Pow(float64(i)-currMean, 2)
-				}
-				currVariance = currVariance / (float64(currSumNonZero+cache[currBinDistance][0]) - 1)
-				answer[currBinDistance].R, answer[currBinDistance].P, couldNotFit = fit.NegativeBinomialFromSumStats(currMean, currVariance)
-				if couldNotFit {
-					answer[currBinDistance].R = -1
-					answer[currBinDistance].P = -1
-					break
-				}
-				//fmt.Printf("CurrDistance: %v. Iteration: %v. CurrDensity: %v. LastZeroDensity: %v.\n", currBinDistance, iteration, currDensity, lastZeroDensity)
-				lastZeroDensity = currDensity
-				currDensity = numbers.NegativeBinomialDist(0, answer[currBinDistance].R, answer[currBinDistance].P)
-				cache[currBinDistance][0] = int(currDensity * float64(currSumNonZero+cache[currBinDistance][0]))
-				iteration++
-			}
-		}
-	}
-
-	return answer
+	return cutoffCache
 }
 
 func usage() {
 	fmt.Print(
-		"strawToBedpe - Convert HiC contact maps in straw format to bedpe contact peak calls.\n" +
+		"strawToBedpe - Convert HiC contact maps in straw format to significant bedpe contact peak calls.\n" +
+			"This program fits the distribution of contact scores for each distance to a zero-truncated negative\n" +
+			"binomial distribution by regression evaluated by coordinate ascent. Then, significant peaks are reported\n" +
+			"as significant outliers from these null contact distributions based on the total number of comparisons" +
+			"and a user-defined false discovery rate.\n" +
 			"The user must provide a txt file with the following tab separated fields:\n" +
 			"file1.straw\tchrom\n" +
 			"In the line above, the first field specifies a straw file, and the second field specifies\n" +
 			"the chromosome name.\n" +
-			"Inter-chromosomal straw files (where aChrom != bChrom), are not currently supported.\n" +
+			"Inter-chromosomal straw files (where aChrom != bChrom) are not supported.\n" +
 			"\n" +
 			"Usage:\n" +
 			"strawToBedpe [options] fileListAndChromNames.txt out.bedpe\n" +
@@ -198,6 +232,13 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var binSize *int = flag.Int("binSize", 5000, "Specify the binSize of input straw data.")
+	var rStart *float64 = flag.Float64("rStart", 1.0, "Specify the starting parameter of R for coordinate ascent.")
+	var pStart *float64 = flag.Float64("pStart", 0.5, "Specify the starting parameter of P for coordinate ascent.")
+	var rStep *float64 = flag.Float64("rStep", 0.001, "Specify the step size for R for coordinate ascent.")
+	var pStep *float64 = flag.Float64("pStep", 0.001, "Specify the step size for P for coordinate ascent.")
+	var Fdr *float64 = flag.Float64("fdr", 0.05, "Set the false discovery rate for output peaks.")
+	var minCutoff *int = flag.Int("minCutoff", 10, "Set the minimum number of reads required to call a significant peak.")
+	var fitStatsFile *string = flag.String("fitStatsFile", "", "Write statistics about distribution fitting to an output text file.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -209,8 +250,21 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
-	fileListAndChromFile := flag.Arg(0)
+	fileList := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	strawToBedpe(fileListAndChromFile, outFile, *binSize)
+	s := Settings{
+		FileList:     fileList,
+		OutFile:      outFile,
+		BinSize:      *binSize,
+		RStart:       *rStart,
+		PStart:       *pStart,
+		RStep:        *rStep,
+		PStep:        *pStep,
+		MinCutoff:    *minCutoff,
+		Fdr:          *Fdr,
+		FitStatsFile: *fitStatsFile,
+	}
+
+	strawToBedpe(s)
 }
