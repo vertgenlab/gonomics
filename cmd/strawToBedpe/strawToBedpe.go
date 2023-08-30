@@ -122,7 +122,7 @@ func strawToBedpe(s Settings) {
 				log.Fatalf("Error: Distance between two straw ends: %v is not a multiple of the bin size: %v.\n", currDistance, s.BinSize)
 			}
 			binDistance = int(currDistance) / s.BinSize
-			if binDistance > s.MinBinDistance && currStraw.ContactScore > cutoffCache[binDistance] {
+			if binDistance >= s.MinBinDistance && currStraw.ContactScore > cutoffCache[binDistance] {
 				currBedPe = bedpe.BedPe{
 					A: bed.Bed{Chrom: currChrom,
 						ChromStart:        currStraw.Bin1Start,
