@@ -33,8 +33,8 @@ var FaFindFastTests = []struct {
 	{InFile: "testdata/test_indel.fa",
 		OutFile:        "testdata/tmp.noN.bed",
 		ExpectedFile:   "testdata/expected.noN.bed",
-		ReferenceName:  "Human",
-		QueryName:      "Chimp",
+		ReferenceName:  "", //also test for ReferenceName and QueryName defaults here
+		QueryName:      "",
 		WindowSize:     10,
 		ChromName:      "chr1",
 		RemoveN:        true,
@@ -44,7 +44,7 @@ var FaFindFastTests = []struct {
 		OutFile:        "testdata/tmp.doubleGaps.bed",
 		ExpectedFile:   "testdata/expected.bed",
 		ReferenceName:  "Human",
-		QueryName:      "Chimp",
+		QueryName:      "Gorilla", //also test for a different QueryName here
 		WindowSize:     10,
 		ChromName:      "chr1",
 		RemoveN:        false,
@@ -63,7 +63,7 @@ var FaFindFastTests = []struct {
 	{InFile: "testdata/test.endGapsRef.fa",
 		OutFile:        "testdata/tmp.refGaps.bed",
 		ExpectedFile:   "testdata/expected.endGapsRef.bed",
-		ReferenceName:  "Human",
+		ReferenceName:  "Human", //also test for finding a ReferenceName which is not the 1st sequence
 		QueryName:      "Chimp",
 		WindowSize:     10,
 		ChromName:      "chr1",

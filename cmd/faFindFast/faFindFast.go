@@ -18,14 +18,21 @@ import (
 func faFindFast(inFile string, outFile string, referenceName string, queryName string, windowSize int, chromName string, removeN bool, longOutput bool, divergenceRate float64) {
 	records := fasta.Read(inFile)
 
-	// TODO: if no specifications from the command-line file, then reference = records[0].seq, query = records[1].seq. Should be this instead of "Human" and "Chimp"
 	// TODO: update other functions like usage and main
 	// TODO: does chromName option need to change/be used?
-	// TODO: add more tests for names
 
 	var reference, query []dna.Base
 	referenceCount := 0
 	queryCount := 0
+
+	//if reference and query names were not specified in the command, then use 1st and 2nd fasta records' names, respectively
+	//will still proceed to check for non=unique names
+	if referenceName == "" {
+		referenceName = records[0].Name
+	}
+	if queryName == "" {
+		queryName = records[1].Name
+	}
 
 	for i := 0; i < len(records); i++ { //for each fasta record, check if name matches reference or query
 		if records[i].Name == referenceName { //if name matches reference, extract reference sequence
@@ -64,8 +71,8 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var referenceName *string = flag.String("referenceName", "Human", "Specify the name of the reference sequence") //TODO: change referenceName and queryName defaults!
-	var queryName *string = flag.String("queryName", "Chimp", "Specify the name of the query sequence")
+	var referenceName *string = flag.String("referenceName", "", "Specify the name of the reference sequence")
+	var queryName *string = flag.String("queryName", "", "Specify the name of the query sequence")
 	var windowSize *int = flag.Int("windowSize", 1000, "Specify the window size")
 	var chromName *string = flag.String("chrom", "", "Specify the chrom name")
 	var removeN *bool = flag.Bool("removeN", false, "Excludes bed regions with Ns in the reference from the output.")
