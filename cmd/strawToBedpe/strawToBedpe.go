@@ -19,16 +19,17 @@ import (
 )
 
 type Settings struct {
-	FileList     string
-	OutFile      string
-	BinSize      int
-	RStart       float64
-	PStart       float64
-	RStep        float64
-	PStep        float64
-	MinCutoff    int
-	Fdr          float64
-	FitStatsFile string
+	FileList       string
+	OutFile        string
+	BinSize        int
+	RStart         float64
+	PStart         float64
+	RStep          float64
+	PStep          float64
+	MinCutoff      int
+	MinBinDistance int
+	Fdr            float64
+	FitStatsFile   string
 }
 
 func strawToBedpe(s Settings) {
@@ -121,7 +122,7 @@ func strawToBedpe(s Settings) {
 				log.Fatalf("Error: Distance between two straw ends: %v is not a multiple of the bin size: %v.\n", currDistance, s.BinSize)
 			}
 			binDistance = int(currDistance) / s.BinSize
-			if currStraw.ContactScore > cutoffCache[binDistance] {
+			if binDistance > s.MinBinDistance && currStraw.ContactScore > cutoffCache[binDistance] {
 				currBedPe = bedpe.BedPe{
 					A: bed.Bed{Chrom: currChrom,
 						ChromStart:        currStraw.Bin1Start,
@@ -182,7 +183,7 @@ func calculateBenjamaniHochbergCutoff(contactScoreCache [][]int, s Settings, com
 		exception.PanicOnErr(err)
 	}
 
-	for currBinDistance := range contactScoreCache {
+	for currBinDistance := s.MinBinDistance; currBinDistance < len(contactScoreCache); currBinDistance++ {
 		currRank = 0
 		currR, currP = fit.ZeroTruncatedNegativeBinomial(contactScoreCache[currBinDistance], s.RStart, s.PStart, s.RStep, s.PStep)
 		//fmt.Printf("Distance: %v. CurrR: %v. CurrP: %v.\n", currBinDistance, currR, currP)
@@ -244,6 +245,7 @@ func main() {
 	var Fdr *float64 = flag.Float64("fdr", 0.05, "Set the false discovery rate for output peaks.")
 	var minCutoff *int = flag.Int("minCutoff", 10, "Set the minimum number of reads required to call a significant peak.")
 	var fitStatsFile *string = flag.String("fitStatsFile", "", "Write statistics about distribution fitting to an output text file.")
+	var minBinDistance *int = flag.Int("minBinDistance", 0, "Specify the minimum bin distance required to call a significant peak.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -259,16 +261,17 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		FileList:     fileList,
-		OutFile:      outFile,
-		BinSize:      *binSize,
-		RStart:       *rStart,
-		PStart:       *pStart,
-		RStep:        *rStep,
-		PStep:        *pStep,
-		MinCutoff:    *minCutoff,
-		Fdr:          *Fdr,
-		FitStatsFile: *fitStatsFile,
+		FileList:       fileList,
+		OutFile:        outFile,
+		BinSize:        *binSize,
+		RStart:         *rStart,
+		PStart:         *pStart,
+		RStep:          *rStep,
+		PStep:          *pStep,
+		MinCutoff:      *minCutoff,
+		MinBinDistance: *minBinDistance,
+		Fdr:            *Fdr,
+		FitStatsFile:   *fitStatsFile,
 	}
 
 	strawToBedpe(s)

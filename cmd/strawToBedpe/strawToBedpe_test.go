@@ -17,6 +17,7 @@ var StrawToBedPeTests = []struct {
 	RStep            float64
 	PStep            float64
 	MinCutoff        int
+	MinBinDistance   int
 	Fdr              float64
 	FitStatsFile     string
 	Expected         string
@@ -29,6 +30,7 @@ var StrawToBedPeTests = []struct {
 		PStart:           0.5,
 		RStep:            0.001,
 		PStep:            0.001,
+		MinBinDistance:   2,
 		MinCutoff:        10,
 		FitStatsFile:     "testdata/out.FitStats.txt",
 		Fdr:              0.05,
@@ -55,16 +57,17 @@ func TestStrawToBedpe(t *testing.T) {
 	var s Settings
 	for _, v := range StrawToBedPeTests {
 		s = Settings{
-			FileList:     v.FileList,
-			OutFile:      v.OutFile,
-			BinSize:      v.BinSize,
-			RStart:       v.RStart,
-			PStart:       v.PStart,
-			RStep:        v.RStep,
-			PStep:        v.PStep,
-			MinCutoff:    v.MinCutoff,
-			Fdr:          v.Fdr,
-			FitStatsFile: v.FitStatsFile,
+			FileList:       v.FileList,
+			OutFile:        v.OutFile,
+			BinSize:        v.BinSize,
+			RStart:         v.RStart,
+			PStart:         v.PStart,
+			RStep:          v.RStep,
+			PStep:          v.PStep,
+			MinCutoff:      v.MinCutoff,
+			MinBinDistance: v.MinBinDistance,
+			Fdr:            v.Fdr,
+			FitStatsFile:   v.FitStatsFile,
 		}
 		strawToBedpe(s)
 		if !bedpe.AllAreEqual(bedpe.Read(v.Expected), bedpe.Read(v.OutFile)) {
