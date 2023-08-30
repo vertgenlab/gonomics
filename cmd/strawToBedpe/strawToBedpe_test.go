@@ -46,7 +46,7 @@ var StrawToBedPeTests = []struct {
 		FitStatsFile:     "testdata/out.FitStats.lowCoverage.txt",
 		Fdr:              0.05,
 		Expected:         "testdata/expected.out.lowCutoff.bedpe",
-		ExpectedFitStats: "testdata/expected.FitStats.LowCoverage.txt",
+		ExpectedFitStats: "testdata/expected.FitStats.lowCoverage.txt",
 	},
 }
 
