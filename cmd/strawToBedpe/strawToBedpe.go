@@ -145,13 +145,15 @@ func strawToBedpe(s Settings) {
 	exception.PanicOnErr(err)
 }
 
-func makeComparisonCountCache(contactScoreCache [][]int, searchSpaceMaxes map[string]int, searchSpaceMins map[string]int, s Settings) []int {
+// makecomparisonCountCache is a helper function that calculates the number of comparisons made for each binDistance.
+func makeComparisonCountCache(contactScoreCache [][]int, searchSpaceMins map[string]int, searchSpaceMaxes map[string]int, s Settings) []int {
 	var totalWindows int
 	var currKey string
 	var comparisonCountCache []int = make([]int, len(contactScoreCache))
 	for i := range comparisonCountCache {
 		totalWindows = 0
 		for currKey, _ = range searchSpaceMins {
+			//fmt.Printf("currKey: %v. searchSpaceMins[currKey]: %v. searchSpaceMaxes[currKey]: %v. BinDistance: %v.\n", currKey, searchSpaceMins[currKey], searchSpaceMaxes[currKey], i)
 			// this calculation is the number of valid contact windows on a chromosome. ChromSize/binSize is windows
 			// on chromosome, minus i, the binDistance.
 			totalWindows += (searchSpaceMaxes[currKey]-searchSpaceMins[currKey])/s.BinSize - i
@@ -183,11 +185,14 @@ func calculateBenjamaniHochbergCutoff(contactScoreCache [][]int, s Settings, com
 	for currBinDistance := range contactScoreCache {
 		currRank = 0
 		currR, currP = fit.ZeroTruncatedNegativeBinomial(contactScoreCache[currBinDistance], s.RStart, s.PStart, s.RStep, s.PStep)
+		//fmt.Printf("Distance: %v. CurrR: %v. CurrP: %v.\n", currBinDistance, currR, currP)
 		for currScore = len(contactScoreCache[currBinDistance]) - 1; currScore > s.MinCutoff; currScore-- {
+			//fmt.Printf("CurrRank: %v. comparisonCountCache[currBinDistance]: %v.\n", currRank, comparisonCountCache[currBinDistance])
 			currRank += contactScoreCache[currBinDistance][currScore]
-			//fmt.Printf("CurrRank: %v. Comparisons: %v.\n", currRank, float64(comparisonCountCache[currBinDistance]))
 			currQValue = (1 - numbers.NegativeBinomialCdf(float64(currScore), currR, currP)) * float64(comparisonCountCache[currBinDistance]) / float64(currRank)
-			//fmt.Printf("CurrBinDistance: %v. CurrScore: %v. CurrQValue: %v.\n", currBinDistance, currScore, currQValue)
+			if !math.IsNaN(currQValue) && !math.IsInf(currQValue, 1) && !math.IsInf(currQValue, -1) {
+				//fmt.Printf("CurrBinDistance: %v. CurrScore: %v. CurrQValue: %v.\n(1 - numbers.NegativeBinomialCdf(float64(currScore), currR, currP)): %v. float64(comparisonCountCache[currBinDistance]) / float64(currRank): %v. \n", currBinDistance, currScore, currQValue, 1-numbers.NegativeBinomialCdf(float64(currScore), currR, currP), float64(comparisonCountCache[currBinDistance])/float64(currRank))
+			}
 			if !math.IsNaN(currQValue) && !math.IsInf(currQValue, 1) && !math.IsInf(currQValue, -1) && currQValue > s.Fdr {
 				cutoffCache[currBinDistance] = currScore
 				break
