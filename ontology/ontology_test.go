@@ -18,17 +18,33 @@ var ThreeDGreatTests = []struct {
 	ContactsFile    string
 	AnnotationsFile string
 	OboFile         string
-	Force           bool
+	OntOutFile      string
+	//	outFile         string
+	Force bool
 }{
 	{QueryFile: "testdata/haqer.bed",
 		ChromSizesFile: "testdata/hg38.chrom.sizes",
-		GeneFile:       "testdata/gencode.v43.annotation.gtf",
-		//ContactsFile:   "testdata/GSE162819_GM12878_MAPS_chromatin_interactions_5kb.bedpe",
+		GeneFile:       "testdata/gencode.v43.annotation.gtf.gz",
+		ContactsFile:   "testdata/GSE162819_GM12878_MAPS_chromatin_interactions_5kb.bedpe.gz",
 		//ContactsFile:    "testdata/GSE162819_H1_MAPS_chromatin_interactions_5kb.bedpe",
 		AnnotationsFile: "testdata/goa_human.gaf",
 		OboFile:         "testdata/go.obo",
-		Force:           false,
+		OntOutFile:      "testdata/3dOntologies.bed",
+		//	outFile:         "testdata/testContactsOut.txt",
+		Force: false,
 	},
+	//{QueryFile: "testdata/haqer.bed",
+	//	ChromSizesFile: "testdata/hg38.chrom.sizes",
+	//	GeneFile:       "testdata/gencode.v43.annotation.gtf.gz",
+	//	//ContactsFile:   "testdata/GSE162819_GM12878_MAPS_chromatin_interactions_5kb.bedpe",
+	//	//ContactsFile:    "testdata/GSE162819_H1_MAPS_chromatin_interactions_5kb.bedpe",
+	//	ContactsFile:    "",
+	//	AnnotationsFile: "testdata/goa_human.gaf",
+	//	OboFile:         "testdata/go.obo",
+	//	OntOutFile:      "testdata/OntologiesProximity.bed",
+	//	//	outFile:         "testdata/testNoContactsOut.txt",
+	//	Force: false,
+	//},
 }
 
 func TestThreeDGreat(t *testing.T) {
@@ -53,6 +69,6 @@ func TestThreeDGreat(t *testing.T) {
 		annotations, _ = gaf.Read(v.AnnotationsFile)
 		fmt.Printf("Reading obos.\n")
 		obos, _ = obo.Read(v.OboFile, v.Force)
-		ThreeDGreat(queries, sizes, genes, contacts, annotations, obos)
+		ThreeDGreat(queries, sizes, genes, contacts, annotations, obos, v.OntOutFile)
 	}
 }

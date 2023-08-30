@@ -49,6 +49,7 @@ func OboToOntology(records map[string]*obo.Obo) map[string]*Ontology {
 	return answer
 }
 
+// geneAssignmentsFromGaf translates a slice of gaf structs into a map where the string value is a GO term id and the key is an ontology struct
 func geneAssignmentsFromGaf(records []gaf.Gaf, terms map[string]*Ontology) {
 	records = gaf.RemoveDuplicates(records)
 	for i := range records {
@@ -116,8 +117,15 @@ func termProportionOfGenome(ontologies map[string]*Ontology, geneProportions map
 	return answer
 }
 
-func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, genes map[string]*gtf.Gene, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo) {
+// ThreeDGreat uses all inputs to determine which areas of the genome, based on 3D genome contacts, are associated with
+// a gene, and therefore it's function, and will output the enrichment score for a given GO term.
+// This function takes in a query file as a bed struct, a chrom.sizes file, a map of genes in gtf form, a contact file in
+// bedpe form, an annotation file in gaf form and a map that takes GO term ID's and relates them to other GO term features
+// in obo format, and finally it takes a string which will write out all regions of the genome with their assigned
+// genes in the name column and their assigned ontologies in the annotation field.
+func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, genes map[string]*gtf.Gene, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo, out3dOntology string) {
 	var err error
+	var filledSpace []bed.Bed
 	var filledSpaceIntervals []interval.Interval
 	var queryOverlaps []interval.Interval
 	var kCache = make(map[string]int) //mapping Go Term Names to number of query elements that overlap. This is 'k' in the binomial test.
@@ -129,13 +137,18 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 
 	tssBed := gtf.GenesToTssBed(genes, chromSizes, true)
 	fmt.Printf("Starting filledSpace.\n")
-	filledSpace := Fill3dSpace(contacts, tssBed, chromSizes)
+	filledSpace = Fill3dSpace(contacts, tssBed, chromSizes)
 	fmt.Printf("Filled space. Len(filledSpace): %v.\n", len(filledSpace))
 	ontologies := OboToOntology(oboMap)
 	fmt.Printf("Made ontologies. Len(ontologies: %v.\n", len(ontologies))
 	geneAssignmentsFromGaf(annotations, ontologies)
 	geneOntologies := genesToOntologies(ontologies)
 	fmt.Printf("Made genesToOntologies. Len(genesToOntologies): %v.\n", len(geneOntologies))
+
+	if out3dOntology != "" {
+		write3dOntologies(out3dOntology, geneOntologies, filledSpace)
+		log.Print("Wrote 3d ontology file.")
+	}
 
 	proportionsForGenes := geneProportionOfGenome(filledSpace)
 	geneOut := fileio.EasyCreate("proportionsForGenes.txt")
@@ -192,6 +205,38 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	}
 	err = out.Close()
 	exception.PanicOnErr(err)
+}
+
+// write3dOntologies take a 3D filled space bed, a map of gene names to their ontologies and an output file name and
+// write out a bed that contains all the filled space information as well as the ontologies that relate to the gene assignments in teh Annotation field of bed
+func write3dOntologies(filename string, geneToOnt map[string][]*Ontology, filledSpace []bed.Bed) {
+	var onts []string
+
+	for i := range filledSpace {
+		filledSpace[i].FieldsInitialized = 8
+		onts = ontologiesToStrings(geneToOnt[filledSpace[i].Name])
+		filledSpace[i].FieldsInitialized += len(onts)
+		filledSpace[i].Score = filledSpace[i].Score + 0 //just to make sure it isn't empty, or overwritten
+		filledSpace[i].Strand = '.'
+		log.Print(onts)
+		filledSpace[i].Annotation = append(filledSpace[i].Annotation, onts...)
+		log.Print(filledSpace[i].Annotation)
+		log.Print(filledSpace[i])
+	}
+	bed.Write(filename, filledSpace)
+}
+
+//TODO: annotations field not getting filled in output
+
+// ontologiesToStrings take a slice of pointers to Ontology structs and stores their name field in a slice of strings
+func ontologiesToStrings(onts []*Ontology) []string {
+	var answer []string
+
+	for o := range onts {
+		answer = append(answer, onts[o].Name)
+	}
+
+	return answer
 }
 
 // BIG TODO LIST

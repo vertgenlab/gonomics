@@ -25,6 +25,9 @@ func Fill3dSpace(contacts []bedpe.BedPe, tss []bed.Bed, sizes map[string]chromIn
 	if contacts == nil {
 		return closest1dGene
 	}
+	if contacts == nil {
+		return closest1dGene
+	}
 
 	for i := range closest1dGene {
 		closest1dGenesIntervals = append(closest1dGenesIntervals, closest1dGene[i])
