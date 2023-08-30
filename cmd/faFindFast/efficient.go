@@ -10,57 +10,63 @@ import (
 	"log"
 )
 
-// incrementWindowEdge takes two aligned fasta sequences and a current index into the alignment.
-// the current index can be -1 for when we want to "increment" to the first position in the alignment.
+// incrementWindowEdge
+// inputs: 3 aligned fasta sequences (reference, firstQuery, secondQuery), a current alignment position index.
 // the sequences are assumed to be all uppercase DNA
-// the function returns:
-//  1. the next alignment position with a reference base, which is usually alignmentIndex+1, but can be greater due to gaps
-//     this value will be equal to len(seqOne) if we were unable to find another reference base
-//  2. gaps opened in ref (0 or 1)
-//  3. gaps opened in the (query) second sequence (0 or 1)
-//  4. gaps closed in the (query) second sequence (0 or 1)
-//  5. int that is the number of Ns in the reference after this increment (0 or 1)
-//  6. int that is the number of Ns in the query (second) sequence after this increment from matches
-//  7. int that is the number of Ns in the query (second) sequence after this increment from gaps in the reference
-//  8. int that is the number of substitutions/mismatches (0 or 1)
-func incrementWindowEdge(reference []dna.Base, firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOrig int) (alnIdx, gapOpenCloseRef, gapOpenedQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst int) {
+// reference, firstQuery, and secondQuery are all of equal length
+// note that alignment positions keep track of firstQuery and secondQuery sequences, while reference positions keep track of the reference sequence
+// outputs:
+//  1. alnIdx: the next alignment position where a reference base exists, which is usually alignmentIndex+1, but can be greater due to gaps in the reference sequence
+//     this value will be equal to len(reference) if we were unable to find another reference base, and this would mean we have reached the end of the reference sequence
+//  2. gapOpenCloseFirstQuery: gaps opened in the firstQuery sequence (0 or 1). Only 1 variable is needed for firstQuery gapOpenClose, but 2 variables for secondQuery gapOpened and gapClosed // TODO: make into 2 variables?
+//  3. gapOpenedSecondQuery: gaps opened in the secondQuery sequence (0 or 1)
+//  4. gapClosedSecondQuery: gaps closed in the secondQuery sequence (0 or 1)
+//  5. numFirstQueryNs: the number of Ns in the firstQuery after this increment (0 or 1)
+//  6. numSecondQueryNsGap: the number of Ns in the secondQuery sequence after this increment from matches with firstQuery
+//  7. numSecondQueryNsMatch: the number of Ns in the secondQuery sequence after this increment from gaps in the firstQuery
+//  8. numSubst: the number of substitutions/mismatches (0 or 1) between firstQuery and secondQuery
+func incrementWindowEdge(reference []dna.Base, firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOrig int) (alnIdx, gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int) {
 	alnIdx = alnIdxOrig
+	// at initialization, lastAlnIdxOfWindow == -1, which is assigned to alnIdxOrig when incrementWindowEdge is called, so alnIdxOrig == -1, so alnIdx = -1. For loop will start at alnIdx++ which is 0, which is the first position in the alignment
 
-	// increment alnIdx to the next ref position (next non-gap pos in reference)
+	// increment alnIdx to the next ref position (next non-gap position in the reference sequence)
+	// for loop start condition: start at alnIdx++, which is the position after the current alignment position
+	// for loop end condition: ends either when we reach the end of the reference sequence or when we reach a gap in the reference sequence
+	// for loop incrementation: alnIdx++
 	for alnIdx++; alnIdx < len(reference) && reference[alnIdx] == dna.Gap; alnIdx++ {
-		if seqTwo[alnIdx] == dna.N {
-			numQueryNsGap++
+		if secondQuery[alnIdx] == dna.N {
+			numSecondQueryNsGap++
 		}
-		if seqTwo[alnIdx] != dna.Gap {
-			gapOpenCloseRef = 1
+		if secondQuery[alnIdx] != dna.Gap {
+			gapOpenCloseFirstQuery = 1 // TODO: when reference is the same as firstQuery, it defines the window, so only 1 variable open/close. Should this change?
 		}
 	}
 
-	// if we ran off the end of seqOne when looking for the next ref base
-	if alnIdx == len(seqOne) {
-		return
+	// if we ran off the end of reference when looking for the next ref base, aka the for loop ended because we reached the end of the reference sequence
+	if alnIdx == len(reference) {
+		return // return all named return variables
 	}
 
-	// did we add another reference N when moving the window one reference base
-	if seqOne[alnIdx] == dna.N {
-		numRefNs++
+	// did we add another firstQuery N when moving the window edge by one reference base
+	if firstQuery[alnIdx] == dna.N {
+		numFirstQueryNs++
 	}
-	// do we add another N to the query count of Ns
-	if seqTwo[alnIdx] == dna.N {
-		numQueryNsMatch++
+	// do we add another N to the secondQuery count of Ns
+	if secondQuery[alnIdx] == dna.N {
+		numSecondQueryNsMatch++
 	}
 	// is this a substitution?
-	if seqOne[alnIdx] != seqTwo[alnIdx] && dna.DefineBase(seqOne[alnIdx]) && dna.DefineBase(seqTwo[alnIdx]) {
+	if firstQuery[alnIdx] != secondQuery[alnIdx] && dna.DefineBase(firstQuery[alnIdx]) && dna.DefineBase(secondQuery[alnIdx]) {
 		numSubst++
 	}
-	// did we open a gap in the query sequence when moving the window edge?
-	if ((alnIdxOrig != -1 && seqTwo[alnIdxOrig] != dna.Gap) || alnIdxOrig == -1) && seqTwo[alnIdx] == dna.Gap {
-		gapOpenedQuery++
+	// did we open a gap in the second query sequence when moving the window edge?
+	if ((alnIdxOrig != -1 && secondQuery[alnIdxOrig] != dna.Gap) || alnIdxOrig == -1) && secondQuery[alnIdx] == dna.Gap {
+		gapOpenedSecondQuery++
 	}
-	// did we close a gap in the query when moving the window edge?
-	if alnIdxOrig != -1 && seqTwo[alnIdxOrig] == dna.Gap && seqTwo[alnIdx] != dna.Gap {
+	// did we close a gap in the second query when moving the window edge?
+	if alnIdxOrig != -1 && secondQuery[alnIdxOrig] == dna.Gap && secondQuery[alnIdx] != dna.Gap {
 		//if seqTwo[alnIdx] == dna.Gap && (alnIdx+1==len(seqOne) || seqTwo[alnIdx+1] != dna.Gap) {
-		gapClosedQuery++
+		gapClosedSecondQuery++
 	}
 
 	return
@@ -92,7 +98,7 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 	for lastAlnIdxOfWindow < len(firstQuery) { // this check could also be "!done", I am not sure what is more clear
 		// we always move the lastBaseOfTheWindow (right side) and add on what we find to the counters because
 		// all this stuff is now inside the current window
-		lastAlnIdxOfWindow, gapOpenCloseRef, gapOpenQuery, _, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst = incrementWindowEdge(reference, query, lastAlnIdxOfWindow)
+		lastAlnIdxOfWindow, gapOpenCloseRef, gapOpenQuery, _, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst = incrementWindowEdge(reference, firstQuery, secondQuery, lastAlnIdxOfWindow)
 		lastRefIdxOfWindow++
 		totalGaps += gapOpenCloseRef + gapOpenQuery
 		totalNs += numRefNs + numQueryNsGap + numQueryNsMatch
