@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"io"
 	"log"
 )
 
@@ -23,11 +23,11 @@ import (
 //  6. int that is the number of Ns in the query (second) sequence after this increment from matches
 //  7. int that is the number of Ns in the query (second) sequence after this increment from gaps in the reference
 //  8. int that is the number of substitutions/mismatches (0 or 1)
-func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdxOrig int) (alnIdx, gapOpenCloseRef, gapOpenedQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst int) {
+func incrementWindowEdge(reference []dna.Base, firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOrig int) (alnIdx, gapOpenCloseRef, gapOpenedQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst int) {
 	alnIdx = alnIdxOrig
 
-	// increment alnIdx to the next ref position (next non-gap pos in seqOne)
-	for alnIdx++; alnIdx < len(seqOne) && seqOne[alnIdx] == dna.Gap; alnIdx++ {
+	// increment alnIdx to the next ref position (next non-gap pos in reference)
+	for alnIdx++; alnIdx < len(reference) && reference[alnIdx] == dna.Gap; alnIdx++ {
 		if seqTwo[alnIdx] == dna.N {
 			numQueryNsGap++
 		}
@@ -69,24 +69,27 @@ func incrementWindowEdge(seqOne []dna.Base, seqTwo []dna.Base, alnIdxOrig int) (
 // speedyWindowDifference is a helper function of faFindFast that calculates the divergence between two input sequences for every position using a sliding window.
 // optional arguments longOutput and divergenceRate allow the user to report a -log10pValue corresponding to the p value of observing a level of divergence for a given
 // window under a null binomial model of neutral evolution.
-func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Base, refChrName string, noPrintIfN bool, longOutput bool, divergenceRate float64, out io.Writer) {
+func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQuery []dna.Base, s Settings) {
 	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                   // these are the two edges of the sliding window in "alignment coordinates"
 	var refIdxBeforeWindow, lastRefIdxOfWindow int = -1, -1                                                   // these are the two edges of the sliding window in "reference (no gaps) coordinates"
 	var totalGaps, totalNs, totalSubst int                                                                    // this is the data we need to keep track of that describes the current window
-	var gapOpenCloseRef, gapOpenQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base
+	var gapOpenCloseRef, gapOpenQuery, gapClosedQuery, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base. TODO: pos ref?
 	var err error
 	var percentDiverged, rawPValue float64
 
 	// this caches map[k] to -log10(BinomialDist(n, k, p, true)), which is the -log10 p Value.
 	var scorePValueCache map[int]float64
 
+	// create outFile
+	file := fileio.EasyCreate(s.OutFile)
+
 	// divergenceRate = -1 is a reserved value that signifies that the user has not set a divergence rate. If divergenceRate != -1,
 	// we initialize the scorePValueCache.
-	if divergenceRate != -1 {
-		scorePValueCache = binomialDistCacheLog10(windowSize, divergenceRate)
+	if s.DivergenceRate != -1 {
+		scorePValueCache = binomialDistCacheLog10(s.WindowSize, s.DivergenceRate)
 	}
 
-	for lastAlnIdxOfWindow < len(reference) { // this check could also be "!done", I am not sure what is more clear
+	for lastAlnIdxOfWindow < len(firstQuery) { // this check could also be "!done", I am not sure what is more clear
 		// we always move the lastBaseOfTheWindow (right side) and add on what we find to the counters because
 		// all this stuff is now inside the current window
 		lastAlnIdxOfWindow, gapOpenCloseRef, gapOpenQuery, _, numRefNs, numQueryNsGap, numQueryNsMatch, numSubst = incrementWindowEdge(reference, query, lastAlnIdxOfWindow)
@@ -122,15 +125,19 @@ func speedyWindowDifference(windowSize int, reference []dna.Base, query []dna.Ba
 						log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.")
 					}
 					rawPValue = scorePValueCache[totalSubst+totalGaps]
-					_, err = fmt.Fprintf(out, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", refChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, refChrName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
+					_, err = fmt.Fprintf(out, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", posRefChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, posRefChrName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
 					exception.PanicOnErr(err)
 				} else {
-					_, err = fmt.Fprintf(out, "%s\t%d\t%d\t%s_%d\t%d\n", refChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, refChrName, refIdxBeforeWindow+1, totalSubst+totalGaps)
+					_, err = fmt.Fprintf(out, "%s\t%d\t%d\t%s_%d\t%d\n", posRefChrName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, posRefChrName, refIdxBeforeWindow+1, totalSubst+totalGaps)
 					exception.PanicOnErr(err)
 				}
 			}
 		}
 	}
+
+	// close outFile
+	err = file.Close()
+	exception.PanicOnErr(err)
 }
 
 // binomialDistCacheLog10 generates a map of form map[int]float64 for a binomial distribution specified by parameters n and k.

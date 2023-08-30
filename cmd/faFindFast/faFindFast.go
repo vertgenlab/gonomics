@@ -10,66 +10,62 @@ import (
 	"log"
 	"math"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
-func faFindFast(inFile string, outFile string, referenceName string, queryName string, posRefName string, windowSize int, posRefChromName string, removeN bool, longOutput bool, divergenceRate float64) {
-	records := fasta.Read(inFile)
+type Settings struct {
+	InFile          string
+	OutFile         string
+	FirstQueryName  string
+	SecondQueryName string
+	WindowSize      int
+	RefChromName    string
+	RemoveN         bool
+	LongOutput      bool
+	DivergenceRate  float64
+}
 
-	var reference, query, posRef []dna.Base
-	referenceCount := 0
-	queryCount := 0
-	posRefCount := 0
+func faFindFast(s Settings) {
+	var reference, firstQuery, secondQuery []dna.Base
+	var found bool
+
+	records := fasta.Read(s.InFile)    // fasta.Read already makes sure that sequence names are unique
+	recordsMap := fasta.ToMap(records) // generate map[string][]dna.Base. No order but can do key-value search
+
+	if len(records) < 2 {
+		log.Fatalf("Error: There must be at least 2 fasta records in the input file.\n")
+	}
 
 	//if reference and query names were not specified in the command, then use 1st and 2nd fasta records' names, respectively
-	if referenceName == "" {
-		referenceName = records[0].Name
-	}
-	if queryName == "" {
-		queryName = records[1].Name
-	}
-
-	//if position reference name was not specified in the command, then use reference fasta record's name
-	//TODO: add 1 more test where reference and posRef have different sequences (not just different names)
-	if posRefName == "" {
-		posRefName = referenceName
-	}
-
-	//proceed to check for non-unique names and get any specified fasta record names
-
-	for i := 0; i < len(records); i++ { //for each fasta record, check if name matches reference or query
-		if records[i].Name == referenceName { //if name matches reference, extract reference sequence
-			if referenceCount == 1 { //however, if name has already appeared once before, fatal error for non-unique names
-				log.Fatalf("Reference sequence name is not unique in the input file")
-			}
-			reference = records[i].Seq
-			referenceCount += 1
-		} else if records[i].Name == queryName {
-			if queryCount == 1 {
-				log.Fatalf("Query sequence name is not unique in the input file")
-			}
-			query = records[i].Seq
-			queryCount += 1
+	//allows backward compatibility with previously-written code
+	if s.FirstQueryName == "" {
+		firstQuery = records[0].Seq
+	} else {
+		_, found = recordsMap[s.FirstQueryName]
+		if found {
+			firstQuery = recordsMap[s.FirstQueryName]
+		} else {
+			log.Fatalf("Error: first query name is not found in the input file.\n")
 		}
-		if records[i].Name == posRefName { //separate check for posRefName. Else if will not be able to obtain posRef if records[i].Name == referenceName == posRefName
-			if posRefCount == 1 {
-				log.Fatalf("Position reference sequence name is not unique in the input file")
-			}
-			posRef = records[i].Seq
-			posRefCount += 1
+	}
+	if s.SecondQueryName == "" {
+		secondQuery = records[1].Seq
+	} else {
+		_, found = recordsMap[s.SecondQueryName]
+		if found {
+			secondQuery = recordsMap[s.SecondQueryName]
+		} else {
+			log.Fatalf("Error: second query name is not found in the input file.\n")
 		}
 	}
 
-	if !(len(reference) == len(query) && len(reference) == len(posRef)) {
-		log.Fatalf("Reference and query sequences are not of equal length")
+	reference = records[0].Seq // reference will always be the 1st fasta record in a multiFa input file
+
+	if !(len(reference) == len(firstQuery) && len(reference) == len(secondQuery)) {
+		log.Fatalf("Error: Reference, first query, and second query sequences are not all of equal length.\n")
 	}
 
-	file := fileio.EasyCreate(outFile)
-	speedyWindowDifference(windowSize, reference, query, posRefChromName, removeN, longOutput, divergenceRate, file) //TODO: change variables here
-	err := file.Close()
-	exception.PanicOnErr(err)
+	speedyWindowDifference(reference, firstQuery, secondQuery, s)
 }
 
 func usage() {
@@ -83,11 +79,10 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var referenceName *string = flag.String("referenceName", "", "Specify the name of the reference sequence")
-	var queryName *string = flag.String("queryName", "", "Specify the name of the query sequence")
-	var posRefName *string = flag.String("posRefName", "", "Specify the name of the position reference sequence. Set to reference sequence by default")
+	var firstQueryName *string = flag.String("firstQueryName", "", "Specify the name of the first query sequence")
+	var secondQueryName *string = flag.String("secondQueryName", "", "Specify the name of the second query sequence")
 	var windowSize *int = flag.Int("windowSize", 1000, "Specify the window size")
-	var posRefChromName *string = flag.String("chrom", "", "Specify a chrom name of the position reference sequence")
+	var refChromName *string = flag.String("chrom", "", "Specify a chrom name of the reference sequence")
 	var removeN *bool = flag.Bool("removeN", false, "Excludes bed regions with Ns in the reference from the output.")
 	var longOutput *bool = flag.Bool("longOutput", false, "Print percent diverged and raw -Log10PValue in output. Requires the 'divergenceRate' argument.")
 	var divergenceRate *float64 = flag.Float64("divergenceRate", math.MaxFloat64, "Set the null divergence rate for p value calculations with 'longOutput'.")
@@ -115,5 +110,17 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFindFast(inFile, outFile, *referenceName, *queryName, *posRefName, *windowSize, *posRefChromName, *removeN, *longOutput, *divergenceRate)
+	s := Settings{
+		InFile:          inFile,
+		OutFile:         outFile,
+		FirstQueryName:  *firstQueryName,
+		SecondQueryName: *secondQueryName,
+		WindowSize:      *windowSize,
+		RefChromName:    *refChromName,
+		RemoveN:         *removeN,
+		LongOutput:      *longOutput,
+		DivergenceRate:  *divergenceRate,
+	}
+
+	faFindFast(s)
 }

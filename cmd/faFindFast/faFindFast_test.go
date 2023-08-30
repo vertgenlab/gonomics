@@ -8,6 +8,8 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
+// TODO: fix according to new faFindFast.go
+
 var FaFindFastTests = []struct {
 	InFile          string
 	OutFile         string
