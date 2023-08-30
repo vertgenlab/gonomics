@@ -15,11 +15,8 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-func faFindFast(inFile string, outFile string, referenceName string, queryName string, windowSize int, chromName string, removeN bool, longOutput bool, divergenceRate float64) {
+func faFindFast(inFile string, outFile string, referenceName string, queryName string, windowSize int, refChromName string, removeN bool, longOutput bool, divergenceRate float64) {
 	records := fasta.Read(inFile)
-
-	// TODO: update other functions like usage and main
-	// TODO: does chromName option need to change/be used?
 
 	var reference, query []dna.Base
 	referenceCount := 0
@@ -55,7 +52,7 @@ func faFindFast(inFile string, outFile string, referenceName string, queryName s
 	}
 
 	file := fileio.EasyCreate(outFile)
-	speedyWindowDifference(windowSize, reference, query, chromName, removeN, longOutput, divergenceRate, file)
+	speedyWindowDifference(windowSize, reference, query, refChromName, removeN, longOutput, divergenceRate, file)
 	err := file.Close()
 	exception.PanicOnErr(err)
 }
@@ -74,7 +71,7 @@ func main() {
 	var referenceName *string = flag.String("referenceName", "", "Specify the name of the reference sequence")
 	var queryName *string = flag.String("queryName", "", "Specify the name of the query sequence")
 	var windowSize *int = flag.Int("windowSize", 1000, "Specify the window size")
-	var chromName *string = flag.String("chrom", "", "Specify the chrom name")
+	var refChromName *string = flag.String("chrom", "", "Specify a chrom name of the reference sequence")
 	var removeN *bool = flag.Bool("removeN", false, "Excludes bed regions with Ns in the reference from the output.")
 	var longOutput *bool = flag.Bool("longOutput", false, "Print percent diverged and raw -Log10PValue in output. Requires the 'divergenceRate' argument.")
 	var divergenceRate *float64 = flag.Float64("divergenceRate", math.MaxFloat64, "Set the null divergence rate for p value calculations with 'longOutput'.")
@@ -102,5 +99,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFindFast(inFile, outFile, *referenceName, *queryName, *windowSize, *chromName, *removeN, *longOutput, *divergenceRate)
+	faFindFast(inFile, outFile, *referenceName, *queryName, *windowSize, *refChromName, *removeN, *longOutput, *divergenceRate)
 }

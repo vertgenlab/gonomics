@@ -23,7 +23,7 @@ var FaFindFastTests = []struct {
 	{InFile: "testdata/test_indel.fa",
 		OutFile:        "testdata/tmp.out.bed",
 		ExpectedFile:   "testdata/expected.bed",
-		ReferenceName:  "Human",
+		ReferenceName:  "Human", //also test for extra species here
 		QueryName:      "Chimp",
 		WindowSize:     10,
 		ChromName:      "chr1",
