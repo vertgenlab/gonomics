@@ -66,7 +66,7 @@ func Fill3dSpace(contacts []bedpe.BedPe, tss []bed.Bed, sizes map[string]chromIn
 
 		currNearest = interval.Query(closest1dGeneTree, contacts[j].B, "any")
 		if len(currNearest) > 1 || len(currNearest) == 0 {
-			log.Fatal("Space Filled bed should return one nearest bed entry, returned %v.", len(currNearest))
+			log.Fatalf("Space Filled bed should return one nearest bed entry, returned %v.", len(currNearest))
 		}
 		currNearestBed = currNearest[0].(bed.Bed)
 		currAnswerB = bed.Bed{Chrom: contacts[j].B.Chrom,
