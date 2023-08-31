@@ -281,6 +281,7 @@ func main() {
 	var minCutoff *int = flag.Int("minCutoff", 10, "Set the minimum number of reads required to call a significant peak.")
 	var fitStatsFile *string = flag.String("fitStatsFile", "", "Write statistics about distribution fitting to an output text file.")
 	var minBinDistance *int = flag.Int("minBinDistance", 0, "Specify the minimum bin distance required to call a significant peak.")
+	var contactScoreFile *string = flag.String("contactScoreFile", "", "Specify a file to write contact score distributions to an output file. Useful for plotting and debugging.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -296,17 +297,18 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		FileList:       fileList,
-		OutFile:        outFile,
-		BinSize:        *binSize,
-		RStart:         *rStart,
-		PStart:         *pStart,
-		RStep:          *rStep,
-		PStep:          *pStep,
-		MinCutoff:      *minCutoff,
-		MinBinDistance: *minBinDistance,
-		Fdr:            *Fdr,
-		FitStatsFile:   *fitStatsFile,
+		FileList:         fileList,
+		OutFile:          outFile,
+		BinSize:          *binSize,
+		RStart:           *rStart,
+		PStart:           *pStart,
+		RStep:            *rStep,
+		PStep:            *pStep,
+		MinCutoff:        *minCutoff,
+		MinBinDistance:   *minBinDistance,
+		Fdr:              *Fdr,
+		FitStatsFile:     *fitStatsFile,
+		ContactScoreFile: *contactScoreFile,
 	}
 
 	strawToBedpe(s)
