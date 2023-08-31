@@ -36,12 +36,12 @@ var StrawToBedPeTests = []struct {
 		PStep:                             0.001,
 		MinBinDistance:                    2,
 		MinCutoff:                         10,
-		ContactScoreFile:                  "testdata/out.contactScoreFile.txt",
+		ContactScoreFile:                  "testdata/out.contactScoreFile.txt.gz",
 		FitStatsFile:                      "testdata/out.FitStats.txt",
 		Fdr:                               0.05,
 		Expected:                          "testdata/expected.out.bedpe",
 		ExpectedFitStats:                  "testdata/expected.FitStats.txt",
-		ExpectedContactScoreFile:          "testdata/expected.contactScoreFile.txt",
+		ExpectedContactScoreFile:          "testdata/expected.contactScoreFile.txt.gz",
 		MaxContactScoreInDistributionFile: 100,
 		MaxBinDistanceInDistributionFile:  -1,
 	},
@@ -93,7 +93,7 @@ func TestStrawToBedpe(t *testing.T) {
 			err = os.Remove(v.FitStatsFile)
 			exception.PanicOnErr(err)
 		}
-		if v.ExpectedContactScoreFile != "" && !fileio.AreEqual(v.ExpectedContactScoreFile, v.ContactScoreFile) {
+		if v.ExpectedContactScoreFile != "" && !fileio.AreEqualIgnoreOrder(v.ExpectedContactScoreFile, v.ContactScoreFile) {
 			t.Errorf("Error: ContactScore file did not match expected.\n")
 		} else if v.ExpectedContactScoreFile != "" {
 			err = os.Remove(v.ContactScoreFile)
