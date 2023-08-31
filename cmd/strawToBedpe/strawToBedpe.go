@@ -19,17 +19,18 @@ import (
 )
 
 type Settings struct {
-	FileList       string
-	OutFile        string
-	BinSize        int
-	RStart         float64
-	PStart         float64
-	RStep          float64
-	PStep          float64
-	MinCutoff      int
-	MinBinDistance int
-	Fdr            float64
-	FitStatsFile   string
+	FileList         string
+	OutFile          string
+	BinSize          int
+	RStart           float64
+	PStart           float64
+	RStep            float64
+	PStep            float64
+	MinCutoff        int
+	MinBinDistance   int
+	Fdr              float64
+	ContactScoreFile string
+	FitStatsFile     string
 }
 
 func strawToBedpe(s Settings) {
@@ -105,6 +106,10 @@ func strawToBedpe(s Settings) {
 		}
 	}
 
+	if s.ContactScoreFile != "" {
+		printContactScoreCacheToFile(contactScoreCache, s)
+	}
+
 	// this cache stores in comparisonCountCache[i] the total number of bins at each bin distance i.
 	// Used for FDR correction as the number of comparisons.
 	comparisonCountCache := makeComparisonCountCache(contactScoreCache, searchSpaceMins, searchSpaceMaxes, s)
@@ -140,6 +145,36 @@ func strawToBedpe(s Settings) {
 				bedpe.WriteToFileHandle(out, currBedPe)
 			}
 		}
+	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+func printContactScoreCacheToFile(contactScoreCache [][]int, s Settings) {
+	var err error
+	out := fileio.EasyCreate(s.ContactScoreFile)
+	var currScore, currBinDistance int
+	headerString := "Score"
+	for i := range contactScoreCache {
+		headerString += fmt.Sprintf("\tBinDistance.%v.Count", i)
+	}
+	_, err = fmt.Fprintf(out, "%v\n", headerString)
+	exception.PanicOnErr(err)
+	for currScore = range contactScoreCache[0] {
+		_, err = fmt.Fprintf(out, "%v", currScore)
+		for currBinDistance = range contactScoreCache {
+			if currScore < len(contactScoreCache[currBinDistance]) {
+				_, err = fmt.Fprintf(out, "\t%v", contactScoreCache[currBinDistance][currScore])
+				exception.PanicOnErr(err)
+			} else {
+				_, err = fmt.Fprintf(out, "\t0")
+				exception.PanicOnErr(err)
+			}
+
+		}
+		_, err = fmt.Fprintf(out, "\n")
+		exception.PanicOnErr(err)
 	}
 
 	err = out.Close()

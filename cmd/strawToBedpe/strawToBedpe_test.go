@@ -9,33 +9,37 @@ import (
 )
 
 var StrawToBedPeTests = []struct {
-	FileList         string
-	OutFile          string
-	BinSize          int
-	RStart           float64
-	PStart           float64
-	RStep            float64
-	PStep            float64
-	MinCutoff        int
-	MinBinDistance   int
-	Fdr              float64
-	FitStatsFile     string
-	Expected         string
-	ExpectedFitStats string
+	FileList                 string
+	OutFile                  string
+	BinSize                  int
+	RStart                   float64
+	PStart                   float64
+	RStep                    float64
+	PStep                    float64
+	MinCutoff                int
+	MinBinDistance           int
+	Fdr                      float64
+	FitStatsFile             string
+	ContactScoreFile         string
+	Expected                 string
+	ExpectedFitStats         string
+	ExpectedContactScoreFile string
 }{
 	{FileList: "testdata/fileList.txt",
-		OutFile:          "testdata/out.bedpe",
-		BinSize:          5000,
-		RStart:           1.0,
-		PStart:           0.5,
-		RStep:            0.001,
-		PStep:            0.001,
-		MinBinDistance:   2,
-		MinCutoff:        10,
-		FitStatsFile:     "testdata/out.FitStats.txt",
-		Fdr:              0.05,
-		Expected:         "testdata/expected.out.bedpe",
-		ExpectedFitStats: "testdata/expected.FitStats.txt",
+		OutFile:                  "testdata/out.bedpe",
+		BinSize:                  5000,
+		RStart:                   1.0,
+		PStart:                   0.5,
+		RStep:                    0.001,
+		PStep:                    0.001,
+		MinBinDistance:           2,
+		MinCutoff:                10,
+		ContactScoreFile:         "testdata/out.contactScoreFile.txt",
+		FitStatsFile:             "testdata/out.FitStats.txt",
+		Fdr:                      0.05,
+		Expected:                 "testdata/expected.out.bedpe",
+		ExpectedFitStats:         "testdata/expected.FitStats.txt",
+		ExpectedContactScoreFile: "testdata/expected.contactScoreFile.txt",
 	},
 	{FileList: "testdata/fileList.txt",
 		OutFile:          "testdata/out.lowCutoff.bedpe",
@@ -57,17 +61,18 @@ func TestStrawToBedpe(t *testing.T) {
 	var s Settings
 	for _, v := range StrawToBedPeTests {
 		s = Settings{
-			FileList:       v.FileList,
-			OutFile:        v.OutFile,
-			BinSize:        v.BinSize,
-			RStart:         v.RStart,
-			PStart:         v.PStart,
-			RStep:          v.RStep,
-			PStep:          v.PStep,
-			MinCutoff:      v.MinCutoff,
-			MinBinDistance: v.MinBinDistance,
-			Fdr:            v.Fdr,
-			FitStatsFile:   v.FitStatsFile,
+			FileList:         v.FileList,
+			OutFile:          v.OutFile,
+			BinSize:          v.BinSize,
+			RStart:           v.RStart,
+			PStart:           v.PStart,
+			RStep:            v.RStep,
+			PStep:            v.PStep,
+			MinCutoff:        v.MinCutoff,
+			MinBinDistance:   v.MinBinDistance,
+			Fdr:              v.Fdr,
+			FitStatsFile:     v.FitStatsFile,
+			ContactScoreFile: v.ContactScoreFile,
 		}
 		strawToBedpe(s)
 		if !bedpe.AllAreEqual(bedpe.Read(v.Expected), bedpe.Read(v.OutFile)) {
@@ -80,6 +85,12 @@ func TestStrawToBedpe(t *testing.T) {
 			t.Errorf("Error: Fit stats file did not match expected.\n")
 		} else if v.ExpectedFitStats != "" {
 			err = os.Remove(v.FitStatsFile)
+			exception.PanicOnErr(err)
+		}
+		if v.ExpectedContactScoreFile != "" && !fileio.AreEqual(v.ExpectedContactScoreFile, v.ContactScoreFile) {
+			t.Errorf("Error: ContactScore file did not match expected.\n")
+		} else if v.ExpectedContactScoreFile != "" {
+			err = os.Remove(v.ContactScoreFile)
 			exception.PanicOnErr(err)
 		}
 	}
