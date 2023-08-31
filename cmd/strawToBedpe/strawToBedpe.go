@@ -19,18 +19,20 @@ import (
 )
 
 type Settings struct {
-	FileList         string
-	OutFile          string
-	BinSize          int
-	RStart           float64
-	PStart           float64
-	RStep            float64
-	PStep            float64
-	MinCutoff        int
-	MinBinDistance   int
-	Fdr              float64
-	ContactScoreFile string
-	FitStatsFile     string
+	FileList                          string
+	OutFile                           string
+	BinSize                           int
+	RStart                            float64
+	PStart                            float64
+	RStep                             float64
+	PStep                             float64
+	MinCutoff                         int
+	MinBinDistance                    int
+	Fdr                               float64
+	ContactScoreFile                  string
+	MaxContactScoreInDistributionFile int
+	MaxBinDistanceInDistributionFile  int
+	FitStatsFile                      string
 }
 
 func strawToBedpe(s Settings) {
@@ -107,6 +109,9 @@ func strawToBedpe(s Settings) {
 	}
 
 	if s.ContactScoreFile != "" {
+		if s.MaxBinDistanceInDistributionFile == -1 {
+			s.MaxBinDistanceInDistributionFile = len(contactScoreCache)
+		}
 		printContactScoreCacheToFile(contactScoreCache, s)
 	}
 
@@ -155,26 +160,20 @@ func printContactScoreCacheToFile(contactScoreCache [][]int, s Settings) {
 	var err error
 	out := fileio.EasyCreate(s.ContactScoreFile)
 	var currScore, currBinDistance int
-	headerString := "Score"
-	for i := range contactScoreCache {
-		headerString += fmt.Sprintf("\tBinDistance.%v.Count", i)
-	}
+	headerString := "BinDistance\tScore\tCount\n"
 	_, err = fmt.Fprintf(out, "%v\n", headerString)
 	exception.PanicOnErr(err)
-	for currScore = range contactScoreCache[0] {
-		_, err = fmt.Fprintf(out, "%v", currScore)
-		for currBinDistance = range contactScoreCache {
+	for currBinDistance = 0; currBinDistance < s.MaxBinDistanceInDistributionFile; currBinDistance++ {
+		for currScore = 0; currScore < s.MaxContactScoreInDistributionFile; currScore++ {
 			if currScore < len(contactScoreCache[currBinDistance]) {
-				_, err = fmt.Fprintf(out, "\t%v", contactScoreCache[currBinDistance][currScore])
+				_, err = fmt.Fprintf(out, "%v\t%v\t%v\n", currBinDistance, currScore, contactScoreCache[currBinDistance][currScore])
 				exception.PanicOnErr(err)
 			} else {
-				_, err = fmt.Fprintf(out, "\t0")
+				_, err = fmt.Fprintf(out, "%v\t%v\t%v\n", currBinDistance, currScore, 0)
 				exception.PanicOnErr(err)
 			}
 
 		}
-		_, err = fmt.Fprintf(out, "\n")
-		exception.PanicOnErr(err)
 	}
 
 	err = out.Close()
@@ -282,6 +281,8 @@ func main() {
 	var fitStatsFile *string = flag.String("fitStatsFile", "", "Write statistics about distribution fitting to an output text file.")
 	var minBinDistance *int = flag.Int("minBinDistance", 0, "Specify the minimum bin distance required to call a significant peak.")
 	var contactScoreFile *string = flag.String("contactScoreFile", "", "Specify a file to write contact score distributions to an output file. Useful for plotting and debugging.")
+	var maxContactScoreInDistributionFile *int = flag.Int("maxContactScoreInDistributionFile", 100, "When writing a contact score file, specify the maximum contact score to write.")
+	var maxBinDistanceInDistributionFile *int = flag.Int("maxBinDistanceInDistributionFile", -1, "When writing a contact score file, specify the maximum bin distance to write. Default writes all bin distances.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -297,18 +298,20 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		FileList:         fileList,
-		OutFile:          outFile,
-		BinSize:          *binSize,
-		RStart:           *rStart,
-		PStart:           *pStart,
-		RStep:            *rStep,
-		PStep:            *pStep,
-		MinCutoff:        *minCutoff,
-		MinBinDistance:   *minBinDistance,
-		Fdr:              *Fdr,
-		FitStatsFile:     *fitStatsFile,
-		ContactScoreFile: *contactScoreFile,
+		FileList:                          fileList,
+		OutFile:                           outFile,
+		BinSize:                           *binSize,
+		RStart:                            *rStart,
+		PStart:                            *pStart,
+		RStep:                             *rStep,
+		PStep:                             *pStep,
+		MinCutoff:                         *minCutoff,
+		MinBinDistance:                    *minBinDistance,
+		Fdr:                               *Fdr,
+		FitStatsFile:                      *fitStatsFile,
+		ContactScoreFile:                  *contactScoreFile,
+		MaxBinDistanceInDistributionFile:  *maxBinDistanceInDistributionFile,
+		MaxContactScoreInDistributionFile: *maxContactScoreInDistributionFile,
 	}
 
 	strawToBedpe(s)
