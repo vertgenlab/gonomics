@@ -88,12 +88,12 @@ func main() {
 	var divergenceRate *float64 = flag.Float64("divergenceRate", math.MaxFloat64, "Set the null divergence rate for p value calculations with 'longOutput'.")
 
 	if *longOutput && *divergenceRate == math.MaxFloat64 {
-		log.Fatalf("Error: must set a 'divergenceRate' if using the 'longOutput' option.")
+		log.Fatalf("Error: must set a 'divergenceRate' if using the 'longOutput' option.\n")
 	}
 
 	if *divergenceRate != math.MaxFloat64 {
 		if *divergenceRate < 0 || *divergenceRate > 1 {
-			log.Fatalf("Error: divergence rate must be a value between 0 and 1.")
+			log.Fatalf("Error: divergence rate must be a value between 0 and 1.\n")
 		}
 	}
 
@@ -103,8 +103,7 @@ func main() {
 
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n",
-			expectedNumArgs, len(flag.Args()))
+		log.Fatalf("Error: expecting %d arguments, but got %d.\n", expectedNumArgs, len(flag.Args()))
 	}
 
 	inFile := flag.Arg(0)
