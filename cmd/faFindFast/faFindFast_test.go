@@ -62,8 +62,8 @@ var FaFindFastTests = []struct {
 		LongOutput:      false},
 	{InFile: "testdata/test.endGapsRef.fa",
 		OutFile:         "testdata/tmp.refGaps.bed",
-		ExpectedFile:    "testdata/expected.endGapsRef.bed", // TODO: change InFile HumanPosRef and OutFiles
-		FirstQueryName:  "Human",                            //also test for finding a FirstQueryName that is not the 1st sequence
+		ExpectedFile:    "testdata/expected.endGapsRef.bed",
+		FirstQueryName:  "Human", //also test for finding a FirstQueryName that is not the 1st sequence
 		SecondQueryName: "Chimp",
 		WindowSize:      10,
 		RefChromName:    "chr1",
