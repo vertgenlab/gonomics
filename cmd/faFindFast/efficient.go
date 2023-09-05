@@ -105,15 +105,6 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 		// all this stuff is now inside the current window
 		lastAlnIdxOfWindow, gapOpenCloseFirstQuery, gapOpenedSecondQuery, _, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst = incrementWindowEdge(firstQuery, secondQuery, lastAlnIdxOfWindow)
 		lastFirstQueryIdxOfWindow++
-		// TODO: calculate reference positions, this is V1 calculate before firstQuery window is finalized, make sure index +1 or not is right
-		/*if reference[lastFirstQueryIdxOfWindow] != dna.Gap { // when updating first query position, update reference position
-			lastRefIdxOfWindow++
-		} else {
-			lastRefIdxOfWindow++
-			for reference[lastRefIdxOfWindow] == dna.Gap { // if lastRefIdxOfWindow points to gap, increment it until reach non-gap
-				lastRefIdxOfWindow++
-			}
-		}*/
 		totalGaps += gapOpenCloseFirstQuery + gapOpenedSecondQuery
 		totalNs += numFirstQueryNs + numSecondQueryNsGap + numSecondQueryNsMatch
 		totalSubst += numSubst
@@ -123,10 +114,6 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow > s.WindowSize {
 			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch, numSubst = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow)
 			firstQueryIdxBeforeWindow++
-			// TODO: calculate reference positions, this is V1 calculate before firstQuery window is finalized
-			/*if reference[firstQueryIdxBeforeWindow] != dna.Gap { // when updating first query position, update reference position
-				refIdxBeforeWindow++
-			}*/
 			//totalGaps -= gapOpenCloseRef + gapClosedQuery
 			totalNs -= numFirstQueryNs + numSecondQueryNsMatch
 			totalSubst -= numSubst
@@ -143,41 +130,55 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow == s.WindowSize && lastAlnIdxOfWindow < len(firstQuery) {
 
 			// TODO: convert position from firstQuery to reference, V2 calculate after firstQuery window is finalized
-			// check if refIdx start is Gap. (if so, don't report. Else:)
-			// check if refIdx end is Gap. (if so, add bases to refIdx end until reach the next non-gap position in reference)
-			//if reference[alnIdxBeforeWindow+1] != dna.Gap {
-			//}
-			//fmt.Printf("firstQueryIdxBeforeWindow: %v, reference[firstQueryIdxBeforeWindow+1] == dna.Gap: %v\n", firstQueryIdxBeforeWindow, reference[firstQueryIdxBeforeWindow+1] == dna.Gap)
-			refIdxBeforeWindow = firstQueryIdxBeforeWindow
-			for alnIdxForRef := 0; alnIdxForRef <= alnIdxBeforeWindow; alnIdxForRef++ {
-				if reference[alnIdxForRef] == dna.Gap && firstQuery[alnIdxForRef] != dna.Gap {
-					refIdxBeforeWindow--
-				} else if reference[alnIdxForRef] != dna.Gap && firstQuery[alnIdxForRef] == dna.Gap {
-					refIdxBeforeWindow++
-				}
-			}
-			lastRefIdxOfWindow = lastFirstQueryIdxOfWindow
-			for alnIdxForRef := 0; alnIdxForRef <= lastAlnIdxOfWindow; alnIdxForRef++ {
-				if reference[alnIdxForRef] == dna.Gap && firstQuery[alnIdxForRef] != dna.Gap {
-					lastRefIdxOfWindow--
-				} else if reference[alnIdxForRef] != dna.Gap && firstQuery[alnIdxForRef] == dna.Gap {
-					lastRefIdxOfWindow++
-				}
-			}
+			// check if firstQuery start (non-gap) is gap in reference. If so, don't report that window
+			if reference[alnIdxBeforeWindow+1] == dna.Gap && firstQuery[alnIdxBeforeWindow+1] != dna.Gap {
+				//fmt.Printf("only reference[alnIdxBeforeWindow] dna.Gap, reference[alnIdxBeforeWindow+1]: %v, firstQuery[alnIdxBeforeWindow+1]: %v\n", reference[alnIdxBeforeWindow+1], firstQuery[alnIdxBeforeWindow+1]) // TODO: remove after debugging
+			} else {
+				// check if firstQuery end is gap in reference. If so, add bases to reference end until reach the next non-gap position in reference? Seems like no need, because end is open and can be gap
+				/*if reference[lastAlnIdxOfWindow] == dna.Gap && firstQuery[lastAlnIdxOfWindow] != dna.Gap {
+					fmt.Printf("only reference[lastAlnIdxOfWindow] dna.Gap, reference[lastAlnIdxOfWindow]: %v, firstQuery[lastAlnIdxOfWindow]: %v\n", reference[lastAlnIdxOfWindow], firstQuery[lastAlnIdxOfWindow])
+				}*/
 
-			// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
-			if !s.RemoveN || totalNs == 0 {
-				if s.LongOutput {
-					percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
-					if totalSubst+totalGaps > s.WindowSize {
-						log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
+				refIdxBeforeWindow = firstQueryIdxBeforeWindow
+				for alnIdxForRef := 0; alnIdxForRef <= alnIdxBeforeWindow; alnIdxForRef++ {
+					if reference[alnIdxForRef] == dna.Gap && firstQuery[alnIdxForRef] != dna.Gap {
+						fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, refIdxBeforeWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], refIdxBeforeWindow) // TODO: remove after debugging
+						refIdxBeforeWindow--
+						fmt.Printf("refIdxBeforeWindow: %v\n", refIdxBeforeWindow) // TODO: remove after debugging
+						// TODO: this is where we check if firstQuery is non-gap, but reference is?
+					} else if reference[alnIdxForRef] != dna.Gap && firstQuery[alnIdxForRef] == dna.Gap {
+						fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, refIdxBeforeWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], refIdxBeforeWindow) // TODO: remove after debugging
+						refIdxBeforeWindow++
+						fmt.Printf("refIdxBeforeWindow: %v\n", refIdxBeforeWindow) // TODO: remove after debugging
 					}
-					rawPValue = scorePValueCache[totalSubst+totalGaps]
-					_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
-					exception.PanicOnErr(err)
-				} else {
-					_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps)
-					exception.PanicOnErr(err)
+				}
+				lastRefIdxOfWindow = lastFirstQueryIdxOfWindow
+				for alnIdxForRef := 0; alnIdxForRef <= lastAlnIdxOfWindow; alnIdxForRef++ {
+					if reference[alnIdxForRef] == dna.Gap && firstQuery[alnIdxForRef] != dna.Gap {
+						fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, lastRefIdxOfWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], lastRefIdxOfWindow) // TODO: remove after debugging
+						lastRefIdxOfWindow--
+						fmt.Printf("lastRefIdxOfWindow: %v\n", lastRefIdxOfWindow) // TODO: remove after debugging
+					} else if reference[alnIdxForRef] != dna.Gap && firstQuery[alnIdxForRef] == dna.Gap {
+						fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, lastRefIdxOfWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], lastRefIdxOfWindow) // TODO: remove after debugging
+						lastRefIdxOfWindow++
+						fmt.Printf("lastRefIdxOfWindow: %v\n", lastRefIdxOfWindow) // TODO: remove after debugging
+					}
+				}
+
+				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
+				if !s.RemoveN || totalNs == 0 {
+					if s.LongOutput {
+						percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
+						if totalSubst+totalGaps > s.WindowSize {
+							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
+						}
+						rawPValue = scorePValueCache[totalSubst+totalGaps]
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
+						exception.PanicOnErr(err)
+					} else {
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps)
+						exception.PanicOnErr(err)
+					}
 				}
 			}
 		}

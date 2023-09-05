@@ -80,6 +80,16 @@ var FaFindFastTests = []struct {
 		RemoveN:         false,
 		DivergenceRate:  0.01,
 		LongOutput:      true},
+	{InFile: "testdata/test_indel_3seq.fa", //also test for extra species here
+		OutFile:         "testdata/tmp.out.3seq.bed",
+		ExpectedFile:    "testdata/expected_3seq.bed",
+		FirstQueryName:  "HumanFirstQuery",
+		SecondQueryName: "ChimpSecondQuery",
+		WindowSize:      10,
+		RefChromName:    "chr1",
+		RemoveN:         false,
+		DivergenceRate:  -1,
+		LongOutput:      false},
 }
 
 func TestFaFindFast(t *testing.T) {
