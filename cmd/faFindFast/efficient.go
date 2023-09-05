@@ -83,6 +83,7 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                                                           // these are the two edges of the sliding window in "alignment positions"
 	var firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow int = -1, -1                                                                             // these are the two edges of the sliding window in "firstQuery (no gaps) positions"
 	var refIdxBeforeWindow, lastRefIdxOfWindow int = -1, -1                                                                                           // these are the two edges of the sliding window in "reference (no gaps) positions"
+	var alnIdxForRef int = 0                                                                                                                          // TODO: remove this variable if needed
 	var totalGaps, totalNs, totalSubst int                                                                                                            // this is the data we need to keep track of that describes the current window
 	var gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base.
 	var err error
@@ -129,41 +130,41 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 		// we check to make sure we are not at the very beginning or end, where we would have partial or illegal windows
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow == s.WindowSize && lastAlnIdxOfWindow < len(firstQuery) {
 
-			// TODO: convert position from firstQuery to reference, V2 calculate after firstQuery window is finalized
+			// TODO: convert position from firstQuery to reference, V2 calculate after firstQuery window is finalized, remove all fmt.Printf after debugging
+
+			fmt.Printf("alnIdxBeforeWindow: %v, lastAlnIdxOfWindow: %v, firstQueryIdxBeforeWindow: %v, lastFirstQueryIdxOfWindow: %v\n", alnIdxBeforeWindow, lastAlnIdxOfWindow, firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow)
+
 			// check if firstQuery start (non-gap) is gap in reference. If so, don't report that window
-			if reference[alnIdxBeforeWindow+1] == dna.Gap && firstQuery[alnIdxBeforeWindow+1] != dna.Gap {
-				//fmt.Printf("only reference[alnIdxBeforeWindow] dna.Gap, reference[alnIdxBeforeWindow+1]: %v, firstQuery[alnIdxBeforeWindow+1]: %v\n", reference[alnIdxBeforeWindow+1], firstQuery[alnIdxBeforeWindow+1]) // TODO: remove after debugging
-			} else {
-				// check if firstQuery end is gap in reference. If so, add bases to reference end until reach the next non-gap position in reference? Seems like no need, because end is open and can be gap
-				/*if reference[lastAlnIdxOfWindow] == dna.Gap && firstQuery[lastAlnIdxOfWindow] != dna.Gap {
-					fmt.Printf("only reference[lastAlnIdxOfWindow] dna.Gap, reference[lastAlnIdxOfWindow]: %v, firstQuery[lastAlnIdxOfWindow]: %v\n", reference[lastAlnIdxOfWindow], firstQuery[lastAlnIdxOfWindow])
-				}*/
+			// check if firstQuery end-1 (last non-gap position) is gap in reference. If so, don't report that window
+			if !((reference[alnIdxBeforeWindow+1] == dna.Gap && firstQuery[alnIdxBeforeWindow+1] != dna.Gap) || (reference[lastAlnIdxOfWindow] == dna.Gap && firstQuery[lastAlnIdxOfWindow] != dna.Gap)) {
 
 				refIdxBeforeWindow = firstQueryIdxBeforeWindow
-				for alnIdxForRef := 0; alnIdxForRef <= alnIdxBeforeWindow; alnIdxForRef++ {
+				for alnIdxForRef = 0; alnIdxForRef <= alnIdxBeforeWindow; alnIdxForRef++ {
 					if reference[alnIdxForRef] == dna.Gap && firstQuery[alnIdxForRef] != dna.Gap {
-						fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, refIdxBeforeWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], refIdxBeforeWindow) // TODO: remove after debugging
+						//fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, refIdxBeforeWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], refIdxBeforeWindow)
 						refIdxBeforeWindow--
-						fmt.Printf("refIdxBeforeWindow: %v\n", refIdxBeforeWindow) // TODO: remove after debugging
-						// TODO: this is where we check if firstQuery is non-gap, but reference is?
+						//fmt.Printf("refIdxBeforeWindow: %v\n", refIdxBeforeWindow)
 					} else if reference[alnIdxForRef] != dna.Gap && firstQuery[alnIdxForRef] == dna.Gap {
-						fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, refIdxBeforeWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], refIdxBeforeWindow) // TODO: remove after debugging
+						//fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, refIdxBeforeWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], refIdxBeforeWindow)
 						refIdxBeforeWindow++
-						fmt.Printf("refIdxBeforeWindow: %v\n", refIdxBeforeWindow) // TODO: remove after debugging
+						//fmt.Printf("refIdxBeforeWindow: %v\n", refIdxBeforeWindow)
 					}
 				}
+
 				lastRefIdxOfWindow = lastFirstQueryIdxOfWindow
-				for alnIdxForRef := 0; alnIdxForRef <= lastAlnIdxOfWindow; alnIdxForRef++ {
+				for alnIdxForRef = 0; alnIdxForRef <= lastAlnIdxOfWindow; alnIdxForRef++ {
 					if reference[alnIdxForRef] == dna.Gap && firstQuery[alnIdxForRef] != dna.Gap {
-						fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, lastRefIdxOfWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], lastRefIdxOfWindow) // TODO: remove after debugging
+						//fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, lastRefIdxOfWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], lastRefIdxOfWindow)
 						lastRefIdxOfWindow--
-						fmt.Printf("lastRefIdxOfWindow: %v\n", lastRefIdxOfWindow) // TODO: remove after debugging
+						//fmt.Printf("lastRefIdxOfWindow: %v\n", lastRefIdxOfWindow)
 					} else if reference[alnIdxForRef] != dna.Gap && firstQuery[alnIdxForRef] == dna.Gap {
-						fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, lastRefIdxOfWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], lastRefIdxOfWindow) // TODO: remove after debugging
+						//fmt.Printf("alnIdxForRef: %v, reference[alnIdxForRef]: %v, firstQuery[alnIdxForRef]: %v, lastRefIdxOfWindow: %v\n", alnIdxForRef, reference[alnIdxForRef], firstQuery[alnIdxForRef], lastRefIdxOfWindow)
 						lastRefIdxOfWindow++
-						fmt.Printf("lastRefIdxOfWindow: %v\n", lastRefIdxOfWindow) // TODO: remove after debugging
+						//fmt.Printf("lastRefIdxOfWindow: %v\n", lastRefIdxOfWindow)
 					}
 				}
+
+				fmt.Printf("Will report this window. refIdxBeforeWindow+1:%v, lastRefIdxOfWindow+1:%v\n", refIdxBeforeWindow+1, lastRefIdxOfWindow+1)
 
 				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
 				if !s.RemoveN || totalNs == 0 {
@@ -180,7 +181,9 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 						exception.PanicOnErr(err)
 					}
 				}
-			}
+			} else {
+				fmt.Printf("Won't report this window. alnIdxBeforeWindow+1 or lastAlnIdxOfWindow is gap in only reference\n")
+			} // TODO: remove else after debugging
 		}
 	}
 

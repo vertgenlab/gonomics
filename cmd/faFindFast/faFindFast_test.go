@@ -80,7 +80,7 @@ var FaFindFastTests = []struct {
 		RemoveN:         false,
 		DivergenceRate:  0.01,
 		LongOutput:      true},
-	{InFile: "testdata/test_indel_3seq.fa", //also test for extra species here
+	{InFile: "testdata/test_indel_3seq.fa",
 		OutFile:         "testdata/tmp.out.3seq.bed",
 		ExpectedFile:    "testdata/expected_3seq.bed",
 		FirstQueryName:  "HumanFirstQuery",
