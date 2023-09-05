@@ -50,6 +50,14 @@ var ReconstructSeqTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0.99,
 	},
+	{NewickFile: "testdata/4d.genericNames.mod",
+                FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
+                OutFile:              "testdata/out.AllPossibleOneHuman.withExtraSeqs.fa",
+                ExpectedFile:         "testdata/expected.AllPossibleOneHuman.fa",
+                BiasLeafName:         "",
+                NonBiasProbThreshold: 0,
+                HighestProbThreshold: 0,
+        },
 }
 
 func TestReconstructSeq(t *testing.T) {
