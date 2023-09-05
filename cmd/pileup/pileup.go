@@ -1,16 +1,18 @@
 // Command Group: "SAM Tools"
 
+// Count bases from sequencing data
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"strings"
 )
 
 func usage() {

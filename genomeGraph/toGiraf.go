@@ -3,10 +3,10 @@ package genomeGraph
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"math"
 	"strings"
@@ -107,7 +107,6 @@ func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 					leastSevereMismatch = scoreMatrix[i][j]
 				}
 			}
-
 		}
 	}
 	var leastSevereMatchMismatchChange int64 = leastSevereMismatch - maxMatch
@@ -123,7 +122,7 @@ func WrapPairGiraf(gg *GenomeGraph, fq fastq.PairedEndBig, seedHash map[uint64][
 	return mappedPair
 }
 
-// setGirafFlags generates the appropriate flags for each giraf in a pair
+// setGirafFlags generates the appropriate flags for each giraf in a pair.
 func setGirafFlags(pair *giraf.GirafPair) {
 	pair.Fwd.Flag = getGirafFlags(&pair.Fwd)
 	pair.Rev.Flag = getGirafFlags(&pair.Rev)
@@ -144,7 +143,7 @@ func GirafToSam(ag *giraf.Giraf) sam.Sam {
 	} else {
 		target := strings.Split(ag.Notes[0].Value, "=")
 		curr.RName = target[0]
-		curr.Pos = uint32(ag.Path.TStart + common.StringToInt(target[1]))
+		curr.Pos = uint32(ag.Path.TStart + parse.StringToInt(target[1]))
 		curr.Flag = getSamFlags(ag)
 		if len(ag.Notes) == 2 {
 			curr.Extra = fmt.Sprintf("BZ:i:%d\tGP:Z:%s\tXO:i:%d\t%s", ag.AlnScore, PathToString(ag.Path.Nodes), ag.Path.TStart, giraf.NoteToString(ag.Notes[1]))

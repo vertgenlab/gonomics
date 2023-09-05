@@ -1,14 +1,19 @@
+// Command Group: "FASTA and Multi-FASTA Tools"
+
+// Using a four-way multiple alignment (including the reference species followed by three successive outgroups),
+// this program calculates branch lengths in units of estimate substitutions for regions in the alignment specified by an input bed file
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/phylo"
-	"log"
 )
 
 type Settings struct {

@@ -1,0 +1,14 @@
+X	HomoRef	HetRefTs	HetRefTv1	HetRefTv2	HomoTs	HetTsTv1	HetTsTv2	HomoTv1	HetTv1Tv2	HomoTv2
+HomoRef	17964	5	3	1	0	0	0	0	0	0	
+HetRefTs	14	1048	1	0	15	0	0	0	0	0	
+HetRefTv1	11	2	341	0	0	0	0	0	0	0	
+HetRefTv2	12	0	0	328	0	0	0	0	0	0	
+HomoTs	0	0	0	0	0	0	0	0	0	0	
+HetTsTv1	0	0	0	0	0	9	0	0	0	0	
+HetTsTv2	0	0	0	0	0	0	8	0	0	0	
+HomoTv1	0	0	0	0	0	0	0	0	0	0	
+HetTv1Tv2	0	0	0	0	0	0	0	0	3	0	
+HomoTv2	0	0	0	0	0	0	0	0	0	0	
+
+matrixTotal	correctTotal	trueNegative	falseNegative	falsePositive	misclassified	Accuracy	Inaccuracy	Recall	Precision	MisclassificaitonRate	FalseVariantRate	falseReferenceRate
+19765	19701	17964	9	37	18	9.967620e-01	3.238047e-03	9.846939e-01	9.693080e-01	1.025641e-02	2.055441e-03	5.007511e-04

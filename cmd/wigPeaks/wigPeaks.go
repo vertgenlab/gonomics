@@ -1,16 +1,18 @@
 // Command Group: "WIG Tools"
 // Command Usage: "Identifies peaks in a WIG file"
 
+// Takes wig file and finds peaks
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
 )
 
 func wigPeaks(inWig string, outBed string, threshold float64, findMinima bool) { //threshold is float64 because WigValue Value aka v2.Value is float64.

@@ -1,21 +1,23 @@
 // Command Group: "Sequence Evolution & Reconstruction"
 // Command Usage: "Simulate evolution along a tree and perform ancestral reconstruction"
 
+// Simulates evolution from the root of a newick tree to the extant species of the trees and then uses the leaf nodes to reconstruct the ancestral nodes and compares the answers for percent accuracy.
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/reconstruct"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
 )
 
-//SimulateEvolve takes in a root fasta file, a newick tree, and gene structure genePred file for the fasta and returns a full simulated tree and a tree with sequence only at the leaves for reconstruction
+// SimulateEvolve takes in a root fasta file, a newick tree, and gene structure genePred file for the fasta and returns a full simulated tree and a tree with sequence only at the leaves for reconstruction.
 func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
 	tree, err := expandedTree.ReadTree(treeFile, rootFastaFile)
 	exception.FatalOnErr(err)
@@ -34,7 +36,7 @@ func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile
 	fasta.Write(leafOutFile, leafFastas)
 }
 
-//ReconstructSeq takes in a newick tree and leaf sequences and returns a reconstructed tree
+// ReconstructSeq takes in a newick tree and leaf sequences and returns a reconstructed tree.
 func ReconstructSeq(newickInput string, fastaInput string, outputFilename string) {
 	tree, err := expandedTree.ReadTree(newickInput, fastaInput)
 	exception.FatalOnErr(err)
@@ -43,7 +45,7 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 	var treeFastas []fasta.Fasta
 
 	for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
-		reconstruct.LoopNodes(tree, i)
+		reconstruct.LoopNodes(tree, i, "", 0, 0)
 	}
 	for j := 0; j < len(leaves); j++ {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
@@ -54,10 +56,10 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 	fasta.Write(outputFilename, treeFastas)
 }
 
-//SimRecon simulates evolution, performs reconstruction, and then evaluates the accuracy of the reconstruction in two ways
-//default accuracy calculation will calculate both exonic and non-exonic accuracy for each node, and it's total accuracy
-//if there is a specified baseAccFile, this function will also return a file that contains 3 numbers:
-//the accuracy for all nodes for the first, second and third base of every codon
+// SimRecon simulates evolution, performs reconstruction, and then evaluates the accuracy of the reconstruction in two ways
+// default accuracy calculation will calculate both exonic and non-exonic accuracy for each node, and it's total accuracy
+// if there is a specified baseAccFile, this function will also return a file that contains 3 numbers:
+// the accuracy for all nodes for the first, second and third base of every codon.
 func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string, reconOutFile string, accuracyOutFile string, baseAccFile string) {
 	//TODO: this code will need to change drastically for sequences of varying lengths.
 	//The loop through the sequence is restricted by the length of a single fasta and the tot calculation will need to calculate the total number of bps

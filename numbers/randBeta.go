@@ -18,8 +18,8 @@ const Small float64 = 1.0e-30
 const MaxIterations int = 200
 const Ln4 float64 = 1.38629436112
 
-//RandBeta is the basic beta variate generator from Cheng 1978. Uses the BA algorithm, which is less optimized, but still runs effectively for my use case.
-//More optimized algorithms (with greater programming complexity) are described in the Cheng paper, and should be implemented (TODO) if required.
+// RandBeta is the basic beta variate generator from Cheng 1978. Uses the BA algorithm, which is less optimized, but still runs effectively for my use case.
+// More optimized algorithms (with greater programming complexity) are described in the Cheng paper, and should be implemented (TODO) if required.
 func RandBeta(a float64, b float64) float64 {
 	var alpha float64 = a + b
 	var beta, gamma, u1, u2, w, v float64

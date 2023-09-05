@@ -2,9 +2,10 @@ package popgen
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 // PlotAfsF writes the Allele Frequency F function (AfsSampleDensity) to an output file for downstream visualization.
@@ -85,6 +86,8 @@ func PlotAfsLikelihood(afs Afs, outFile string, leftBound float64, rightBound fl
 	exception.PanicOnErr(err)
 }
 
+// PlotDerivedAscertainmentProbability takes the path to an output file and prints the values of
+// DerivedAscertainmentProbability(n, i, d) for all values of i to the file.
 func PlotDerivedAscertainmentProbability(outFile string, n int, d int) {
 	var err error
 	out := fileio.EasyCreate(outFile)
@@ -100,6 +103,8 @@ func PlotDerivedAscertainmentProbability(outFile string, n int, d int) {
 	exception.PanicOnErr(err)
 }
 
+// PlotAncestralAscertainmentProbability takes the path to an output file and prints the values of
+// AncestralAscertainmentProbability(n, i, d) for all values of i to the file.
 func PlotAncestralAscertainmentProbability(outFile string, n int, d int) {
 	var err error
 	out := fileio.EasyCreate(outFile)
@@ -115,6 +120,8 @@ func PlotAncestralAscertainmentProbability(outFile string, n int, d int) {
 	exception.PanicOnErr(err)
 }
 
+// PlotDerivedAscertainmentDenominator takes the path to an output file and prints the values of
+// DerivedAscertainmentDenominator to the file, given the input parameters.
 func PlotDerivedAscertainmentDenominator(outFile string, n int, d int, alpha float64, integralError float64) {
 	var err error
 	allN := []int{n}
@@ -135,6 +142,8 @@ func PlotDerivedAscertainmentDenominator(outFile string, n int, d int, alpha flo
 	exception.PanicOnErr(err)
 }
 
+// PlotAncestralAscertainmentDenominator takes the path to an output file and prints the values of
+// AncestralAscertainmentDenominator to the file for the parameters provided.
 func PlotAncestralAscertainmentDenominator(outFile string, n int, d int, alpha float64, integralError float64) {
 	var err error
 	allN := []int{n}

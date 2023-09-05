@@ -1,10 +1,14 @@
+// Command Group: "WIG Tools"
+
+// Returns a filtered wig based on option parameters
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/wig"
 	"log"
+
+	"github.com/vertgenlab/gonomics/wig"
 )
 
 type Settings struct {

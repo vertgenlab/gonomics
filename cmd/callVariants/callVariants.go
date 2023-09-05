@@ -1,26 +1,36 @@
 // Command Group: "Variant Calling & Annotation"
 
+// A tool to find variation between multiple alignment files
 package main
 
 import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func usage() {
 	fmt.Print(
 		"callVariants - A tool to find variation between multiple alignment files.\n\n" +
+			"callVariants is a joint variant caller, i.e. it requires a minimum of two inputs: an experimental file declared with -i (e.g. a tumor sample), " +
+			"and a normal sample declared with -n (ideally but not necessarily from the same individual as -i). callVariants does NOT support single-sample calling. " +
+			"callVariants generates pileups for each position covered in the input -i and -n files and generates a 2x2 contingency table consisting of the " +
+			"number of reads with the reference allele in the -i and -n files and the number of reads with the alternate allele in the -i and -n files. " +
+			"a fishers exact test is performed on the contingency table to evaluate whether the alternate allele frequency in the -i file is significantly different " +
+			"from the alternate allele frequency in the -n files. There are several filters listed below that may be used to refine the results and account for common " +
+			"sources of error in sequencing data such as strand bias and alignment artifacts. The authors recommend that callVariants be used in conjunction with other " +
+			"variant callers rather than as a replacement.\n\n" +
 			"Usage:\n" +
 			"  callVariants [options] -i file1.bam -i file2.bam -n normal.bam -r reference.fasta\n\n" +
 			"Options:\n\n")
@@ -84,7 +94,7 @@ func startWorker(wg *sync.WaitGroup, writeChan chan<- vcf.Vcf, synced <-chan []s
 	wg.Done()
 }
 
-// startPileup for each input file
+// startPileup for each input file.
 func startPileup(files []string, readFilters []func(s sam.Sam) bool, pileFilters []func(p sam.Pile) bool) (headers []sam.Header, piles []<-chan sam.Pile) {
 	headers = make([]sam.Header, len(files))
 	piles = make([]<-chan sam.Pile, len(files))
@@ -100,7 +110,7 @@ func startPileup(files []string, readFilters []func(s sam.Sam) bool, pileFilters
 	return
 }
 
-// checkHeadersMatch verifies that all input files use the same reference
+// checkHeadersMatch verifies that all input files use the same reference.
 func checkHeadersMatch(headers []sam.Header) error {
 	ref := headers[0].Chroms
 	for i := 1; i < len(headers); i++ {
@@ -116,7 +126,7 @@ func checkHeadersMatch(headers []sam.Header) error {
 	return nil
 }
 
-// makeOutputHeader produces a header for the output vcf file
+// makeOutputHeader produces a header for the output vcf file.
 func makeOutputHeader(filenames []string) vcf.Header {
 	var header vcf.Header
 	sampleNames := make([]string, len(filenames))
@@ -136,15 +146,15 @@ func makeOutputHeader(filenames []string) vcf.Header {
 	return header
 }
 
-// inputFiles is a custom type that gets filled by flag.Parse()
+// inputFiles is a custom type that gets filled by flag.Parse().
 type inputFiles []string
 
-// String to satisfy flag.Value interface
+// String to satisfy flag.Value interface.
 func (i *inputFiles) String() string {
 	return strings.Join(*i, " ")
 }
 
-// Set to satisfy flag.Value interface
+// Set to satisfy flag.Value interface.
 func (i *inputFiles) Set(value string) error {
 	*i = append(*i, value)
 	return nil

@@ -1,12 +1,13 @@
 package graphReconstruct
 
 import (
+	"log"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/genomeGraph"
-	"log"
-	"testing"
 )
 
 var (
@@ -20,19 +21,19 @@ var (
 	humanNode4 = genomeGraph.AddNode(humanGraph, &genomeGraph.Node{Id: 3, Seq: dna.StringToBases("CCC"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("CCC")), Prev: nil, Next: nil})
 	humanNode5 = genomeGraph.AddNode(humanGraph, &genomeGraph.Node{Id: 4, Seq: dna.StringToBases("GGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("GGG")), Prev: nil, Next: nil})
 
-	humanEdge1 = genomeGraph.Edge{humanNode2, 0.25}
-	humanEdge2 = genomeGraph.Edge{humanNode3, 0.75}
-	humanEdge3 = genomeGraph.Edge{humanNode3, 1.00}
-	humanEdge4 = genomeGraph.Edge{humanNode4, 0.25}
-	humanEdge5 = genomeGraph.Edge{humanNode5, 0.75}
-	humanEdge6 = genomeGraph.Edge{humanNode5, 1.00}
+	humanEdge1 = genomeGraph.Edge{Dest: humanNode2, Prob: 0.25}
+	humanEdge2 = genomeGraph.Edge{Dest: humanNode3, Prob: 0.75}
+	humanEdge3 = genomeGraph.Edge{Dest: humanNode3, Prob: 1.00}
+	humanEdge4 = genomeGraph.Edge{Dest: humanNode4, Prob: 0.25}
+	humanEdge5 = genomeGraph.Edge{Dest: humanNode5, Prob: 0.75}
+	humanEdge6 = genomeGraph.Edge{Dest: humanNode5, Prob: 1.00}
 
 	chimpGraph = genomeGraph.EmptyGraph()
 
 	chimpNode1 = genomeGraph.AddNode(chimpGraph, &genomeGraph.Node{Id: 0, Seq: dna.StringToBases("ACGT"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("ACGT")), Prev: nil, Next: nil})
 	chimpNode2 = genomeGraph.AddNode(chimpGraph, &genomeGraph.Node{Id: 1, Seq: dna.StringToBases("TTGG"), SeqTwoBit: dnaTwoBit.NewTwoBit(dna.StringToBases("TTGG")), Prev: nil, Next: nil})
 
-	chimpEdge1 = genomeGraph.Edge{chimpNode2, 1.00}
+	chimpEdge1 = genomeGraph.Edge{Dest: chimpNode2, Prob: 1.00}
 
 	gorillaGraph = genomeGraph.EmptyGraph()
 
@@ -140,10 +141,6 @@ func TestGraphColumn(t *testing.T) {
 
 	gorillaNode1.Next = []genomeGraph.Edge{gorillaEdge1}
 	gorillaNode2.Prev = []genomeGraph.Edge{gorillaEdge1}
-
-	//simpleGraph.PrintGraph(humanGraph)
-	//simpleGraph.PrintGraph(chimpGraph)
-	//simpleGraph.PrintGraph(gorillaGraph)
 }
 
 func TestPathFinder(t *testing.T) {
@@ -162,7 +159,7 @@ func TestPathFinder(t *testing.T) {
 	if dna.BasesToString(seq) != actualSeq {
 		log.Printf("Sequence outpput: %s does not match expected sequence: %s", dna.BasesToString(seq), actualSeq)
 	}
-	//log.Print(dna.BasesToString(seq))
+	// log.Print(dna.BasesToString(seq))
 }
 
 func TestBuildNodes(t *testing.T) {

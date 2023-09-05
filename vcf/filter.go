@@ -1,12 +1,13 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
-// IsHeterozygous returns true if more than 1 allele is present in the sample
+// IsHeterozygous returns true if more than 1 allele is present in the sample.
 func IsHeterozygous(s Sample) bool {
 	if len(s.Alleles) == 0 {
 		return false
@@ -35,12 +36,12 @@ func IsHomozygous(s Sample) bool {
 	return true
 }
 
-//IsBiallelic returns true if a vcf record has 1 alt variant, false otherwise.
+// IsBiallelic returns true if a vcf record has 1 alt variant, false otherwise.
 func IsBiallelic(v Vcf) bool {
 	return len(v.Alt) == 1
 }
 
-//IsSubstitution returns true if all of the alt fields of a vcf records are of length 1, false otherwise.
+// IsSubstitution returns true if all of the alt fields of a vcf records are of length 1, false otherwise.
 func IsSubstitution(v Vcf) bool {
 	if len(v.Ref) != 1 {
 		return false
@@ -53,7 +54,7 @@ func IsSubstitution(v Vcf) bool {
 	return true
 }
 
-//IsSegregating returns true if a Vcf record is a segregating site, true if the samples of the record contain at least two allelic states (ex. not all 0 or all 1).
+// IsSegregating returns true if a Vcf record is a segregating site, true if the samples of the record contain at least two allelic states (ex. not all 0 or all 1).
 func IsSegregating(v Vcf) bool {
 	if len(v.Samples) == 0 {
 		return false //special case, no samples
@@ -80,7 +81,7 @@ func IsSegregating(v Vcf) bool {
 	return false
 }
 
-//IsPolarizable returns true if a variant can be "polarized" in a derived allele frequency spectrum, false otherwise.
+// IsPolarizable returns true if a variant can be "polarized" in a derived allele frequency spectrum, false otherwise.
 func IsPolarizable(v Vcf) bool {
 	if !HasAncestor(v) {
 		return false
@@ -95,7 +96,7 @@ func IsPolarizable(v Vcf) bool {
 	return true
 }
 
-//IsRefWeakAltStrong returns true if an input biallelic substitution variant has a weak Ref allele and a strong Alt allele, false otherwise.
+// IsRefWeakAltStrong returns true if an input biallelic substitution variant has a weak Ref allele and a strong Alt allele, false otherwise.
 func IsRefWeakAltStrong(v Vcf) bool {
 	if !IsBiallelic(v) || !IsSubstitution(v) {
 		return false
@@ -108,7 +109,7 @@ func IsRefWeakAltStrong(v Vcf) bool {
 	return false
 }
 
-//IsStrongToWeak returns true if an input biallelic substitution variant has a strong Ref allele and a weak Alt allele, false otherwise.
+// IsStrongToWeak returns true if an input biallelic substitution variant has a strong Ref allele and a weak Alt allele, false otherwise.
 func IsRefStrongAltWeak(v Vcf) bool {
 	if !IsBiallelic(v) || !IsSubstitution(v) {
 		return false
@@ -121,7 +122,7 @@ func IsRefStrongAltWeak(v Vcf) bool {
 	return false
 }
 
-//IsNotRefStrongAltWeak returns true if an input biallelic substitution variant is not a strong to weak variant, false otherwise.
+// IsNotRefStrongAltWeak returns true if an input biallelic substitution variant is not a strong to weak variant, false otherwise.
 func IsNotRefStrongAltWeak(v Vcf) bool {
 	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
 		return false
@@ -129,7 +130,7 @@ func IsNotRefStrongAltWeak(v Vcf) bool {
 	return !IsRefStrongAltWeak(v)
 }
 
-//IsNotRefWeakAltStrong returns true if an input biallelic substitution variant does not have a weak Ref allele and a strong Alt allele, false otherwise.
+// IsNotRefWeakAltStrong returns true if an input biallelic substitution variant does not have a weak Ref allele and a strong Alt allele, false otherwise.
 func IsNotRefWeakAltStrong(v Vcf) bool {
 	if !IsBiallelic(v) || !IsSubstitution(v) { //ensures the answer is false if we do not match this initial exclusion criteria.
 		return false
@@ -137,17 +138,17 @@ func IsNotRefWeakAltStrong(v Vcf) bool {
 	return !IsRefWeakAltStrong(v)
 }
 
-//IsWeakToStrongOrStrongToWeak returns true if an input biallelic substitution variant is a strong to weak variant or a weak to strong variant, false otherwise.
+// IsWeakToStrongOrStrongToWeak returns true if an input biallelic substitution variant is a strong to weak variant or a weak to strong variant, false otherwise.
 func IsWeakToStrongOrStrongToWeak(v Vcf) bool {
 	return IsRefStrongAltWeak(v) || IsRefWeakAltStrong(v)
 }
 
-//IsNotWeakToStrongOrStrongToWeak returns true if a variant is neither a weak to strong variant nor a strong to weak variant, false otherwise.
+// IsNotWeakToStrongOrStrongToWeak returns true if a variant is neither a weak to strong variant nor a strong to weak variant, false otherwise.
 func IsNotWeakToStrongOrStrongToWeak(v Vcf) bool {
 	return IsNotRefWeakAltStrong(v) && IsNotRefStrongAltWeak(v)
 }
 
-//SampleVcf takes a set of Vcf records and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs)
+// SampleVcf takes a set of Vcf records and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs).
 func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) ([]Vcf, Header) {
 	var sampleList []string
 	if len(header.Text) > 0 {
@@ -193,7 +194,7 @@ func getSampleKeepList(n int, numSamples int) []int {
 	return sequentialSlice
 }
 
-//returns a slice where the value is the index. Answer is of length n. ex (4) returns [0 1 2 3]
+// returns a slice where the value is the index. Answer is of length n. ex (4) returns [0 1 2 3].
 func getSequentialSlice(n int) []int {
 	var answer []int = make([]int, n)
 	for i := 0; i < n; i++ {

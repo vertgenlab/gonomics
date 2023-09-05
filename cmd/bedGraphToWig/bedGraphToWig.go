@@ -1,12 +1,16 @@
+// Command Group: "BED Tools"
+
+// Converts bedGraph to wig. Wig scores will be equal to the bedGraph dataValue field across the range of the bedGraph entry
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
 )
 
 func bedGraphToWig(inFile string, chromFile string, outFile string, missing float64) {

@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
-	"os"
-	"testing"
 )
 
-// TODO add better testing once sam simulation code is done
+// TODO add better testing once sam simulation code is done.
 func TestCallVariants(t *testing.T) {
 	var err error
 	ref := "testdata/human_chrM.fasta"
@@ -49,7 +50,6 @@ func TestCallVariants(t *testing.T) {
 // V6 (SNV):       T
 
 func TestMultiAlleleComplexity(t *testing.T) {
-
 	v := vcf.Vcf{
 		Chr: "chrM",
 		Pos: 4,

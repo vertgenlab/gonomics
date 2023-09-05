@@ -1,13 +1,17 @@
+// Command Group: "FASTA and Multi-FASTA Tools"
+
+// Bins fastas into a minimum size group with either a single record or multiple records from a size ordered chrom.sizes file
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"path/filepath"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func faBin(genome string, path string, binNum int, minSize int, assemblyName string) {

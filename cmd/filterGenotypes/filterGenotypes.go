@@ -1,19 +1,21 @@
 // Command Group: "VCF Tools"
 
+// Filter genotyped VCFs containing at least 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func usage() {
 	fmt.Print(
-		"filterGenotypes - filter genotyped Vcfs containing at leaste 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents\n\n" +
+		"filterGenotypes - filter genotyped Vcfs containing at least 3 samples with SNP regions where parental genomes are homozygous (and different) and have a clear heterozygous F1 from the parents\n\n" +
 			"Usage:\n" +
 			"  ./filterGenotypes [options] input.vcf output.vcf\n\n")
 	flag.PrintDefaults()
@@ -83,7 +85,6 @@ func main() {
 			ByNames(gvcf, header, samples, writer)
 
 			writer.Close()
-
 		} else if *parentOne == "" || *parentTwo == "" || *f1Genome == "" {
 			log.Fatalf("Error: Must provide exactly 2 parents and 1 F1 sample...\n")
 		} else {

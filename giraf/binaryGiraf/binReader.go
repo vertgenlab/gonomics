@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bgzf"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaThreeBit"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
@@ -17,14 +17,14 @@ import (
 	"strings"
 )
 
-// The BinReader struct wraps the bgzf reader from the biogo repository with a bytes buffer to store encoded giraf records
+// The BinReader struct wraps the bgzf reader from the biogo repository with a bytes buffer to store encoded giraf records.
 type BinReader struct {
 	bg       *bgzf.Reader
 	currData *bytes.Buffer
 	readBffr []byte
 }
 
-// NewBinReader creates a new BinReader
+// NewBinReader creates a new BinReader.
 func NewBinReader(filename string) *BinReader {
 	return &BinReader{
 		bg:       bgzf.NewReader(filename),
@@ -33,7 +33,7 @@ func NewBinReader(filename string) *BinReader {
 	}
 }
 
-// DecompressGiraf will decode a binary giraf file (.giraf.fe) and output a giraf file (.giraf)
+// DecompressGiraf will decode a binary giraf file (.giraf.fe) and output a giraf file (.giraf).
 func DecompressGiraf(infilename string, outfilename string, graph *genomeGraph.GenomeGraph) {
 	// Initialize infile
 	infile := fileio.EasyOpen(infilename)
@@ -43,21 +43,23 @@ func DecompressGiraf(infilename string, outfilename string, graph *genomeGraph.G
 
 	// Initialize outfile
 	outfile := fileio.EasyCreate(outfilename)
-	defer outfile.Close()
 
 	// Read info until EOF
 	var curr giraf.Giraf
 	for curr, err = ReadGiraf(reader, graph); err != io.EOF; curr, err = ReadGiraf(reader, graph) {
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 		giraf.WriteGirafToFileHandle(outfile, &curr)
 	}
 
 	// Close reader
 	err = reader.bg.Close()
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
+
+	err = outfile.Close()
+	exception.PanicOnErr(err)
 }
 
-// The Read method for the BinWriter struct decompresses a single giraf record and writes to file
+// ReadGiraf is a method for the BinWriter struct decompresses a single giraf record and writes to file.
 func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	var answer giraf.Giraf
 	var bytesRead int
@@ -73,7 +75,7 @@ func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	if bytesRead != 4 {
 		return answer, io.ErrUnexpectedEOF
 	}
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	blockSize := int(binary.LittleEndian.Uint32(buffer[:4]))
 
 	// check cap of readBffr. Either make new slice, or re-slice as needed
@@ -88,7 +90,7 @@ func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	if err == io.ErrUnexpectedEOF || bytesRead != blockSize {
 		log.Fatalln("ERROR: truncated record")
 	}
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	br.currData.Write(br.readBffr) // copy data from intermediate buffer to bytes buffer
 
 	// qNameLen (uint8)
@@ -168,7 +170,7 @@ func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	return answer, err
 }
 
-// addFullSeq parses the cigar and the fancySeq fields to retrieve the full length read sequence
+// addFullSeq parses the cigar and the fancySeq fields to retrieve the full length read sequence.
 func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *genomeGraph.GenomeGraph) {
 	var fancyBases []dna.Base
 	if fancySeq.Len != 0 {
@@ -208,10 +210,9 @@ func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *geno
 			log.Fatalf("ERROR: Unrecognized cigar operation: %v", cigar.Op)
 		}
 	}
-
 }
 
-// appendNotes parses the encoded notes at the end of the alignment record and appends them to the output giraf record
+// appendNotes parses the encoded notes at the end of the alignment record and appends them to the output giraf record.
 func appendNotes(answer *giraf.Giraf, br *BinReader) {
 	var currNote giraf.Note
 	var currString strings.Builder
@@ -274,7 +275,7 @@ func appendNotes(answer *giraf.Giraf, br *BinReader) {
 	}
 }
 
-// determineQStartQEnd parses the cigar to determine where the alignment starts and ends
+// determineQStartQEnd parses the cigar to determine where the alignment starts and ends.
 func determineQStartQEnd(answer *giraf.Giraf) (int, int) {
 	var start, end int
 	if answer.Cigar == nil {

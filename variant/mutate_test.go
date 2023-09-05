@@ -1,8 +1,9 @@
 package variant
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 type MutatorTest struct {

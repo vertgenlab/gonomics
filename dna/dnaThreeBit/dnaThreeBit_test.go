@@ -1,8 +1,9 @@
 package dnaThreeBit
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 //func BasesToUint64(seq []dna.Base, start int, end int, padding ThreeBitBase) uint64 {

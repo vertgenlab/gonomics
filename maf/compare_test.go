@@ -1,8 +1,9 @@
 package maf
 
 import (
-	"github.com/vertgenlab/gonomics/fasta"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 var toFastaTests = []struct {

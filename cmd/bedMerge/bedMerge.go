@@ -1,5 +1,6 @@
 // Command Group: "BED Tools"
 
+// Combines overlapping bed entries, keeping max score. Output will be sorted by genome coordinate
 package main
 
 import (
@@ -12,11 +13,11 @@ import (
 	"log"
 )
 
-func bedMerge(infile string, outfile string, mergeAdjacent bool, lowMem bool) {
+func bedMerge(infile string, outfile string, mergeAdjacent bool, lowMem bool, keepAllNames bool) {
 	if lowMem {
 		bedMergeLowMem(infile, outfile, mergeAdjacent)
 	} else {
-		bedMergeHighMem(infile, outfile, mergeAdjacent)
+		bedMergeHighMem(infile, outfile, mergeAdjacent, keepAllNames)
 	}
 }
 
@@ -49,9 +50,9 @@ func bedMergeLowMem(infile string, outfile string, mergeAdjacent bool) {
 	exception.PanicOnErr(err)
 }
 
-func bedMergeHighMem(infile string, outfile string, mergeAdjacent bool) {
-	var records []bed.Bed = bed.Read(infile)
-	outList := bed.MergeHighMem(records, mergeAdjacent)
+func bedMergeHighMem(infile string, outfile string, mergeAdjacent bool, keepAllNames bool) {
+	var records = bed.Read(infile)
+	outList := bed.MergeHighMem(records, mergeAdjacent, keepAllNames)
 	bed.Write(outfile, outList)
 }
 
@@ -68,6 +69,7 @@ func main() {
 	var expectedNumArgs int = 2
 	var mergeAdjacent *bool = flag.Bool("mergeAdjacent", false, "Merge non-overlapping entries with direct adjacency.")
 	var lowMem *bool = flag.Bool("lowMem", false, "Use the low memory algorithm. Requires input file to be pre-sorted.")
+	var keepAllNames *bool = flag.Bool("keepAllNames", false, "If set to true, merged beds will also have a merged name field in a comma separated list, cannot currently be combined with lowMem option")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -82,5 +84,5 @@ func main() {
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	bedMerge(infile, outfile, *mergeAdjacent, *lowMem)
+	bedMerge(infile, outfile, *mergeAdjacent, *lowMem, *keepAllNames)
 }

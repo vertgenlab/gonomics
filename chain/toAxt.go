@@ -1,10 +1,11 @@
 package chain
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 // AllToAxt converts a slice of chain structs into a slice of axt structs, taking in the target and query faMaps.
@@ -76,13 +77,13 @@ func ToAxt(ch Chain, target []dna.Base, query []dna.Base) axt.Axt {
 	return answer
 }
 
-//helper function to quickly get sequence at a starting pos plus length this way i dont have to keep doing start:start+length everytime
+// helper function to quickly get sequence at a starting pos plus length this way i dont have to keep doing start:start+length everytime.
 func getSequence(seq []dna.Base, start int, length int) []dna.Base {
 	return seq[start : start+length]
 }
 
-//get alignment blocks for the 3 columns containing alignment data
-//length of of target and query seqs in axts should be the same i believe, so we can loop over either one.
+// get alignment blocks for the 3 columns containing alignment data
+// length of of target and query seqs in axts should be the same i believe, so we can loop over either one.
 func getChainCounts(rSeq []dna.Base, qSeq []dna.Base) int {
 	var answer int = 0
 	for i := 0; i < len(rSeq); i++ {
@@ -108,7 +109,7 @@ func calcMissingBases(rSeq []dna.Base, qSeq []dna.Base) (int, int) {
 	return target, query
 }
 
-func CalcEntireBlock(rSeq []dna.Base, qSeq []dna.Base) []BaseStats {
+func calcEntireBlock(rSeq []dna.Base, qSeq []dna.Base) []BaseStats {
 	var answer []BaseStats
 	var curr BaseStats
 	if len(rSeq) != len(qSeq) {
@@ -133,6 +134,9 @@ func CalcEntireBlock(rSeq []dna.Base, qSeq []dna.Base) []BaseStats {
 	return answer
 }
 
+// AxtToChain converts an Axt alignment into chain format.  The lengths
+// of the target and query are needed for the conversion and an id
+// for the chain is also needed as input.
 func AxtToChain(align *axt.Axt, tLen int, qLen int, id int) Chain {
 	var answer Chain = Chain{
 		Score:     int(align.Score),
@@ -149,6 +153,6 @@ func AxtToChain(align *axt.Axt, tLen int, qLen int, id int) Chain {
 		Alignment: make([]BaseStats, 0),
 		Id:        id,
 	}
-	answer.Alignment = append(answer.Alignment, CalcEntireBlock(align.RSeq, align.QSeq)...)
+	answer.Alignment = append(answer.Alignment, calcEntireBlock(align.RSeq, align.QSeq)...)
 	return answer
 }

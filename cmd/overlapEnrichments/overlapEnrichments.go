@@ -1,13 +1,17 @@
+// Command Group: "Statistics & Population Genetics"
+
+// Returns the p-value of enrichment and depletion for overlaps between the elements in two input files
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/interval/lift"
-	"log"
 )
 
 func overlapEnrichments(method string, inFile string, secondFile string, noGapFile string, outFile string, verbose int, trimToRefGenome bool) {
@@ -43,13 +47,9 @@ func overlapEnrichments(method string, inFile string, secondFile string, noGapFi
 
 		for i := range noGapRegions {
 			overlap1 = lift.IntervalSliceToLift(interval.Query(tree1, noGapRegions[i], "within"))
-			for j := range overlap1 {
-				trimmedE1 = append(trimmedE1, overlap1[j])
-			}
+			trimmedE1 = append(trimmedE1, overlap1...)
 			overlap2 = lift.IntervalSliceToLift(interval.Query(tree2, noGapRegions[i], "within"))
-			for j := range overlap2 {
-				trimmedE2 = append(trimmedE2, overlap2[j])
-			}
+			trimmedE2 = append(trimmedE2, overlap2...)
 		}
 		elementsOne = trimmedE1
 		elementsTwo = trimmedE2

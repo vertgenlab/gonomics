@@ -2,14 +2,15 @@ package sam
 
 import (
 	"fmt"
-	//bgBam "github.com/biogo/hts/bam"
-	//bgSam "github.com/biogo/hts/sam"
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/dna"
 	"io"
 	"io/ioutil"
 	"os/exec"
 	"testing"
+
+	//bgBam "github.com/biogo/hts/bam"
+	//bgSam "github.com/biogo/hts/sam".
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 const bamTestfile string = "../bgzf/testdata/test.bam"

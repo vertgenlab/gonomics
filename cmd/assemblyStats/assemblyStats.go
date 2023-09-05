@@ -1,12 +1,14 @@
 // Command Group: "Statistics & Population Genetics"
 
+// Provides information about the number of scaffolds, including the N50, number of scaffolds, and distribution of lengths of assembled scaffolds.
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fasta"
 	"log"
+
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 func assemblyStats(infile string, outfile string, countLowerAsGaps bool) {

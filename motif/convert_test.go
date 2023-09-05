@@ -1,11 +1,12 @@
 package motif
 
 import (
+	"os"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"os"
-	"testing"
 )
 
 var PfmToPpmTests = []struct {

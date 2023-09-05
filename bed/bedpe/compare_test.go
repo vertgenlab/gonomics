@@ -1,16 +1,17 @@
 package bedpe
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed"
 )
 
-var Equal1 BedPe = BedPe{A: bed.Bed{Chrom: "chr9", ChromStart: 60, ChromEnd: 75,}, B: bed.Bed{Chrom: "chr9", ChromStart: 7500, ChromEnd: 7900}}
-var Equal2 BedPe = BedPe{A: bed.Bed{Chrom: "chr12", ChromStart: 86500, ChromEnd: 86540,}, B: bed.Bed{Chrom: "chr12", ChromStart: 975340, ChromEnd: 975550}}
+var Equal1 BedPe = BedPe{A: bed.Bed{Chrom: "chr9", ChromStart: 60, ChromEnd: 75}, B: bed.Bed{Chrom: "chr9", ChromStart: 7500, ChromEnd: 7900}}
+var Equal2 BedPe = BedPe{A: bed.Bed{Chrom: "chr12", ChromStart: 86500, ChromEnd: 86540}, B: bed.Bed{Chrom: "chr12", ChromStart: 975340, ChromEnd: 975550}}
 
 var EqualTests = []struct {
-	a BedPe
-	b BedPe
+	a        BedPe
+	b        BedPe
 	Expected bool
 }{
 	{Equal1, Equal2, false},
@@ -29,8 +30,8 @@ func TestEqual(t *testing.T) {
 }
 
 var AllEqualTests = []struct {
-	a []BedPe
-	b []BedPe
+	a        []BedPe
+	b        []BedPe
 	Expected bool
 }{
 	{a: []BedPe{Equal1, Equal2, Equal2}, b: []BedPe{Equal1}, Expected: false},

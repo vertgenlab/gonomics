@@ -2,26 +2,28 @@ package vcf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Read parses a slice of VCF structs from an input filename. Does not store or return the header.
 func Read(filename string) ([]Vcf, Header) {
 	var answer []Vcf
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
 	header := ReadHeader(file)
 	var curr Vcf
 	var done bool
 	for curr, done = NextVcf(file); !done; curr, done = NextVcf(file) {
 		answer = append(answer, curr)
 	}
+	err := file.Close()
+	exception.PanicOnErr(err)
 	return answer, header
 }
 
@@ -30,7 +32,8 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Vcf, wg *sync.WaitGroup) {
 	for curr, done := NextVcf(file); !done; curr, done = NextVcf(file) {
 		data <- curr
 	}
-	file.Close()
+	err := file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }
 
@@ -39,7 +42,7 @@ func GoReadToChan(filename string) (<-chan Vcf, Header) {
 	file := fileio.EasyOpen(filename)
 	header := ReadHeader(file)
 	var wg sync.WaitGroup
-	data := make(chan Vcf)
+	data := make(chan Vcf, 1000)
 	wg.Add(1)
 	go ReadToChan(file, data, &wg)
 
@@ -57,13 +60,13 @@ func processVcfLine(line string) Vcf {
 	var err error
 	data := strings.Split(line, "\t")
 	if len(data) < 8 {
-		log.Fatalf("Error when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
+		log.Panicf("Error when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
 	}
 
 	curr.Chr = data[0]
 	curr.Pos, err = strconv.Atoi(data[1])
 	if err != nil {
-		log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
+		log.Panicf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
 	}
 	curr.Id = data[2]
 	curr.Ref = data[3]
@@ -72,7 +75,7 @@ func processVcfLine(line string) Vcf {
 	if data[5] != "." {
 		curr.Qual, err = strconv.ParseFloat(data[5], 64)
 		if err != nil {
-			log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
+			log.Panicf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
 		}
 	}
 	curr.Filter = data[6]
@@ -112,7 +115,7 @@ func parseSamples(samples []string, format []string, line string) []Sample {
 	return answer
 }
 
-// parseGenotype returns the alleles and phase parsed from the GT field in Samples
+// parseGenotype returns the alleles and phase parsed from the GT field in Samples.
 func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 	var alleleId int64
 	var err error
@@ -140,7 +143,6 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 				log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to an int16 in the following line\n%s\n", text[i], line)
 			}
 			alleles = append(alleles, int16(alleleId))
-
 		} else { // is phase info
 			phase = append(phase, text[i] == "|")
 		}
@@ -160,7 +162,7 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 	return
 }
 
-// splitGenotype splits each elements of the GT field into a slice of elements (e.g. 1/1 becomes []string{"1", "/", "1")
+// splitGenotype splits each elements of the GT field into a slice of elements (e.g. 1/1 becomes []string{"1", "/", "1").
 func splitGenotype(gt string) []string {
 	answer := make([]string, 0, len(gt))
 	for i := 0; i < len(gt); i++ {
@@ -196,7 +198,7 @@ func FormatToString(format []string) string {
 	return answer
 }
 
-//TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed. geno bool variable determines whether to print notes or genotypes.
+// TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed. geno bool variable determines whether to print notes or genotypes.
 func WriteVcfToFileHandle(file io.Writer, input []Vcf) {
 	var err error
 	for i := 0; i < len(input); i++ {
@@ -206,7 +208,7 @@ func WriteVcfToFileHandle(file io.Writer, input []Vcf) {
 		} else {
 			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, FormatToString(input[i].Format), SamplesToString(input[i].Samples))
 		}
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 }
 
@@ -218,15 +220,15 @@ func WriteVcf(file io.Writer, input Vcf) {
 	} else {
 		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, FormatToString(input.Format), SamplesToString(input.Samples))
 	}
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
 // Write writes a []Vcf to an output filename.
 func Write(filename string, data []Vcf) {
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
-
 	WriteVcfToFileHandle(file, data)
+	err := file.Close()
+	exception.PanicOnErr(err)
 }
 
 // PrintVcf prints every line of a []Vcf.
@@ -241,7 +243,7 @@ func PrintSingleLine(data Vcf) {
 	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, strings.Join(data.Alt, ","), data.Qual, data.Filter, data.Info, data.Format, SamplesToString(data.Samples))
 }
 
-// IsVcfFile checks suffix of filename to confirm if the file is a vcf formatted file
+// IsVcfFile checks suffix of filename to confirm if the file is a vcf formatted file.
 func IsVcfFile(filename string) bool {
 	if strings.HasSuffix(filename, ".vcf") || strings.HasSuffix(filename, ".vcf.gz") {
 		return true

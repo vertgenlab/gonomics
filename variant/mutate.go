@@ -2,6 +2,7 @@ package variant
 
 import (
 	"errors"
+
 	"github.com/vertgenlab/gonomics/dna"
 )
 

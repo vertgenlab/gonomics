@@ -1,12 +1,14 @@
 // Command Group: "General Tools"
 
+// View http url links and print data stream to stdout
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func usage() {

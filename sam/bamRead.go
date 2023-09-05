@@ -3,20 +3,21 @@ package sam
 import (
 	"bytes"
 	"errors"
+	"io"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/bgzf"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"io"
-	"log"
-	"strings"
 )
 
 // bam is a binary version of sam compressed as a bgzf file
 // specs can be found in the sam documentation at:
 // https://raw.githubusercontent.com/samtools/hts-specs/master/SAMv1.pdf
 
-// magicBam is a 4 byte sequence at the start of a bam file
+// magicBam is a 4 byte sequence at the start of a bam file.
 const magicBam string = "BAM\u0001"
 
 // BamReader wraps a bgzf.BlockReader with a fully allocated bgzf.Block.
@@ -209,6 +210,19 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 		s.Cigar[i].RunLength = int(cigint >> 4)
 	}
 
+	// handle case where we are using a recycled sam struct.
+	// in this case we don't want to waste memory and set the cigar to nil
+	// for unaligned, so we use cig[0].Op = '*' which is how it is done when
+	// reading from a sam file.
+	if numCigarOps == 0 {
+		if cap(s.Cigar) >= 1 {
+			s.Cigar = s.Cigar[:1]
+		} else {
+			s.Cigar = make([]cigar.Cigar, 1)
+		}
+		s.Cigar[0].Op = '*'
+	}
+
 	if cap(s.Seq) >= lenSeq {
 		s.Seq = s.Seq[:lenSeq]
 	} else {
@@ -249,15 +263,19 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	}
 	s.unparsedExtra = s.unparsedExtra[:len(ex)]
 	copy(s.unparsedExtra, ex)
+	s.parsedExtra = nil
+	s.parsedExtraIdx = nil
+	s.parsedExtraTags = nil
+	s.parsedExtraTypes = nil
 	return
 }
 
-// integer to cigar look quick lookup
+// integer to cigar look quick lookup.
 var cigLookup = []rune{'M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X', '*'}
 
 // baseDecoder is for 4-bit to dna.Base decoding.
 // gonomics does not support all 16 options in bam.
-// options are: =ACMGRSVTWYHKDBN
+// options are: =ACMGRSVTWYHKDBN.
 var baseDecoder = [16]dna.Base{dna.Nil, dna.A, dna.C, dna.Nil, dna.G, dna.Nil, dna.Nil, dna.Nil, dna.T, dna.Nil, dna.Nil, dna.Nil, dna.Nil, dna.Nil, dna.Nil, dna.N}
 var ErrNonStdBase error = errors.New("sequence contains bases other than A,C,G,T,N. Other bases are not supported in gonomics")
 

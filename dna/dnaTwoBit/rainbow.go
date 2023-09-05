@@ -23,7 +23,7 @@ func NewTwoBitRainbow(inSeq []dna.Base) []*TwoBit {
 	return answer
 }
 
-// TwoBitRainbowDeReference is the same as NewTwoBitRainbow except it will be turn a non-pointer plice of dnaTwoBit
+// TwoBitRainbowDeReference is the same as NewTwoBitRainbow except it will be turn a non-pointer plice of dnaTwoBit.
 func TwoBitRainbowDeReference(inSeq []dna.Base) []TwoBit {
 	var start, end, sliceLenNeeded int = 0, 0, 0
 	clone := make([]dna.Base, len(inSeq))

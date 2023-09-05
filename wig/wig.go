@@ -1,21 +1,21 @@
-//package wig provides functions to read, write, and manipulate wig files.
-//more information on the WIG file format can be found at https://genome.ucsc.edu/goldenPath/help/wiggle.html
-
+// Package wig provides functions to read, write, and manipulate wig files.
+// more information on the WIG file format can be found at https://genome.ucsc.edu/goldenPath/help/wiggle.html
 package wig
 
 import (
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
 	"sync"
 )
 
-// Wig stores information on the chromosome location and step properties of Wig data. Individual wig values are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
+// Wig stores information on the chromosome location and step properties of Wig data. Individual wig values
+// are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
 type Wig struct {
 	StepType string
 	Chrom    string
@@ -33,7 +33,7 @@ func Read(filename string) []Wig {
 
 	file := fileio.EasyOpen(filename)
 
-	for curr, doneReading = NextWig(file); !doneReading; curr, doneReading = NextWig(file) { //TODO: use channels here instead of appending. Line 44 would be changed
+	for curr, doneReading = NextWig(file); !doneReading; curr, doneReading = NextWig(file) { //TODO: use channels here instead of appending.
 		finalWig = append(finalWig, curr)
 	}
 	var err error
@@ -61,12 +61,12 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 			chromList = strings.Split(lineFields[1], "=")
 			currentWig.Chrom = chromList[1]
 			startList = strings.Split(lineFields[2], "=")
-			currentWig.Start = common.StringToInt(startList[1])
+			currentWig.Start = parse.StringToInt(startList[1])
 			stepList = strings.Split(lineFields[3], "=")
-			currentWig.Step = common.StringToInt(stepList[1])
+			currentWig.Step = parse.StringToInt(stepList[1])
 			if len(lineFields) == 5 {
 				spanList = strings.Split(lineFields[4], "=")
-				currentWig.Span = common.StringToInt(spanList[1])
+				currentWig.Span = parse.StringToInt(spanList[1])
 			} else {
 				currentWig.Span = -1 //signify missing
 			}
@@ -76,7 +76,7 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 			if currentWig.StepType == "" {
 				log.Fatalf("ERROR: %s is missing a wig header (e.g. fixedStep chrom=chr...)", file.File.Name())
 			}
-			currentWig.Values = append(currentWig.Values, common.StringToFloat64(line))
+			currentWig.Values = append(currentWig.Values, parse.StringToFloat64(line))
 		}
 
 		peek, err = fileio.EasyPeekReal(file, 1)
@@ -92,7 +92,8 @@ func NextWig(file *fileio.EasyReader) (Wig, bool) {
 	return currentWig, doneReading
 }
 
-//ReadToChan reads from a fileio.EasyReader to send Wig structs to a chan<- Wig.
+// ReadToChan reads from a fileio.EasyReader to send Wig structs to a chan<- Wig.
+// When it has finished reading the file, ReadToChan will call Done on the waitgroup.
 func ReadToChan(file *fileio.EasyReader, data chan<- Wig, wg *sync.WaitGroup) {
 	for curr, done := NextWig(file); !done; curr, done = NextWig(file) {
 		data <- curr
@@ -102,7 +103,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Wig, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-//GoReadToChan reads Wig entries from an input filename to a <-chan Wig.
+// GoReadToChan reads Wig entries from an input filename to a <-chan Wig.
 func GoReadToChan(filename string) <-chan Wig {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
@@ -118,7 +119,7 @@ func GoReadToChan(filename string) <-chan Wig {
 	return data
 }
 
-// Prints the first record in a Wig struct. Mainly used for debugging.
+// PrintFirst prints the first record in a Wig struct. Mainly used for debugging.
 func PrintFirst(rec []Wig) {
 	if len(rec) == 0 {
 		fmt.Println("Empty Wig; length of input was zero.")
@@ -133,7 +134,7 @@ func PrintFirst(rec []Wig) {
 	}
 }
 
-// Write writes a Wig data structure to a WIG format file at the input filename
+// Write writes a Wig data structure to a WIG format file at the input filename.
 func Write(filename string, rec []Wig) {
 	file := fileio.EasyCreate(filename)
 	for i := range rec {
@@ -145,7 +146,7 @@ func Write(filename string, rec []Wig) {
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle is an helper function for Write that writes the Wig data structure to a file.
+// WriteToFileHandle is an helper function for Write that writes the Wig data structure to an io.Writer
 func WriteToFileHandle(file io.Writer, rec Wig) {
 	var err error
 	if rec.StepType == "fixedStep" {
@@ -156,7 +157,7 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 			_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d\n", rec.StepType, rec.Chrom,
 				rec.Start, rec.Step)
 		}
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	} else if rec.StepType == "variableStep" {
 		log.Fatalf("ERROR: %s is variableStep Wig, must convert to fixedStep before reading in Wig to gonomics", rec.StepType)
 	} else {
@@ -172,13 +173,12 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 			} //Only print significant figures to some capacity? rpkm
 			// We want to make this as concise as possible.
 			// How can we break up a wig into sections that actually has data and skip over large sections of zeros?
-			common.ExitIfError(err)
+			exception.PanicOnErr(err)
 		}
-
 	}
 }
 
-// ChromToSlice returns the values from a wig entry matching a user-specified chromosome name
+// ChromToSlice returns the values from a wig entry matching a user-specified chromosome name.
 func ChromToSlice(w []Wig, chrom string) []float64 {
 	var output []float64
 	for _, v := range w {

@@ -1,14 +1,16 @@
 // Command Group: "FASTQ Tools"
 
+// Options alter fastq file formatting
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 func fastqFormat(s Settings) {

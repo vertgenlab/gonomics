@@ -1,13 +1,17 @@
 package fastq
 
 import (
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"strings"
 )
 
+// FastqBig holds normal fastq info, as well as the reverse complement of the sequence
+// and two rainbow tables where every possible offset of Seq and SeqRc are stored
+// in TwoBit format.
 type FastqBig struct {
 	Name      string
 	Seq       []dna.Base
@@ -17,6 +21,7 @@ type FastqBig struct {
 	RainbowRc []dnaTwoBit.TwoBit
 }
 
+// ReadBigToChan reads a given fastq file into FastqBig structs and sends them into the provided channel.
 func ReadBigToChan(filename string, output chan<- FastqBig) {
 	var curr Fastq
 	var currBig FastqBig
@@ -30,6 +35,7 @@ func ReadBigToChan(filename string, output chan<- FastqBig) {
 	close(output)
 }
 
+// ToFastqBig converts a Fastq to FastqBig format.
 func ToFastqBig(a Fastq) FastqBig {
 	answer := FastqBig{}
 	answer.Name = a.Name
@@ -51,18 +57,18 @@ func ReadFqBig(reader *fileio.ByteReader) (FastqBig, bool) {
 	if done {
 		return FastqBig{}, true
 	}
-	answer.Name = strings.Split(string(line.String()[1:]), " ")[0]
+	answer.Name = strings.Split(line.String()[1:], " ")[0]
 	line, done = fileio.ReadLine(reader)
 	if done {
 		return FastqBig{}, true
 	}
-	//set up sequence and reverse comp
+	// set up sequence and reverse comp
 	answer.Seq = dna.ByteSliceToDnaBases(line.Bytes())
 	answer.SeqRc = make([]dna.Base, len(answer.Seq))
 	copy(answer.SeqRc, answer.Seq)
 	dna.ReverseComplement(answer.SeqRc)
 
-	//performs two bit conversion
+	// performs two bit conversion
 	answer.Rainbow = dnaTwoBit.TwoBitRainbowDeReference(answer.Seq)
 	answer.RainbowRc = dnaTwoBit.TwoBitRainbowDeReference(answer.SeqRc)
 

@@ -3,10 +3,10 @@ package axt
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
@@ -83,7 +83,7 @@ func GoReadToChan(filename string) (<-chan Axt, []string) {
 // ReadNext takes an EasyReader and returns the next Axt record as well as a boolean flag
 // indicating if we are done reading the file.  If there
 // is an Axt record left in the file, it will be returned along with "false."  If we are done reading the file
-// a blank Axt record will be returned along with "true."
+// a blank Axt record will be returned along with "true.".
 func ReadNext(reader *fileio.EasyReader) (Axt, bool) {
 	header, hDone := fileio.EasyNextRealLine(reader)
 	if hDone {
@@ -112,13 +112,13 @@ func axtHelper(header string, rSeq string, qSeq string) Axt {
 	}
 	var answer Axt = Axt{
 		RName:      words[1],
-		RStart:     common.StringToInt(words[2]),
-		REnd:       common.StringToInt(words[3]),
+		RStart:     parse.StringToInt(words[2]),
+		REnd:       parse.StringToInt(words[3]),
 		QName:      words[4],
-		QStart:     common.StringToInt(words[5]),
-		QEnd:       common.StringToInt(words[6]),
-		QStrandPos: common.StringToStrand(words[7]),
-		Score:      common.StringToInt(words[8]),
+		QStart:     parse.StringToInt(words[5]),
+		QEnd:       parse.StringToInt(words[6]),
+		QStrandPos: parse.StringToStrand(words[7]),
+		Score:      parse.StringToInt(words[8]),
 		RSeq:       dna.StringToBases(rSeq),
 		QSeq:       dna.StringToBases(qSeq),
 	}
@@ -135,7 +135,7 @@ func WriteToFileHandle(file io.Writer, input Axt, alnNumber int) {
 // ToString converts an Axt alignment struct into a string.  Axt records are numbered in files, so
 // a number must be provided that will be used as this id.
 func ToString(input Axt, id int) string {
-	return fmt.Sprintf("%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", id, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, common.StrandToRune(input.QStrandPos), input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
+	return fmt.Sprintf("%d %s %d %d %s %d %d %c %d\n%s\n%s\n\n", id, input.RName, input.RStart, input.REnd, input.QName, input.QStart, input.QEnd, parse.StrandToRune(input.QStrandPos), input.Score, dna.BasesToString(input.RSeq), dna.BasesToString(input.QSeq))
 }
 
 // Write is a wrapper function that will loop over a slice of axt alignments and writes each record to a file.
@@ -168,7 +168,7 @@ func Swap(in *Axt, tLen int, qLen int) {
 	in.RSeq, in.QSeq = in.QSeq, in.RSeq
 }
 
-// IsAxtFile returns true of filename ends in .axt or .axt.gz
+// IsAxtFile returns true of filename ends in .axt or .axt.gz.
 func IsAxtFile(filename string) bool {
 	if strings.HasSuffix(filename, ".axt") || strings.HasSuffix(filename, ".axt.gz") {
 		return true

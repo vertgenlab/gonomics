@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 type variantType int
@@ -56,7 +57,7 @@ func getVariant(exp, norm []sam.Pile, samHeader sam.Header, ref *fasta.Seeker, m
 	return makeVcf(exp, norm, bkgd, chrName, warnings, refBases, alts, altPvalues, altVarTypes, ref), true
 }
 
-// addFmtField assembles the piles and p values into the format field of the vcf
+// addFmtField assembles the piles and p values into the format field of the vcf.
 func addFmtField(v vcf.Vcf, exp, norm []sam.Pile, ref dna.Base, alts []string, passingAltPvalues [][]float64, passingVarType []variantType) vcf.Vcf {
 	var genotypeAlleles []int16
 	var depth int
@@ -76,7 +77,7 @@ func addFmtField(v vcf.Vcf, exp, norm []sam.Pile, ref dna.Base, alts []string, p
 	return v
 }
 
-// calcDepth returns the number of reads in the input pile
+// calcDepth returns the number of reads in the input pile.
 func calcDepth(s sam.Pile) int {
 	var depth int
 	for i := range s.CountF {
@@ -101,11 +102,13 @@ func getFormatData(s sam.Pile, sIdx int, ref dna.Base, alts []string, passingAlt
 
 	// add ref to altcounts
 	alleleCounts = append(alleleCounts, s.CountF[int(ref)]+s.CountR[int(ref)])
-
+	var b dna.Base
 	for i := range alts {
 		switch passingVarType[i] {
 		case singleNucleotide:
-			alleleCounts = append(alleleCounts, s.CountF[int(dna.RuneToBase(rune(alts[i][0])))]+s.CountR[int(dna.RuneToBase(rune(alts[i][0])))])
+			b, err = dna.RuneToBase(rune(alts[i][0]))
+			exception.PanicOnErr(err)
+			alleleCounts = append(alleleCounts, s.CountF[int(b)]+s.CountR[int(b)])
 
 		case insertion:
 			alleleCounts = append(alleleCounts, s.InsCountF[alts[i]]+s.InsCountR[alts[i]])
@@ -132,7 +135,7 @@ func getFormatData(s sam.Pile, sIdx int, ref dna.Base, alts []string, passingAlt
 	return
 }
 
-// sprintAD prints the allele depth (AD) field to a string
+// sprintAD prints the allele depth (AD) field to a string.
 func sprintAD(ad []int) string {
 	var s strings.Builder
 	for i := range ad {
@@ -144,7 +147,7 @@ func sprintAD(ad []int) string {
 	return s.String()
 }
 
-// sprintPV prints the p values (PV) field to a string
+// sprintPV prints the p values (PV) field to a string.
 func sprintPV(pv []float64) string {
 	if len(pv) == 1 && pv[0] == -1 {
 		return "."
@@ -312,11 +315,15 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 	// d = Background Alt Allele Count
 
 	var a, b, c, d int
+	var base dna.Base
+	var err error
 	var fwdStrandBias float64
 
 	switch varType {
 	case singleNucleotide: // alt is single base
-		alt := int(dna.RuneToBase(rune(altString[0])))
+		base, err = dna.RuneToBase(rune(altString[0]))
+		exception.PanicOnErr(err)
+		alt := int(base)
 		c = exp.CountF[alt] + exp.CountR[alt]
 		d = bkgd.CountF[alt] + bkgd.CountR[alt]
 		fwdStrandBias = float64(exp.CountF[alt]) / float64(c)
@@ -351,7 +358,6 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 	// Check exclusion cases to avoid actually doing the test
 	var p float64
 	switch {
-
 	// If alternate allele is less than minimum reads then p is 1
 	case c < minAltReads:
 		p = 1
@@ -379,7 +385,7 @@ func fishersExactTest(altString string, exp sam.Pile, bkgd sam.Pile, hasNorm boo
 	return p
 }
 
-// dataPresent returns true if any of the input []Pile contain a non-nil value
+// dataPresent returns true if any of the input []Pile contain a non-nil value.
 func dataPresent(p []sam.Pile) bool {
 	for i := range p {
 		if p[i].RefIdx != -1 { // RefIdx == -1 is mark for no data
@@ -436,7 +442,7 @@ func makeVcf(exp, norm []sam.Pile, bkgd sam.Pile, chrName string, warnings []str
 	return v
 }
 
-// adjustAlts alters the ref and alt fields depending on the variant type
+// adjustAlts alters the ref and alt fields depending on the variant type.
 func adjustAlts(v vcf.Vcf, deletionIndexes []int, varTypes []variantType, ref *fasta.Seeker) vcf.Vcf {
 	var longestDeletion int
 	delLens := make([]int, len(deletionIndexes))

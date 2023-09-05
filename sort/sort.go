@@ -1,16 +1,18 @@
+// Package sort holds structs and functions for sorting genomic data types
 package sort
 
 import (
 	"container/heap"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"os"
 	"sort"
 	"strconv"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
 )
 
 const (
@@ -23,7 +25,7 @@ type priorityGiraf struct {
 	sortPath []uint32
 }
 
-// Implements sort.Interface based on Breadth-First topological ordering of a SimpleGraph
+// Implements sort.Interface based on Breadth-First topological ordering of a SimpleGraph.
 type byTopologicalOrder []*priorityGiraf
 
 func (g byTopologicalOrder) Len() int { return len(g) }
@@ -31,7 +33,7 @@ func (g byTopologicalOrder) Len() int { return len(g) }
 func (g byTopologicalOrder) Swap(i, j int) { g[i], g[j] = g[j], g[i] }
 
 func (g byTopologicalOrder) Less(i, j int) bool {
-	// determine minPathLen so that we dont overshoot the index on one of the inputs
+	// determine minPathLen so that we don't overshoot the index on one of the inputs
 	var minPathLen int
 	if len(g[i].sortPath) < len(g[j].sortPath) {
 		minPathLen = len(g[i].sortPath)
@@ -70,7 +72,7 @@ func (g byTopologicalOrder) Less(i, j int) bool {
 	return false
 }
 
-// Implements methods required for heap.Interface
+// Implements methods required for heap.Interface.
 func (g *byTopologicalOrder) Push(x interface{}) {
 	giraf := x.(*priorityGiraf)
 	*g = append(*g, giraf)
@@ -88,7 +90,7 @@ func (g *byTopologicalOrder) Pop() interface{} {
 // Sorts giraf by startposition and startnode given the node order defined in nodeIdSortOrder
 // This was intended to be paired with a list of sorted nodes such as simpleGraph.GetSortOrder()
 // so that the file result would be a topologically sorted giraf file, however this can be used with
-// any given node sort order
+// any given node sort order.
 func GirafExternalMergeSort(girafFile string, nodeIdSortOrder []uint32, linesPerChunk int, outFile string) {
 	file := fileio.EasyOpen(girafFile)
 	var done bool
@@ -160,7 +162,6 @@ func writeChunk(g []*priorityGiraf, chunkNum int) string {
 	defer file.Close()
 	for i := 0; i < len(g); i++ {
 		giraf.WriteGirafToFileHandle(file, g[i].data)
-
 	}
 	return chunkName
 }
@@ -174,9 +175,10 @@ func girafMergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrd
 		chunkReaders[i] = fileio.EasyOpen(chunkIDs[i])
 		curr, done := giraf.NextGiraf(chunkReaders[i])
 		if done {
-			chunkReaders[i].Close()
-			err := os.Remove(chunkReaders[i].File.Name())
-			common.ExitIfError(err)
+			err := chunkReaders[i].Close()
+			exception.PanicOnErr(err)
+			err = os.Remove(chunkReaders[i].File.Name())
+			exception.PanicOnErr(err)
 			log.Fatalln("ERROR: Could not find file, or file empty", chunkIDs[i])
 		} else {
 			// I figure that it would be just as quick to rederive the sortPath
@@ -197,9 +199,10 @@ func girafMergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrd
 		outputChan <- curr.data
 		nextGiraf, done = giraf.NextGiraf(chunkReaders[curr.origin])
 		if done {
-			chunkReaders[curr.origin].Close()
-			err := os.Remove(chunkReaders[curr.origin].File.Name())
-			common.ExitIfError(err)
+			err := chunkReaders[curr.origin].Close()
+			exception.PanicOnErr(err)
+			err = os.Remove(chunkReaders[curr.origin].File.Name())
+			exception.PanicOnErr(err)
 		} else {
 			heap.Push(&priorityQueue, &priorityGiraf{nextGiraf, curr.origin, getSortPath(&nextGiraf.Path, sortOrderMap)})
 		}
@@ -207,7 +210,7 @@ func girafMergeChunks(outputChan chan<- *giraf.Giraf, chunkIDs []string, sortOrd
 	close(outputChan)
 }
 
-//TODO: should really come up with a better index format than this
+// TODO: should really come up with a better index format than this.
 func writeIdx(filename string, sortOrder []uint32) {
 	idxName := filename + ".idx"
 	file := fileio.MustCreate(idxName)
@@ -215,19 +218,22 @@ func writeIdx(filename string, sortOrder []uint32) {
 
 	for i := 0; i < len(sortOrder); i++ {
 		_, err := fmt.Fprintln(file, sortOrder[i])
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 }
 
-func ReadIdx(filename string) []uint32 {
+func readIdx(filename string) []uint32 {
 	answer := make([]uint32, 0)
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
 
 	for line, done := fileio.EasyNextLine(file); !done; line, done = fileio.EasyNextLine(file) {
 		val, err := strconv.Atoi(line)
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 		answer = append(answer, uint32(val))
 	}
+
+	err := file.Close()
+	exception.PanicOnErr(err)
+
 	return answer
 }

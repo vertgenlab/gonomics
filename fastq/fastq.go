@@ -1,41 +1,43 @@
-//Package fastq provides functions for reading, writing, and manipulating data in the fastq file format.
+// Package fastq provides functions for reading, writing, and manipulating data in the fastq file format.
 package fastq
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"sync"
 )
 
-//Fastq stores the name, sequence, and quality scores for each 4 line record of a Fastq file.
+// Fastq stores the name, sequence, and quality scores for each 4 line record of a Fastq file.
 type Fastq struct {
 	Name string
 	Seq  []dna.Base
 	Qual []uint8
 }
 
-//Read sends all records in a fastq format file to a []*Fastq.TODO: Pointer cleanup in this package?
+// Read sends all records in a fastq format file to a []Fastq.
 func Read(filename string) []Fastq {
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
-
 	answer := ReadFastqs(file)
+	err := file.Close()
+	exception.PanicOnErr(err)
 	return answer
 }
 
-//ReadToChan is a helper function of GoReadToChan.
+// ReadToChan reads from an EasyReader, sending fastq records to data.  When it gest to the end
+// of the fastq file, it will call Done() on the waitgroup.
 func ReadToChan(file *fileio.EasyReader, data chan<- Fastq, wg *sync.WaitGroup) {
 	for curr, done := NextFastq(file); !done; curr, done = NextFastq(file) {
 		data <- curr
 	}
-	file.Close()
+	err := file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }
 
-//GoReadToChan parses Fastq structs from an input filename and returns a chan of pointers to those Fastq structs.
+// GoReadToChan launches a go routine that parses Fastq structs from an input filename and returns a chan of those Fastq structs.
 func GoReadToChan(filename string) <-chan Fastq {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
@@ -51,23 +53,24 @@ func GoReadToChan(filename string) <-chan Fastq {
 	return data
 }
 
-//Write all records in an input []*Fastq to a file at an input filename string.
+// Write writes all records in an input []Fastq to a file at an input filename string.
 func Write(filename string, records []Fastq) {
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
 	for _, fq := range records {
 		WriteToFileHandle(file, fq)
 	}
+	err := file.Close()
+	exception.PanicOnErr(err)
 }
 
-//WriteToFileHandle writes an individual fastq record to a given fileio.EasyWriter.
+// WriteToFileHandle writes an individual fastq record to a given fileio.EasyWriter.
 func WriteToFileHandle(file *fileio.EasyWriter, fq Fastq) {
 	var err error
 	_, err = fmt.Fprintf(file, "@%s\n%s\n+\n%s\n", fq.Name, dna.BasesToString(fq.Seq), QualString(fq.Qual))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 }
 
-//processFastqRecord is a helper function of NextFastq that parses a fastq struct from an input line of a fastq file provided as a string.
+// processFastqRecord is a helper function of NextFastq that parses a fastq struct from an input line of a fastq file provided as a string.
 func processFastqRecord(line1 string, line2 string, line3 string, line4 string) Fastq {
 	var curr Fastq
 	if line3 != "+" {
@@ -77,7 +80,9 @@ func processFastqRecord(line1 string, line2 string, line3 string, line4 string) 
 	return curr
 }
 
-//NextFastq is a helper function of Read and GoReadToChan. NextFastq checks a reader for additional lines of data and parses a Fastq line if more lines exist.
+// NextFastq is a helper function of Read and GoReadToChan. NextFastq checks a reader for additional lines of data and returns a fastq struct
+// and a bool telling the caller if it is done reading from the file.
+// When it is done reading from the EasyReader, it will return an empty fastq and true.
 func NextFastq(reader *fileio.EasyReader) (Fastq, bool) {
 	line, done := fileio.EasyNextLine(reader)
 	line2, done2 := fileio.EasyNextLine(reader)
@@ -92,7 +97,7 @@ func NextFastq(reader *fileio.EasyReader) (Fastq, bool) {
 	return processFastqRecord(line, line2, line3, line4), false
 }
 
-//ReadFastqs reads a slice of fastq from a fileio.EasyReader instead of from a filename.
+// ReadFastqs reads a slice of fastq from a fileio.EasyReader.
 func ReadFastqs(er *fileio.EasyReader) []Fastq {
 	var curr Fastq
 	var done bool
@@ -103,7 +108,7 @@ func ReadFastqs(er *fileio.EasyReader) []Fastq {
 	return answer
 }
 
-//String converts a fastq struct to a string so it will be automatically formatted when printing with the fmt format.
+// String converts a fastq struct to a string so it will be automatically formatted when printing with the fmt format.
 func (fq *Fastq) String() string {
 	return fmt.Sprintf("@%s\n%s\n+\n%s\n", fq.Name, dna.BasesToString(fq.Seq), QualString(fq.Qual))
 }

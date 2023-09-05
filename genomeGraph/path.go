@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"strings"
 )
@@ -28,7 +28,6 @@ func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {
 }
 
 func ViewGraphAlignment(g *giraf.Giraf, genome *GenomeGraph) string {
-
 	var seqOne, seqTwo bytes.Buffer
 	var i int = g.Path.TStart
 	var j int = g.QStart
@@ -92,7 +91,7 @@ func addStartChrPos(samfile sam.Sam) int {
 	var answer int = 0
 	if strings.Contains(samfile.Extra, "XO:i:") {
 		words := strings.Split(samfile.Extra, "\t")
-		answer = common.StringToInt(words[2][5:])
+		answer = parse.StringToInt(words[2][5:])
 	}
 	return answer
 }
@@ -150,13 +149,13 @@ func pathPrettyString(graphPath string) string {
 	for i = 0; i < len(words); i += 8 {
 		var line string = ""
 		if i+8 > len(words) {
-			line += fmt.Sprintf("%s", words[i])
+			line += words[i]
 			for j = i + 1; j < len(words)-1; j++ {
-				line += fmt.Sprintf(":%s", words[j])
+				line += words[j]
 			}
 			s += fmt.Sprintf("%s\n", line)
 		} else {
-			line += fmt.Sprintf("%s", words[i])
+			line += words[i]
 			for j = i + 1; j < i+8; j++ {
 				line += fmt.Sprintf(":%s", words[j])
 			}

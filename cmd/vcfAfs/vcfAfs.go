@@ -1,14 +1,16 @@
 // Command Group: "Statistics & Population Genetics"
 
+// Returns allele frequency spectrum information in a text file for graphing
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
-	"log"
 )
 
 type Settings struct {
@@ -20,7 +22,7 @@ type Settings struct {
 	IntegralError           float64
 	DivergenceAscertainment bool
 	D                       int  //size of the ascertainment subset
-	IncludeRef              bool //Includes the reference genome allele as a datapoint in the derived allele frequency spectrum. Incompatable with "UnPolarized".
+	IncludeRef              bool //Includes the reference genome allele as a datapoint in the derived allele frequency spectrum. Incompatible with "UnPolarized".
 }
 
 func vcfAfs(vcfFile string, outFile string, s Settings) {

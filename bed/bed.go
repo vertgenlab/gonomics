@@ -1,12 +1,12 @@
-//Package bed provides functions for reading, writing, and manipulating Browser Extensible Data (BED) format files.
-//More information on the BED file format can be found at https://genome.ucsc.edu/FAQ/FAQformat.html#format1
+// Package bed provides functions for reading, writing, and manipulating Browser Extensible Data (BED) format files.
+// More information on the BED file format can be found at https://genome.ucsc.edu/FAQ/FAQformat.html#format1
 package bed
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
@@ -34,7 +34,7 @@ const (
 	None     Strand = '.'
 )
 
-// String converts a bed struct to a string so it will be automatically formatted when printing with the fmt package.
+// String converts a Bed struct to a string so it will be automatically formatted when printing with the fmt package.
 func (b Bed) String() string {
 	return ToString(b, b.FieldsInitialized)
 }
@@ -69,14 +69,14 @@ func WriteBed(file io.Writer, input Bed) {
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle writes an input Bed struct to an io.Writer
+// WriteToFileHandle writes an input Bed struct to an io.Writer.
 func WriteToFileHandle(file io.Writer, rec Bed) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", rec)
 	exception.PanicOnErr(err)
 }
 
-//Write writes a slice of Bed structs to a specified filename.
+// Write writes a slice of Bed structs to a specified filename.
 func Write(filename string, records []Bed) {
 	var err error
 	file := fileio.EasyCreate(filename)
@@ -88,7 +88,7 @@ func Write(filename string, records []Bed) {
 	exception.PanicOnErr(err)
 }
 
-//Read returns a slice of Bed structs from an input filename.
+// Read returns a slice of Bed structs from an input filename.
 func Read(filename string) []Bed {
 	var line string
 	var answer []Bed
@@ -106,18 +106,18 @@ func Read(filename string) []Bed {
 	return answer
 }
 
-//processBedLine is a helper function of Read that returns a Bed struct from an input line of a file.
+// processBedLine is a helper function of Read that returns a Bed struct from an input line of a file.
 func processBedLine(line string) Bed {
 	words := strings.Split(line, "\t")
-	startNum := common.StringToInt(words[1])
-	endNum := common.StringToInt(words[2])
+	startNum := parse.StringToInt(words[1])
+	endNum := parse.StringToInt(words[2])
 
 	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Strand: None, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
 	}
 	if len(words) >= 5 {
-		current.Score = common.StringToInt(words[4])
+		current.Score = parse.StringToInt(words[4])
 	}
 	if len(words) >= 6 {
 		current.Strand = StringToStrand(words[5])
@@ -130,7 +130,7 @@ func processBedLine(line string) Bed {
 	return current
 }
 
-//StringToStrand parses a bed.Strand struct from an input string.
+// StringToStrand parses a bed.Strand struct from an input string.
 func StringToStrand(s string) Strand {
 	switch s {
 	case "+":
@@ -145,16 +145,16 @@ func StringToStrand(s string) Strand {
 	}
 }
 
-//NextBed returns a Bed struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
+// NextBed returns a Bed struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
 func NextBed(reader *fileio.EasyReader) (Bed, bool) {
-	line, done := fileio.EasyNextLine(reader)
+	line, done := fileio.EasyNextRealLine(reader)
 	if done {
 		return Bed{}, true
 	}
 	return processBedLine(line), false
 }
 
-//ReadToChan reads from a fileio.EasyReader to send Bed structs to a chan<- Bed.
+// ReadToChan reads from a fileio.EasyReader to send Bed structs to a chan<- Bed.
 func ReadToChan(file *fileio.EasyReader, data chan<- Bed, wg *sync.WaitGroup) {
 	for curr, done := NextBed(file); !done; curr, done = NextBed(file) {
 		data <- curr
@@ -164,11 +164,11 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Bed, wg *sync.WaitGroup) {
 	wg.Done()
 }
 
-//GoReadToChan reads Bed entries from an input filename to a <-chan Bed.
+// GoReadToChan reads Bed entries from an input filename to a <-chan Bed.
 func GoReadToChan(filename string) <-chan Bed {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
-	data := make(chan Bed)
+	data := make(chan Bed, 1000)
 	wg.Add(1)
 	go ReadToChan(file, data, &wg)
 

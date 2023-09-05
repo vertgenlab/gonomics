@@ -1,17 +1,17 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
 // IsEqual returns true if two input Fasta structs have an equal name and sequence.
 func IsEqual(alpha Fasta, beta Fasta) bool {
 	if alpha.Name == beta.Name && dna.CompareSeqsCaseSensitive(alpha.Seq, beta.Seq) == 0 {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // allEqual determines if two slices of fasta records are equivalent.

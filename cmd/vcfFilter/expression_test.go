@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/vcf"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func TestExpressionFormat(t *testing.T) {

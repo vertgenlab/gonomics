@@ -1,14 +1,16 @@
 // Command Group: "Statistics & Population Genetics"
 
+// Returns summary statistics on an MCMC trace file produced by selectionMCMC
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 func mcmcTraceStats(inFile string, outFile string, hdiProportion float64, burnIn int, parameterName string) {

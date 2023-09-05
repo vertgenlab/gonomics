@@ -7,7 +7,7 @@ import (
 
 // NewThreeBitRainbow builds a "rainbow table" of a sequence in ThreeBit format
 // with every possible offset, so that there is always a version of the sequence
-// that can be compared to another ThreeBit sequence using xor
+// that can be compared to another ThreeBit sequence using xor.
 func NewThreeBitRainbow(inSeq []dna.Base, padding ThreeBitBase) []*ThreeBit {
 	var i, start, end, sliceLenNeeded, startOffset int
 	answer := make([]*ThreeBit, 21)

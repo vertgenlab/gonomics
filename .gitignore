@@ -13,3 +13,6 @@
 
 # .idea files
 .idea/*
+
+# gonomics cache
+./cmd/gonomics/command_cache.txt

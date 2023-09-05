@@ -29,7 +29,7 @@ func Cat(a *ThreeBit, b *ThreeBit) { // I was tempted to call this ligate
 	}
 }
 
-// Copy returns of duplicate of the ThreeBit passed in
+// Copy returns of duplicate of the ThreeBit passed in.
 func Copy(a *ThreeBit) *ThreeBit {
 	if a == nil {
 		return nil

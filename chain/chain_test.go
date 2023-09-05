@@ -1,10 +1,11 @@
 package chain
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var dir []string = []string{"testdata/big.chain", "testdata/twoChainZ.chain"}

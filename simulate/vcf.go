@@ -8,9 +8,9 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-//VcfToFile generates simulated VCF data. This currently is a skeleton that can be expanded on with additional functions. Currently supports generating gVCF annotations from
-//SimulateAFS in the popgen package. Random locations can be generated with simulateBed, and random mutations can be picked with Christi's simulate code.
-//maybe we can combine these?
+// VcfToFile generates simulated VCF data.  The inputs are alpha (the selection parameter), the number of sites,
+// the output filename, along with parameters for the bounding function for sampling.  Reasonable parameters
+// choices for boundAlpha, boundBeta, and boundMultiplier are 0.001, 0.001, and 10000.
 func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha float64, boundBeta float64, boundMultiplier float64) {
 	out := fileio.EasyCreate(outFile)
 	var current vcf.Vcf
@@ -26,7 +26,9 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 	exception.PanicOnErr(err)
 }
 
-//SingleVcf returns a single simulated Vcf from a user-specified selection parameter alpha.
+// SingleVcf returns a single simulated Vcf record for a user-specified selection parameter alpha and genomic position.
+// There also needs to be parameters for the bounding function, where alpha, beta, and multiplier parameters of 0.001, 0.001, and 10000 are good
+// for most applications.
 func SingleVcf(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int) vcf.Vcf {
 	var genotype []vcf.Sample
 	var divergent bool

@@ -1,12 +1,14 @@
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Removes all columns in a multi fasta alignment that are not variable
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fasta"
 	"log"
+
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 func mfaReduce(inFilename, outFilename string) {
@@ -17,7 +19,7 @@ func mfaReduce(inFilename, outFilename string) {
 
 func usage() {
 	fmt.Print(
-		"mfaReduce - mfaReduce removes all columns in an multi fasta alignment that are not variable\n" +
+		"mfaReduce - mfaReduce removes all columns in a multi fasta alignment that are not variable\n" +
 			"Usage:\n" +
 			" mfaReduce input.mfa output.mfa\n" +
 			"options:\n")

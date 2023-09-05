@@ -1,15 +1,17 @@
 // Command Group: "Statistics & Population Genetics"
 
+// Generates a binary input matrix for PCA
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 /*

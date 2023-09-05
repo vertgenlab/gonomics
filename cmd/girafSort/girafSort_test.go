@@ -1,11 +1,12 @@
 package main
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
-	"io/ioutil"
-	"testing"
 )
 
 func TestGirafSort(t *testing.T) {

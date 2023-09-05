@@ -2,17 +2,18 @@
 
 //TODO: Input-normalization.
 
+// Generate count matrix from single-cell sequencing data
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"io"
 	"log"
@@ -104,7 +105,7 @@ func normAndPrintRow(out io.Writer, r Row, normalizationMap map[string]float64, 
 	exception.PanicOnErr(err)
 }
 
-//Each Row represents one line of the output tsv, which includes the count for each gene from a particular cell. As counts can be weighted by input normalization factors, counts are represented as floats.
+// Each Row represents one line of the output tsv, which includes the count for each gene from a particular cell. As counts can be weighted by input normalization factors, counts are represented as floats.
 type Row struct {
 	Bx     string
 	Counts []float64
@@ -122,7 +123,7 @@ func parseNormMap(normFile string) map[string]float64 {
 		if len(words) != 2 {
 			log.Fatalf("Expression normalization input file must be a tab-separated file with two columns per line.")
 		}
-		normalizationMap[words[0]] = common.StringToFloat64(words[1])
+		normalizationMap[words[0]] = parse.StringToFloat64(words[1])
 	}
 	err = exp.Close()
 	exception.PanicOnErr(err)
@@ -135,6 +136,7 @@ func usage() {
 			"Accepts sam reads aligned to a reference genome that have first been processed with fastqFormat -singleCell -collapseUmi and sorted with mergeSort -singleCellBx\n" +
 			"Usage:\n" +
 			"scCount reads.sam genes.gtf out.csv\n" +
+			"genes.gtf must contain transcript lines, where field 3 (feature) is 'transcript'\n" +
 			"scCount also accepts a tab-separated optional input to declare expression normalization multipliers for each gene using the expNormalizationFile option.\n" +
 			"options:\n")
 	flag.PrintDefaults()

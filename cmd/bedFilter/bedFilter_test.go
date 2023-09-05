@@ -1,65 +1,115 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
 	"math"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 var BedFilterTests = []struct {
-	InFile       string
-	OutFile      string
-	ExpectedFile string
-	MinScore     int
-	MaxScore     int
-	MinLength    int
-	MaxLength    int
-	MinStart     int
-	MaxStart     int
-	MinEnd       int
-	MaxEnd       int
-	MinNameFloat float64
-	MaxNameFloat float64
-	Chrom        string
-	SubSet       float64
-	SetSeed      int64
+	InFile                string
+	OutFile               string
+	ExpectedFile          string
+	MinScore              int
+	MaxScore              int
+	MinLength             int
+	MaxLength             int
+	MinStart              int
+	MaxStart              int
+	MinEnd                int
+	MaxEnd                int
+	MinNameFloat          float64
+	MaxNameFloat          float64
+	MaxAnnotationFloat    float64
+	MinAnnotationFloat    float64
+	AnnotationFilterField int
+	Chrom                 string
+	SubSet                float64
+	SetSeed               int64
 }{
-	{"testdata/test.bed",
-		"testdata/tmp.bed",
-		"testdata/expected.bed",
-		0,
-		1000,
-		3,
-		1000,
-		5,
-		999999,
-		10,
-		1000010,
-		-1 * math.MaxFloat64,
-		math.MaxFloat64,
-		"chr1",
-		1.0,
-		0,
+	{InFile: "testdata/test.bed",
+		OutFile:               "testdata/tmp.bed",
+		ExpectedFile:          "testdata/expected.bed",
+		MinScore:              0,
+		MaxScore:              1000,
+		MinLength:             3,
+		MaxLength:             1000,
+		MinStart:              5,
+		MaxStart:              999999,
+		MinEnd:                10,
+		MaxEnd:                1000010,
+		MinNameFloat:          -1 * math.MaxFloat64,
+		MaxNameFloat:          math.MaxFloat64,
+		MinAnnotationFloat:    -1 * math.MaxFloat64,
+		MaxAnnotationFloat:    math.MaxFloat64,
+		AnnotationFilterField: 0,
+		Chrom:                 "chr1",
+		SubSet:                1.0,
+		SetSeed:               0,
 	},
-	{"testdata/test.bed",
-		"testdata/tmp.bed",
-		"testdata/expected.SubSet.bed",
-		-1 * numbers.MaxInt,
-		numbers.MaxInt,
-		0,
-		numbers.MaxInt,
-		0,
-		numbers.MaxInt,
-		0,
-		numbers.MaxInt,
-		-1 * math.MaxFloat64,
-		math.MaxFloat64,
-		"",
-		0.5,
-		0,
+	{InFile: "testdata/test.bed",
+		OutFile:               "testdata/tmp.bed",
+		ExpectedFile:          "testdata/expected.SubSet.bed",
+		MinScore:              -1 * numbers.MaxInt,
+		MaxScore:              numbers.MaxInt,
+		MinLength:             0,
+		MaxLength:             numbers.MaxInt,
+		MinStart:              0,
+		MaxStart:              numbers.MaxInt,
+		MinEnd:                0,
+		MaxEnd:                numbers.MaxInt,
+		MinNameFloat:          -1 * math.MaxFloat64,
+		MaxNameFloat:          math.MaxFloat64,
+		MinAnnotationFloat:    -1 * math.MaxFloat64,
+		MaxAnnotationFloat:    math.MaxFloat64,
+		AnnotationFilterField: 0,
+		Chrom:                 "",
+		SubSet:                0.5,
+		SetSeed:               0,
+	},
+	{InFile: "testdata/test.annotationFilter.bed",
+		OutFile:               "testdata/tmp.annotationFilter.bed",
+		ExpectedFile:          "testdata/expected.annotationFilter.bed",
+		MinScore:              -1 * numbers.MaxInt,
+		MaxScore:              numbers.MaxInt,
+		MinLength:             0,
+		MaxLength:             numbers.MaxInt,
+		MinStart:              0,
+		MaxStart:              numbers.MaxInt,
+		MinEnd:                0,
+		MaxEnd:                numbers.MaxInt,
+		MinNameFloat:          -1 * math.MaxFloat64,
+		MaxNameFloat:          math.MaxFloat64,
+		MinAnnotationFloat:    -10,
+		MaxAnnotationFloat:    10,
+		AnnotationFilterField: 0,
+		Chrom:                 "",
+		SubSet:                1,
+		SetSeed:               0,
+	},
+	{InFile: "testdata/test.annotationFilter.secondField.bed",
+		OutFile:               "testdata/tmp.annotationFilter.secondField.bed",
+		ExpectedFile:          "testdata/expected.annotationFilter.secondField.bed",
+		MinScore:              -1 * numbers.MaxInt,
+		MaxScore:              numbers.MaxInt,
+		MinLength:             0,
+		MaxLength:             numbers.MaxInt,
+		MinStart:              0,
+		MaxStart:              numbers.MaxInt,
+		MinEnd:                0,
+		MaxEnd:                numbers.MaxInt,
+		MinNameFloat:          -1 * math.MaxFloat64,
+		MaxNameFloat:          math.MaxFloat64,
+		MinAnnotationFloat:    -10,
+		MaxAnnotationFloat:    10,
+		AnnotationFilterField: 1,
+		Chrom:                 "",
+		SubSet:                1,
+		SetSeed:               0,
 	},
 }
 
@@ -68,21 +118,24 @@ func TestBedFilter(t *testing.T) {
 	var s Settings
 	for _, v := range BedFilterTests {
 		s = Settings{
-			InFile:       v.InFile,
-			OutFile:      v.OutFile,
-			MinScore:     v.MinScore,
-			MaxScore:     v.MaxScore,
-			MinLength:    v.MinLength,
-			MaxLength:    v.MaxLength,
-			MinStart:     v.MinStart,
-			MaxStart:     v.MaxStart,
-			MinEnd:       v.MinEnd,
-			MaxEnd:       v.MaxEnd,
-			MinNameFloat: v.MinNameFloat,
-			MaxNameFloat: v.MaxNameFloat,
-			Chrom:        v.Chrom,
-			SubSet:       v.SubSet,
-			SetSeed:      v.SetSeed,
+			InFile:                v.InFile,
+			OutFile:               v.OutFile,
+			MinScore:              v.MinScore,
+			MaxScore:              v.MaxScore,
+			MinLength:             v.MinLength,
+			MaxLength:             v.MaxLength,
+			MinStart:              v.MinStart,
+			MaxStart:              v.MaxStart,
+			MinEnd:                v.MinEnd,
+			MaxEnd:                v.MaxEnd,
+			MinNameFloat:          v.MinNameFloat,
+			MaxNameFloat:          v.MaxNameFloat,
+			MinAnnotationFloat:    v.MinAnnotationFloat,
+			MaxAnnotationFloat:    v.MaxAnnotationFloat,
+			AnnotationFilterField: v.AnnotationFilterField,
+			Chrom:                 v.Chrom,
+			SubSet:                v.SubSet,
+			SetSeed:               v.SetSeed,
 		}
 		bedFilter(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

@@ -71,7 +71,7 @@ func BenchmarkChanDerefPtr(b *testing.B) {
 	}
 }
 
-// testing ptrs in various sized values
+// testing ptrs in various sized values.
 var kb1 [1000]byte
 var kb1Ptr *[1000]byte
 var kb100 [100000]byte

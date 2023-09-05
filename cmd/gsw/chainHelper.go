@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/dna"
@@ -8,7 +10,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/vcf"
-	"strings"
 )
 
 func convertChains(chainFile, targetFa, queryFa, format, output string) {
@@ -23,7 +24,7 @@ func convertChains(chainFile, targetFa, queryFa, format, output string) {
 	case "vcf":
 		vcfChannel := goChainToVcf(chainFile, targetFa, queryFa)
 		file := fileio.EasyCreate(output)
-		vcf.NewWriteHeader(file, vcf.NewHeader(targetFa))
+		vcf.NewWriteHeader(file, vcf.NewHeader())
 		for i := range vcfChannel {
 			vcf.WriteVcf(file, i)
 		}
@@ -92,7 +93,7 @@ func workThreadAxtVcf(axtChannel <-chan axt.Axt, ans chan<- vcf.Vcf) {
 	close(ans)
 }
 
-//FilterVcfPos will filter out records that appear as the same postion more than once, keeping the first one it encounters. In addition, if records contains Ns, those records will also be filtered out.
+// FilterVcfPos will filter out records that appear as the same position more than once, keeping the first one it encounters. In addition, if records contains Ns, those records will also be filtered out.
 func filterVcfPos(vcfs []vcf.Vcf) []vcf.Vcf {
 	vcf.Sort(vcfs)
 	var answer []vcf.Vcf
@@ -110,7 +111,7 @@ func filterVcfPos(vcfs []vcf.Vcf) []vcf.Vcf {
 		curr = chrVcfMap[key]
 		encountered := make(map[int]bool)
 		for i = 0; i < len(curr); i++ {
-			if encountered[curr[i].Pos] == true {
+			if encountered[curr[i].Pos] {
 				//do not add
 			} else {
 				encountered[curr[i].Pos] = true

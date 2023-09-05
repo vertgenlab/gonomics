@@ -1,14 +1,16 @@
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Concatenate multiFa alignment files by sequence. Accepts an arbitrary number of input fasta files
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 func catMultiFa(fileList []string, o string, lineLength int) {

@@ -1,14 +1,16 @@
 // Command Group: "Statistics & Population Genetics"
 
+// Returns values sampled from the probability distribution of the mean selection coefficient for a given set of bed regions
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/popgen"
 	"log"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/popgen"
 )
 
 func selectionMcmc(filename string, outFile string, s popgen.McmcSettings) {

@@ -1,13 +1,14 @@
 package sam
 
 import (
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"reflect"
 	"sync"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var r001 = Sam{
@@ -187,14 +188,14 @@ var readWriteTests = []struct {
 	{"testdata/test.sam"},
 }
 
-// testing for runtime errors on real files
+// testing for runtime errors on real files.
 func TestReadReal(t *testing.T) {
 	for _, test := range readWriteTests {
 		Read(test.filename)
 	}
 }
 
-// testing for runtime errors on real files
+// testing for runtime errors on real files.
 func TestReadAndWriteReal(t *testing.T) {
 	for _, test := range readWriteTests {
 		tempFile := test.filename + ".tmp"

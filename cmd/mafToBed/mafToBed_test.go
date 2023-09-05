@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
@@ -24,9 +24,7 @@ func TestMafToBed(t *testing.T) {
 			t.Errorf("Error in mafToBed.")
 		} else {
 			err = os.Remove(v.outputFile)
-			if err != nil {
-				common.ExitIfError(err)
-			}
+			exception.PanicOnErr(err)
 		}
 	}
 }

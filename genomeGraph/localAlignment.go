@@ -1,10 +1,11 @@
 package genomeGraph
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"log"
 )
 
 var HumanChimpTwoScoreMatrixNoGap = [][]int64{

@@ -1,10 +1,11 @@
 package vcf
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/variant"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/variant"
 )
 
 var testSub = Vcf{

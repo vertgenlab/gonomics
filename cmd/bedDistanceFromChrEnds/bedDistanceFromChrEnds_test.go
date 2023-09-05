@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var BedDistanceFromChrEndsTests = []struct {
@@ -32,6 +33,5 @@ func TestBedDistanceFromChrEnds(t *testing.T) {
 			err = os.Remove(v.outBed)
 			exception.PanicOnErr(err)
 		}
-
 	}
 }

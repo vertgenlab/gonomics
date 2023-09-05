@@ -2,14 +2,15 @@ package main
 
 import (
 	"bytes"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func TestVcfWebAnnotate(t *testing.T) {

@@ -1,14 +1,15 @@
 package binaryGiraf
 
 import (
+	"io"
+	"reflect"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaThreeBit"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
-	"io"
-	"reflect"
-	"testing"
 )
 
 var TestQual = []uint8{40, 5, 5, 5, 5, 5, 5, 5, 30, 20, 20, 20, 1}

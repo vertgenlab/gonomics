@@ -1,12 +1,11 @@
-//Package motif provides functions for reading, writing, and manipulating position matrices for transcription factor binding site motif analysis.
-
+// Package motif provides functions for reading, writing, and manipulating position matrices for transcription factor binding site motif analysis.
 package motif
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strings"
 )
@@ -21,7 +20,7 @@ const (
 )
 
 // PositionMatrix is a struct encoding a position frequency/probability/weight matrix.
-//Mat[row][column]. Mat rows 0, 1, 2, and 3 correspond to base identities A, C, G, and T, respectively.
+// Mat[row][column]. Mat rows 0, 1, 2, and 3 correspond to base identities A, C, G, and T, respectively.
 // Mat columns correspond to position in a motif. So Mat[2][4] in a PPM would correspond to the
 // probability of a G in the 5th position of a motif.
 type PositionMatrix struct {
@@ -56,19 +55,19 @@ func matToJasparString(mat [][]float64) string {
 		log.Fatalf("Error: Input PFM must have 4 rows, one for each nucleotide.")
 	}
 	for i := range mat[0] {
-		answer = answer + fmt.Sprintf("\t%g", mat[0][i])
+		answer = answer + fmt.Sprintf("\t%.6g", mat[0][i])
 	}
 	answer = answer + "\t]\nC [ "
 	for i := range mat[1] {
-		answer = answer + fmt.Sprintf("\t%g", mat[1][i])
+		answer = answer + fmt.Sprintf("\t%.6g", mat[1][i])
 	}
 	answer = answer + "\t]\nG [ "
 	for i := range mat[2] {
-		answer = answer + fmt.Sprintf("\t%g", mat[2][i])
+		answer = answer + fmt.Sprintf("\t%.6g", mat[2][i])
 	}
 	answer = answer + "\t]\nT [ "
 	for i := range mat[3] {
-		answer = answer + fmt.Sprintf("\t%g", mat[3][i])
+		answer = answer + fmt.Sprintf("\t%.6g", mat[3][i])
 	}
 	answer = answer + "\t]\n"
 	return answer
@@ -180,6 +179,6 @@ func parseMotifLine(answer PositionMatrix, line string, motifLen int, index int)
 	answer.Mat[index] = make([]float64, motifLen)
 	fields = fields[1:] //trim first field, which corresponds to nucleotide id.
 	for i := 0; i < len(fields); i++ {
-		answer.Mat[index][i] = common.StringToFloat64(fields[i])
+		answer.Mat[index][i] = parse.StringToFloat64(fields[i])
 	}
 }

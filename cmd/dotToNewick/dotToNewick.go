@@ -1,19 +1,20 @@
 // Command Group: "Sequence Evolution & Reconstruction"
 
+// Generates a newick tree file from an input dot format tree
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/tree"
 	"log"
 )
 
 func dotToNewick(inFile string, outFile string, verbose bool) {
 	t := tree.ParseDot(inFile, verbose)
-	secondErr := tree.WriteNewick(outFile, t)
-	common.ExitIfError(secondErr)
+	err := tree.WriteNewick(outFile, t)
+	exception.PanicOnErr(err)
 }
 
 func usage() {

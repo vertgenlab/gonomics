@@ -1,11 +1,10 @@
 // Package cigar contains functions to manipulate cigar data in the SAM file format.
-//More information on cigars can be found in http://samtools.github.io/hts-specs/SAMv1.pdf
-
+// More information on cigars can be found in http://samtools.github.io/hts-specs/SAMv1.pdf
 package cigar
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"unicode"
 )
@@ -16,7 +15,7 @@ type Cigar struct {
 	Op        rune
 }
 
-//NumInsertions calculates the number of inserted bases relative to a reference genome for an input Cigar slice.
+// NumInsertions calculates the number of inserted bases relative to a reference genome for an input Cigar slice.
 func NumInsertions(input []Cigar) int {
 	var count int
 	if input[0].Op == '*' {
@@ -30,7 +29,7 @@ func NumInsertions(input []Cigar) int {
 	return count
 }
 
-//NumDeletions calculates the number of deletions relative to a reference genome for an input Cigar slice.
+// NumDeletions calculates the number of deletions relative to a reference genome for an input Cigar slice.
 func NumDeletions(input []Cigar) int {
 	var count int
 	if input[0].Op == '*' {
@@ -44,7 +43,7 @@ func NumDeletions(input []Cigar) int {
 	return count
 }
 
-//ToString converts a slice of Cigar structs to a string for producing readable outputs for files or standard out.
+// ToString converts a slice of Cigar structs to a string for producing readable outputs for files or standard out.
 func ToString(c []Cigar) string {
 	if len(c) == 0 {
 		return "*"
@@ -60,7 +59,7 @@ func ToString(c []Cigar) string {
 	return output
 }
 
-//FromString parses an input string into a slice of Cigar structs.
+// FromString parses an input string into a slice of Cigar structs.
 func FromString(input string) []Cigar {
 	var output []Cigar
 	var currentNumber string
@@ -74,7 +73,7 @@ func FromString(input string) []Cigar {
 		if unicode.IsDigit(v) {
 			currentNumber = currentNumber + fmt.Sprintf("%c", v)
 		} else if validOp(v) {
-			currentCigar := Cigar{RunLength: common.StringToInt(currentNumber), Op: v}
+			currentCigar := Cigar{RunLength: parse.StringToInt(currentNumber), Op: v}
 			output = append(output, currentCigar)
 			currentNumber = ""
 		} else {
@@ -84,7 +83,7 @@ func FromString(input string) []Cigar {
 	return output
 }
 
-//MatchLength returns the number of bases in a Cigar slice that align to the reference.
+// MatchLength returns the number of bases in a Cigar slice that align to the reference.
 func MatchLength(c []Cigar) int {
 	var ans int
 	if c[0].Op == '*' {
@@ -98,7 +97,7 @@ func MatchLength(c []Cigar) int {
 	return ans
 }
 
-//ReferenceLength calculates the number of reference positions that a Cigar slice spans.
+// ReferenceLength calculates the number of reference positions that a Cigar slice spans.
 func ReferenceLength(c []Cigar) int {
 	var ans int
 	if c[0].Op == '*' {
@@ -112,7 +111,7 @@ func ReferenceLength(c []Cigar) int {
 	return ans
 }
 
-//QueryLength calculates the length of the query read from a slice of Cigar structs.
+// QueryLength calculates the length of the query read from a slice of Cigar structs.
 func QueryLength(c []Cigar) int {
 	var ans int
 	if c[0].Op == '*' {
@@ -126,7 +125,7 @@ func QueryLength(c []Cigar) int {
 	return ans
 }
 
-//validOp returns true if a particular input rune matches any of the acceptable Cigar operation characters.
+// validOp returns true if a particular input rune matches any of the acceptable Cigar operation characters.
 func validOp(r rune) bool {
 	switch r {
 	case 'M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X':
@@ -136,7 +135,7 @@ func validOp(r rune) bool {
 	}
 }
 
-//ConsumesReference returns true of the rune matches an operation character that is reference consuming for Cigars.
+// ConsumesReference returns true of the rune matches an operation character that is reference consuming for Cigars.
 func ConsumesReference(r rune) bool {
 	switch r {
 	case 'M', 'D', 'N', '=', 'X':
@@ -148,7 +147,7 @@ func ConsumesReference(r rune) bool {
 	return false
 }
 
-//ConsumesQuery returns true for input runes that match query consuming characters for Cigars.
+// ConsumesQuery returns true for input runes that match query consuming characters for Cigars.
 func ConsumesQuery(r rune) bool {
 	switch r {
 	case 'M', 'I', 'S', '=', 'X':

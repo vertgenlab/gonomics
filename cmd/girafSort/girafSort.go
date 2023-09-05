@@ -1,13 +1,15 @@
 // Command Group: "Sorting"
 
+// External sort of giraf records based on topological ordering of nodes in input graph
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/sort"
-	"log"
 )
 
 func usage() {

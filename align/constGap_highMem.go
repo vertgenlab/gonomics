@@ -1,10 +1,13 @@
 package align
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
+// ConstGap_highMem aligns two sequences (alpha, beta) using a score matrix (scores) and a constant gap penalty of gapPen.
+// The return values are the alignment score and the cigar representing the alignment.
 func ConstGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
 	//make matrices for m (score, broken down into mRowCurrent,mRowPrevious and mColumn to save memory) and trace (traceback with directions)
 	mRowCurrent := make([]int64, len(beta)+1)

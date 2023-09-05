@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/vcf"
 	"io"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func writeTableHeader(outfile io.Writer, header vcf.Header, maxAlts int) (infoOrder []vcf.InfoHeader, formatOrder []vcf.FormatHeader) {
@@ -98,7 +99,7 @@ func writeAsTable(s *strings.Builder, outfile io.Writer, v vcf.Vcf, header vcf.H
 	exception.PanicOnErr(err)
 }
 
-// getMaxAltCount reads through the input vcf file to determine the maximum number of alternate alleles present
+// getMaxAltCount reads through the input vcf file to determine the maximum number of alternate alleles present.
 func getMaxAltCount(infile string) int {
 	var maxAlts int
 	records, _ := vcf.GoReadToChan(infile)

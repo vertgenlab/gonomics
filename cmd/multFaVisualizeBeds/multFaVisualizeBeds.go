@@ -1,13 +1,15 @@
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Provides human-readable multiple alignments for all entries in a bed file
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/browser"
-	"log"
 )
 
 func multFaVisualizeBeds(bedFile string, alnFile string, outFormat bool, noMask bool, lineLength int, outDir string) {

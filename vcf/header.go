@@ -3,7 +3,7 @@ package vcf
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// Header contains all of the information present in the header section of a VCF.
+// Header contains all information present in the header section of a VCF.
 // Info, Filter, Format, and Contig lines are parsed into maps keyed by ID.
 type Header struct {
 	FileFormat string                         // ##fileformat=VCFv4.3
@@ -26,6 +26,7 @@ type Header struct {
 // InfoType stores the type of variable that a field in the Header holds.
 type InfoType byte
 
+// String converts the InfoType value as a human-readable string
 func (t InfoType) String() string {
 	switch t {
 	case Integer:
@@ -95,7 +96,7 @@ func ReadHeader(er *fileio.EasyReader) Header {
 	return parseHeader(headerText)
 }
 
-// SampleNamesInOrder takes in the header and gives back the sample names in the order in which they appear in the header
+// SampleNamesInOrder takes in the header and gives back the sample names in the order in which they appear in the header.
 func SampleNamesInOrder(header Header) []string {
 	var answer []string = make([]string, len(header.Samples))
 	for sampleName, idx := range header.Samples {
@@ -245,7 +246,7 @@ func parseSamplesFromHeader(line string) map[string]int {
 }
 
 // getHeaderFields parses the comma delimited fields within the '<' '>' delimited portion of a header line.
-// e.g. ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype"> returns []string{ID=GT Number=1 Type=String Description="Genotype"}
+// e.g. ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype"> returns []string{ID=GT Number=1 Type=String Description="Genotype"}.
 func getHeaderFields(line string) []string {
 	start := strings.IndexRune(line, '<')
 	if line[len(line)-1] != '>' || start == -1 {
@@ -295,63 +296,43 @@ func parseHeaderFields(line string) (Id string, Number string, Type InfoType, De
 	return
 }
 
-func processHeader(header Header, line string) Header {
-	if strings.HasPrefix(line, "#") {
-		header.Text = append(header.Text, line)
-	} else {
-		log.Fatal("There was an error reading the header line")
-	}
-	return header
-}
-
-//If you have multiple samples to add to the header, use strings.Join(samples[], "\t") as an argument that combines multiple samples by tabs
-//Name input is strictly used to push in a name for the sample column.
-
-func NewHeader(name string) Header {
+// NewHeader creates a new minimal header for a vcf file
+func NewHeader() Header {
 	var header Header
 	header.Text = append(header.Text, "##fileformat=VCFv4.2")
-	header.Text = append(header.Text, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT"))
+	header.Text = append(header.Text, "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT")
 	return header
 }
 
-//The other option is add everything as one string, so we don';t have to keep appending, parsing will in general be the same, but append is more consistant with how we read in line, by line.
-/*
-var text string =
-		"##fileformat=VCFv4.2\n"+
-		"##fileDate="+t.Format("20060102")+"\n"+
-		"##source=github.com/vertgenlab/gonomics\n"+
-		"##phasing=none\n"+
-		"##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant: DEL, INS, DUP, INV, CNV, BND\">\n"+
-		"##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the structural variant described in this record\">\n"+
-		"##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n"+
-		"##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n"+
-		fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s", name)
-
-*/
-
+// NewWriteHeader writes the value of header.Text to the
+// provided io.Writer
 func NewWriteHeader(file io.Writer, header Header) {
 	var err error
 	for h := 0; h < len(header.Text); h++ {
 		_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
-		common.ExitIfError(err)
+		exception.FatalOnErr(err)
 	}
 }
 
+// WriteMultiSamplesHeader will write the value of header.Text to an io.Writer,
+// but will replace the line starting with "#CHROM\t" with a "#CHROM" line
+// that contains the standard column headers and then the names of the samples
+// passed with listNames.
 func WriteMultiSamplesHeader(file io.Writer, header Header, listNames []string) {
 	var err error
 	for h := 0; h < len(header.Text); h++ {
 		if strings.Contains(header.Text[h], "#CHROM\t") {
 			name := strings.Join(listNames, "\t")
 			_, err = fmt.Fprintf(file, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s\n", name))
-			common.ExitIfError(err)
+			exception.FatalOnErr(err)
 		} else {
 			_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
-			common.ExitIfError(err)
+			exception.FatalOnErr(err)
 		}
 	}
 }
 
-//Uses Vcf header to create 2 hash maps 1) is the sample index that maps the which allele each sample has in Vcf 2) hash reference chromsome names to an index (used to build uint64 containing chromID and position)
+// HeaderToMaps uses a Vcf header to create a pointer to a SampleHash
 func HeaderToMaps(header Header) *SampleHash {
 	var name string
 	var index, hapIdx int16
@@ -374,7 +355,7 @@ func HeaderToMaps(header Header) *SampleHash {
 	return hash
 }
 
-//HeaderGetSampleList returns an ordered list of the samples present in the header of a Vcf file. Useful when adding or removing samples from a VCF.
+// HeaderGetSampleList returns an ordered list of the samples present in the header of a Vcf file. Useful when adding or removing samples from a VCF.
 func HeaderGetSampleList(header Header) []string {
 	var answer []string
 	for _, line := range header.Text {
@@ -386,7 +367,7 @@ func HeaderGetSampleList(header Header) []string {
 	return answer
 }
 
-//HeaderUpdateSampleList can be provided with a new list of samples to update the sample list in a Header.
+// HeaderUpdateSampleList can be provided with a new list of samples to update the sample list in a Header.
 func HeaderUpdateSampleList(header Header, newSamples []string) Header {
 	var line string
 	for i := 0; i < len(header.Text); i++ {

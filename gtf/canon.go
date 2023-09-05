@@ -2,7 +2,7 @@ package gtf
 
 import "sort"
 
-// Returns length of cDNA in nucleotides
+// CdnaLength returns the length of the cDNA in nucleotides.
 func CdnaLength(t *Transcript) int {
 	var answer int = 0
 	for i := 0; i < len(t.Exons); i++ {
@@ -11,7 +11,7 @@ func CdnaLength(t *Transcript) int {
 	return answer
 }
 
-// Returns length of Cds in nucleotides
+// CdsLength returns the length of the Cds in nucleotides (after splicing).
 func CdsLength(t *Transcript) int {
 	var answer int = 0
 	for i := 0; i < len(t.Exons); i++ {
@@ -28,18 +28,20 @@ func isLonger(i, j *Transcript) bool {
 	return iLen > jLen || (iLen == jLen && CdnaLength(i) > CdnaLength(j))
 }
 
-// Sorts so that the canonical transcript is always g.Transcripts[0]
+// SortTranscripts sorts the longest transcript to the front so that the canonical/longest transcript is always g.Transcripts[0].
 func SortTranscripts(g *Gene) {
 	sort.Slice(g.Transcripts, func(i, j int) bool { return isLonger(g.Transcripts[i], g.Transcripts[j]) })
 }
 
+// SortAllTranscripts applies SortTranscripts to every value in the map
 func SortAllTranscripts(m map[string]*Gene) {
 	for _, g := range m {
 		SortTranscripts(g)
 	}
 }
 
-// Moves canonical to zero without sorting all transcripts. Faster than SortTranscripts
+// MoveCanonicalToZero does a single iteration of bubble sort to move the longest/canonical transcript to the first position in the slice.
+// This is faster than SortTranscripts.
 func MoveCanonicalToZero(g *Gene) {
 	for i := 1; i < len(g.Transcripts); i++ {
 		if isLonger(g.Transcripts[i], g.Transcripts[0]) {
@@ -48,6 +50,7 @@ func MoveCanonicalToZero(g *Gene) {
 	}
 }
 
+// MoveAllCanonicalToZero applies MoveCanonicalToZero to every value in the map
 func MoveAllCanonicalToZero(m map[string]*Gene) {
 	for _, g := range m {
 		MoveCanonicalToZero(g)

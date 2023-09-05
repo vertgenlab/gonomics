@@ -2,16 +2,17 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
+
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
 // carefulMultDivFloat tries to gracefully handle the case when you have a
 // bunch of numbers being multiplied together in a numerator (numer)
 // and then being divided by a bunch of numbers
 // in a denominator (denom).  For example numer={2,3,4} and denom={6,3,4}
-// would be equal to 2*3*4/6/3/4
+// would be equal to 2*3*4/6/3/4.
 func carefulMultDivFloat(numer []float64, denom []float64) float64 {
 	var answer float64 = 1
 	var i, j int = 0, 0
@@ -40,7 +41,7 @@ func carefulMultDivFloat(numer []float64, denom []float64) float64 {
 
 // carefulMultDivInt does the same thing as carefulMultDivFloat, but for
 // ints and raises a fatal error if the answer can not be represented as an int
-// TODO: right now the overflow check assumes we are on 64bit arch
+// TODO: right now the overflow check assumes we are on 64bit arch.
 func carefulMultDivInt(numer []int, denom []int) int {
 	var answer int = 1
 	var i, j int = 0, 0
@@ -71,7 +72,7 @@ func carefulMultDivInt(numer []int, denom []int) int {
 // [c, d]
 // pvalue returned is for a being smaller than expected
 // in relation to b, given the
-// ratio of c to d
+// ratio of c to d.
 func fisherExactLess(a, b, c, d int) float64 {
 	var currProb float64 = fisherProbLess(a, b, c, d)
 	var runningTotal float64 = currProb
@@ -80,7 +81,7 @@ func fisherExactLess(a, b, c, d int) float64 {
 		b = b + 1
 		c = c + 1
 		d = d - 1
-		//currProb = fisherProbLess(a, b, c, d) // this way may be more resistant to propogation of error, but slower
+		//currProb = fisherProbLess(a, b, c, d) // this way may be more resistant to propagation of error, but slower
 		currProb = currProb * float64(a+1) / float64(c) * float64(d+1) / float64(b)
 		runningTotal += currProb
 	}
@@ -122,7 +123,7 @@ func fisherProbLess(a, b, c, d int) float64 {
 // aSmall being true tests for the ratio of a to b
 // being small, given the ratio of c to d
 // aSmall being false tests for the ratio of a to b
-// being large, given the ratio of c to d
+// being large, given the ratio of c to d.
 func FisherExact(a, b, c, d int, aSmall bool) float64 {
 	if aSmall {
 		return fisherExactLess(a, b, c, d)
@@ -157,8 +158,8 @@ func BinomCoefficient(n int, k int) int {
 	return carefulMultDivInt(numer, denom)
 }
 
-//BinomCoefficientLog returns log(n choose k), where log is the natural logarithm.
-//Ideal for large numbers as this raises the overflow ceiling considerably.
+// BinomCoefficientLog returns log(n choose k), where log is the natural logarithm.
+// Ideal for large numbers as this raises the overflow ceiling considerably.
 func BinomCoefficientLog(n int, k int) float64 {
 	if n < 0 || k < 0 || k > n {
 		log.Fatalf("The binomial coefficient call could not be handled: n=%d and k=%d\n", n, k)
@@ -181,12 +182,12 @@ func BinomCoefficientLog(n int, k int) float64 {
 	return logspace.Divide(numer, denom)
 }
 
-//Factorial returns n! in normal space.
+// Factorial returns n! in normal space.
 func Factorial(n int) int {
 	return int(math.Gamma(float64(n + 1)))
 }
 
-//DigitsBaseTen returns the
+// DigitsBaseTen returns the.
 func DigitsBaseTen(x int) int {
 	var count int = 1
 	if x < 0 {
@@ -200,7 +201,7 @@ func DigitsBaseTen(x int) int {
 	return count
 }
 
-//AbsInt returns the absolute value of an input of type int.
+// AbsInt returns the absolute value of an input of type int.
 func AbsInt(x int) int {
 	if x < 0 {
 		return -x

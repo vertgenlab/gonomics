@@ -1,11 +1,12 @@
 package lift
 
 import (
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/logspace"
 )
 
 // ElementOverlapProbabilities returns a slice of float64 representing the probabilities that an element in elements2 overlaps an element in elements1.
@@ -148,15 +149,15 @@ func EnrichmentPValueUpperBound(elements1 []Lift, elements2 []Lift, noGapRegions
 		log.Println("Calculating the pValue.")
 	}
 
-	enrichPValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	enrichPValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob, false)
 	for s = overlapCount + 1; s <= numTrials; s++ {
-		curr, _ = numbers.BinomialDist(numTrials, s, prob)
+		curr, _ = numbers.BinomialDist(numTrials, s, prob, false)
 		enrichPValue += curr
 	}
 
-	depletePValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	depletePValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob, false)
 	for s = overlapCount - 1; s >= 0; s-- {
-		curr, _ = numbers.BinomialDist(numTrials, s, prob)
+		curr, _ = numbers.BinomialDist(numTrials, s, prob, false)
 		depletePValue += curr
 	}
 
@@ -167,8 +168,9 @@ func EnrichmentPValueUpperBound(elements1 []Lift, elements2 []Lift, noGapRegions
 	return answer
 }
 
-// EnrichmentPValueLowerBound, together with EnrichmentPValueUpperBound, provide a range of possible values for the pValue of overlap.
-// Returns a slice of four values. The first is the debug check, the second is the expected number of overlaps, and the third and fourth represent the pValues for enrichment and depletion, respectively.
+// EnrichmentPValueLowerBound together with EnrichmentPValueUpperBound provide a range of possible values for the pValue of overlap.
+// Returns a slice of four values. The first is the debug check, the second is the expected number of overlaps, and the third and fourth
+// represent the pValues for enrichment and depletion, respectively.
 func EnrichmentPValueLowerBound(elements1 []Lift, elements2 []Lift, noGapRegions []Lift, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
 	var answer []float64 = make([]float64, 4)
@@ -191,15 +193,15 @@ func EnrichmentPValueLowerBound(elements1 []Lift, elements2 []Lift, noGapRegions
 		log.Println("Calculating the pValue.")
 	}
 	var curr float64
-	enrichPValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	enrichPValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob, false)
 	for s = overlapCount + 1; s <= numTrials; s++ {
-		curr, _ = numbers.BinomialDist(numTrials, s, prob)
+		curr, _ = numbers.BinomialDist(numTrials, s, prob, false)
 		enrichPValue += curr
 	}
 
-	depletePValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob)
+	depletePValue, _ = numbers.BinomialDist(numTrials, overlapCount, prob, false)
 	for s = overlapCount - 1; s >= 0; s-- {
-		curr, _ = numbers.BinomialDist(numTrials, s, prob)
+		curr, _ = numbers.BinomialDist(numTrials, s, prob, false)
 		depletePValue += curr
 	}
 

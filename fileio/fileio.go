@@ -5,11 +5,13 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"os"
+	"sort"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // MustCreate creates a file with the input name.
@@ -79,7 +81,7 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 	for line, err = reader.ReadString('\n'); err == nil && strings.HasPrefix(line, "#"); line, err = reader.ReadString('\n') {
 	}
 	if err != nil && err != io.EOF {
-		log.Panic()
+		log.Panic(err)
 	}
 	if err == io.EOF {
 		if line != "" {
@@ -114,7 +116,7 @@ func PeekReal(reader *bufio.Reader, n int) ([]byte, error) {
 
 // ReadHeader will advance a reader past initial lines that begin with '#',
 // returning a slice of these comments lines and leaving the reader at
-// the first non-comment line
+// the first non-comment line.
 func ReadHeader(reader *bufio.Reader) ([]string, error) {
 	var peek []byte
 	var peekErr error
@@ -131,7 +133,7 @@ func ReadHeader(reader *bufio.Reader) ([]string, error) {
 	return header, peekErr
 }
 
-// equal returns true if two input files are identical
+// equal returns true if two input files are identical.
 func equal(a string, b string, commentsMatter bool) bool {
 	var fileADone, fileBDone = false, false
 	var lineA, lineB string
@@ -163,7 +165,7 @@ func equal(a string, b string, commentsMatter bool) bool {
 }
 
 // AreEqualIgnoreComments returns true if input files are equal.
-// Ignores lines beginning with #.
+// This function ignores lines beginning with #.
 func AreEqualIgnoreComments(a string, b string) bool {
 	return equal(a, b, false)
 }
@@ -173,16 +175,41 @@ func AreEqual(a string, b string) bool {
 	return equal(a, b, true)
 }
 
-//ReadFileToSingleLineString reads in any file type and returns contents without any \n
+// AreEqualIgnoreOrder returns true if input files contain the same lines,
+// although the order of the lines does not matter.
+// This program sorts the two files and compares the contents, so it is not well
+// suited for large files as the whole contents are read into memory.
+func AreEqualIgnoreOrder(a string, b string) bool {
+	fileA := Read(a)
+	fileB := Read(b)
+
+	if len(fileA) != len(fileB) {
+		return false
+	}
+
+	sort.Strings(fileA)
+	sort.Strings(fileB)
+
+	for i := range fileA {
+		if fileB[i] != fileA[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+// ReadFileToSingleLineString reads in any file type and returns contents without any \n.
 func ReadFileToSingleLineString(filename string) string {
 	var catInput string
 	var line string
 	var doneReading bool = false
 	file := EasyOpen(filename)
-	defer file.Close()
 
 	for line, doneReading = EasyNextRealLine(file); !doneReading; line, doneReading = EasyNextRealLine(file) {
 		catInput = catInput + line
 	}
+	err := file.Close()
+	exception.PanicOnErr(err)
 	return catInput
 }

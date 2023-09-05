@@ -1,5 +1,6 @@
 // Command Group: "Data Conversion"
 
+// Converts a gtf file into bed format
 package main
 
 import (
@@ -7,15 +8,15 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/gtf"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strings"
 )
 
-func gtfToBed(fileName string, outFile string, tss bool, chromSizeFile string) {
+func gtfToBed(fileName string, outFile string, tss bool, chromSizeFile string, merge bool) {
 	var err error
 	var line string
 	var nameString string
@@ -25,7 +26,7 @@ func gtfToBed(fileName string, outFile string, tss bool, chromSizeFile string) {
 	if tss {
 		g := gtf.Read(fileName)
 		sizes := chromInfo.ReadToMap(chromSizeFile)
-		beds := gtf.GenesToTssBed(g, sizes)
+		beds := gtf.GenesToTssBed(g, sizes, merge)
 		bed.Write(outFile, beds)
 	} else {
 		file := fileio.EasyOpen(fileName)
@@ -36,7 +37,7 @@ func gtfToBed(fileName string, outFile string, tss bool, chromSizeFile string) {
 			for i := 5; i < len(words); i++ {
 				nameString = nameString + ":" + words[i]
 			}
-			currBed = bed.Bed{Chrom: words[0], ChromStart: common.StringToInt(words[3]) - 1, ChromEnd: common.StringToInt(words[4]), Name: nameString, Score: 0, Strand: bed.Positive, FieldsInitialized: 6}
+			currBed = bed.Bed{Chrom: words[0], ChromStart: parse.StringToInt(words[3]) - 1, ChromEnd: parse.StringToInt(words[4]), Name: nameString, Score: 0, Strand: bed.Positive, FieldsInitialized: 6}
 			if words[6] == "-" {
 				currBed.Strand = bed.Negative
 			}
@@ -61,6 +62,7 @@ func usage() {
 func main() {
 	var tss *bool = flag.Bool("tss", false, "Return a bed of tss positions annotated only with the geneName. Must provide chrom sizes file.")
 	var chromSizeFile *string = flag.String("chromSizeFile", "", "Specifies the name of a chrom.sizes file.")
+	var merge *bool = flag.Bool("merge", false, "Merge overlapping entries after converting all records to beds. Available with tss only.")
 	var expectedNumArgs int = 2
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -75,5 +77,5 @@ func main() {
 	fileName := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	gtfToBed(fileName, outFile, *tss, *chromSizeFile)
+	gtfToBed(fileName, outFile, *tss, *chromSizeFile, *merge)
 }

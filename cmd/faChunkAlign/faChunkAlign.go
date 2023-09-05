@@ -1,12 +1,14 @@
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Align two or more sequences by "chunks" of bases instead of by single bases. Each sequence must
+// have a length that is divisible by the chunk size
 package main
 
 import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/align"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 	"os"
@@ -51,7 +53,7 @@ func main() {
 
 	inFile := flag.Arg(0)
 	chunkSize, err := strconv.Atoi(flag.Arg(1))
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	outFile := flag.Arg(2)
 
 	faChunkAlign(inFile, chunkSize, *gapOpen*-1, *gapExtend*-1, outFile)

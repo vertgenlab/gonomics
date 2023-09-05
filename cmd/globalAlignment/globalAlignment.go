@@ -1,23 +1,26 @@
 // Command Group: "Linear Alignment Tools"
 
+// Align two FASTA files, each with only 1 sequence
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+	"os"      //raven added this line for MSA Fasta output
+	"strings" //raven added this line for CountSeqIdx
+
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/exception" //raven added this line for file Close, exception.PanicOnErr
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
-	"log"
-	"os"      //raven added this line for MSA Fasta output
-	"strings" //raven added this line for CountSeqIdx
 )
 
-//raven did not put this helper function into the globalAlignment function because it is used twice within the globalAlignment function
-//raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
-//raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx
+// helper function: count the number of sequences in input FASTA files.
+// raven did not put this helper function into the globalAlignment function because it is used twice within the globalAlignment function
+// raven wrote this block to count sequences based on the Read function in gonomics/fasta/fasta.go
+// raven changed the input variable from filename string to inputFile EasyReader, so that the file is only opened 1 time for 2 purposes: faDone and CountSeqIdx.
 func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	var line string
 	var seqIdx int = 1 //I know in Read seqIdx is int64 and starts with -1, but I am using it differently here. EasyReader comes in having read the first fasta, so seqIdx starts with 1
@@ -32,8 +35,9 @@ func CountSeqIdx(inputFile *fileio.EasyReader) int {
 	return seqIdx
 }
 
-//raven did not put this helper function into the globalAlignment function because it is used in the globalAlignment function
-//faONe is target, faTwo is query
+// helper function: visualize the alignment of 2 sequences
+// raven did not put this helper function into the globalAlignment function because it is used in the globalAlignment function
+// faONe is target, faTwo is query.
 func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *genomeGraph.GenomeGraph {
 	answer := genomeGraph.EmptyGraph()
 	//use targetEnd and queryEnd to track position number for each fasta sequence as we move along.
@@ -61,7 +65,8 @@ func cigarToGraph(target fasta.Fasta, query fasta.Fasta, aln []align.Cigar) *gen
 	return answer
 }
 
-//raven moved helper functions from main and non-usage functions into this function
+// main function: align 2 sequences and optionally write to output file.
+// raven moved helper functions from main and non-usage functions into this function.
 func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyReader, outFileName string) {
 	//make sure files meet the usage requirements of globalAlignment.go
 	faOne, faDoneOne := fasta.NextFasta(inputFileOne)
@@ -102,11 +107,10 @@ func globalAlignment(inputFileOne *fileio.EasyReader, inputFileTwo *fileio.EasyR
 	//genomeGraph.PrintGraph(genomeGraph)
 }
 
-//raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options
+// raven edited this block to specify only 1 sequnce is expected in each fasta file and add Usage nad options.
 func usage() {
 	fmt.Print(
-		"./globalAlignment - chelsea's global alignment\n" +
-			" Align 2 .fasta files, each with only 1 sequence\n" +
+		"./globalAlignment - Align 2 .fasta files, each with only 1 sequence\n" +
 			"Usage:\n" +
 			"	globalAlignment target.fasta query.fasta\n" +
 			"options:\n")

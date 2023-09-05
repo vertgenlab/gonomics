@@ -31,7 +31,6 @@ func TestHttpReader(t *testing.T) {
 				t.Errorf("Error: fetching data over http did not equal local copy...\n")
 			}
 		}
-
 	}
 }
 

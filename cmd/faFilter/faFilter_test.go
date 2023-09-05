@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/exception"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 var FaFilterTests = []struct {
@@ -31,8 +32,6 @@ func TestFaFilter(t *testing.T) {
 			t.Errorf("Error in faFilter.")
 		}
 		err = os.Remove(v.outputFile)
-		if err != nil {
-			common.ExitIfError(err)
-		}
+		exception.PanicOnErr(err)
 	}
 }

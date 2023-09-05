@@ -2,11 +2,11 @@ package vcf
 
 import (
 	"log"
-	//DEBUG: "fmt"
+	//DEBUG: "fmt".
 )
 
-//invertSample inverts the ancestral/derived state for each allele in a Sample. Only works for biallelic positions, throws an error if an allele state is greater than 1.
-//TODO: this is currently only supported for biallelic bases.
+// invertSample inverts the ancestral/derived state for each allele in a Sample. Only works for biallelic positions, throws an error if an allele state is greater than 1.
+// TODO: this is currently only supported for biallelic bases.
 func invertSample(g Sample) Sample {
 	for i := range g.Alleles {
 		switch g.Alleles[i] {
@@ -21,7 +21,7 @@ func invertSample(g Sample) Sample {
 	return g
 }
 
-//invertAlleles inverts the Genotype for each entry in a slice of Sample structs.
+// invertAlleles inverts the Genotype for each entry in a slice of Sample structs.
 func invertAlleles(g []Sample) []Sample {
 	for i := 0; i < len(g); i++ {
 		g[i] = invertSample(g[i])
@@ -29,7 +29,7 @@ func invertAlleles(g []Sample) []Sample {
 	return g
 }
 
-//InvertVcf inverts the reference and alt variants in a Vcf record. Currently does not update other fields, but this functionality may be added.
+// InvertVcf inverts the reference and alt variants in a Vcf record. Currently does not update other fields, but this functionality may be added.
 func InvertVcf(v Vcf) Vcf {
 	if len(v.Alt) > 1 {
 		log.Fatalf("InvertVCF is not currently supported for multiallelic bases.")

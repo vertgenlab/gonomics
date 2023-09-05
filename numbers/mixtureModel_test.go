@@ -2,10 +2,11 @@ package numbers
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
 	"math"
 	"math/rand"
 	"testing"
+
+	"golang.org/x/exp/slices"
 )
 
 func TestRunMixtureModel(t *testing.T) {
@@ -50,7 +51,7 @@ func BenchmarkRunMixtureModel(b *testing.B) {
 	}
 }
 
-// generate data from a normal distribution with noise
+// generate data from a normal distribution with noise.
 func generateData(num int, mean, std float64) []float64 {
 	ans := make([]float64, num)
 	for i := range ans {

@@ -1,14 +1,15 @@
 package main
 
 import (
+	"io/ioutil"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
-	"io/ioutil"
-	"testing"
 )
 
 func TestGirafSimulate(t *testing.T) {
@@ -55,7 +56,7 @@ func TestGirafSimulate(t *testing.T) {
 //@SQ     SN:n3 LN:1
 //@SQ     SN:n4 LN:3
 
-// Test Functions
+// Test Functions.
 func MakeTestGraph() *genomeGraph.GenomeGraph {
 	graph := genomeGraph.EmptyGraph()
 

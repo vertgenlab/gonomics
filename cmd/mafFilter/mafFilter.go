@@ -1,12 +1,14 @@
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Filter a maf file to remove entries below a score threshold
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/maf"
 	"log"
+
+	"github.com/vertgenlab/gonomics/maf"
 )
 
 func mafFilter(inFile string, outFile string, threshold float64) {

@@ -1,14 +1,16 @@
 // Command Group: "Data Conversion"
 
+// Extracts sequences from a fasta file from regions specified by an input bed
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
 func bedToFasta(fastaFile string, bedFile string, outfile string, revComp bool) {
@@ -19,9 +21,9 @@ func bedToFasta(fastaFile string, bedFile string, outfile string, revComp bool) 
 
 	for i := range records {
 		fastaEntry = convert.SingleBedToFasta(records[i], reference)
-		if (revComp == true) && (records[i].Strand == bed.Negative) {
+		if revComp && (records[i].Strand == bed.Negative) {
+			fastaEntry.Name = fmt.Sprintf("%s_RevComp", fastaEntry.Name)
 			fasta.ReverseComplement(fastaEntry)
-			fastaEntry.Name = fastaEntry.Name + "_RevComp"
 		}
 		outlist = append(outlist, fastaEntry)
 	}

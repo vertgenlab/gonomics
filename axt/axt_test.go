@@ -23,11 +23,10 @@ func TestReadToChan(t *testing.T) {
 		index = 0
 		for each := range reader {
 			if !isEqual(each, file[index]) {
-				t.Errorf("Error: Read to chan function does not equal standard read funtion\n")
+				t.Errorf("Error: Read to chan function does not equal standard read function\n")
 			}
 			index++
 		}
-
 	}
 }
 
@@ -48,7 +47,7 @@ func TestWriteAndRead(t *testing.T) {
 	}
 }
 
-//TODO: Finish rev. comp sequences for testing swap
+// TODO: Finish rev. comp sequences for testing swap.
 func TestAxtSwap(t *testing.T) {
 	var targetLen int = 10
 	var queryLen int = 10

@@ -1,25 +1,32 @@
 package simulate
 
 import (
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/sam"
 	"math/rand"
+	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/sam"
 )
 
-func TestGenerateSam(t *testing.T) {
+func TestSam(t *testing.T) {
+	var err error
 	rand.Seed(1)
 	ref := fasta.Read("testdata/eng.fa")
-	actual := IlluminaSam(ref[0].Name, ref[0].Seq, 100)
-	expected, _ := sam.Read("testdata/expected.sam")
-
-	if len(actual) != len(expected) {
-		t.Error("problem simulating sam file")
-	}
-
-	for i := range actual {
-		if !sam.Equal(actual[i], expected[i]) {
-			t.Error("problem simulating sam file")
-		}
+	out := fileio.EasyCreate("testdata/actual.sam")
+	var bw *sam.BamWriter
+	header := sam.GenerateHeader(fasta.ToChromInfo(ref), nil, sam.Unsorted, sam.None)
+	sam.WriteHeaderToFileHandle(out, header)
+	IlluminaPairedSam(ref[0].Name, ref[0].Seq, 100, 150, 500, 50, 0, 0, numbers.BinomialAlias{}, numbers.BinomialAlias{}, 0, out, bw, false, []int{})
+	err = out.Close()
+	exception.PanicOnErr(err)
+	if !fileio.AreEqual("testdata/actual.sam", "testdata/expected.sam") {
+		t.Errorf("Error in Sam simulation.")
+	} else {
+		err = os.Remove("testdata/actual.sam")
+		exception.PanicOnErr(err)
 	}
 }

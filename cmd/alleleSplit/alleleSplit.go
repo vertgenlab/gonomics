@@ -1,14 +1,16 @@
 // Command Group: "Variant Calling & Annotation"
 
+// Separates a sam alignment from a heterozygous individual
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 func usage() {

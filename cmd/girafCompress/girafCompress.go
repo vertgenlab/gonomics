@@ -1,15 +1,17 @@
 // Command Group: "Genome Graph Tools"
 
+// GIRAF <-> GIRAF.FE conversion, for more information, see the giraf package
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/genomeGraph"
-	"github.com/vertgenlab/gonomics/giraf/binaryGiraf"
 	"log"
 	"path/filepath"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/genomeGraph"
+	"github.com/vertgenlab/gonomics/giraf/binaryGiraf"
 )
 
 func usage() {

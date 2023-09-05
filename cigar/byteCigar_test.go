@@ -4,12 +4,12 @@ import (
 	"testing"
 )
 
-// Current declaration of the cigar struct
+// Current declaration of the cigar struct.
 var c1 Cigar = Cigar{RunLength: 35, Op: 'M'}
 var c2 Cigar = Cigar{RunLength: 2, Op: 'I'}
 var c3 Cigar = Cigar{RunLength: 16, Op: 'D'}
 
-// Byte Cigar light weight cigar
+// Byte Cigar light weight cigar.
 var b1 ByteCigar = ByteCigar{RunLen: 35, Op: 'M'}
 var b2 ByteCigar = ByteCigar{RunLen: 2, Op: 'I'}
 var b3 ByteCigar = ByteCigar{RunLen: 16, Op: 'D'}

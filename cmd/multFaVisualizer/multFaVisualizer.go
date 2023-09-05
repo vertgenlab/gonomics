@@ -1,12 +1,13 @@
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Provides human-readable multiple alignment from a given multiFa
 package main
 
 import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/browser"
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 )
 
@@ -42,11 +43,11 @@ func main() {
 
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
-	start := common.StringToInt(flag.Arg(2))
+	start := parse.StringToInt(flag.Arg(2))
 	if flag.Arg(3) == "END" || flag.Arg(3) == "end" || flag.Arg(3) == "End" {
 		endOfAlignment = true
 	} else {
-		endPos = common.StringToInt(flag.Arg(3))
+		endPos = parse.StringToInt(flag.Arg(3))
 	}
 
 	multFaVisualizer(infile, outfile, start, endPos, *noMask, *lineLength, endOfAlignment)

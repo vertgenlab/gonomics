@@ -1,11 +1,15 @@
+// Command Group: "FASTA and Multi-FASTA Tools"
+
+// Pull unique sequences from a fasta file
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
 func faUniq(inFile string, outFile string) {

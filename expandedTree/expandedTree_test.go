@@ -1,9 +1,10 @@
 package expandedTree
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 func TestReadTree(t *testing.T) {

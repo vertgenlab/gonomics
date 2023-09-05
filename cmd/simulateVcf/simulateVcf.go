@@ -1,13 +1,15 @@
 // Command Group: "Data Simulation"
 
+// Contains functions for simulating VCF data
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/simulate"
 )
 
 func simulateVcf(s Settings) {

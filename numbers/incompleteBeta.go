@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-//Translation of an implementation of the Regularized Incomplete Beta function Copyright (c) 2016, 2017 Lewis Van Winkle, zlib license. https://codeplea.com/incomplete-beta-function-c
+// Translation of an implementation of the Regularized Incomplete Beta function Copyright (c) 2016, 2017 Lewis Van Winkle, zlib license. https://codeplea.com/incomplete-beta-function-c
 func incompleteBetaHelper(a float64, b float64, x float64) float64 {
 	if x > (a+1.0)/(a+b+2.0) {
 		return (1.0 - incompleteBetaHelper(b, a, 1.0-x))

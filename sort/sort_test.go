@@ -1,10 +1,11 @@
 package sort
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/genomeGraph"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/genomeGraph"
 )
 
 func TestGirafExternalMergeSort(t *testing.T) {
@@ -18,7 +19,7 @@ func TestGirafExternalMergeSort(t *testing.T) {
 func TestReadAndWriteIdx(t *testing.T) {
 	inputOrder := []uint32{0, 5, 3, 2, 0}
 	writeIdx("testdata/testWrite", inputOrder)
-	ouputOrder := ReadIdx("testdata/testWrite.idx")
+	ouputOrder := readIdx("testdata/testWrite.idx")
 
 	for i := 0; i < len(inputOrder); i++ {
 		if inputOrder[i] != ouputOrder[i] {

@@ -14,7 +14,7 @@ import (
 // magicHexEOF is a particular empty bgzf block that marks the true EOF.
 var magicEOF []byte = makeMagicEOF()
 
-// BlockWriter moves data -> compressor -> zipBlock -> file writer
+// BlockWriter moves data -> compressor -> zipBlock -> file writer.
 type BlockWriter struct {
 	w          io.Writer
 	compressor *gzip.Writer
@@ -35,7 +35,7 @@ func NewBlockWriter(w io.Writer) *BlockWriter {
 	return &zw
 }
 
-// NewWriter creates a bgzf writer that writes bytes instead of blocks
+// NewWriter creates a bgzf writer that writes bytes instead of blocks.
 func NewWriter(w io.Writer) *Writer {
 	var bw Writer
 	bw.bw = NewBlockWriter(w)
@@ -46,22 +46,20 @@ func NewWriter(w io.Writer) *Writer {
 func (w *BlockWriter) Write(p []byte) (n int, err error) {
 	w.compressor.Reset(w.zipBlock)
 
-	// ******
-	// TODO better way around this?
+	// TODO: better way around this?
+	_, err = w.compressor.Write([]byte{}) // trash gzip default header
 	// The gzip writer tries to write a header smartly at the time of
 	// data write, however bgzf requires custom header fields which
 	// require knowing the compressed size of the block, which can only
 	// be determined after compression. Therefore we cannot use the
-	// default gzip header behavior. The code below performs an empty
+	// default gzip header behavior. The line above performs an empty
 	// write to make the gzip writer 'think' it has written a header.
 	// We then trash the default header and write a custom header below.
-	_, err = w.compressor.Write([]byte{}) // trash gzip default header
 	if err != nil {
 		log.Panic(err)
 	}
 	w.zipBlock.Reset() // reset written trashed header
 	// end of code block for discarding default gzip header
-	// ******
 
 	n, err = w.compressor.Write(p) // compress p into write buffer
 	if n != len(p) || err != nil {

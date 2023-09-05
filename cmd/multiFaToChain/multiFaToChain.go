@@ -1,12 +1,16 @@
+// Command Group: "Data Conversion"
+
+// Convert a pairwise multiFa format alignment to a chain file. First species is the target by default
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/chain"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
 type State byte

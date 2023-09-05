@@ -1,9 +1,10 @@
 package dnaThreeBit
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 // ThreeBit is a struct to represent long DNA sequences in a memory efficient format
@@ -21,7 +22,7 @@ type ThreeBit struct {
 // of casting between uint64 and uint8.  I don't think many
 // ThreeBitBases will be sitting around for a long time by themselves
 // so I don't think the extra memory will be noticed.
-// Even though it is encoded as 64 bits, only the last three can be used (zero to seven)
+// Even though it is encoded as 64 bits, only the last three can be used (zero to seven).
 type ThreeBitBase uint64
 
 // The four bases {A,C,G,T} and N are encoded with the numbers 0 to 4.
@@ -67,7 +68,7 @@ func BasesToUint64(seq []dna.Base, start int, end int, padding ThreeBitBase) uin
 }
 
 // basesToUint64WithOffset places padding at the beginning of the sequence (as well as the end, which is normal)
-// so that sequences may be "in register" with each other so that an xor can quickly compare them for equality
+// so that sequences may be "in register" with each other so that an xor can quickly compare them for equality.
 func basesToUint64WithOffset(seq []dna.Base, start int, end int, padding ThreeBitBase, offset int) uint64 {
 	if end-start+offset > 21 || start >= end {
 		log.Fatalf("Error: when converting to ThreeBit. start=%d end=%d\n", start, end)
@@ -107,7 +108,7 @@ func GetBase(fragment *ThreeBit, pos int) dna.Base {
 	return dna.Base(GetThreeBitBase(fragment, pos))
 }
 
-// NewThreeBit creates a ThreeBit encoding of inSeq with padding on the end
+// NewThreeBit creates a ThreeBit encoding of inSeq with padding on the end.
 func NewThreeBit(inSeq []dna.Base, padding ThreeBitBase) *ThreeBit {
 	var sliceLenNeeded int = (len(inSeq) + 20) / 21
 	var start, end int = 0, 0

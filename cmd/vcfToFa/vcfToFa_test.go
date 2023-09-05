@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/exception"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var VcfToFaTests = []struct {
@@ -37,7 +38,7 @@ func TestVcfToFa(t *testing.T) {
 			t.Errorf("VcfToFa output did not match expected output.")
 		} else {
 			err = os.Remove(v.actualOutputFile)
-			common.ExitIfError(err)
+			exception.PanicOnErr(err)
 		}
 	}
 }

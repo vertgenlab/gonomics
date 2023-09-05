@@ -1,5 +1,6 @@
 // Command Group: "Data Simulation"
 
+// Simulate a multiallelic, haplotic Wright-Fisher population (discrete, non-overlapping generations)
 package main
 
 import (
@@ -10,19 +11,17 @@ import (
 
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/popgen"
-	"github.com/vertgenlab/gonomics/simulate"
 )
 
 func simulateWrightFisher(outFile string, set popgen.WrightFisherSettings) {
 	rand.Seed(set.SetSeed)
 
-	wf := simulate.SimulateWrightFisher(set)
+	wf := simMain(set)
 	if set.Fasta {
 		fasta.Write(outFile, wf.Fasta)
 	} else {
 		popgen.WriteTSV(outFile, wf)
 	}
-
 }
 
 func usage() {

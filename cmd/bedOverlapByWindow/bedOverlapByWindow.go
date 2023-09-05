@@ -1,15 +1,17 @@
 // Command Group: "BED Tools"
 
+// Given a window size (default 5000), return the number of base pairs that are in any bed region within that window
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 func bedOverlapByWindow(infile string, chromsizes string, outfile string, windowSize int) {
@@ -17,46 +19,32 @@ func bedOverlapByWindow(infile string, chromsizes string, outfile string, window
 	bInfo := bed.Read(infile)
 	out := fileio.EasyCreate(outfile)
 	defer out.Close()
-	var positionCounts map[string][]uint32
-	positionCounts = make(map[string][]uint32)
+	positionCounts := make(map[string][]uint32)
 	var i, b, p, j, x int
 	var thisChrom []uint32
 
 	for i = 0; i < len(cInfo); i++ {
-
 		positionCounts[cInfo[i].Name] = make([]uint32, cInfo[i].Size)
-
 	}
 
 	for b = 0; b < len(bInfo); b++ {
-
 		thisChrom = positionCounts[bInfo[b].Chrom]
 
 		for p = bInfo[b].ChromStart; p < bInfo[b].ChromEnd; p++ {
-
 			for x = numbers.Max(0, p-(windowSize-1)); x < numbers.Min(bInfo[b].ChromEnd, p+1); x++ {
-
 				//for x = numbers.MaxInt64(0, p-(windowSize-1)); x < numbers.MinInt64(bInfo[b].ChromEnd, p+(windowSize-1)); x++{
 				thisChrom[x] += 1
-
 			}
-
 		}
-
 	}
 
 	for i = 0; i < len(cInfo); i++ {
-
 		thisChrom = positionCounts[cInfo[i].Name]
 
 		for j = 0; j < len(thisChrom); j++ {
-
 			fmt.Fprintf(out, "%s\t%d\t%d\t%s\t%d\n", cInfo[i].Name, j, j+windowSize, ".", thisChrom[j])
-
 		}
-
 	}
-
 }
 
 func usage() {

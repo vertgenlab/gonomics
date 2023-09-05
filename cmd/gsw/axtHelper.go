@@ -2,12 +2,11 @@ package main
 
 import (
 	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/vcf"
-	"path/filepath"
-	"strings"
 )
 
 func convertAxt(axtFile, format, targetFa, output string) {
@@ -15,7 +14,7 @@ func convertAxt(axtFile, format, targetFa, output string) {
 	case "vcf":
 		vcfChannel := goChannelAxtVcf(axtFile)
 		file := fileio.EasyCreate(output)
-		header := vcf.NewHeader(strings.TrimSuffix(targetFa, filepath.Ext(targetFa)))
+		header := vcf.NewHeader()
 		vcf.NewWriteHeader(file, header)
 		var ans []vcf.Vcf
 		for i := range vcfChannel {
@@ -23,7 +22,8 @@ func convertAxt(axtFile, format, targetFa, output string) {
 		}
 		vcf.Sort(ans)
 		vcf.WriteVcfToFileHandle(file, ans)
-		file.Close()
+		err := file.Close()
+		exception.PanicOnErr(err)
 	case "gg":
 		genomeGraph.Write(output, axtToGenomeGraph(axtFile, targetFa))
 	default:

@@ -1,14 +1,18 @@
+// Command Group: "General Tools"
+
+// Returns all regions that contact input genomic regions
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
-	"log"
 )
 
 func intervalContacts(bedpeFile string, inFile string, contactOutFile string) {

@@ -2,12 +2,13 @@ package vcf
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"strings"
 )
 
-//AppendAncestor adds the ancestral allele state (defined by input bases) to the INFO column of a vcf entry.
+// AppendAncestor adds the ancestral allele state (defined by input bases) to the INFO column of a vcf entry.
 func AppendAncestor(g Vcf, b []dna.Base) Vcf {
 	if g.Info == "." {
 		g.Info = fmt.Sprintf("AA=%s", dna.BasesToString(b))
@@ -17,17 +18,17 @@ func AppendAncestor(g Vcf, b []dna.Base) Vcf {
 	return g
 }
 
-//IsRefAncestor returns true if the reference allele in the record matches the ancestral allele in the Info annotation, false otherwise.
+// IsRefAncestor returns true if the reference allele in the record matches the ancestral allele in the Info annotation, false otherwise.
 func IsRefAncestor(g Vcf) bool {
 	return dna.BasesToString(QueryAncestor(g)) == g.Ref
 }
 
-//IsAltAncestor returns true if the first alt allele in the record matches the ancestral allele in the Info annotation, false otherwise.
+// IsAltAncestor returns true if the first alt allele in the record matches the ancestral allele in the Info annotation, false otherwise.
 func IsAltAncestor(g Vcf) bool {
 	return dna.BasesToString(QueryAncestor(g)) == g.Alt[0]
 }
 
-//QueryAncestor finds the AA INFO from a VCF struct and returns the base of the ancestral allele.
+// QueryAncestor finds the AA INFO from a VCF struct and returns the base of the ancestral allele.
 func QueryAncestor(g Vcf) []dna.Base {
 	if g.Info == "." {
 		return nil //or should this log.Fatalf out? Depends on whether we have vcf with partial annotation
@@ -43,14 +44,14 @@ func QueryAncestor(g Vcf) []dna.Base {
 	return nil
 }
 
-//HasAncestor returns true if a VCF record is annotated with an ancestor allele in the Info column, false otherwise.
+// HasAncestor returns true if a VCF record is annotated with an ancestor allele in the Info column, false otherwise.
 func HasAncestor(g Vcf) bool {
 	return QueryAncestor(g) != nil
 }
 
-//AnnotateAncestorFromMultiFa adds the ancestral state to a VCF variant by inspecting a pairwise fasta of the reference genome and an ancestor sequence.
-//records is a pairwise multiFa where the first entry is the reference genome and the second entry is the ancestor.
-//Returns the refPos and alnPos of the current record.
+// AnnotateAncestorFromMultiFa adds the ancestral state to a VCF variant by inspecting a pairwise fasta of the reference genome and an ancestor sequence.
+// records is a pairwise multiFa where the first entry is the reference genome and the second entry is the ancestor.
+// Returns the refPos and alnPos of the current record.
 func AnnotateAncestorFromMultiFa(g Vcf, records []fasta.Fasta, RefStart int, AlnStart int) (Vcf, int, int) {
 	p := fasta.RefPosToAlnPosCounter(records[0], int(g.Pos)-1, RefStart, AlnStart) //get the alignment position of the variant
 	//DEBUG: fmt.Printf("RefSeq: %s\n", dna.BasesToString(records[0].Seq))
@@ -74,7 +75,7 @@ func AnnotateAncestorFromMultiFa(g Vcf, records []fasta.Fasta, RefStart int, Aln
 	return g, g.Pos - 1, p
 }
 
-//AncestorFlagToHeader adds an ##INFO line to a vcfHeader to include information about the AA flag for ancestral alleles.
+// AncestorFlagToHeader adds an ##INFO line to a vcfHeader to include information about the AA flag for ancestral alleles.
 func AncestorFlagToHeader(h Header) Header {
 	var lastInfoIndex int
 	var firstFormatIndex int = -1

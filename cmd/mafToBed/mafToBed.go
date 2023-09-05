@@ -1,13 +1,15 @@
 // Command Group: "Data Conversion"
 
+// Convert a maf alignment into a bed, where the bed score is the alignment score
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/maf"
-	"log"
 )
 
 func mafToBed(mafFile string, outBed string, reference string) {

@@ -2,8 +2,8 @@
 package psl
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strings"
 )
@@ -76,24 +76,24 @@ func pslLine(reader *PslReader) (*Psl, bool) {
 		}
 		reader.columns = strings.Split(reader.Reader.Buffer.String(), "\t")
 		if len(reader.columns) == 21 {
-			reader.curr.Match = common.StringToInt(reader.columns[0])
-			reader.curr.MisMatch = common.StringToInt(reader.columns[1])
-			reader.curr.RepeatMatch = common.StringToInt(reader.columns[2])
-			reader.curr.Ns = common.StringToInt(reader.columns[3])
-			reader.curr.QNumIns = common.StringToInt(reader.columns[4])
-			reader.curr.QBaseIns = common.StringToInt(reader.columns[5])
-			reader.curr.TNumIns = common.StringToInt(reader.columns[6])
-			reader.curr.TBaseIns = common.StringToInt(reader.columns[7])
+			reader.curr.Match = parse.StringToInt(reader.columns[0])
+			reader.curr.MisMatch = parse.StringToInt(reader.columns[1])
+			reader.curr.RepeatMatch = parse.StringToInt(reader.columns[2])
+			reader.curr.Ns = parse.StringToInt(reader.columns[3])
+			reader.curr.QNumIns = parse.StringToInt(reader.columns[4])
+			reader.curr.QBaseIns = parse.StringToInt(reader.columns[5])
+			reader.curr.TNumIns = parse.StringToInt(reader.columns[6])
+			reader.curr.TBaseIns = parse.StringToInt(reader.columns[7])
 			reader.curr.Strand = reader.columns[8]
 			reader.curr.QName = reader.columns[9]
-			reader.curr.QSize = common.StringToInt(reader.columns[10])
-			reader.curr.QStart = common.StringToInt(reader.columns[11])
-			reader.curr.QEnd = common.StringToInt(reader.columns[12])
+			reader.curr.QSize = parse.StringToInt(reader.columns[10])
+			reader.curr.QStart = parse.StringToInt(reader.columns[11])
+			reader.curr.QEnd = parse.StringToInt(reader.columns[12])
 			reader.curr.TName = reader.columns[13]
-			reader.curr.TSize = common.StringToInt(reader.columns[14])
-			reader.curr.TStart = common.StringToInt(reader.columns[15])
-			reader.curr.TEnd = common.StringToInt(reader.columns[16])
-			reader.curr.BlockCount = common.StringToInt(reader.columns[17])
+			reader.curr.TSize = parse.StringToInt(reader.columns[14])
+			reader.curr.TStart = parse.StringToInt(reader.columns[15])
+			reader.curr.TEnd = parse.StringToInt(reader.columns[16])
+			reader.curr.BlockCount = parse.StringToInt(reader.columns[17])
 			reader.curr.BlockSize = fileio.StringToIntSlice(reader.columns[18])
 			reader.curr.QList = fileio.StringToIntSlice(reader.columns[19])
 			reader.curr.TList = fileio.StringToIntSlice(reader.columns[20])

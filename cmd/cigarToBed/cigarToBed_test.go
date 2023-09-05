@@ -1,8 +1,7 @@
 package main
 
 import (
-	//"github.com/vertgenlab/gonomics/bed" //only needed for bed.AllAreEqual
-	"github.com/vertgenlab/gonomics/common"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
@@ -35,9 +34,7 @@ func TestCigarToBed(t *testing.T) {
 			t.Errorf("Error in cigarToBed for outIns.")
 		}
 		err := os.Remove("ins_tmp.bed")
-		if err != nil {
-			common.ExitIfError(err)
-		}
+		exception.PanicOnErr(err)
 
 		//records_del := bed.Read("del_tmp.bed")
 		//expected_del := bed.Read(v.outDel_bed_expected)
@@ -46,9 +43,6 @@ func TestCigarToBed(t *testing.T) {
 			t.Errorf("Error in cigarToBed for outDel.")
 		}
 		err = os.Remove("del_tmp.bed")
-		if err != nil {
-			common.ExitIfError(err)
-		}
-
+		exception.PanicOnErr(err)
 	}
 }

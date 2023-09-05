@@ -2,11 +2,13 @@ package fasta
 
 import (
 	"errors"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"os"
+	"strings"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // Seeker enables random access of fasta sequences using a pre-computed index.
@@ -44,6 +46,9 @@ func NewSeeker(fasta, index string) *Seeker {
 	exception.FatalOnErr(err)
 
 	if index == "" {
+		if strings.HasSuffix(fasta, ".gz") {
+			log.Fatalf("Fasta seeker is not compatible with gzipped files. Please unzip the fasta file.")
+		}
 		index = fasta + ".fai"
 	}
 	sr.idx = readIndex(index)
@@ -111,6 +116,7 @@ func seek(sr *Seeker, off chrOffset, nextChrStartByte, start, end int) ([]dna.Ba
 
 	answer := make([]dna.Base, end-start)
 	var j int
+	var b dna.Base
 	for i := range data {
 		if data[i] == '>' { // in case of read into next fasta record
 			err = ErrSeekEndOutsideChr
@@ -119,7 +125,9 @@ func seek(sr *Seeker, off chrOffset, nextChrStartByte, start, end int) ([]dna.Ba
 		if data[i] == '\r' || data[i] == '\n' {
 			continue
 		}
-		answer[j] = dna.ByteToBase(data[i])
+		b, err = dna.ByteToBase(data[i])
+		exception.PanicOnErr(err)
+		answer[j] = b
 		j++
 	}
 	return answer[:j], err // trim off any extra bases in case EOF

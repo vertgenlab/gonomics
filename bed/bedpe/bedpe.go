@@ -6,9 +6,9 @@ package bedpe
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
@@ -57,7 +57,7 @@ func ToString(bunk BedPe, fields int) string {
 	return ""
 }
 
-// WriteToFileHandle writes an input BedPe struct to an io.Writer
+// WriteToFileHandle writes an input BedPe struct to an io.Writer.
 func WriteToFileHandle(file io.Writer, rec BedPe) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", rec)
@@ -95,10 +95,10 @@ func Read(filename string) []BedPe {
 func processBedPeLine(line string) BedPe {
 	var startANum, endANum, startBNum, endBNum int
 	words := strings.Split(line, "\t")
-	startANum = common.StringToInt(words[1])
-	endANum = common.StringToInt(words[2])
-	startBNum = common.StringToInt(words[4])
-	endBNum = common.StringToInt(words[5])
+	startANum = parse.StringToInt(words[1])
+	endANum = parse.StringToInt(words[2])
+	startBNum = parse.StringToInt(words[4])
+	endBNum = parse.StringToInt(words[5])
 
 	current := BedPe{A: bed.Bed{
 		Chrom:             words[0],
@@ -119,7 +119,7 @@ func processBedPeLine(line string) BedPe {
 		current.A.Name, current.B.Name = words[6], words[6]
 	}
 	if len(words) >= 8 {
-		current.A.Score, current.B.Score = common.StringToInt(words[7]), common.StringToInt(words[7])
+		current.A.Score, current.B.Score = parse.StringToInt(words[7]), parse.StringToInt(words[7])
 	}
 	if len(words) >= 9 {
 		current.A.Strand = bed.StringToStrand(words[8])
@@ -172,7 +172,7 @@ func GoReadToChan(filename string) <-chan BedPe {
 	return data
 }
 
-//SplitBedPe takes in a bedPe and creates two half based on A and B values in bedPe
+// SplitBedPe takes in a bedPe and creates two half based on A and B values in bedPe.
 func SplitBedPe(in BedPe) (BedPeHalf, BedPeHalf) {
 	left := BedPeHalf{
 		Chrom:      in.A.Chrom,

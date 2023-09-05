@@ -1,16 +1,18 @@
 // Command Group: "BED Tools"
 
+// Returns bed file with entries annotated based on the values corresponding to the region in a wig file
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
-	"math"
 )
 
 func bedValueWig(s Settings) {
@@ -32,7 +34,7 @@ func bedValueWig(s Settings) {
 		bed.Trim(records, s.TrimLeft, s.TrimRight)
 	}
 
-	if s.NormFlag == true {
+	if s.NormFlag {
 		var wigCounterByChrom float64
 		for i := range wigData { //Goal here is to cycle through all the "chromosomes" of the wig: wig[0], wig[1], etc.
 			wigCounterByChrom = 0
@@ -61,7 +63,7 @@ func bedValueWig(s Settings) {
 				} else {
 					currValue = bedRangeMax(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd, s.NoDataValue)
 				}
-				if s.NormFlag == true {
+				if s.NormFlag {
 					currValue = currValue / wigTotal
 				}
 				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%g", currValue)) // %g will

@@ -1,17 +1,19 @@
-// Command Group: "Wig Tools"
+// Command Group: "WIG Tools"
 //TODO make wigStats compatible with negative wig values
 
+// Provide coverage histogram for WIG format visualization files
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
-	"math"
 )
 
 func wigStats(inFile string, noGapFile string, outFile string, missingDataValue float64) {
@@ -44,7 +46,6 @@ func wigStats(inFile string, noGapFile string, outFile string, missingDataValue 
 	}
 	err = out.Close()
 	exception.PanicOnErr(err)
-
 }
 
 func usage() {

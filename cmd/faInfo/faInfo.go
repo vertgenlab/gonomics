@@ -1,15 +1,17 @@
 // Command Group: "FASTA and Multi-FASTA Tools"
 
+// Returns summary statistics to standard out for an input.fa, including the counts for each base.
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
 )
 
 func faInfo(inFile string, outFile string) {

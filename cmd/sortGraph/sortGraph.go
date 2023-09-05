@@ -1,12 +1,14 @@
 // Command Group: "Sorting"
 
+// Topologically sorts nodes in a genome graph (.gg) file
 package main
 
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/genomeGraph"
 	"log"
+
+	"github.com/vertgenlab/gonomics/genomeGraph"
 )
 
 func usage() {

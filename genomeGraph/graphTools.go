@@ -1,10 +1,10 @@
 package genomeGraph
 
 import (
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"strings"
@@ -109,7 +109,6 @@ func vChrGraph(genome *GenomeGraph, chr fasta.Fasta, vcfsChr []vcf.Vcf) *GenomeG
 					SetEvenWeights(lastMatch)
 				}
 				if vcf.Snp(vcfsChr[i]) {
-
 					refAllele = &Node{Id: uint32(len(genome.Nodes)), Seq: dna.StringToBases(vcfsChr[i].Ref), Prev: nil, Next: nil}
 					refAllele = AddNode(genome, refAllele)
 					AddEdge(currMatch, refAllele, 0.5)
@@ -209,8 +208,8 @@ func FaSplitByNs(fa []fasta.Fasta) []fasta.Fasta {
 }
 */
 
-//TODO move these vcf helper functions to vcf
-//new nodes are treated as insertion
+// TODO move these vcf helper functions to vcf
+// new nodes are treated as insertion.
 func isINV(v vcf.Vcf) bool {
 	var truth bool = false
 	data := strings.Split(v.Info, ";")
@@ -244,7 +243,7 @@ func getSvEnd(v vcf.Vcf) int {
 		for i := 0; i < len(words); i++ {
 			if strings.Contains(words[i], "END=") {
 				text := strings.Split(words[i], "END=")
-				return common.StringToInt(text[1])
+				return parse.StringToInt(text[1])
 			}
 		}
 	}

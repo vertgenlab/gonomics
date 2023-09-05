@@ -1,9 +1,10 @@
 package genomeGraph
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
-	"testing"
 )
 
 func TestGetSortOrder(t *testing.T) {
@@ -27,25 +28,25 @@ func TestGetSortOrder(t *testing.T) {
 	if len(brokenGraph) != 2 {
 		t.Errorf("ERROR: Problem with breaking up discontigous graph into subgraphs")
 	}
-
 }
 
 // TestGraph Structure
-//             n2          e0 = 1
-//         e1     \e2
-//      e0     e3  \       e2 = 1
-//  n0 --- n1       n4
-//                 /
-//         e4     /e5      e5 = 1
-//             n3
 //
-//               A
-//                  \
-//                   \
-//  ATG --- CG 		 TAA
-//                   /
-//                  /
-//               T
+//	           n2          e0 = 1
+//	       e1     \e2
+//	    e0     e3  \       e2 = 1
+//	n0 --- n1       n4
+//	               /
+//	       e4     /e5      e5 = 1
+//	           n3
+//
+//	             A
+//	                \
+//	                 \
+//	ATG --- CG 		 TAA
+//	                 /
+//	                /
+//	             T
 func MakeDisContigTestGraph() *GenomeGraph {
 	graph := EmptyGraph()
 
