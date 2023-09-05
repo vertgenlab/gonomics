@@ -82,7 +82,7 @@ func incrementWindowEdge(firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOr
 func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQuery []dna.Base, s Settings) {
 	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                                                           // these are the two edges of the sliding window in "alignment positions"
 	var firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow int = -1, -1                                                                             // these are the two edges of the sliding window in "firstQuery (no gaps) positions"
-	var refIdxBeforeWindow, lastRefIdxOfWindow int                                                                                                    // these are the two edges of the sliding window in "reference (no gaps) positions"
+	var refIdxBeforeWindow, lastRefIdxOfWindow int = -1, -1                                                                                           // these are the two edges of the sliding window in "reference (no gaps) positions"
 	var totalGaps, totalNs, totalSubst int                                                                                                            // this is the data we need to keep track of that describes the current window
 	var gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base.
 	var err error
@@ -105,6 +105,15 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 		// all this stuff is now inside the current window
 		lastAlnIdxOfWindow, gapOpenCloseFirstQuery, gapOpenedSecondQuery, _, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst = incrementWindowEdge(firstQuery, secondQuery, lastAlnIdxOfWindow)
 		lastFirstQueryIdxOfWindow++
+		// TODO: calculate reference positions, this is V1 calculate before firstQuery window is finalized, make sure index +1 or not is right
+		/*if reference[lastFirstQueryIdxOfWindow] != dna.Gap { // when updating first query position, update reference position
+			lastRefIdxOfWindow++
+		} else {
+			lastRefIdxOfWindow++
+			for reference[lastRefIdxOfWindow] == dna.Gap { // if lastRefIdxOfWindow points to gap, increment it until reach non-gap
+				lastRefIdxOfWindow++
+			}
+		}*/
 		totalGaps += gapOpenCloseFirstQuery + gapOpenedSecondQuery
 		totalNs += numFirstQueryNs + numSecondQueryNsGap + numSecondQueryNsMatch
 		totalSubst += numSubst
@@ -114,6 +123,10 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow > s.WindowSize {
 			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch, numSubst = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow)
 			firstQueryIdxBeforeWindow++
+			// TODO: calculate reference positions, this is V1 calculate before firstQuery window is finalized
+			/*if reference[firstQueryIdxBeforeWindow] != dna.Gap { // when updating first query position, update reference position
+				refIdxBeforeWindow++
+			}*/
 			//totalGaps -= gapOpenCloseRef + gapClosedQuery
 			totalNs -= numFirstQueryNs + numSecondQueryNsMatch
 			totalSubst -= numSubst
@@ -129,12 +142,28 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 		// we check to make sure we are not at the very beginning or end, where we would have partial or illegal windows
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow == s.WindowSize && lastAlnIdxOfWindow < len(firstQuery) {
 
-			/*			// TODO: uncomment this code block and bracket on line 154 if needed, to convert position from firstQuery to reference
-						// only report a window if it does not start on a gap in the reference sequence
-						fmt.Printf("firstQueryIdxBeforeWindow: %v, reference[firstQueryIdxBeforeWindow+1] == dna.Gap: %v\n", firstQueryIdxBeforeWindow, reference[firstQueryIdxBeforeWindow+1] == dna.Gap)
-						if reference[firstQueryIdxBeforeWindow+1] != dna.Gap { */
-			refIdxBeforeWindow = firstQueryIdxBeforeWindow // TODO: calculate reference positions if needed
+			// TODO: convert position from firstQuery to reference, V2 calculate after firstQuery window is finalized
+			// check if refIdx start is Gap. (if so, don't report. Else:)
+			// check if refIdx end is Gap. (if so, add bases to refIdx end until reach the next non-gap position in reference)
+			//if reference[alnIdxBeforeWindow+1] != dna.Gap {
+			//}
+			//fmt.Printf("firstQueryIdxBeforeWindow: %v, reference[firstQueryIdxBeforeWindow+1] == dna.Gap: %v\n", firstQueryIdxBeforeWindow, reference[firstQueryIdxBeforeWindow+1] == dna.Gap)
+			refIdxBeforeWindow = firstQueryIdxBeforeWindow
+			for alnIdxForRef := 0; alnIdxForRef <= alnIdxBeforeWindow; alnIdxForRef++ {
+				if reference[alnIdxForRef] == dna.Gap && firstQuery[alnIdxForRef] != dna.Gap {
+					refIdxBeforeWindow--
+				} else if reference[alnIdxForRef] != dna.Gap && firstQuery[alnIdxForRef] == dna.Gap {
+					refIdxBeforeWindow++
+				}
+			}
 			lastRefIdxOfWindow = lastFirstQueryIdxOfWindow
+			for alnIdxForRef := 0; alnIdxForRef <= lastAlnIdxOfWindow; alnIdxForRef++ {
+				if reference[alnIdxForRef] == dna.Gap && firstQuery[alnIdxForRef] != dna.Gap {
+					lastRefIdxOfWindow--
+				} else if reference[alnIdxForRef] != dna.Gap && firstQuery[alnIdxForRef] == dna.Gap {
+					lastRefIdxOfWindow++
+				}
+			}
 
 			// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
 			if !s.RemoveN || totalNs == 0 {
@@ -151,7 +180,6 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 					exception.PanicOnErr(err)
 				}
 			}
-			//}
 		}
 	}
 
