@@ -126,23 +126,23 @@ func ScoreWindow(pm PositionMatrix, seq []dna.Base, alnStart int) (float64, bool
 	return answer, true
 }
 
-// RankTensorElement encodes the value and base for a RankTensor at a particular row and column.
+// rankTensorElement encodes the value and base for a RankTensor at a particular row and column.
 // In three dimensions, it is useful to consider the Value and Base as two layers of the RankTensor.
-type RankTensorElement struct {
+type rankTensorElement struct {
 	Value float64
 	Base  dna.Base
 }
 
 // initializeRankTensor turns a PositionMatrix into a rank-ordered position weight tensor.
-func initializeRankTensor(p PositionMatrix) [][]RankTensorElement {
+func initializeRankTensor(p PositionMatrix) [][]rankTensorElement {
 	var row, column int
 	var currMaxRow, currRank int
 	var currMaxValue float64
-	var answer = make([][]RankTensorElement, 4)
+	var answer = make([][]rankTensorElement, 4)
 	for row = 0; row < 4; row++ {
-		answer[row] = make([]RankTensorElement, len(p.Mat[row]))
+		answer[row] = make([]rankTensorElement, len(p.Mat[row]))
 		for column = 0; column < len(p.Mat[row]); column++ {
-			answer[row][column] = RankTensorElement{Value: p.Mat[row][column], Base: dna.Base(row)} //cast row to dna.Base (0 -> A, 1 -> C, 2 -> G, 3 -> T)
+			answer[row][column] = rankTensorElement{Value: p.Mat[row][column], Base: dna.Base(row)} //cast row to dna.Base (0 -> A, 1 -> C, 2 -> G, 3 -> T)
 		}
 	}
 	//sort matrix columns by rank
@@ -164,7 +164,7 @@ func initializeRankTensor(p PositionMatrix) [][]RankTensorElement {
 }
 
 // rankTensorToString formats a RankTensor as a string for debugging and visualization.
-func rankTensorToString(m [][]RankTensorElement) string {
+func rankTensorToString(m [][]rankTensorElement) string {
 	var row, column int
 	var answer, currBaseString string
 	for row = 0; row < len(m); row++ {
@@ -190,7 +190,7 @@ func buildKmerHash(p PositionMatrix, thresholdProportion float64) map[uint64]flo
 		log.Fatalf("Error in buildKmerHash. Could not score consensus sequence.")
 	}
 	var threshold float64 = thresholdProportion * consensusValue
-	var rankMatrix [][]RankTensorElement = initializeRankTensor(p)
+	var rankMatrix [][]rankTensorElement = initializeRankTensor(p)
 	var currRankVector = make([]int, len(p.Mat[0])) //intialize to all zeros, representing the consensus sequence.
 	var consensusKey uint64 = dnaTwoBit.BasesToUint64RightAln(currSeq.Seq, 0, len(currSeq.Seq))
 	answer[consensusKey] = consensusValue
@@ -211,7 +211,7 @@ func buildKmerHash(p PositionMatrix, thresholdProportion float64) map[uint64]flo
 
 // recursiveCheckKmers is a helper function of buildKmerHash, which searches for all kmer permutations of a PostionMatrix consensus sequence
 // and adds all kmers with a motif score above an input threshold to a map. This implementation uses dynamic programming to search all kmers efficiently.
-func recursiveCheckKmers(answer map[uint64]float64, currSeq []dna.Base, rankMatrix [][]RankTensorElement, parentValue float64, rankVector []int, index int, threshold float64) {
+func recursiveCheckKmers(answer map[uint64]float64, currSeq []dna.Base, rankMatrix [][]rankTensorElement, parentValue float64, rankVector []int, index int, threshold float64) {
 	//first score sequence
 	//we look at parent score, and we look at changed base.
 	currValue := parentValue + rankMatrix[rankVector[index]][index].Value - rankMatrix[rankVector[index]-1][index].Value
@@ -233,6 +233,7 @@ func recursiveCheckKmers(answer map[uint64]float64, currSeq []dna.Base, rankMatr
 	}
 }
 
+/*
 func RapidMatchComp(motifs []PositionMatrix, records []fasta.Fasta, propMatch float64, chromName string, outFile string, residualWindow int, outputAsProportion bool) {
 	var err error
 	var motifLen int
@@ -265,6 +266,9 @@ func RapidMatchComp(motifs []PositionMatrix, records []fasta.Fasta, propMatch fl
 	exception.PanicOnErr(err)
 }
 
+*/
+
+/*
 func scanSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, motifName string, motifLen int, chromName string, out *fileio.EasyWriter, index int, residualWindowSize int, consensusScore float64, strand bed.Strand, outputAsProportion bool) {
 	var couldGetNewKey, inKmerHash, needNewAltKey bool
 	var bitMask uint64 = uint64(math.Pow(2, float64(2*motifLen)) - 1) //bitmask formula: B_n = 2^{2n} - 1
@@ -345,6 +349,8 @@ func scanSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, motifN
 
 	}
 }
+
+*/
 
 // RapidMatch performs genome-wide scans for TF motif occurrences from an input genome in fasta format.
 // propMatch specifies the motif score threshold for a match, as a proportion of the consensus score.
