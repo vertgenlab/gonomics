@@ -160,16 +160,16 @@ func printContactScoreCacheToFile(contactScoreCache [][]int, s Settings) {
 	var err error
 	out := fileio.EasyCreate(s.ContactScoreFile)
 	var currScore, currBinDistance int
-	headerString := "BinDistance\tScore\tCount\tLogCount\n"
+	headerString := "BinDistance\tScore\tCount\n"
 	_, err = fmt.Fprintf(out, "%v\n", headerString)
 	exception.PanicOnErr(err)
 	for currBinDistance = 0; currBinDistance < s.MaxBinDistanceInDistributionFile; currBinDistance++ {
 		for currScore = 0; currScore < s.MaxContactScoreInDistributionFile; currScore++ {
 			if currScore < len(contactScoreCache[currBinDistance]) {
-				_, err = fmt.Fprintf(out, "%v\t%v\t%v\t%v\n", currBinDistance, currScore, contactScoreCache[currBinDistance][currScore], math.Log(float64(contactScoreCache[currBinDistance][currScore])+0.001))
+				_, err = fmt.Fprintf(out, "%v\t%v\t%v\n", currBinDistance, currScore, contactScoreCache[currBinDistance][currScore])
 				exception.PanicOnErr(err)
 			} else {
-				_, err = fmt.Fprintf(out, "%v\t%v\t%v\t%v\n", currBinDistance, currScore, 0, math.Log(0.001))
+				_, err = fmt.Fprintf(out, "%v\t%v\t%v\n", currBinDistance, currScore, 0)
 				exception.PanicOnErr(err)
 			}
 
