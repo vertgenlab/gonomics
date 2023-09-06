@@ -17,6 +17,7 @@ var ReconstructSeqTests = []struct {
 	BiasLeafName         string
 	NonBiasProbThreshold float64
 	HighestProbThreshold float64
+	KeepAllSeq           bool
 }{
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -25,6 +26,7 @@ var ReconstructSeqTests = []struct {
 		BiasLeafName:         "",
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
+		KeepAllSeq:           false,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -33,6 +35,7 @@ var ReconstructSeqTests = []struct {
 		BiasLeafName:         "human",
 		NonBiasProbThreshold: 0.8,
 		HighestProbThreshold: 0,
+		KeepAllSeq:           false,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -41,6 +44,7 @@ var ReconstructSeqTests = []struct {
 		BiasLeafName:         "human",
 		NonBiasProbThreshold: 0.99,
 		HighestProbThreshold: 0,
+		KeepAllSeq:           false,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -49,15 +53,26 @@ var ReconstructSeqTests = []struct {
 		BiasLeafName:         "human",
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0.99,
+		KeepAllSeq:           false,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
-                FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
-                OutFile:              "testdata/out.AllPossibleOneHuman.withExtraSeqs.fa",
-                ExpectedFile:         "testdata/expected.AllPossibleOneHuman.fa",
-                BiasLeafName:         "",
-                NonBiasProbThreshold: 0,
-                HighestProbThreshold: 0,
-        },
+		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
+		OutFile:              "testdata/out.AllPossibleOneHuman.withExtraSeqs.fa",
+		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.fa",
+		BiasLeafName:         "",
+		NonBiasProbThreshold: 0,
+		HighestProbThreshold: 0,
+		KeepAllSeq:           false,
+	},
+	{NewickFile: "testdata/4d.genericNames.mod",
+		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
+		OutFile:              "testdata/out.AllPossibleOneHuman.withExtraSeqs.fa",
+		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.keepAllSeq.fa",
+		BiasLeafName:         "",
+		NonBiasProbThreshold: 0,
+		HighestProbThreshold: 0,
+		KeepAllSeq:           true,
+	},
 }
 
 func TestReconstructSeq(t *testing.T) {
@@ -101,6 +116,7 @@ func TestReconstructSeq(t *testing.T) {
 			BiasLeafName:         v.BiasLeafName,
 			NonBiasProbThreshold: v.NonBiasProbThreshold,
 			HighestProbThreshold: v.HighestProbThreshold,
+			KeepAllSeq:           v.KeepAllSeq,
 		}
 		ReconstructSeq(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

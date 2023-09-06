@@ -21,6 +21,7 @@ type Settings struct {
 	BiasLeafName         string
 	NonBiasProbThreshold float64
 	HighestProbThreshold float64
+	KeepAllSeq           bool
 }
 
 func ReconstructSeq(s Settings) {
@@ -53,6 +54,19 @@ func ReconstructSeq(s Settings) {
 	for k := range branches {
 		treeFastas = append(treeFastas, *branches[k].Fasta)
 	}
+
+	if s.KeepAllSeq {
+		records := fasta.Read(s.FastaInput) // fasta.Read already makes sure that sequence names are unique
+		treeFastasMap := fasta.ToMap(treeFastas)
+		var found bool
+		for i := range records {
+			_, found = treeFastasMap[records[i].Name]
+			if !found {
+				treeFastas = append(treeFastas, records[i]) // in the keepAllSeq option, append non-tree fastas to the treeFastas variable to be written to the outFile
+			}
+		}
+	}
+
 	fasta.Write(s.OutFile, treeFastas)
 }
 
@@ -71,6 +85,7 @@ func main() {
 	var biasLeafName *string = flag.String("biasLeafName", "", "Specify an extant (leaf) sequence towards which we will bias reconstruction for the immediate ancestor (parent node).")
 	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasBaseThreshold", 0, "Given that a biasLeafName specifies a reference species, when reconstructing the sequence of a non-reference species, unless the sum of probabilities for all non-reference bases is above this value, the reference base is returned.")
 	var highestProbThreshold *float64 = flag.Float64("highestProbThreshold", 0, "The highest probability base must be above this value to be accepted for reconstruction. Otherwise, dna.N will be returned.")
+	var keepAllSeq *bool = flag.Bool("keepAllSeq", false, "By default, reconstructSeq discards sequences in the fasta input that are not specified in the newick input, because they are not used in the reconstruction. If keepAllSeq is set to TRUE, reconstructSeq will keep all sequences in the fasta input, even if they are not used in the reconstruction.")
 
 	var expectedNumArgs = 3
 
@@ -95,6 +110,7 @@ func main() {
 		BiasLeafName:         *biasLeafName,
 		NonBiasProbThreshold: *nonBiasProbThreshold,
 		HighestProbThreshold: *highestProbThreshold,
+		KeepAllSeq:           *keepAllSeq,
 	}
 
 	ReconstructSeq(s)
