@@ -24,6 +24,7 @@ type MatchCompSettings struct {
 	RefStart           int
 	OutputAsProportion bool
 	EnforceStrandMatch bool
+	ResidualFilter     float64
 }
 
 func MatchComp(s MatchCompSettings) {
@@ -58,7 +59,6 @@ func MatchComp(s MatchCompSettings) {
 		}
 		var currSeq = ConsensusSequence(motifs[i], false)
 		consensusScore, _, couldScoreConsensus = ScoreWindow(motifs[i], currSeq.Seq, 0)
-		//fmt.Printf("ConsensusScore: %v.\n", consensusScore)
 		if !couldScoreConsensus {
 			log.Fatalf("Error: problem in buildKmerHash. Could not score consensus sequence.")
 		}
@@ -66,22 +66,22 @@ func MatchComp(s MatchCompSettings) {
 		altEndsConsidered := make(map[int]bool, 0)
 
 		kmerHash = buildKmerHash(motifs[i], s.PropMatch)
-		scanRefSequenceComp(s.Records, kmerHash, motifs[i], s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Positive, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered)
+		scanRefSequenceComp(s.Records, kmerHash, motifs[i], s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Positive, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered, s.ResidualFilter)
 
 		revCompMotif = ReverseComplement(motifs[i])
 		revKmerHash = buildKmerHash(revCompMotif, s.PropMatch)
-		scanRefSequenceComp(s.Records, revKmerHash, revCompMotif, s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Negative, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered)
+		scanRefSequenceComp(s.Records, revKmerHash, revCompMotif, s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Negative, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered, s.ResidualFilter)
 
 		//now we scan the alt sequences for any motifs lost in ref
-		scanAltSequenceComp(s.Records, kmerHash, motifs[i], s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Positive, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered)
-		scanAltSequenceComp(s.Records, revKmerHash, revCompMotif, s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Negative, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered)
+		scanAltSequenceComp(s.Records, kmerHash, motifs[i], s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Positive, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered, s.ResidualFilter)
+		scanAltSequenceComp(s.Records, revKmerHash, revCompMotif, s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Negative, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered, s.ResidualFilter)
 	}
 
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
 
-func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm PositionMatrix, chromName string, out *fileio.EasyWriter, residualWindowSize int, consensusScore float64, strand bed.Strand, refStart int, enforceStrandMatch bool, outputAsProportion bool, altEndsConsidered map[int]bool) {
+func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm PositionMatrix, chromName string, out *fileio.EasyWriter, residualWindowSize int, consensusScore float64, strand bed.Strand, refStart int, enforceStrandMatch bool, outputAsProportion bool, altEndsConsidered map[int]bool, residualFilter float64) {
 	var needNewKey bool = true
 	var currRefKey uint64
 	var couldGetNewKey, inKmerHash, couldScoreSequence bool
@@ -166,24 +166,24 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				minResidualAltScore = minResidualAltScore / consensusScore
 				minResidual = math.Abs(currRefScore - minResidualAltScore)
 			}
-			currBed = bed.Bed{
-				Chrom:             chromName,
-				ChromStart:        refPos - len(pm.Mat[0]) + 1,
-				ChromEnd:          refPos + 1,
-				Name:              pm.Name,
-				Score:             0,
-				Strand:            strand,
-				FieldsInitialized: 9,
-				Annotation:        []string{fmt.Sprintf("%v", currRefScore), fmt.Sprintf("%v", minResidualAltScore), fmt.Sprintf("%v", minResidual)},
+			if minResidual >= residualFilter {
+				currBed = bed.Bed{
+					Chrom:             chromName,
+					ChromStart:        refPos - len(pm.Mat[0]) + 1,
+					ChromEnd:          refPos + 1,
+					Name:              pm.Name,
+					Score:             0,
+					Strand:            strand,
+					FieldsInitialized: 9,
+					Annotation:        []string{fmt.Sprintf("%v", currRefScore), fmt.Sprintf("%v", minResidualAltScore), fmt.Sprintf("%v", minResidual)},
+				}
+				bed.WriteBed(out, currBed)
 			}
-			bed.WriteBed(out, currBed)
 		}
 	}
-
-	//fmt.Printf("UsedAltEndPositions\n%v\n", altEndsConsidered)
 }
 
-func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm PositionMatrix, chromName string, out *fileio.EasyWriter, residualWindowSize int, consensusScore float64, strand bed.Strand, refStart int, enforceStrandMatch bool, outputAsProportion bool, altEndsConsidered map[int]bool) {
+func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm PositionMatrix, chromName string, out *fileio.EasyWriter, residualWindowSize int, consensusScore float64, strand bed.Strand, refStart int, enforceStrandMatch bool, outputAsProportion bool, altEndsConsidered map[int]bool, residualFilter float64) {
 	var needNewKey = true
 	var currAltKey uint64
 	var refPos = refStart
@@ -242,7 +242,6 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				minResidualRefScore = 0
 				for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, refStart); currRefStart <= alnPos+residualWindowSize-len(pm.Mat[0])+1; currRefStart++ {
 					currRefScore, _, couldScoreSequence = ScoreWindow(pm, records[0].Seq, currRefStart)
-					//fmt.Printf("AlnPos: %v. currRefStart: %v. CurrRefEnd: %v. CurrRefScore: %v.\n", alnPos, currRefStart, currRefEnd, currRefScore)
 					if !couldScoreSequence {
 						break
 					}
@@ -269,17 +268,19 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 					minResidualRefScore = minResidualRefScore / consensusScore
 					minResidual = math.Abs(currAltScore - minResidualRefScore)
 				}
-				currBed = bed.Bed{
-					Chrom:             chromName,
-					ChromStart:        refPos - len(pm.Mat[0]) + 1,
-					ChromEnd:          refPos + 1,
-					Name:              pm.Name,
-					Score:             0,
-					Strand:            strand,
-					FieldsInitialized: 9,
-					Annotation:        []string{fmt.Sprintf("%v", minResidualRefScore), fmt.Sprintf("%v", currAltScore), fmt.Sprintf("%v", minResidual)},
+				if minResidual >= residualFilter {
+					currBed = bed.Bed{
+						Chrom:             chromName,
+						ChromStart:        refPos - len(pm.Mat[0]) + 1,
+						ChromEnd:          refPos + 1,
+						Name:              pm.Name,
+						Score:             0,
+						Strand:            strand,
+						FieldsInitialized: 9,
+						Annotation:        []string{fmt.Sprintf("%v", minResidualRefScore), fmt.Sprintf("%v", currAltScore), fmt.Sprintf("%v", minResidual)},
+					}
+					bed.WriteBed(out, currBed)
 				}
-				bed.WriteBed(out, currBed)
 			}
 		}
 

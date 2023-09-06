@@ -31,10 +31,11 @@ func tfMatchComp(s motif.MatchCompSettings, fastaFileName string) {
 
 func usage() {
 	fmt.Print(
-		"tfMatchComp - Compare the TFBS profiles between two input aligned genomic sequences." +
-			"Input fasta sequences must be uppercase, which can be achieved with faFormat.\n" +
+		"tfMatchComp - Compare the motif profiles between two input aligned genomic sequences." +
+			"Output lines are as follows:\n" +
+			"CHR\tCHROMSTART\tCHROMEND\tMOTIF_NAME\t0\tMOTIF_STRAND\tREF_SCORE\tALT_SCORE\tRESIDUAL" +
 			"Usage:\n" +
-			"tfMatchComp input.fa matrices.pfm chromName output.bed\n" +
+			"tfMatchComp input.fa matrices.pfm/ppm/pwm chromName output.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -49,6 +50,7 @@ func main() {
 	var residualWindowSize *int = flag.Int("residualWindowSize", 5, "Set the number of offset bases to consider when searching for motif in other species.")
 	var enforceStrandMatch *bool = flag.Bool("enforceStrand", false, "If species A has the motif CCC, and the orthologous species B has sequence GGG, this is considered a match by default (as the motif is still there, just in revComp.\n"+
 		"This option enforces strand matching.")
+	var residualFilter *float64 = flag.Float64("residualFilter", 0, "The difference in motif scores between the two sequences must be at least this value to be retained in the output.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -75,6 +77,7 @@ func main() {
 		RefStart:           *refStart,
 		OutputAsProportion: *outputAsProportion,
 		EnforceStrandMatch: *enforceStrandMatch,
+		ResidualFilter:     *residualFilter,
 	}
 
 	tfMatchComp(s, inFile)
