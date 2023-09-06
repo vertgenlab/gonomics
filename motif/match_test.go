@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
@@ -33,7 +32,7 @@ func TestScoreWindow(t *testing.T) {
 		motifs = ReadJaspar(v.MatrixFile, "Frequency")
 		for i = range motifs {
 			for j = range v.AlnStart {
-				currScore, currBool = ScoreWindow(motifs[i], v.Seq[i], v.AlnStart[j])
+				currScore, _, currBool = ScoreWindow(motifs[i], v.Seq[i], v.AlnStart[j])
 				if currScore != v.ExpectedScores[i][j] {
 					t.Errorf("Error in ScoreWindow. Score was not as expected. Expected: %v. Observed: %v.", v.ExpectedScores[i][j], currScore)
 				}
@@ -41,52 +40,6 @@ func TestScoreWindow(t *testing.T) {
 					t.Errorf("Error in ScoreWindow. Bool was not as expected. Expected: %v. Observed: %v.", v.ExpectedBools[i][j], currBool)
 				}
 			}
-		}
-	}
-}
-
-var MatchCompTests = []struct {
-	MotifFile          string
-	FastaFile          string
-	ChromName          string
-	PropMatch          float64
-	OutFile            string
-	RefStart           int
-	OutputAsProportion bool
-	ExpectedFile       string
-}{
-	{MotifFile: "testdata/jaspar.vertebrate.txt",
-		FastaFile:          "testdata/STR012.fa",
-		ChromName:          "chr9",
-		PropMatch:          0.95,
-		OutFile:            "testdata/tmp.MatchComp.bed",
-		RefStart:           113944,
-		OutputAsProportion: false,
-		ExpectedFile:       "testdata/expected.MatchComp.bed"},
-	{MotifFile: "testdata/jaspar.vertebrate.txt",
-		FastaFile:          "testdata/STR012.fa",
-		ChromName:          "chr9",
-		PropMatch:          0.95,
-		OutFile:            "testdata/tmp.OutputAsProp.MatchComp.bed",
-		RefStart:           113944,
-		OutputAsProportion: true,
-		ExpectedFile:       "testdata/expected.OutputAsProp.MatchComp.bed"},
-}
-
-func TestMatchComp(t *testing.T) {
-	var err error
-	var motifs []PositionMatrix
-	var records []fasta.Fasta
-	for _, v := range MatchCompTests {
-		motifs = ReadJaspar(v.MotifFile, "Frequency")
-		records = fasta.Read(v.FastaFile)
-		fasta.AllToUpper(records)
-		MatchComp(motifs, records, v.ChromName, v.PropMatch, v.OutFile, v.RefStart, v.OutputAsProportion)
-		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-			t.Errorf("Error in MatchComp. Output is not as expected.")
-		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
 		}
 	}
 }
@@ -107,7 +60,7 @@ func TestRankTensors(t *testing.T) {
 	var motifs []PositionMatrix
 	var i int
 	var out *fileio.EasyWriter
-	var currRankMatrix [][]RankTensorElement
+	var currRankMatrix [][]rankTensorElement
 	for _, v := range RankMatrixTests {
 		out = fileio.EasyCreate(v.OutFile)
 		motifs = ReadJaspar(v.PwmFile, "Weight")

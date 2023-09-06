@@ -38,7 +38,7 @@ func TestTfMatch(t *testing.T) {
 			MatrixFileType:     v.MatrixFileType,
 			PropMatch:          v.PropMatch,
 			Pseudocounts:       v.Pseudocounts,
-			OutputasProportion: v.OutputAsProportion,
+			OutputAsProportion: v.OutputAsProportion,
 		}
 		tfMatch(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

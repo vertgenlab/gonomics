@@ -15,7 +15,7 @@ type Settings struct {
 	MatrixFileType     string
 	PropMatch          float64
 	Pseudocounts       float64
-	OutputasProportion bool
+	OutputAsProportion bool
 }
 
 func tfMatch(s Settings) {
@@ -37,7 +37,7 @@ func tfMatch(s Settings) {
 	if s.PropMatch < 0 || s.PropMatch > 1 {
 		log.Fatalf("Error. PropMatch option should be a proportion, a value between 0 and 1.")
 	}
-	motif.RapidMatch(motifs, records, s.PropMatch, s.OutFile, s.OutputasProportion)
+	motif.RapidMatch(motifs, records, s.PropMatch, s.OutFile, s.OutputAsProportion)
 }
 
 func usage() {
@@ -77,7 +77,7 @@ func main() {
 		MatrixFileType:     *matrixFileType,
 		PropMatch:          *propMatch,
 		Pseudocounts:       *pfmPseudocounts,
-		OutputasProportion: *outputAsProportion,
+		OutputAsProportion: *outputAsProportion,
 	}
 
 	tfMatch(s)
