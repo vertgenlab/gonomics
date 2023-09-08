@@ -20,6 +20,7 @@ type Settings struct {
 
 func tfMatch(s Settings) {
 	records := fasta.Read(s.InFile)
+	fasta.AllToUpper(records)
 	motifs := motif.ReadJaspar(s.MatrixFile, s.MatrixFileType)
 	switch s.MatrixFileType {
 	case "Frequency":
