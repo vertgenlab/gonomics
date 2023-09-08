@@ -7,531 +7,14 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
+	"github.com/vertgenlab/gonomics/starrSeq"
 	"log"
-	"math/rand"
 	"os"
 	"sort"
-	"strings"
 )
 
-type Settings struct {
-	inFile          string
-	outFile         string
-	inputNormalize  string
-	byCell          bool
-	samOut          bool
-	scAnalysis      string
-	binCells        int
-	umiSat          bool
-	gfpNorm         string
-	bed             string
-	ncNorm          string
-	determineBins   string
-	inputSequencing string
-}
-
-// calculateNormFactor takes the countsMap created in readInputSequencingSam and writes out a data frame with the name of the construct, counts per 500bp, percent abundance, and normalization factor
-func calculateNormFactor(countsMap map[string]float64, outFile string) {
-	var totalReads float64 = 0
-	var line string
-	var percentLib float64
-	var matrix []string
-
-	out := fileio.EasyCreate(outFile)
-	fileio.WriteToFileHandle(out, "construct\treadsPer500bp\tpercentLibrary\tnormFactor")
-
-	numConstructs := len(countsMap)
-	idealPerc := 100.0 / float64(numConstructs)
-
-	for i := range countsMap {
-		totalReads = countsMap[i] + totalReads
-	}
-
-	for i := range countsMap {
-		percentLib = (countsMap[i] / totalReads) * 100
-		line = fmt.Sprintf("%s\t%f\t%f\t%f", i, countsMap[i], percentLib, idealPerc/percentLib)
-		matrix = append(matrix, line)
-	}
-	sort.Strings(matrix)
-	for _, i := range matrix {
-		fileio.WriteToFileHandle(out, i)
-	}
-	err := out.Close()
-	exception.PanicOnErr(err)
-}
-
-// readInputSequencingSam reads and parses an alignment file for an input library sequencing run. It creates a read-count map for all constructs in the provided GTF
-func readInputSequencingSam(s Settings) {
-	var tree = make([]interval.Interval, 0)
-	var bedSizeMap = make(map[string]int)
-	var countsMap = make(map[string]float64)
-	var selectTree map[string]*interval.IntervalNode
-	var constructName string
-	var counts float64
-	var currEntry sam.Sam
-
-	inChan, _ := sam.GoReadToChan(s.inFile)
-	bedEntries := bed.Read(s.inputSequencing)
-
-	for _, i := range bedEntries {
-		tree = append(tree, i)
-		bedSizeMap[i.Name] = bed.Size(i)
-		countsMap[i.Name] = 0
-	}
-	selectTree = interval.BuildTree(tree)
-
-	currEntry = <-inChan
-	for i := range inChan {
-		//remove PCR duplicates
-		if interval.AreEqual(currEntry, i) {
-			if currEntry.Qual >= i.Qual {
-				continue
-			} else {
-				currEntry = i
-				continue
-			}
-		}
-		overlappedBedEntry := interval.Query(selectTree, currEntry, "any")
-		if len(overlappedBedEntry) != 1 {
-			currEntry = i
-			continue
-		}
-		constructName = overlappedBedEntry[0].(bed.Bed).Name
-		counts, _ = countsMap[constructName]
-		countsMap[constructName] = counts + 1
-		currEntry = i
-	}
-	//normalize reads to 500bp
-	for i := range countsMap {
-		counts, _ = countsMap[i]
-		countsMap[i] = counts / (float64(bedSizeMap[i]) / 500.0)
-	}
-	calculateNormFactor(countsMap, s.outFile)
-}
-
-// getNcAvg takes in the input normalized matrix of single cell data, the list of negative control sequences and an empty slice of slices and will return the average negative control reads for each
-// cell type
-func getNcAvg(matrix []string, ncSlice []string, ncVals [][]float64) []float64 {
-	var found bool
-	var currCluster string
-	var columns []string
-	var prevCluster string
-	var ncAvg []float64
-
-	columns = strings.Split(matrix[0], "\t")
-	currCluster = columns[0]
-
-	clusterIdx := 0
-	for p, i := range matrix {
-		found = false
-		columns = strings.Split(i, "\t")
-		currCluster = columns[0]
-		if p > 0 && currCluster != prevCluster {
-			clusterIdx++
-		}
-		for _, j := range ncSlice {
-			if j == columns[1] {
-				found = true
-				break
-			}
-		}
-		if found {
-			ncVals[clusterIdx] = append(ncVals[clusterIdx], parse.StringToFloat64(columns[2]))
-		}
-		prevCluster = currCluster
-	}
-	for i, _ := range ncVals {
-		ncAvg = append(ncAvg, numbers.AverageFloat64(ncVals[i]))
-	}
-	return ncAvg
-}
-
-// normScToNegativeCtrls is the initial function to normalize single-cell data to negative control reads in the same cell type. It takes in a matrix that is the input-normalized, the settings struct,
-// the number of cell types and returns the negative control normalized read counts
-func normScToNegativeCtrls(matrix []string, s Settings, numCellTypes int) []string {
-	var ncSlice, columns []string
-	var prevCluster, newLine string
-
-	ncVals := make([][]float64, numCellTypes)
-	nc := fileio.Read(s.ncNorm)
-	for _, i := range nc {
-		ncSlice = append(ncSlice, i)
-	}
-	ncAvg := getNcAvg(matrix, ncSlice, ncVals)
-
-	columns = strings.Split(matrix[0], "\t")
-	currCluster := columns[0]
-
-	clusterIdx := 0
-	for j, i := range matrix {
-		columns = strings.Split(i, "\t")
-		currCluster = columns[0]
-		if j > 0 && currCluster != prevCluster {
-			clusterIdx++
-		}
-		columns[2] = fmt.Sprintf("%f", parse.StringToFloat64(columns[2])/ncAvg[clusterIdx])
-		newLine = strings.Join(columns, "\t")
-		matrix[j] = newLine
-		prevCluster = currCluster
-	}
-	return matrix
-}
-
-// gfpNormalize iterates over a single-cell counts map and applies a GFP normalization factor.
-func gfpNormalize(countsMap map[string]float64, normFactor float64) {
-	var counts float64
-	for i := range countsMap {
-		counts, _ = countsMap[i]
-		countsMap[i] = counts * normFactor
-	}
-}
-
-// gfpNormFactor takes in a map of cellType-gfpReads and returns a map with cellType-gfpNormalizationValue. Normalization value is calculated by the percentage of GFP reads if all
-// cell types were equal, and dividing it by the observed percentage of GFP reads in a given cell type
-func gfpNormFactor(clusterGFP map[string]int) map[string]float64 {
-	var totalCounts, clusterCounts int
-	var actualPerc float64
-	gfpNormMap := make(map[string]float64)
-	idealPerc := 1.0 / float64(len(clusterGFP))
-	for i := range clusterGFP {
-		clusterCounts, _ = clusterGFP[i]
-		totalCounts = clusterCounts + totalCounts
-	}
-	for i := range clusterGFP {
-		actualPerc = float64(clusterGFP[i]) / float64(totalCounts)
-		gfpNormMap[i] = idealPerc / actualPerc
-	}
-	return gfpNormMap
-}
-
-// parseGfpBam is similar to the parseBam function but handles bams containing GFP reads. This function also takes in a map of cellBx-cellType and an empty map containing each cellType
-// It returns a map that contains [cellType] = gfpReads
-func parseGfpBam(gfpBam string, cellTypeMap map[string]string, clusterGFP map[string]int) map[string]int {
-	var bit int32
-	var cluster string
-	var count int
-	var gfpStats []string
-	var found bool
-
-	inChan, _ := sam.GoReadToChan(gfpBam)
-	for i := range inChan {
-		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(int32)
-		if bit&8 == 8 {
-			cellBx, _, _ := sam.QueryTag(i, "CB")
-			cluster, found = cellTypeMap[cellBx.(string)]
-			if found {
-				count, _ = clusterGFP[cluster]
-				clusterGFP[cluster] = count + 1
-			}
-		}
-	}
-	//print out some GFP read counts / cluster
-	var gfpReads int
-	for i := range clusterGFP {
-		gfpReads, _ = clusterGFP[i]
-		gfpStats = append(gfpStats, fmt.Sprintf("found %d GFP reads in %s", gfpReads, i))
-	}
-	for _, i := range gfpStats {
-		fmt.Println(i)
-	}
-	return clusterGFP
-}
-
-// umiSaturation randomly subsets the whole bam file (10% to 100% of all reads) and calculates how many UMIs are in those subests. The output is a tab delimited text file.
-func umiSaturation(umiBxSlice []string, out *fileio.EasyWriter) {
-	var perc, randNum float64
-	var j string
-	var count int
-
-	fileio.WriteToFileHandle(out, "totalReads\tumis")
-
-	for i := 1; i <= 10; i++ {
-		perc = float64(i) / 10
-		mp := make(map[string]bool)
-		count = 0
-		for _, j = range umiBxSlice {
-			randNum = rand.Float64()
-			if randNum > perc {
-				continue
-			}
-			count++
-			mp[j] = true
-		}
-		fileio.WriteToFileHandle(out, fmt.Sprintf("%d\t%d", count, len(mp)))
-	}
-}
-
-// combineBams is triggered when there are more than 1 input bams in a comma delimited list. This function appends a "_int" to the back of the cell barcode correstponding to the input file order
-// and then concatenates all bam files together
-func combineBams(a string, out *fileio.EasyWriter, iteration *int, length int, bw *sam.BamWriter) *sam.BamWriter {
-	var err error
-	var columns, columns2 []string
-	var j, join string
-	var n int
-
-	inChan, head := sam.GoReadToChan(a)
-	if *iteration == 1 {
-		bw = sam.NewBamWriter(out, head)
-	}
-	for i := range inChan {
-		err = sam.ParseExtra(&i)
-		columns = strings.Split(i.Extra, "\t")
-		for n, j = range columns {
-			columns2 = strings.Split(j, ":")
-			if columns2[0] == "CB" {
-				columns[n] = fmt.Sprintf("%s_%d", j, *iteration)
-				join = strings.Join(columns, "\t")
-				i.Extra = join
-			}
-		}
-		sam.WriteToBamFileHandle(bw, i, 0)
-	}
-	exception.PanicOnErr(err)
-	*iteration++
-	return bw
-}
-
-// binnedPseudobulk is the psuedobulk function if the -binCells option is used. It adds an addition column to the dataframe corresponding to bin identity
-func binnedPseudobulk(inSlices [][]string, out *fileio.EasyWriter, norm string) {
-	var j, i string
-	var count float64
-	var found bool
-	var columns []string
-
-	whichBin := 'A'
-	fileio.WriteToFileHandle(out, "construct\tcounts\tbin")
-	for _, bin := range inSlices {
-		mp := make(map[string]float64)
-		var toWrite []string
-		for _, j = range bin {
-			columns = strings.Split(j, "\t")
-			count, found = mp[columns[1]]
-			if !found {
-				mp[columns[1]] = 1
-			} else {
-				mp[columns[1]] = count + 1
-			}
-		}
-		if norm != "" {
-			inputNormalize(mp, norm)
-		}
-		for i = range mp {
-			toWrite = append(toWrite, fmt.Sprintf("%s\t%f\t%c", i, mp[i], whichBin))
-		}
-		sort.Strings(toWrite)
-		for _, i = range toWrite {
-			fileio.WriteToFileHandle(out, i)
-		}
-		whichBin++
-	}
-}
-
-// determine ideal bins will determine how many bins should be used for the pseudobulk -binCells option
-func determineIdealBins(s Settings, cellTypeSlice []string) int {
-	var count, j int
-	var found, stop bool
-	var z, l, m string
-	var binSlice []int
-	var matrix [][]string
-
-	nc := fileio.Read(s.determineBins)
-
-	for i := 0; i <= 10; i++ { //do this whole loop 10 times (essentially 10 replicates)
-		stop = false
-		for j = 1; j <= 100; j++ { //loop from bins 1 to 100 (j)
-			s.binCells = j                                   //set the binCells parameter to j
-			matrix = distributeCells(s, cellTypeSlice, true) //run distributeCells with that value of j
-			for k := range matrix {                          //loop through bins in matrix
-				ncMap := make(map[string]int) //create a map that has ncConstructName--counts
-				for _, z = range nc {         //populate the map
-					ncMap[z] = 0
-				}
-				for _, l = range matrix[k] { //loop through the constructs in a particular bin
-					columns := strings.Split(l, "\t") //split an entry in from the matrix
-					count, found = ncMap[columns[1]]  //search the 2nd column to see if it is a negative control
-					if found {                        //if it is, add a count to the map for that particular negative control
-						ncMap[columns[1]] = count + 1
-					}
-				}
-				for m = range ncMap {
-					count, _ = ncMap[m]
-					if count < 1 {
-						binSlice = append(binSlice, j-1)
-						stop = true
-						break
-					}
-				}
-				if stop == true {
-					break
-				}
-			}
-			if stop == true {
-				break
-			}
-		}
-	}
-	return int(numbers.AverageInt(binSlice))
-}
-
-// determineBin takes in an int and the probablity of any given bin and determines the bin the cell belongs to.
-func determineBin(numBins int, prob float64) int {
-	var bin int
-
-	randNum := rand.Float64()      // draw a random number
-	for j := 0; j < numBins; j++ { //iterate over the number of bins
-		if j == numBins { //if we've gotten to the last bin and the cell still hasn't been partitioned, we don't have to check anything else we can just put it there.
-			return j
-		}
-		if randNum >= prob*float64(j) && randNum < prob*float64(j+1) { // check to see if our random number belongs to that bin
-			bin = j
-		}
-	}
-	return bin
-}
-
-// distributeCells takes in a slice of string that is created in parseBam that has a list of cellBarcodes and constructs. It will partition those cells and constructs into separate slices. The number of bins is a user-input variable
-func distributeCells(s Settings, cellTypeSlice []string, fromDB bool) [][]string {
-	var currCell string
-	var columns []string
-	var bin, count int
-	var found bool
-
-	whichBin := 'A'                   //for counting cells per bin
-	whichBinMap := make(map[rune]int) //for counting cells per bin
-
-	binnedCells := make([][]string, s.binCells) //make a slice of slice of string with the size of the user-specified number of bins
-	prob := 1.0 / float64(s.binCells)           // determine the probability that the cell belongs to a particular bin
-
-	sort.Strings(cellTypeSlice) //sort the slice of strings containing (cellBarcode \t construct) so that indentical cell barcodes line up next to one another
-
-	for _, i := range cellTypeSlice {
-		columns = strings.Split(i, "\t")
-		if columns[0] == currCell { // if the cell barcode is the same as the one the loop just saw, partition that cell-construct pair into the same bin as the one before
-			binnedCells[bin] = append(binnedCells[bin], i)
-			continue
-		}
-		bin = determineBin(s.binCells, prob)           //function to determine which bin to put the new cell into.
-		binnedCells[bin] = append(binnedCells[bin], i) //put cell into correct bin
-		currCell = columns[0]                          //set the cell barcode that was just partitioned to current cell for the next iteration
-		count, found = whichBinMap[whichBin+rune(bin)]
-		if !found {
-			whichBinMap[whichBin+rune(bin)] = 1
-		} else {
-			whichBinMap[whichBin+rune(bin)] = count + 1
-		}
-	}
-
-	var outSlice []string
-	if !fromDB {
-		for i := range whichBinMap {
-			outSlice = append(outSlice, fmt.Sprintf("Bin: %c\tcells: %d", i, whichBinMap[i]))
-		}
-		sort.Strings(outSlice)
-		for _, i := range outSlice {
-			fmt.Println(i)
-		}
-	}
-	return binnedCells
-}
-
-// singleCellAnalysis will create a count for each construct in each cell type. This function takes
-func singleCellAnalysis(s Settings, cellTypeSlice []string, allConstructs []string, writer *fileio.EasyWriter) {
-	var found, found2 bool
-	var cellType, j, m, cluster string
-	var count float64
-	var outMatrix, columns, columns2 []string
-	var gfpNormFactorMap map[string]float64
-
-	cellTypeMap := make(map[string]string) // [cellBarcode]cellType
-	allCellTypes := make(map[string]int)   // [cellType]placeholderInt
-	//countsPerCellType := make(map[string]int)
-
-	cto := fileio.Read(s.scAnalysis) // read in the tab delimited file with cell and cell type info
-	for _, i := range cto {          //make a map where the cell barcode is the key and the cell type is the value
-		columns = strings.Split(i, "\t")
-		cellTypeMap[columns[0]] = columns[1]
-		_, found2 = allCellTypes[columns[1]] // also populate a map that contains a list of all cell types
-		if !found2 {
-			allCellTypes[columns[1]] = 0
-		}
-	}
-
-	if s.gfpNorm != "" {
-		gfpClusterMap := parseGfpBam(s.gfpNorm, cellTypeMap, allCellTypes)
-		gfpNormFactorMap = gfpNormFactor(gfpClusterMap)
-	}
-
-	for cellType = range allCellTypes { //loop over the list of cell types
-		var a int = 0
-		singleCellTypeMap := make(map[string]float64) // make a map which will hold the construct counts for the current cell type ([construct]counts)
-		for _, j = range allConstructs {              // loop over all construct that were found in the bam file to make every construct start at 0 reads
-			singleCellTypeMap[j] = 0
-		}
-		for _, i := range cellTypeSlice { //loop over the slice created in cellrangerBam() that that contains: cellBarcode \t construct
-			columns2 = strings.Split(i, "\t")
-			cluster, found = cellTypeMap[columns2[0]] //search for that cell barcode in the cellType map
-			if found && cluster == cellType {         // if that cell is found and the cell type in the map matches the cell type we are looping through, search for the construct corresponding with that cellBarcode in the singleCellCount map and add one to the value
-				count, _ = singleCellTypeMap[columns2[1]]
-				singleCellTypeMap[columns2[1]] = count + 1
-				a++
-			}
-		}
-		if s.inputNormalize != "" { // normalize the singleCellCount map if needed
-			inputNormalize(singleCellTypeMap, s.inputNormalize)
-		}
-		if s.gfpNorm != "" {
-			gfpNormalizationFactor := gfpNormFactorMap[cellType]
-			gfpNormalize(singleCellTypeMap, gfpNormalizationFactor)
-		}
-		for m = range singleCellTypeMap { // write out the results from that cell type
-			write := fmt.Sprintf("%s\t%s\t%f", cellType, m, singleCellTypeMap[m]) //cell type \t construct \t count
-			outMatrix = append(outMatrix, write)
-		}
-		fmt.Println(fmt.Sprintf("Found %d raw counts in the cell type: %s", a, cellType))
-	}
-	sort.Strings(outMatrix) //sort the slice before writing
-
-	if s.ncNorm != "" {
-		outMatrix = normScToNegativeCtrls(outMatrix, s, len(allCellTypes))
-	}
-	if s.ncNorm != "" {
-		fileio.WriteToFileHandle(writer, "cellCluster\tconstruct\tcounts/ncCounts")
-	} else {
-		fileio.WriteToFileHandle(writer, "cellCluster\tconstruct\tcounts")
-	}
-	for _, i := range outMatrix { //once all cell types have been looped through, write out the total count matrix
-		fileio.WriteToFileHandle(writer, i)
-	}
-}
-
-// inputNormalize takes in the psuedobulk map and an input normalization table and normalizes all the raw count values in the map
-func inputNormalize(mp map[string]float64, normalize string) {
-	var total float64
-	var found bool
-	var columns []string
-
-	inputNormValues := fileio.Read(normalize)
-	if len(inputNormValues) < len(mp) {
-		fmt.Println("The input normalization table has less constructs than were found in the input bam. 1 or more constructs won't be normalized. Please check your input files.")
-	} else if len(inputNormValues) > len(mp) {
-		fmt.Println("The input normalization table has more constructs than were found in the input bam. Constructs not found in the bam will have 0 counts in the output.")
-	}
-	for _, i := range inputNormValues { //iterate over the table with input normalization values and use those to edit the counts in the map
-		columns = strings.Split(i, "\t")
-		total, found = mp[columns[0]]
-		if found {
-			mp[columns[0]] = total * parse.StringToFloat64(columns[1])
-		} else {
-			mp[columns[0]] = 0.0 //user wants to normalize this construct meaning that it was in the library. however, no reads were recovered for that construct so we add it to the map and set the value to zero
-		}
-	}
-}
-
-// writeMap simply writes out the pseudobulk and/or input normalized values to an io.writer
+// writeMap writes out a pseudobulk map to an io.writer
 func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 	var total float64
 	var write string
@@ -549,39 +32,49 @@ func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
 }
 
 // parseBam takes in a cellranger count bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
-func parseBam(s Settings) {
+func parseBam(s starrSeq.ScStarrSeqSettings) {
 	var k int = 0
-	var constructName, cellString, cellByConstructName, umiBx string
+	var constructName, umiBx, cellType string
 	var count float64
 	var found bool
 	var bit int32
-	var norm bool = false
 	var sc bool = false
-	var noSettings bool = false
-	var allConstructs, cellTypeSlice, umiBxSlice []string
+	var populateUmiStruct bool = false
+	var allConstructs, umiBxSlice, allCellTypes []string
+	var umi starrSeq.UMI
+	var umiSlice []starrSeq.UMI
+	var err error
+	var out, outSam *fileio.EasyWriter
 
-	if s.inputNormalize != "" { //create a bool for normalize
-		norm = true
-	}
-	if s.scAnalysis != "" { //create a bool for cellTypeAnalysis
+	cellTypeMap := make(map[string]string)
+	if s.ScAnalysis != "" { //create a bool for cellTypeAnalysis
 		sc = true
+		ck := starrSeq.ReadClusterKey(s.ScAnalysis)
+		for _, i := range ck {
+			cellTypeMap[i.Bx] = i.Cluster
+			allCellTypes = append(allCellTypes, i.Cluster)
+		}
 	}
-	if !sc && s.binCells < 1 && !s.samOut && !s.byCell && !s.umiSat {
-		noSettings = true
+
+	if s.ByCell != "" || sc || s.BinCells > 0 || s.DetermineBins != "" || s.CountMatrix != "" {
+		populateUmiStruct = true
 	}
 
-	ch, head := sam.GoReadToChan(s.inFile)
+	ch, head := sam.GoReadToChan(s.InFile)
 
-	out := fileio.EasyCreate(s.outFile)
+	if !s.NoOut {
+		out = fileio.EasyCreate(s.OutFile)
+	}
 
-	if s.samOut {
-		sam.WriteHeaderToFileHandle(out, head)
+	if s.SamOut != "" {
+		outSam = fileio.EasyCreate(s.SamOut)
+		sam.WriteHeaderToFileHandle(outSam, head)
 	}
 
 	var tree = make([]interval.Interval, 0)
 	var selectTree map[string]*interval.IntervalNode
-	if s.bed != "" {
-		bedEntries := bed.Read(s.bed)
+	if s.Bed != "" {
+		bedEntries := bed.Read(s.Bed)
 		for _, i := range bedEntries {
 			tree = append(tree, i)
 		}
@@ -591,17 +84,17 @@ func parseBam(s Settings) {
 	pseudobulkMap := make(map[string]float64)
 
 	for i := range ch { //iterate of over the chanel of sam.Sam
-		if s.umiSat {
-			umi, _, _ := sam.QueryTag(i, "UB")
+		if s.UmiSat != "" {
+			readUmi, _, _ := sam.QueryTag(i, "UB")
 			cb, _, _ := sam.QueryTag(i, "CB")
-			umiBx = fmt.Sprintf("%s_%s", umi, cb)
+			umiBx = fmt.Sprintf("%s_%s", readUmi, cb)
 			umiBxSlice = append(umiBxSlice, umiBx)
 		}
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
 		bit = num.(int32)
 		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
 			k++
-			if s.bed != "" {
+			if s.Bed != "" {
 				overlappedBedEntry := interval.Query(selectTree, i, "any")
 				if len(overlappedBedEntry) != 1 {
 					continue
@@ -611,23 +104,20 @@ func parseBam(s Settings) {
 				construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
 				constructName = construct.(string)
 			}
-			if s.byCell || sc || s.binCells > 0 || s.determineBins != "" {
+			if populateUmiStruct {
+				//rand.Seed(s.setSeed)
 				cell, _, _ := sam.QueryTag(i, "CB") // get the cell barcode associated with valid UMI
-				cellString = cell.(string)
-				cellByConstructName = fmt.Sprintf("%s\t%s", cellString, constructName) //list of all construct reads and what cell barcodes they belong to
-				if s.byCell {                                                          //if you only want to print out the construct and the cell it was found in
-					fileio.WriteToFileHandle(out, cellByConstructName)
+				cellType, found = cellTypeMap[cell.(string)]
+				if found {
+					umi = starrSeq.UMI{Bx: cell.(string), Cluster: cellType, Construct: constructName}
+				} else {
+					umi = starrSeq.UMI{Bx: cell.(string), Cluster: "undefined", Construct: constructName}
 				}
-				if sc || s.binCells > 0 || s.determineBins != "" { //get some data for the singleCellAnalysis and distributeCells functions
-					allConstructs = append(allConstructs, constructName) //list of all constructs found in the bam
-					cellTypeSlice = append(cellTypeSlice, cellByConstructName)
-				}
-				continue
-			} else if s.samOut { //write output as sam
-				sam.WriteToFileHandle(out, i)
-				continue
-			} else if s.binCells > 0 {
-				continue
+				allConstructs = append(allConstructs, umi.Construct) //list of all constructs found in the bam
+				umiSlice = append(umiSlice, umi)
+			}
+			if s.SamOut != "" { //write output as sam
+				sam.WriteToFileHandle(outSam, i)
 			}
 			//pseudobulk, default behavior. Use a map [constructName]rawCount to add up reads per construct
 			count, found = pseudobulkMap[constructName]
@@ -638,29 +128,48 @@ func parseBam(s Settings) {
 			}
 		}
 	}
-	if s.umiSat {
-		umiSaturation(umiBxSlice, out)
-	}
+
 	fmt.Println("Found this many valid UMIs: ", k)
-	if sc { //singleCellAnalysis, handles all the writing as well
-		singleCellAnalysis(s, cellTypeSlice, allConstructs, out)
+
+	if s.ByCell != "" {
+		outByCell := fileio.EasyCreate(s.ByCell)
+		for _, i := range umiSlice {
+			fileio.WriteToFileHandle(outByCell, fmt.Sprintf("%s\t%s", i.Bx, i.Construct))
+		}
+		err = outByCell.Close()
+		exception.PanicOnErr(err)
 	}
-	if s.determineBins != "" {
-		s.binCells = determineIdealBins(s, cellTypeSlice)
-		fmt.Printf("Using %d bins\n", s.binCells)
+	if s.UmiSat != "" {
+		starrSeq.UmiSaturation(umiBxSlice, s.UmiSat)
 	}
-	if s.binCells > 0 { //goes to binning and pseudobulk. Handles normalization and writing as well
-		binnedCells := distributeCells(s, cellTypeSlice, false)
-		binnedPseudobulk(binnedCells, out, s.inputNormalize)
+	if s.CountMatrix != "" {
+		starrSeq.MakeCountMatrix(s, umiSlice, allConstructs)
 	}
-	if norm && noSettings { //normalize pseudobulk
-		inputNormalize(pseudobulkMap, s.inputNormalize)
+	if sc && !s.NoOut { //singleCellAnalysis, handles all the writing as well
+		starrSeq.SingleCellAnalysis(s, umiSlice, allConstructs, allCellTypes, cellTypeMap, out)
 	}
-	if noSettings { //write out pseudobulk
+	if s.DetermineBins != "" {
+		s.BinCells = starrSeq.DetermineIdealBins(s, umiSlice)
+		fmt.Printf("Using %d bins\n", s.BinCells)
+	}
+	if s.BinCells > 0 { //goes to binning and pseudobulk. Handles normalization and writing as well
+		binnedCells := starrSeq.DistributeCells(s.BinCells, umiSlice, false)
+		starrSeq.BinnedPseudobulk(binnedCells, out, s.InputNormalize)
+	}
+	if s.InputNormalize != "" && !s.NoOut { //normalize pseudobulk
+		starrSeq.InputNormalize(pseudobulkMap, s.InputNormalize)
+	}
+	if !s.NoOut && s.ScAnalysis == "" && s.BinCells < 1 { //write out pseudobulk
 		writeMap(pseudobulkMap, out)
 	}
-	err := out.Close()
-	exception.PanicOnErr(err)
+	if !s.NoOut {
+		err = out.Close()
+		exception.PanicOnErr(err)
+	}
+	if s.SamOut != "" {
+		err = outSam.Close()
+		exception.PanicOnErr(err)
+	}
 }
 
 func usage() {
@@ -675,15 +184,17 @@ func usage() {
 }
 
 func main() {
-	var byCell *bool = flag.Bool("byCell", false, "Will report the construct that each UMI belongs to and which cell in which it was found in a tab-delimited table.")
+	var byCell *string = flag.String("byCell", "", "Report the construct that each UMI belongs to and which cell in which it was found in a tab-delimited table."+
+		" The table will be sent to the provided file name.")
 	var inputNorm *string = flag.String("inputNorm", "", "Takes in a tab delimited table with construct name and input normalization value")
-	var samOut *bool = flag.Bool("samOut", false, "Output will be the reads that have valid UMIs in sam format")
+	var samOut *string = flag.String("samOut", "", "Filter the input bam file by reads that have valid UMIs and send the output, in sam format, to the provdided file name")
 	var cellTypeAnalysis *string = flag.String("cellTypeAnalysis", "", "Takes in a tab delimited file that has cell barcode and cell type identification. "+
 		"The ouptut of options will be a matrix that has counts for each construct in each cell type. The Seurat command WhichCells() can be used to generate the required list.")
 	var binCells *int = flag.Int("binCells", 0, "Number of bins to randomly assign cells to. The output will be a psudobulk table for each bin")
-	var umiSat *bool = flag.Bool("umiSat", false, "Create a UMI saturation curve of all reads in the input bam file.")
-	var gfpNorm *string = flag.String("gfpNorm", "", "Bam file from the same scSTARR-seq experiment containing cellranger count alignments to GFP for cell cluster GFP normalization. "+
-		"Multiple bam files from different GEM wells can be provided in a comma-separated list")
+	var umiSat *string = flag.String("umiSat", "", "Create a UMI saturation curve of all reads in the input bam file. The table containing total reads count and UMI count"+
+		" will be send to the provided file name")
+	var transfectionNorm *string = flag.String("transfectionNorm", "", "Bam file from the same scSTARR-seq experiment containing cellranger count alignments to a transfection reporter reference"+
+		" for cell cluster GFP normalization. Multiple bam files from different GEM wells can be provided in a comma-separated list")
 	var bed *string = flag.String("bed", "", "Use a bed file for assigning reads to constructs instead of the GTF that was used in cellranger mkref. The bed file must have the "+
 		"name of the construct in the fourth field. Recommended for constructs with barcodes.")
 	var ncNorm *string = flag.String("ncNorm", "", "Reports single cell data as the ratio of reads for each construct to negative control reads in the same cell type."+
@@ -694,35 +205,31 @@ func main() {
 	var inputSequencing *string = flag.String("inputSequencing", "", "Returns library statistics (Reads per 500bp, percent of each construct in library, and input normalization factor"+
 		"for an input library sequencing sam/bam file. A bed file corresponding to constructs on the reference that the input file is aligned to must be provided and the name of the construct must"+
 		"be in the 4th field. The input alignment file must be sorted by position. PCR duplicates will be removed.")
-
-	var expectedNumArgs int = 2
+	//var setSeed *int64 = flag.Int64("setSeed", 1, "Set a seed for random number generation.")
+	var countMatrix *string = flag.String("scCount", "", "Create count matrix that has cell barcode in rows and constructs as columns. If GFP bam files are provided with the"+
+		" -gfpNorm option, GFP will be included as a column. The count matrix will be sent to the file name provided")
+	var noOut *bool = flag.Bool("noOut", false, "If the -noOut option is used a psuedobulk table will not be created a the function will only take in the inFile argument.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-	if *ncNorm != "" && *gfpNorm != "" {
-		log.Fatalf("Error: only one normalization method for single-cell data must be used")
+	var expectedNumArgs int
+
+	if *noOut {
+		expectedNumArgs = 1
+	} else {
+		expectedNumArgs = 2
 	}
 
-	if (*ncNorm != "" || *gfpNorm != "") && *cellTypeAnalysis == "" {
-		log.Fatalf("Error: -ncNorm or -gfpNorm must be used with -cellTypeAnalysis")
+	if *ncNorm != "" && *transfectionNorm != "" {
+		log.Fatalf("Error: only one normalization method for single-cell data can be used at once")
 	}
-
-	if *byCell && (*inputNorm != "" || *samOut) {
-		log.Fatalf("Error: byCell cannot be used with normalize or samOut.")
-	}
-
-	if *inputNorm != "" && *samOut {
-		log.Fatalf("Error: normalize and samOut cannot be used together.")
-	}
-
-	if (*byCell || *samOut) && *cellTypeAnalysis != "" {
-		log.Fatalf("Error: cellTypeAnalysis is incompatable with byCell and samOut.")
-	}
-
 	if *binCells < 0 {
 		log.Fatalf("Error: -binCells must be a positive intiger")
+	}
+	if *binCells > 0 && *cellTypeAnalysis != "" {
+		log.Fatalf("Bin cells cannot be used with -cellTypeAnalysis")
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
@@ -730,94 +237,49 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(flag.Args()))
 	}
-	var s Settings = Settings{
-		inFile:          flag.Arg(0),
-		outFile:         flag.Arg(1),
-		inputNormalize:  *inputNorm,
-		byCell:          *byCell,
-		scAnalysis:      *cellTypeAnalysis,
-		binCells:        *binCells,
-		umiSat:          *umiSat,
-		samOut:          *samOut,
-		gfpNorm:         *gfpNorm,
-		bed:             *bed,
-		ncNorm:          *ncNorm,
-		determineBins:   *determineBins,
-		inputSequencing: *inputSequencing,
+	var s starrSeq.ScStarrSeqSettings = starrSeq.ScStarrSeqSettings{
+		InFile:           flag.Arg(0),
+		OutFile:          flag.Arg(1),
+		InputNormalize:   *inputNorm,
+		ByCell:           *byCell,
+		ScAnalysis:       *cellTypeAnalysis,
+		BinCells:         *binCells,
+		UmiSat:           *umiSat,
+		SamOut:           *samOut,
+		TransfectionNorm: *transfectionNorm,
+		Bed:              *bed,
+		NcNorm:           *ncNorm,
+		DetermineBins:    *determineBins,
+		InputSequencing:  *inputSequencing,
+		//setSeed:         *setSeed,
+		CountMatrix: *countMatrix,
+		NoOut:       *noOut,
 	}
 
-	var bw *sam.BamWriter
-	var combineBamWriter *fileio.EasyWriter
+	//deal with multiple gem wells
+	var multipleGems bool
+	var multipleGfpGems bool = false
 	var err error
-	inFiles := strings.Split(s.inFile, ",")
-	if len(inFiles) > 1 {
-		var path, tmpFileSlice []string
-		if *cellTypeAnalysis != "" {
-			fmt.Println("*** WARNING *** You are using multiple GEM wells with -cellTypeAnalysis. Using multiple GEM wells will add an additional suffix to cell barcodes to reinforce cell barcode uniqueness. " +
-				"The first bam file provided will have the '_1' suffix, the second bam file '_2' and so on. This mirrors the default behavior of both Seurat merge() and integrate() functions. " +
-				"If multiple GEM wells haven't be processed in the same way in Seurat and in the scStarrSeqAnalysis programs, cell lookup for -cellTypeAnalysis will be impaired.")
-		}
-		for _, i := range inFiles {
-			path = strings.Split(i, "/")
-			tmpFileSlice = append(tmpFileSlice, path[len(path)-1])
-		}
-		tmpFileSlice = append(tmpFileSlice, ".bam")
-		tmpFileName := strings.Join(tmpFileSlice, "_")
-		combineBamWriter = fileio.EasyCreate(tmpFileName)
-		p := 1
-		for _, i := range inFiles {
-			bw = combineBams(i, combineBamWriter, &p, len(inFiles), bw)
-		}
-		s.inFile = tmpFileName
-		err = bw.Close()
-		exception.PanicOnErr(err)
-		err = combineBamWriter.Close()
-		exception.PanicOnErr(err)
 
+	s.InFile, multipleGems = starrSeq.DetectMultipleGems(s.InFile, s.ScAnalysis)
+	if *transfectionNorm != "" {
+		s.TransfectionNorm, multipleGfpGems = starrSeq.DetectMultipleGfpGems(s.TransfectionNorm)
 	}
 
-	var gfpBams []string
-	if *gfpNorm != "" {
-		var bwGFP *sam.BamWriter
-		var combineBamWriterGFP *fileio.EasyWriter
-		gfpBams = strings.Split(*gfpNorm, ",")
-		if len(gfpBams) > 1 {
-			var path, tmpFileSlice []string
-			fmt.Println("*** WARNING *** You are using multiple GEM wells with -gfpNorm. Using multiple GEM wells will add an additional suffix to cell barcodes to reinforce cell barcode uniqueness. " +
-				"The first bam file provided will have the '_1' suffix, the second bam file '_2' and so on. This mirrors the default behavior of both Seurat merge() and integrate() functions. " +
-				"If multiple GEM wells haven't be processed in the same way in Seurat and in the scStarrSeqAnalysis programs, cell lookup for -cellTypeAnalysis will be impaired.")
-			for _, i := range gfpBams {
-				path = strings.Split(i, "/")
-				tmpFileSlice = append(tmpFileSlice, path[len(path)-1])
-			}
-			tmpFileSlice = append(tmpFileSlice, ".bam")
-			tmpFileName := strings.Join(tmpFileSlice, "_")
-			combineBamWriterGFP = fileio.EasyCreate(tmpFileName)
-			p := 1
-			for _, i := range gfpBams {
-				bwGFP = combineBams(i, combineBamWriterGFP, &p, len(gfpBams), bwGFP)
-			}
-			s.gfpNorm = tmpFileName
-			err = bwGFP.Close()
-			exception.PanicOnErr(err)
-			err = combineBamWriterGFP.Close()
-			exception.PanicOnErr(err)
-
-		}
-	}
-
+	//output or input sequencing
 	if *inputSequencing != "" {
-		readInputSequencingSam(s)
+		starrSeq.ParseInputSequencingSam(s)
 	} else {
 		parseBam(s)
 	}
 
-	if len(inFiles) > 1 {
-		err = os.Remove(s.inFile)
+	//if multiple gem wells were used remove the tmp files
+	if multipleGems {
+		err = os.Remove(s.InFile)
 		exception.PanicOnErr(err)
 	}
-	if len(gfpBams) > 1 {
-		err = os.Remove(s.gfpNorm)
+	if multipleGfpGems {
+		err = os.Remove(s.TransfectionNorm)
 		exception.PanicOnErr(err)
 	}
 }
