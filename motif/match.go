@@ -132,7 +132,7 @@ func scanGenome(records []fasta.Fasta, kmerHash map[uint64]float64, consensusSco
 					currKey = currKey | 3
 					currKey = currKey & bitMask
 				default:
-					log.Fatalf("Unrecognized base.")
+					log.Fatalf("Unrecognized base: %s.", dna.BaseToString(records[currChrom].Seq[currPos]))
 				}
 			}
 			if !needNewKey {
@@ -188,7 +188,7 @@ func getNewKey(record fasta.Fasta, alnPos int, motifLen int) (uint64, int, bool)
 			answer = answer | 3
 			motifPos++
 		default:
-			log.Fatalf("Unrecognized base.")
+			log.Fatalf("Unrecognized base: %s.", dna.BaseToString(record.Seq[alnPos]))
 		}
 		alnPos++
 	}
@@ -250,7 +250,7 @@ func rankTensorToString(m [][]rankTensorElement) string {
 }
 
 // buildKmerHash produces a hash mapping 2bit encoded kmer sequences to their corresponding motif score for a PositionMatrix.
-// Only kmers with a motif score above an input thresholdProportion are stored in the
+// Only kmers with a motif score above an input thresholdProportion are stored in the output map.
 func buildKmerHash(p PositionMatrix, thresholdProportion float64) map[uint64]float64 {
 	var answer = make(map[uint64]float64)
 	var currSeq = ConsensusSequence(p, false)
@@ -260,7 +260,7 @@ func buildKmerHash(p PositionMatrix, thresholdProportion float64) map[uint64]flo
 	}
 	var threshold float64 = thresholdProportion * consensusValue
 	var rankMatrix [][]rankTensorElement = initializeRankTensor(p)
-	var currRankVector = make([]int, len(p.Mat[0])) //intialize to all zeros, representing the consensus sequence.
+	var currRankVector = make([]int, len(p.Mat[0])) //initialize to all zeros, representing the consensus sequence.
 	var consensusKey uint64 = dnaTwoBit.BasesToUint64RightAln(currSeq.Seq, 0, len(currSeq.Seq))
 	answer[consensusKey] = consensusValue
 
