@@ -168,11 +168,9 @@ func getNewKey(record fasta.Fasta, alnPos int, motifLen int) (uint64, int, bool)
 		}
 		switch record.Seq[alnPos] {
 		case dna.N: //if we see an N, we skip this base and clear out answer and the partial key.
-			alnPos++
 			motifPos = 0
 			answer = 0
 		case dna.Gap: //keep searching, motifs can span gaps, which are ignored.
-			alnPos++
 		case dna.A:
 			answer = answer << 2 //left shift two bases, clearing a space for the new base.
 			answer = answer | 0  //append 00 in last two spots with bitwise OR.
@@ -192,6 +190,7 @@ func getNewKey(record fasta.Fasta, alnPos int, motifLen int) (uint64, int, bool)
 		default:
 			log.Fatalf("Unrecognized base.")
 		}
+		alnPos++
 	}
 	return answer, alnPos, true
 }
