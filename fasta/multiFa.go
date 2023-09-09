@@ -48,6 +48,21 @@ func AlnPosToRefPosCounter(record Fasta, AlnPos int, refStart int, alnStart int)
 	return refStart
 }
 
+// AlnPosToRefPosCounterSeq is AlnPosToRefPosCounter but the input record is just the sequence of the fasta struct
+func AlnPosToRefPosCounterSeq(record []dna.Base, AlnPos int, refStart int, alnStart int) int {
+	if alnStart > AlnPos {
+		refStart, alnStart = 0, 0 //in case the alnStart was improperly set (greater than the desired position, we reset the counters to 0.
+	}
+	for t := alnStart; t < AlnPos; t++ {
+		if t == len(record) {
+			log.Fatalf("Ran out of chromosome.")
+		} else if record[t] != dna.Gap {
+			refStart++
+		}
+	}
+	return refStart
+}
+
 // CopySubset returns a copy of a multiFa from a specified start and end position.
 func CopySubset(records []Fasta, start int, end int) []Fasta {
 	c := make([]Fasta, len(records))
