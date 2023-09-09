@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
@@ -132,7 +133,8 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 
 			// TODO: convert position from firstQuery to reference, V2 calculate after firstQuery window is finalized, remove all fmt.Printf after debugging
 
-			fmt.Printf("alnIdxBeforeWindow: %v, lastAlnIdxOfWindow: %v, firstQueryIdxBeforeWindow: %v, lastFirstQueryIdxOfWindow: %v\n", alnIdxBeforeWindow, lastAlnIdxOfWindow, firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow)
+			// V2.1: I calculated refIdx with no other function
+			//fmt.Printf("alnIdxBeforeWindow: %v, lastAlnIdxOfWindow: %v, firstQueryIdxBeforeWindow: %v, lastFirstQueryIdxOfWindow: %v\n", alnIdxBeforeWindow, lastAlnIdxOfWindow, firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow)
 
 			// check if firstQuery start (non-gap) is gap in reference. If so, don't report that window
 			// check if firstQuery end-1 (last non-gap position) is gap in reference. If so, don't report that window
@@ -164,7 +166,21 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 					}
 				}
 
-				fmt.Printf("Will report this window. refIdxBeforeWindow+1:%v, lastRefIdxOfWindow+1:%v\n", refIdxBeforeWindow+1, lastRefIdxOfWindow+1)
+				//fmt.Printf("Will report this window. refIdxBeforeWindow+1:%v, lastRefIdxOfWindow+1:%v\n", refIdxBeforeWindow+1, lastRefIdxOfWindow+1)
+
+				// V2.2: I calculated refIdx with another function fasta.AlnPosToRefPosCounterSeq
+				refIdxBeforeWindow_V2 := fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindow, 0, 0)
+				lastRefIdxOfWindow_V2 := fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow, 0, 0)
+				if refIdxBeforeWindow_V2 != 0 && refIdxBeforeWindow != refIdxBeforeWindow_V2 {
+					fmt.Printf("BeforeWindow V1 and V2 don't agree. alnIdxBeforeWindow: %v, refIdxBeforeWindow:%v, refIdxBeforeWindow_V2:%v\n", alnIdxBeforeWindow, refIdxBeforeWindow, refIdxBeforeWindow_V2)
+					fmt.Printf("Will report this window. refIdxBeforeWindow+1:%v, lastRefIdxOfWindow+1:%v\n", refIdxBeforeWindow+1, lastRefIdxOfWindow+1)
+				}
+				if lastRefIdxOfWindow != lastRefIdxOfWindow_V2 {
+					fmt.Printf("lastOfWindow V1 and V2 don't agree\n")
+				}
+				//fmt.Printf("BeforeWindow V1 and V2 agree? %v, %v, %v\n", refIdxBeforeWindow == refIdxBeforeWindow_V2, refIdxBeforeWindow, refIdxBeforeWindow_V2)
+				//fmt.Printf("lastOfWindow V1 and V2 agree? %v, %v, %v\n", lastRefIdxOfWindow == lastRefIdxOfWindow_V2, lastRefIdxOfWindow, lastRefIdxOfWindow_V2)
+				// Conclusion about V2. Only last test has don't agree. Is correct window 2 12? NO I think V2 is correct
 
 				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
 				if !s.RemoveN || totalNs == 0 {
@@ -178,11 +194,13 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 						exception.PanicOnErr(err)
 					} else {
 						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps)
+						// TODO: change back to code above after debugging
+						//_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps, alnIdxBeforeWindow)
 						exception.PanicOnErr(err)
 					}
 				}
 			} else {
-				fmt.Printf("Won't report this window. alnIdxBeforeWindow+1 or lastAlnIdxOfWindow is gap in only reference\n")
+				//fmt.Printf("Won't report this window. alnIdxBeforeWindow+1 or lastAlnIdxOfWindow is gap in only reference\n")
 			} // TODO: remove else after debugging
 		}
 	}
