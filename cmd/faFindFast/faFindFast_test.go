@@ -19,6 +19,7 @@ var FaFindFastTests = []struct {
 	RemoveN         bool
 	DivergenceRate  float64
 	LongOutput      bool
+	OutputAlnPos    bool
 }{
 	{InFile: "testdata/test_indel.fa", //also test for extra species here
 		OutFile:         "testdata/tmp.out.bed",
@@ -29,7 +30,8 @@ var FaFindFastTests = []struct {
 		RefChromName:    "chr1",
 		RemoveN:         false,
 		DivergenceRate:  -1,
-		LongOutput:      false},
+		LongOutput:      false,
+		OutputAlnPos:    false},
 	{InFile: "testdata/test_indel.fa",
 		OutFile:         "testdata/tmp.noN.bed",
 		ExpectedFile:    "testdata/expected.noN.bed",
@@ -39,7 +41,8 @@ var FaFindFastTests = []struct {
 		RefChromName:    "chr1",
 		RemoveN:         true,
 		DivergenceRate:  -1,
-		LongOutput:      false},
+		LongOutput:      false,
+		OutputAlnPos:    false},
 	{InFile: "testdata/test.endDoubleGaps.fa",
 		OutFile:         "testdata/tmp.doubleGaps.bed",
 		ExpectedFile:    "testdata/expected.bed",
@@ -49,7 +52,8 @@ var FaFindFastTests = []struct {
 		RefChromName:    "chr1",
 		RemoveN:         false,
 		DivergenceRate:  -1,
-		LongOutput:      false},
+		LongOutput:      false,
+		OutputAlnPos:    false},
 	{InFile: "testdata/test.endGapsQuery.fa",
 		OutFile:         "testdata/tmp.queryGaps.bed",
 		ExpectedFile:    "testdata/expected.endGapsQuery.bed",
@@ -59,7 +63,8 @@ var FaFindFastTests = []struct {
 		RefChromName:    "chr1",
 		RemoveN:         false,
 		DivergenceRate:  -1,
-		LongOutput:      false},
+		LongOutput:      false,
+		OutputAlnPos:    false},
 	{InFile: "testdata/test.endGapsRef.fa",
 		OutFile:         "testdata/tmp.refGaps.bed",
 		ExpectedFile:    "testdata/expected.endGapsRef.bed",
@@ -69,7 +74,8 @@ var FaFindFastTests = []struct {
 		RefChromName:    "chr1",
 		RemoveN:         false,
 		DivergenceRate:  -1,
-		LongOutput:      false},
+		LongOutput:      false,
+		OutputAlnPos:    false},
 	{InFile: "testdata/test.endGapsRef.fa",
 		OutFile:         "testdata/tmp.longOutput.bed",
 		ExpectedFile:    "testdata/expected.longOutput.bed",
@@ -79,7 +85,8 @@ var FaFindFastTests = []struct {
 		RefChromName:    "chr1",
 		RemoveN:         false,
 		DivergenceRate:  0.01,
-		LongOutput:      true},
+		LongOutput:      true,
+		OutputAlnPos:    false},
 	{InFile: "testdata/test_indel_3seq.fa",
 		OutFile:         "testdata/tmp.out.3seq.bed",
 		ExpectedFile:    "testdata/expected_3seq.bed",
@@ -89,7 +96,30 @@ var FaFindFastTests = []struct {
 		RefChromName:    "chr1",
 		RemoveN:         false,
 		DivergenceRate:  -1,
-		LongOutput:      false},
+		LongOutput:      false,
+		OutputAlnPos:    false},
+	{InFile: "testdata/test_indel_3seq.fa",
+		OutFile:         "testdata/tmp.AlnPos.bed",
+		ExpectedFile:    "testdata/expected_alnPos.bed",
+		FirstQueryName:  "HumanFirstQuery",
+		SecondQueryName: "ChimpSecondQuery",
+		WindowSize:      10,
+		RefChromName:    "chr1",
+		RemoveN:         false,
+		DivergenceRate:  -1,
+		LongOutput:      false,
+		OutputAlnPos:    true}, //test for outputAlnPos
+	{InFile: "testdata/test_indel_3seq.fa",
+		OutFile:         "testdata/tmp.out.longAndAlnPos.bed",
+		ExpectedFile:    "testdata/expected_longAndAlnPos.bed",
+		FirstQueryName:  "HumanFirstQuery",
+		SecondQueryName: "ChimpSecondQuery",
+		WindowSize:      10,
+		RefChromName:    "chr1",
+		RemoveN:         false,
+		DivergenceRate:  -1,
+		LongOutput:      true, //test for longOutput AND outputAlnPos
+		OutputAlnPos:    true},
 }
 
 func TestFaFindFast(t *testing.T) {
@@ -105,6 +135,7 @@ func TestFaFindFast(t *testing.T) {
 			RemoveN:         v.RemoveN,
 			LongOutput:      v.LongOutput,
 			DivergenceRate:  v.DivergenceRate,
+			OutputAlnPos:    v.OutputAlnPos,
 		}
 		faFindFast(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

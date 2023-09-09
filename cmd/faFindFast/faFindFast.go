@@ -23,6 +23,7 @@ type Settings struct {
 	RemoveN         bool
 	LongOutput      bool
 	DivergenceRate  float64
+	OutputAlnPos    bool
 }
 
 func faFindFast(s Settings) {
@@ -86,6 +87,7 @@ func main() {
 	var removeN *bool = flag.Bool("removeN", false, "Excludes bed regions with Ns in the reference from the output.")
 	var longOutput *bool = flag.Bool("longOutput", false, "Print percent diverged and raw -Log10PValue in output. Requires the 'divergenceRate' argument.")
 	var divergenceRate *float64 = flag.Float64("divergenceRate", math.MaxFloat64, "Set the null divergence rate for p value calculations with 'longOutput'.")
+	var outputAlnPos *bool = flag.Bool("outputAlnPos", false, "Print the alignment position of the window's start in output.")
 
 	if *longOutput && *divergenceRate == math.MaxFloat64 {
 		log.Fatalf("Error: must set a 'divergenceRate' if using the 'longOutput' option.\n")
@@ -119,6 +121,7 @@ func main() {
 		RemoveN:         *removeN,
 		LongOutput:      *longOutput,
 		DivergenceRate:  *divergenceRate,
+		OutputAlnPos:    *outputAlnPos,
 	}
 
 	faFindFast(s)

@@ -145,7 +145,7 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 
 				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
 				if !s.RemoveN || totalNs == 0 {
-					if s.LongOutput {
+					if s.LongOutput && !s.OutputAlnPos {
 						percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
 						if totalSubst+totalGaps > s.WindowSize {
 							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
@@ -153,10 +153,19 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 						rawPValue = scorePValueCache[totalSubst+totalGaps]
 						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
 						exception.PanicOnErr(err)
+					} else if !s.LongOutput && s.OutputAlnPos {
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps, alnIdxBeforeWindow+1)
+						exception.PanicOnErr(err)
+					} else if s.LongOutput && s.OutputAlnPos {
+						percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
+						if totalSubst+totalGaps > s.WindowSize {
+							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
+						}
+						rawPValue = scorePValueCache[totalSubst+totalGaps]
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue, alnIdxBeforeWindow+1)
+						exception.PanicOnErr(err)
 					} else {
 						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps)
-						// TODO: for "reporting alignment position" option
-						//_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps, alnIdxBeforeWindow+1)
 						exception.PanicOnErr(err)
 					}
 				}
