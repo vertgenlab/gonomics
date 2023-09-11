@@ -14,7 +14,7 @@ type line struct {
 	vals    []float64
 }
 
-func MakeCountMatrix(s ScStarrSeqSettings, umiSlice []UMI, allConstructs []string) {
+func MakeCountMatrix(s ScStarrSeqSettings, umiSlice []Read, allConstructs []string) {
 	var header []string
 	var cell string
 	var norm bool = false

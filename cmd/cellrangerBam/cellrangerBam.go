@@ -11,25 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/starrSeq"
 	"log"
 	"os"
-	"sort"
 )
-
-// writeMap writes out a pseudobulk map to an io.writer
-func writeMap(mp map[string]float64, writer *fileio.EasyWriter) {
-	var total float64
-	var write string
-	var writeSlice []string
-	for i := range mp {
-		total, _ = mp[i]
-		write = fmt.Sprintf("%s\t%f", i, total)
-		writeSlice = append(writeSlice, write)
-	}
-	sort.Strings(writeSlice)
-	fileio.WriteToFileHandle(writer, "construct\tcounts")
-	for _, i := range writeSlice {
-		fileio.WriteToFileHandle(writer, i)
-	}
-}
 
 // parseBam takes in a cellranger count bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
 func parseBam(s starrSeq.ScStarrSeqSettings) {
@@ -37,12 +19,12 @@ func parseBam(s starrSeq.ScStarrSeqSettings) {
 	var constructName, umiBx, cellType string
 	var count float64
 	var found bool
-	var bit int32
+	var bit uint8
 	var sc bool = false
 	var populateUmiStruct bool = false
 	var allConstructs, umiBxSlice, allCellTypes []string
-	var umi starrSeq.UMI
-	var umiSlice []starrSeq.UMI
+	var umi starrSeq.Read
+	var umiSlice []starrSeq.Read
 	var err error
 	var out, outSam *fileio.EasyWriter
 
@@ -91,7 +73,7 @@ func parseBam(s starrSeq.ScStarrSeqSettings) {
 			umiBxSlice = append(umiBxSlice, umiBx)
 		}
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(int32)
+		bit = num.(uint8)
 		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
 			k++
 			if s.Bed != "" {
@@ -109,9 +91,9 @@ func parseBam(s starrSeq.ScStarrSeqSettings) {
 				cell, _, _ := sam.QueryTag(i, "CB") // get the cell barcode associated with valid UMI
 				cellType, found = cellTypeMap[cell.(string)]
 				if found {
-					umi = starrSeq.UMI{Bx: cell.(string), Cluster: cellType, Construct: constructName}
+					umi = starrSeq.Read{Bx: cell.(string), Cluster: cellType, Construct: constructName}
 				} else {
-					umi = starrSeq.UMI{Bx: cell.(string), Cluster: "undefined", Construct: constructName}
+					umi = starrSeq.Read{Bx: cell.(string), Cluster: "undefined", Construct: constructName}
 				}
 				allConstructs = append(allConstructs, umi.Construct) //list of all constructs found in the bam
 				umiSlice = append(umiSlice, umi)
@@ -160,7 +142,7 @@ func parseBam(s starrSeq.ScStarrSeqSettings) {
 		starrSeq.InputNormalize(pseudobulkMap, s.InputNormalize)
 	}
 	if !s.NoOut && s.ScAnalysis == "" && s.BinCells < 1 { //write out pseudobulk
-		writeMap(pseudobulkMap, out)
+		starrSeq.WritePseudobulkMap(pseudobulkMap, out)
 	}
 	if !s.NoOut {
 		err = out.Close()
@@ -209,6 +191,8 @@ func main() {
 	var countMatrix *string = flag.String("scCount", "", "Create count matrix that has cell barcode in rows and constructs as columns. If GFP bam files are provided with the"+
 		" -gfpNorm option, GFP will be included as a column. The count matrix will be sent to the file name provided")
 	var noOut *bool = flag.Bool("noOut", false, "If the -noOut option is used a psuedobulk table will not be created a the function will only take in the inFile argument.")
+	var altMapping *string = flag.String("altMapping", "", "Use a bed file for construct mapping and collapse corrected-UMI by hand rather than rely on cellranger count valid UMIs. "+
+		"Provde a bed file with construct names for construct determination.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -254,6 +238,7 @@ func main() {
 		//setSeed:         *setSeed,
 		CountMatrix: *countMatrix,
 		NoOut:       *noOut,
+		AltMapping:  *altMapping,
 	}
 
 	//deal with multiple gem wells
@@ -269,6 +254,8 @@ func main() {
 	//output or input sequencing
 	if *inputSequencing != "" {
 		starrSeq.ParseInputSequencingSam(s)
+	} else if *altMapping != "" {
+		starrSeq.Alt(s)
 	} else {
 		parseBam(s)
 	}

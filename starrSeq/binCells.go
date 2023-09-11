@@ -25,7 +25,7 @@ func DetermineBin(numBins int, prob float64) int {
 }
 
 // DistributeCells takes in a slice of string that is created in parseBam that has a list of cellBarcodes and constructs. It will partition those cells and constructs into separate slices. The number of bins is a user-input variable
-func DistributeCells(binCells int, cellTypeSlice []UMI, fromDB bool) [][]UMI {
+func DistributeCells(binCells int, cellTypeSlice []Read, fromDB bool) [][]Read {
 	var currCell string
 	var bin, count int
 	var found bool
@@ -33,8 +33,8 @@ func DistributeCells(binCells int, cellTypeSlice []UMI, fromDB bool) [][]UMI {
 	whichBin := 'A'                   //for counting cells per bin
 	whichBinMap := make(map[rune]int) //for counting cells per bin
 
-	binnedCells := make([][]UMI, binCells) //make a slice of slice of string with the size of the user-specified number of bins
-	prob := 1.0 / float64(binCells)        // determine the probability that the cell belongs to a particular bin
+	binnedCells := make([][]Read, binCells) //make a slice of slice of string with the size of the user-specified number of bins
+	prob := 1.0 / float64(binCells)         // determine the probability that the cell belongs to a particular bin
 
 	SortUmiByCellBx(cellTypeSlice) //sort the slice of strings containing (cellBarcode \t construct) so that indentical cell barcodes line up next to one another
 
@@ -68,13 +68,13 @@ func DistributeCells(binCells int, cellTypeSlice []UMI, fromDB bool) [][]UMI {
 }
 
 // DetermineIdealBins will determine how many bins should be used for the pseudobulk -binCells option.
-func DetermineIdealBins(s ScStarrSeqSettings, umiSlice []UMI) int {
+func DetermineIdealBins(s ScStarrSeqSettings, umiSlice []Read) int {
 	var count, j int
 	var found, stop bool
 	var z, m string
 	var binSlice []int
-	var matrix [][]UMI
-	var l UMI
+	var matrix [][]Read
+	var l Read
 
 	nc := fileio.Read(s.DetermineBins)
 
@@ -115,11 +115,11 @@ func DetermineIdealBins(s ScStarrSeqSettings, umiSlice []UMI) int {
 }
 
 // BinnedPseudobulk is the psuedobulk function if the -binCells option is used. It adds an addition column to the dataframe corresponding to bin identity
-func BinnedPseudobulk(inSlices [][]UMI, out *fileio.EasyWriter, norm string) {
+func BinnedPseudobulk(inSlices [][]Read, out *fileio.EasyWriter, norm string) {
 	var i string
 	var count float64
 	var found bool
-	var j UMI
+	var j Read
 
 	whichBin := 'A'
 	fileio.WriteToFileHandle(out, "construct\tcounts\tbin")

@@ -12,7 +12,7 @@ type scStarrSeqMatrix struct {
 }
 
 // SingleCellAnalysis will create a count for each construct in each cell type. This function takes
-func SingleCellAnalysis(s ScStarrSeqSettings, umiSlice []UMI, allConstructs []string, allCellTypes []string, cellTypeMap map[string]string, writer *fileio.EasyWriter) {
+func SingleCellAnalysis(s ScStarrSeqSettings, umiSlice []Read, allConstructs []string, allCellTypes []string, cellTypeMap map[string]string, writer *fileio.EasyWriter) {
 	var cellType, j, m, toWrite string
 	var outMatrix []scStarrSeqMatrix
 	var outLine scStarrSeqMatrix

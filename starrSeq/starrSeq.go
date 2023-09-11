@@ -27,13 +27,15 @@ type ScStarrSeqSettings struct {
 	SetSeed          int64
 	CountMatrix      string
 	NoOut            bool
+	AltMapping       string
 }
 
-// UMI is a custom struct that stores data about a UMI-representitive STARR-seq read. It stores the cell barcode, the cell type and the construct that the read maps to, all as strings
-type UMI struct {
+// Read is a custom struct that stores data about a UMI-representitive STARR-seq read. It stores the cell barcode, the cell type and the construct that the read maps to, all as strings
+type Read struct {
 	Bx        string
 	Cluster   string
 	Construct string
+	UMI       string
 }
 
 // ClusterKey is a custom struct that stores a cell barcode and the cell type that that barcode belongs to, both as strings
@@ -42,8 +44,8 @@ type ClusterKey struct {
 	Bx      string
 }
 
-// SortUmiByCellBx takes in a slice of UMI and sorts the slice lexicographically according to the cell barcode
-func SortUmiByCellBx(umiSlice []UMI) {
+// SortUmiByCellBx takes in a slice of Read and sorts the slice lexicographically according to the cell barcode
+func SortUmiByCellBx(umiSlice []Read) {
 	sort.Slice(umiSlice, func(i, j int) bool {
 		return umiSlice[i].Bx < umiSlice[j].Bx
 	})
@@ -78,7 +80,7 @@ func ReadInputNormTable(inFile string) []InputNormFactor {
 	return inputNormList
 }
 
-// UmiSaturation randomly subsets the whole bam file (10% to 100% of all reads) and calculates how many UMIs are in those subests. The output is a tab delimited text file.
+// UmiSaturation randomly subsets the whole bam file (10% to 100% of all reads) and calculates how many Reads are in those subests. The output is a tab delimited text file.
 func UmiSaturation(umiBxSlice []string, file string) {
 	var perc, randNum float64
 	var j string
@@ -115,4 +117,21 @@ func sortScCountMatrixByConstruct(in []scStarrSeqMatrix) {
 	sort.Slice(in, func(i, j int) bool {
 		return in[i].construct < in[j].construct
 	})
+}
+
+// WritePseudobulkMap writes out a pseudobulk map to an io.writer
+func WritePseudobulkMap(mp map[string]float64, writer *fileio.EasyWriter) {
+	var total float64
+	var write string
+	var writeSlice []string
+	for i := range mp {
+		total, _ = mp[i]
+		write = fmt.Sprintf("%s\t%f", i, total)
+		writeSlice = append(writeSlice, write)
+	}
+	sort.Strings(writeSlice)
+	fileio.WriteToFileHandle(writer, "construct\tcounts")
+	for _, i := range writeSlice {
+		fileio.WriteToFileHandle(writer, i)
+	}
 }

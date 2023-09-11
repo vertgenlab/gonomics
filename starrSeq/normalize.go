@@ -120,24 +120,24 @@ func NormScToNegativeCtrls(matrix []scStarrSeqMatrix, ncNorm string, numCellType
 
 // ParseGfpBam is similar to the parseBam function but handles bams containing GFP reads. This function also takes in a map of cellBx-cellType and an empty map containing each cellType
 // It returns a map that contains [cellType] = gfpReads
-func ParseGfpBam(gfpBam string, cellTypeMap map[string]string, clusterGFP map[string]int) ([]UMI, map[string]int) {
-	var bit int32
+func ParseGfpBam(gfpBam string, cellTypeMap map[string]string, clusterGFP map[string]int) ([]Read, map[string]int) {
+	var bit uint8
 	var cluster string
-	var gfpUmis []UMI
+	var gfpUmis []Read
 	var gfpStats []string
 	var found bool
 
 	inChan, _ := sam.GoReadToChan(gfpBam)
 	for i := range inChan {
 		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(int32)
+		bit = num.(uint8)
 		if bit&8 == 8 {
 			cellBx, _, _ := sam.QueryTag(i, "CB")
 			cluster, found = cellTypeMap[cellBx.(string)]
 			if found {
-				gfpUmis = append(gfpUmis, UMI{Bx: cellBx.(string), Cluster: cluster, Construct: "GFP"})
+				gfpUmis = append(gfpUmis, Read{Bx: cellBx.(string), Cluster: cluster, Construct: "GFP"})
 			} else {
-				gfpUmis = append(gfpUmis, UMI{Bx: cellBx.(string), Cluster: "undefined", Construct: "GFP"})
+				gfpUmis = append(gfpUmis, Read{Bx: cellBx.(string), Cluster: "undefined", Construct: "GFP"})
 			}
 			if found {
 				clusterGFP[cluster] += 1
