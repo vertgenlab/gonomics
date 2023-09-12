@@ -77,13 +77,40 @@ func incrementWindowEdge(firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOr
 	return
 }
 
+// updateAlnIdxBeforeWindow
+// When reporting in firstQuery positions,
+// alnIdxBeforeWindow corresponds to firstQueryIdxBeforeWindow, which is non-gap in firstQuery
+// output bed reports chromStart = firstQueryIdxBeforeWindow+1
+// However, firstQueryIdxBeforeWindow+1 may correspond not to alnIdxBeforeWindow+1
+// If there are gaps in the multiFa alignment in the firstQuery,
+// then firstQueryIdxBeforeWindow+1 corresponds to alnIdxBeforeWindow+(some number > 1)
+// When reporting in reference positions,
+// chromStart = refIdxWindowStart, which is converted from the alnIdxBeforeWindow+(some number > 1)
+// in order to match firstQueryIdxBeforeWindow+1
+// This function recursively finds alnIdxBeforeWindow+(some number > 1), which corresponds to firstQueryIdxBeforeWindow+1
+// Note that this function is only needed for chromStart, not chromEnd
+// firstQuery[lastAlnIdxOfWindow+1] is allowed to be gap or exceed the firstQuery length
+// This is because the bed's chromStart is closed, meaning the position firstQueryIdxBeforeWindow+1 is included in the window (for all species)
+// But the bed's chromEnd is open, meaning the position lastAlnIdxOfWindow+1 is not included in the window (for all species)
+// Note also that updateAlnIdxBeforeWindow is only for translating positions and does not affect divergence calculations
+// BeforeWindow works better than trying to report WindowStart, because +1 is only needed once outside recursive function
+func updateAlnIdxBeforeWindow(firstQuery []dna.Base, alnIdxOrig int) (alnIdx int) {
+	alnIdx = alnIdxOrig
+	if alnIdx+1 < len(firstQuery) && firstQuery[alnIdx+1] == dna.Gap {
+		alnIdx++
+		updateAlnIdxBeforeWindow(firstQuery, alnIdx)
+	}
+	return
+}
+
 // speedyWindowDifference is a helper function of faFindFast that calculates the divergence between two input sequences (firstQuery, secondQuery sequences) using a sliding window, and then reports the divergence in terms of reference positions (positions in the reference sequence).
 // optional arguments longOutput and divergenceRate allow the user to report a -log10pValue corresponding to the p value of observing a level of divergence for a given
 // window under a null binomial model of neutral evolution.
 func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQuery []dna.Base, s Settings) {
 	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                                                           // these are the two edges of the sliding window in "alignment positions"
+	var alnIdxBeforeWindowForRef int = -1                                                                                                             // this is to generate the alnIdx intermediate for translating firstQueryIdxBeforeWindow+1 to refIdxWindowStart
 	var firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow int = -1, -1                                                                             // these are the two edges of the sliding window in "firstQuery (no gaps) positions"
-	var refIdxBeforeWindow, lastRefIdxOfWindow int                                                                                                    // these are the two edges of the sliding window in "reference (no gaps) positions"
+	var refIdxWindowStart, lastRefIdxOfWindowPlusOne int                                                                                              // these are the two edges of the sliding window in "reference (no gaps) positions" PLUS ONE. refIdxWindowStart = refIdxBeforeWindow+1. lastRefIdxOfWindowPlusOne = lastRefIdxOfWindow+1.
 	var totalGaps, totalNs, totalSubst int                                                                                                            // this is the data we need to keep track of that describes the current window
 	var gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base.
 	var err error
@@ -114,6 +141,7 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 		// but not at the beginning when we have not yet incremented the end enough to have a full "windowSize" of bases in the window
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow > s.WindowSize {
 			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch, numSubst = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow)
+			alnIdxBeforeWindowForRef = updateAlnIdxBeforeWindow(firstQuery, alnIdxBeforeWindow)
 			firstQueryIdxBeforeWindow++
 			//totalGaps -= gapOpenCloseRef + gapClosedQuery
 			totalNs -= numFirstQueryNs + numSecondQueryNsMatch
@@ -131,17 +159,19 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow == s.WindowSize && lastAlnIdxOfWindow < len(firstQuery) {
 
 			// convert position from firstQuery to reference
-			// check if firstQuery start (non-gap) is gap in reference. If so, don't report that window
-			// check if firstQuery end-1 (last non-gap position) is gap in reference. If so, don't report that window
-			if !((reference[alnIdxBeforeWindow+1] == dna.Gap && firstQuery[alnIdxBeforeWindow+1] != dna.Gap) || (reference[lastAlnIdxOfWindow] == dna.Gap && firstQuery[lastAlnIdxOfWindow] != dna.Gap)) {
-
-				if alnIdxBeforeWindow == -1 { // special case
-					refIdxBeforeWindow = -1
-					lastRefIdxOfWindow = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow, 0, 0)
+			// check if firstQuery chromStart (non-gap) is gap in reference. If so, don't report that window
+			// check if firstQuery chromEnd-1 (last non-gap position) is gap in reference. If so, don't report that window
+			if !((reference[alnIdxBeforeWindowForRef+1] == dna.Gap && firstQuery[alnIdxBeforeWindowForRef+1] != dna.Gap) || (reference[lastAlnIdxOfWindow] == dna.Gap && firstQuery[lastAlnIdxOfWindow] != dna.Gap)) {
+				// call fasta.AlnPosToRefPosCounterSeq on the alnPos of chromStart and chromEnd
+				// as opposed to alnIdxBeforeWindowForRef and lastAlnIdxOfWindow
+				// this is because fasta.AlnPosToRefPosCounterSeq rounds position up when it encounters gap
+				// in order to only scan the genome once, call fasta.AlnPosToRefPosCounterSeq on saved refStart and alnStart once refStart and alnStart both exceed 0
+				if lastRefIdxOfWindowPlusOne < 0 || lastAlnIdxOfWindow+1 < 0 {
+					refIdxWindowStart = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1, 0, 0)
 				} else {
-					refIdxBeforeWindow = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindow, 0, 0)
-					lastRefIdxOfWindow = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow, refIdxBeforeWindow, alnIdxBeforeWindow)
+					refIdxWindowStart = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1, lastRefIdxOfWindowPlusOne, lastAlnIdxOfWindow+1)
 				}
+				lastRefIdxOfWindowPlusOne = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow+1, refIdxWindowStart, alnIdxBeforeWindowForRef+1)
 
 				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
 				if !s.RemoveN || totalNs == 0 {
@@ -151,10 +181,10 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
 						}
 						rawPValue = scorePValueCache[totalSubst+totalGaps]
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
 						exception.PanicOnErr(err)
 					} else if !s.LongOutput && s.OutputAlnPos {
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps, alnIdxBeforeWindow+1)
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, alnIdxBeforeWindow+1)
 						exception.PanicOnErr(err)
 					} else if s.LongOutput && s.OutputAlnPos {
 						percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
@@ -162,10 +192,10 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
 						}
 						rawPValue = scorePValueCache[totalSubst+totalGaps]
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps, "+", percentDiverged, rawPValue, alnIdxBeforeWindow+1)
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, "+", percentDiverged, rawPValue, alnIdxBeforeWindow+1)
 						exception.PanicOnErr(err)
 					} else {
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\n", s.RefChromName, refIdxBeforeWindow+1, lastRefIdxOfWindow+1, s.RefChromName, refIdxBeforeWindow+1, totalSubst+totalGaps)
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps)
 						exception.PanicOnErr(err)
 					}
 				}

@@ -1,6 +1,6 @@
 chr1	0	9	chr1_0	2
 chr1	1	10	chr1_1	2
-chr1	3	12	chr1_3	3
+chr1	2	12	chr1_2	3
 chr1	3	13	chr1_3	3
 chr1	4	14	chr1_4	3
 chr1	5	15	chr1_5	3
@@ -15,7 +15,7 @@ chr1	13	24	chr1_13	3
 chr1	14	25	chr1_14	3
 chr1	15	26	chr1_15	3
 chr1	16	27	chr1_16	3
-chr1	17	28	chr1_17	2
+chr1	18	28	chr1_18	2
 chr1	19	29	chr1_19	2
 chr1	20	30	chr1_20	0
 chr1	21	31	chr1_21	0
