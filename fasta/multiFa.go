@@ -35,17 +35,7 @@ func AlnPosToRefPos(record Fasta, AlnPos int) int {
 
 // AlnPosToRefPosCounter is like AlnPosToRefPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined with the input variables refStart and alnStart.
 func AlnPosToRefPosCounter(record Fasta, AlnPos int, refStart int, alnStart int) int {
-	if alnStart > AlnPos {
-		refStart, alnStart = 0, 0 //in case the alnStart was improperly set (greater than the desired position, we reset the counters to 0.
-	}
-	for t := alnStart; t < AlnPos; t++ {
-		if t == len(record.Seq) {
-			log.Fatalf("Ran out of chromosome.")
-		} else if record.Seq[t] != dna.Gap {
-			refStart++
-		}
-	}
-	return refStart
+	return AlnPosToRefPosCounterSeq(record.Seq, AlnPos, refStart, alnStart)
 }
 
 // AlnPosToRefPosCounterSeq is AlnPosToRefPosCounter but the input record is just the sequence of the fasta struct
