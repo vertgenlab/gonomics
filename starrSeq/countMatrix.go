@@ -16,16 +16,23 @@ type line struct {
 
 func MakeCountMatrix(s ScStarrSeqSettings, umiSlice []Read, allConstructs []string) {
 	var header []string
-	var cell string
+	var cell, cluster string
 	var norm bool = false
 	var normMap map[string]float64
 	var matrixSlice []line
 	var idx int
 	var l line
+	var cellTypeSlice []ClusterKey
 
 	out := fileio.EasyCreate(s.CountMatrix)
 
 	cellTypeMap := make(map[string]string) //bx--cellType
+	if s.TransfectionNorm != "" {
+		cellTypeSlice = ReadClusterKey(s.ScAnalysis)
+		for _, i := range cellTypeSlice {
+			cellTypeMap[i.Bx] = i.Cluster
+		}
+	}
 
 	header = append(header, "cellBx")
 	if s.ScAnalysis != "" {
@@ -119,8 +126,24 @@ func MakeCountMatrix(s ScStarrSeqSettings, umiSlice []Read, allConstructs []stri
 				i.vals = append(i.vals, 0)
 			} else {
 				i.vals = append(i.vals, cellGfpMap[i.bx])
+				//delete entry from map
+				delete(cellGfpMap, i.bx)
 			}
 			writeLineToFileHandle(i, out, s)
+		}
+		//write remaining GFP map lines to file
+		for i := range cellGfpMap {
+			var gfpLine line
+			gfpLine.bx = i
+			cluster, found = cellTypeMap[i]
+			if found {
+				gfpLine.cluster = cluster
+			} else {
+				gfpLine.cluster = "undefined"
+			}
+			gfpLine.vals = make([]float64, len(uniqueConstructs))
+			gfpLine.vals = append(gfpLine.vals, cellGfpMap[i])
+			writeLineToFileHandle(gfpLine, out, s)
 		}
 	}
 	err := out.Close()
