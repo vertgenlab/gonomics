@@ -47,7 +47,7 @@ func main() {
 	var pfmPseudocounts *float64 = flag.Float64("pfmPseudocounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM.")
 	var refStart *int = flag.Int("refStart", 0, "Set the reference position for the beginning of the input multiFa alignment.")
 	var outputAsProportion *bool = flag.Bool("outputAsProportion", false, "Display the output motif scores as proportions of the consensus score. Motif difference score will thus be a change in consensus proportion.")
-	var residualWindowSize *int = flag.Int("residualWindowSize", 5, "Set the number of offset bases to consider when searching for motif in other species.")
+	var residualWindowSize *int = flag.Int("residualWindowSize", 5, "Set the number of offset bases to consider when searching for motif in other species. The window in the other species that minimizes the motif score residual will be reported.")
 	var enforceStrandMatch *bool = flag.Bool("enforceStrand", false, "If species A has the motif CCC, and the orthologous species B has sequence GGG, this is considered a match by default (as the motif is still there, just in revComp.\n"+
 		"This option enforces strand matching.")
 	var residualFilter *float64 = flag.Float64("residualFilter", 0, "The difference in motif scores between the two sequences must be at least this value to be retained in the output.")
