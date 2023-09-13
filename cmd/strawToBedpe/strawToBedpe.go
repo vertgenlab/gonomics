@@ -188,7 +188,6 @@ func makeComparisonCountCache(contactScoreCache [][]int, searchSpaceMins map[str
 	for i := range comparisonCountCache {
 		totalWindows = 0
 		for currKey, _ = range searchSpaceMins {
-			//fmt.Printf("currKey: %v. searchSpaceMins[currKey]: %v. searchSpaceMaxes[currKey]: %v. BinDistance: %v.\n", currKey, searchSpaceMins[currKey], searchSpaceMaxes[currKey], i)
 			// this calculation is the number of valid contact windows on a chromosome. ChromSize/binSize is windows
 			// on chromosome, minus i, the binDistance.
 			totalWindows += (searchSpaceMaxes[currKey]-searchSpaceMins[currKey])/s.BinSize - i
@@ -220,14 +219,9 @@ func calculateBenjamaniHochbergCutoff(contactScoreCache [][]int, s Settings, com
 	for currBinDistance := s.MinBinDistance; currBinDistance < len(contactScoreCache); currBinDistance++ {
 		currRank = 0
 		currR, currP = fit.ZeroTruncatedNegativeBinomial(contactScoreCache[currBinDistance], s.RStart, s.PStart, s.RStep, s.PStep)
-		//fmt.Printf("Distance: %v. CurrR: %v. CurrP: %v.\n", currBinDistance, currR, currP)
 		for currScore = len(contactScoreCache[currBinDistance]) - 1; currScore > s.MinCutoff; currScore-- {
-			//fmt.Printf("CurrRank: %v. comparisonCountCache[currBinDistance]: %v.\n", currRank, comparisonCountCache[currBinDistance])
 			currRank += contactScoreCache[currBinDistance][currScore]
 			currQValue = (1 - numbers.NegativeBinomialCdf(float64(currScore), currR, currP)) * float64(comparisonCountCache[currBinDistance]) / float64(currRank)
-			if !math.IsNaN(currQValue) && !math.IsInf(currQValue, 1) && !math.IsInf(currQValue, -1) {
-				//fmt.Printf("CurrBinDistance: %v. CurrScore: %v. CurrQValue: %v.\n(1 - numbers.NegativeBinomialCdf(float64(currScore), currR, currP)): %v. float64(comparisonCountCache[currBinDistance]) / float64(currRank): %v. \n", currBinDistance, currScore, currQValue, 1-numbers.NegativeBinomialCdf(float64(currScore), currR, currP), float64(comparisonCountCache[currBinDistance])/float64(currRank))
-			}
 			if !math.IsNaN(currQValue) && !math.IsInf(currQValue, 1) && !math.IsInf(currQValue, -1) && currQValue > s.Fdr {
 				cutoffCache[currBinDistance] = currScore
 				break

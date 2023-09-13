@@ -1,7 +1,6 @@
 package fit
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
@@ -55,9 +54,6 @@ func zeroTruncatedNegativeBinomialLogLikelihood(data []int, R float64, P float64
 	var density float64
 	for i := 1; i < len(data); i++ {
 		density, _ = numbers.NegativeBinomialDist(i, R, P, true)
-		if 1-math.Pow(P, R) == 0 {
-			fmt.Printf("Found it! P: %v. R: %v.\n", P, R)
-		}
 		likelihood += float64(data[i]) * logspace.Divide(density, math.Log(1-math.Pow(P, R)))
 	}
 	return likelihood
@@ -125,6 +121,8 @@ func checkSouth(data []int, R float64, P float64, rStep float64, pStep float64, 
 	return currDirection, currLikelihood
 }
 
+// checkSouthWest is a helper function of nextDirection and firstDirection. This function checks the likelihood in the 'southwest'
+// direction, when R is lower by rStep and P is lower by pStep.
 func checkSouthWest(data []int, R float64, P float64, rStep float64, pStep float64, currDirection direction, currLikelihood float64) (direction, float64) {
 	if R-rStep < 0.001 || P-pStep < 0.001 {
 		return currDirection, currLikelihood
@@ -136,6 +134,8 @@ func checkSouthWest(data []int, R float64, P float64, rStep float64, pStep float
 	return currDirection, currLikelihood
 }
 
+// checkWest is a helper function of nextDirection and firstDirection. This function checks the likelihood in the 'west'
+// direction, when P is lower by pStep.
 func checkWest(data []int, R float64, P float64, rStep float64, pStep float64, currDirection direction, currLikelihood float64) (direction, float64) {
 	if P-pStep < 0.001 {
 		return currDirection, currLikelihood
@@ -147,6 +147,8 @@ func checkWest(data []int, R float64, P float64, rStep float64, pStep float64, c
 	return currDirection, currLikelihood
 }
 
+// checkNorthWest is a helper function of nextDirection and firstDirection. This function checks the likelihood in the 'northwest'
+// direction, when R is higher by rStep and P is lower by pStep.
 func checkNorthWest(data []int, R float64, P float64, rStep float64, pStep float64, currDirection direction, currLikelihood float64) (direction, float64) {
 	if P-pStep < 0.001 {
 		return currDirection, currLikelihood
@@ -315,9 +317,7 @@ func ZeroTruncatedNegativeBinomial(data []int, R float64, P float64, rStep float
 		log.Fatalf("Error: initial P value must a valid probability. Found: %v.\n", P)
 	}
 
-	//fmt.Printf("Getting first direction.\n")
 	currDirection, currLikelihood := firstDirection(data, R, P, rStep, pStep)
-	//fmt.Printf("Got first direction.\n")
 
 	for currDirection != neutral {
 		R, P = moveInDirection(R, P, rStep, pStep, currDirection)
