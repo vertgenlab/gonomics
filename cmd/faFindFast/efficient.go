@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
+	"math"
 )
 
 // incrementWindowEdge
@@ -122,9 +123,9 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 	// create outFile
 	file := fileio.EasyCreate(s.OutFile)
 
-	// divergenceRate = -1 is a reserved value that signifies that the user has not set a divergence rate. If divergenceRate != -1,
+	// divergenceRate = math.MaxFloat64 is a reserved value that signifies that the user has not set a divergence rate. If divergenceRate != -1,
 	// we initialize the scorePValueCache.
-	if s.DivergenceRate != -1 {
+	if s.DivergenceRate != math.MaxFloat64 {
 		scorePValueCache = binomialDistCacheLog10(s.WindowSize, s.DivergenceRate)
 	}
 
