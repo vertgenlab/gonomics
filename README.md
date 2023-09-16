@@ -99,7 +99,8 @@ However, we expect these programs to function as intended in these older version
 
 We ask that the following publication be cited in work using Gonomics executable commands or development libraries:
 
-Au et al, Bioinformatics Volume 39, Issue 8, August 2023, btad516 \url{https://doi.org/10.1093/bioinformatics/btad516}
+Au et al, Bioinformatics Volume 39, Issue 8, August 2023, btad516 
+https://doi.org/10.1093/bioinformatics/btad516
 
 ---
 
