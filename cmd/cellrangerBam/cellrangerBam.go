@@ -4,53 +4,51 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/starrSeq"
 	"log"
-	"os"
+	"strings"
 )
 
 // parseBam takes in a cellranger count bam file and pulls out reads that are representative of the UMI and also returns the construct associated with the UMI.
-func parseBam(s starrSeq.ScStarrSeqSettings) {
+func parseCellrangerBam(s starrSeq.ScStarrSeqSettings) {
 	var k int = 0
-	var constructName, umiBx, cellType string
-	var count float64
+	var constructName, umiBx, cellType, cellFormat string
 	var found bool
-	var bit int32
-	var sc bool = false
-	var populateUmiStruct bool = false
+	var bit uint8
+	var multipleGems = false
+	var gemNumber int = 1
 	var allConstructs, umiBxSlice, allCellTypes []string
-	var umi starrSeq.Read
-	var umiSlice []starrSeq.Read
-	var err error
-	var out, outSam *fileio.EasyWriter
+	var read starrSeq.Read
+	var readSlice []starrSeq.Read
+	var outSam *fileio.EasyWriter
+
+	//detect multiple bam files
+	files := strings.Split(s.InFile, ",")
+	if len(files) > 1 {
+		multipleGems = true
+		if s.ScAnalysis != "" {
+			fmt.Println("*** WARNING *** You are using multiple GEM wells with -gfpNorm. Using multiple GEM wells will add an additional suffix to cell barcodes to reinforce cell barcode uniqueness. " +
+				"The first bam file provided will have the '_1' suffix, the second bam file '_2' and so on. This mirrors the default behavior of both Seurat merge() and integrate() functions. " +
+				"If multiple GEM wells haven't be processed in the same way in Seurat and in the scStarrSeqAnalysis programs, cell lookup for -cellTypeAnalysis will be impaired.")
+		}
+	}
 
 	cellTypeMap := make(map[string]string)
-	if s.ScAnalysis != "" { //create a bool for cellTypeAnalysis
-		sc = true
+	if s.ScAnalysis != "" {
 		ck := starrSeq.ReadClusterKey(s.ScAnalysis)
 		for _, i := range ck {
 			cellTypeMap[i.Bx] = i.Cluster
 			allCellTypes = append(allCellTypes, i.Cluster)
 		}
-	}
-
-	if s.ByCell != "" || sc || s.BinCells > 0 || s.DetermineBins != "" || s.CountMatrix != "" {
-		populateUmiStruct = true
-	}
-
-	ch, head := sam.GoReadToChan(s.InFile)
-
-	if !s.NoOut {
-		out = fileio.EasyCreate(s.OutFile)
-	}
-
-	if s.SamOut != "" {
-		outSam = fileio.EasyCreate(s.SamOut)
-		sam.WriteHeaderToFileHandle(outSam, head)
+	} else if s.CountMatrixCellTypes != "" {
+		ck := starrSeq.ReadClusterKey(s.CountMatrixCellTypes)
+		for _, i := range ck {
+			cellTypeMap[i.Bx] = i.Cluster
+			allCellTypes = append(allCellTypes, i.Cluster)
+		}
 	}
 
 	var tree = make([]interval.Interval, 0)
@@ -63,95 +61,65 @@ func parseBam(s starrSeq.ScStarrSeqSettings) {
 		selectTree = interval.BuildTree(tree)
 	}
 
-	pseudobulkMap := make(map[string]float64)
-
-	for i := range ch { //iterate of over the chanel of sam.Sam
-		if s.UmiSat != "" {
-			readUmi, _, _ := sam.QueryTag(i, "UB")
-			cb, _, _ := sam.QueryTag(i, "CB")
-			umiBx = fmt.Sprintf("%s_%s", readUmi, cb)
-			umiBxSlice = append(umiBxSlice, umiBx)
-		}
-		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(int32)
-		if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
-			k++
-			if s.Bed != "" {
-				overlappedBedEntry := interval.Query(selectTree, i, "any")
-				if len(overlappedBedEntry) != 1 {
-					continue
-				}
-				constructName = overlappedBedEntry[0].(bed.Bed).Name
-			} else {
-				construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
-				constructName = construct.(string)
+	for _, bam := range files {
+		ch, head := sam.GoReadToChan(bam)
+		if s.SamOut != "" {
+			if gemNumber == 1 {
+				outSam = fileio.EasyCreate(s.SamOut)
+				sam.WriteHeaderToFileHandle(outSam, head)
 			}
-			if populateUmiStruct {
+		}
+		for i := range ch { //iterate of over the chanel of sam.Sam
+			if s.UmiSat != "" {
+				readUmi, _, _ := sam.QueryTag(i, "UB")
+				cb, _, _ := sam.QueryTag(i, "CB")
+
+				umiBx = fmt.Sprintf("%s_%s", readUmi, cb)
+				umiBxSlice = append(umiBxSlice, umiBx)
+			}
+			num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
+			bit = num.(uint8)
+			if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
+				k++
+				if s.Bed != "" {
+					overlappedBedEntry := interval.Query(selectTree, i, "any")
+					if len(overlappedBedEntry) != 1 {
+						continue
+					}
+					constructName = overlappedBedEntry[0].(bed.Bed).Name
+				} else {
+					construct, _, _ := sam.QueryTag(i, "GX") // get the construct associated with valid UMI
+					constructName = construct.(string)
+				}
 				//rand.Seed(s.setSeed)
 				cell, _, _ := sam.QueryTag(i, "CB") // get the cell barcode associated with valid UMI
-				cellType, found = cellTypeMap[cell.(string)]
-				if found {
-					umi = starrSeq.Read{Bx: cell.(string), Cluster: cellType, Construct: constructName}
+				if multipleGems {
+					cellFormat = fmt.Sprintf("%s_%d", cell.(string), gemNumber)
 				} else {
-					umi = starrSeq.Read{Bx: cell.(string), Cluster: "undefined", Construct: constructName}
+					cellFormat = cell.(string)
 				}
-				allConstructs = append(allConstructs, umi.Construct) //list of all constructs found in the bam
-				umiSlice = append(umiSlice, umi)
-			}
-			if s.SamOut != "" { //write output as sam
-				sam.WriteToFileHandle(outSam, i)
-			}
-			//pseudobulk, default behavior. Use a map [constructName]rawCount to add up reads per construct
-			count, found = pseudobulkMap[constructName]
-			if !found {
-				pseudobulkMap[constructName] = 1
-			} else {
-				pseudobulkMap[constructName] = count + 1
+				readUmi, _, _ := sam.QueryTag(i, "UB") // get the UMI associated with the valid UMI
+				cellType, found = cellTypeMap[cellFormat]
+				switch {
+				case (s.ScAnalysis != "" || s.CountMatrixCellTypes != "") && found: //we want cell type data and its found
+					read = starrSeq.Read{Bx: cellFormat, Cluster: cellType, Construct: constructName, UMI: readUmi.(string)}
+				case (s.ScAnalysis != "" || s.CountMatrixCellTypes != "") && !found: //we want cell type data, but we didn't find the cell type in the map
+					read = starrSeq.Read{Bx: cellFormat, Cluster: "undefined", Construct: constructName, UMI: readUmi.(string)}
+				case s.ScAnalysis == "" && s.CountMatrixCellTypes == "": // we don't care about cell type analysis. cluster is nil
+					read = starrSeq.Read{Bx: cellFormat, Construct: constructName, UMI: readUmi.(string)}
+				}
+				allConstructs = append(allConstructs, read.Construct) //list of all constructs found in the bam
+				readSlice = append(readSlice, read)
+				if s.SamOut != "" { //write output as sam
+					sam.WriteToFileHandle(outSam, i)
+				}
 			}
 		}
+		gemNumber++
 	}
-
 	fmt.Println("Found this many valid UMIs: ", k)
-
-	if s.ByCell != "" {
-		outByCell := fileio.EasyCreate(s.ByCell)
-		for _, i := range umiSlice {
-			fileio.WriteToFileHandle(outByCell, fmt.Sprintf("%s\t%s", i.Bx, i.Construct))
-		}
-		err = outByCell.Close()
-		exception.PanicOnErr(err)
-	}
-	if s.UmiSat != "" {
-		starrSeq.UmiSaturation(umiBxSlice, s.UmiSat)
-	}
-	if s.CountMatrix != "" {
-		starrSeq.MakeCountMatrix(s, umiSlice, allConstructs)
-	}
-	if sc && !s.NoOut { //singleCellAnalysis, handles all the writing as well
-		starrSeq.SingleCellAnalysis(s, umiSlice, allConstructs, allCellTypes, cellTypeMap, out)
-	}
-	if s.DetermineBins != "" {
-		s.BinCells = starrSeq.DetermineIdealBins(s, umiSlice)
-		fmt.Printf("Using %d bins\n", s.BinCells)
-	}
-	if s.BinCells > 0 { //goes to binning and pseudobulk. Handles normalization and writing as well
-		binnedCells := starrSeq.DistributeCells(s.BinCells, umiSlice, false)
-		starrSeq.BinnedPseudobulk(binnedCells, out, s.InputNormalize)
-	}
-	if s.InputNormalize != "" && !s.NoOut { //normalize pseudobulk
-		starrSeq.InputNormalize(pseudobulkMap, s.InputNormalize)
-	}
-	if !s.NoOut && s.ScAnalysis == "" && s.BinCells < 1 { //write out pseudobulk
-		starrSeq.WritePseudobulkMap(pseudobulkMap, out)
-	}
-	if !s.NoOut {
-		err = out.Close()
-		exception.PanicOnErr(err)
-	}
-	if s.SamOut != "" {
-		err = outSam.Close()
-		exception.PanicOnErr(err)
-	}
+	r := starrSeq.ReadSliceAnalysisSettings{ReadSlice: readSlice, FuncSettings: s, AllCellTypes: allCellTypes, AllConstructs: allConstructs, CellTypeMap: cellTypeMap}
+	starrSeq.ReadSliceAnalysis(r)
 }
 
 func usage() {
@@ -188,11 +156,14 @@ func main() {
 		"for an input library sequencing sam/bam file. A bed file corresponding to constructs on the reference that the input file is aligned to must be provided and the name of the construct must"+
 		"be in the 4th field. The input alignment file must be sorted by position. PCR duplicates will be removed.")
 	//var setSeed *int64 = flag.Int64("setSeed", 1, "Set a seed for random number generation.")
-	var countMatrix *string = flag.String("scCount", "", "Create count matrix that has cell barcode in rows and constructs as columns. If GFP bam files are provided with the"+
-		" -gfpNorm option, GFP will be included as a column. The count matrix will be sent to the file name provided")
+	var countMatrix *string = flag.String("countMatrix", "", "Create count matrix that has cell barcode in rows and constructs as columns. If GFP bam files are provided with the"+
+		" -transfectionNorm option, GFP will be included as a column. If -countMatrixCellTypes is used, an additional column for cell type will be included. "+
+		"The count matrix will be sent to the file name provided")
 	var noOut *bool = flag.Bool("noOut", false, "If the -noOut option is used a psuedobulk table will not be created a the function will only take in the inFile argument.")
 	var altMapping *string = flag.String("altMapping", "", "Use a bed file for construct mapping and collapse corrected-UMI by hand rather than rely on cellranger count valid UMIs. "+
 		"Provde a bed file with construct names for construct determination.")
+	var countMatrixCellTypes *string = flag.String("countMatrixCellTypes", "", "Provide a tab-delimited file of cellBarcode -- cell type to add an additional column"+
+		"to a count matrix corresponding to cell type.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -215,6 +186,9 @@ func main() {
 	if *binCells > 0 && *cellTypeAnalysis != "" {
 		log.Fatalf("Bin cells cannot be used with -cellTypeAnalysis")
 	}
+	if *altMapping != "" && (*samOut != "" || *umiSat != "" || *noOut) {
+		log.Fatalf("altMapping is not compatable with samOut. If you are interested in collapsing UMI in a sam file use samFilter -collapseUMI")
+	}
 
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
@@ -236,19 +210,10 @@ func main() {
 		DetermineBins:    *determineBins,
 		InputSequencing:  *inputSequencing,
 		//setSeed:         *setSeed,
-		CountMatrix: *countMatrix,
-		NoOut:       *noOut,
-		AltMapping:  *altMapping,
-	}
-
-	//deal with multiple gem wells
-	var multipleGems bool
-	var multipleGfpGems bool = false
-	var err error
-
-	s.InFile, multipleGems = starrSeq.DetectMultipleGems(s.InFile, s.ScAnalysis)
-	if *transfectionNorm != "" {
-		s.TransfectionNorm, multipleGfpGems = starrSeq.DetectMultipleGfpGems(s.TransfectionNorm)
+		CountMatrix:          *countMatrix,
+		NoOut:                *noOut,
+		AltMapping:           *altMapping,
+		CountMatrixCellTypes: *countMatrixCellTypes,
 	}
 
 	//output or input sequencing
@@ -257,16 +222,7 @@ func main() {
 	} else if *altMapping != "" {
 		starrSeq.Alt(s)
 	} else {
-		parseBam(s)
+		parseCellrangerBam(s)
 	}
 
-	//if multiple gem wells were used remove the tmp files
-	if multipleGems {
-		err = os.Remove(s.InFile)
-		exception.PanicOnErr(err)
-	}
-	if multipleGfpGems {
-		err = os.Remove(s.TransfectionNorm)
-		exception.PanicOnErr(err)
-	}
 }

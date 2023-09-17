@@ -25,7 +25,7 @@ func DetermineBin(numBins int, prob float64) int {
 }
 
 // DistributeCells takes in a slice of string that is created in parseBam that has a list of cellBarcodes and constructs. It will partition those cells and constructs into separate slices. The number of bins is a user-input variable
-func DistributeCells(binCells int, cellTypeSlice []Read, fromDB bool) [][]Read {
+func DistributeCells(s ScStarrSeqSettings, cellTypeSlice []Read, fromDB bool) [][]Read {
 	var currCell string
 	var bin, count int
 	var found bool
@@ -33,8 +33,8 @@ func DistributeCells(binCells int, cellTypeSlice []Read, fromDB bool) [][]Read {
 	whichBin := 'A'                   //for counting cells per bin
 	whichBinMap := make(map[rune]int) //for counting cells per bin
 
-	binnedCells := make([][]Read, binCells) //make a slice of slice of string with the size of the user-specified number of bins
-	prob := 1.0 / float64(binCells)         // determine the probability that the cell belongs to a particular bin
+	binnedCells := make([][]Read, s.BinCells) //make a slice of slice of string with the size of the user-specified number of bins
+	prob := 1.0 / float64(s.BinCells)         // determine the probability that the cell belongs to a particular bin
 
 	SortUmiByCellBx(cellTypeSlice) //sort the slice of strings containing (cellBarcode \t construct) so that indentical cell barcodes line up next to one another
 
@@ -43,7 +43,7 @@ func DistributeCells(binCells int, cellTypeSlice []Read, fromDB bool) [][]Read {
 			binnedCells[bin] = append(binnedCells[bin], i)
 			continue
 		}
-		bin = DetermineBin(binCells, prob)             //function to determine which bin to put the new cell into.
+		bin = DetermineBin(s.BinCells, prob)           //function to determine which bin to put the new cell into.
 		binnedCells[bin] = append(binnedCells[bin], i) //put cell into correct bin
 		currCell = i.Bx                                //set the cell barcode that was just partitioned to current cell for the next iteration
 		count, found = whichBinMap[whichBin+rune(bin)]
@@ -81,9 +81,9 @@ func DetermineIdealBins(s ScStarrSeqSettings, umiSlice []Read) int {
 	for i := 0; i <= 10; i++ { //do this whole loop 10 times (essentially 10 replicates)
 		stop = false
 		for j = 1; j <= 100; j++ { //loop from bins 1 to 100 (j)
-			s.BinCells = j                                       //set the binCells parameter to j
-			matrix = DistributeCells(s.BinCells, umiSlice, true) //run distributeCells with that value of j
-			for k := range matrix {                              //loop through bins in matrix
+			s.BinCells = j                              //set the binCells parameter to j
+			matrix = DistributeCells(s, umiSlice, true) //run distributeCells with that value of j
+			for k := range matrix {                     //loop through bins in matrix
 				ncMap := make(map[string]int) //create a map that has ncConstructName--counts
 				for _, z = range nc {         //populate the map
 					ncMap[z] = 0
@@ -115,7 +115,7 @@ func DetermineIdealBins(s ScStarrSeqSettings, umiSlice []Read) int {
 }
 
 // BinnedPseudobulk is the psuedobulk function if the -binCells option is used. It adds an addition column to the dataframe corresponding to bin identity
-func BinnedPseudobulk(inSlices [][]Read, out *fileio.EasyWriter, norm string) {
+func BinnedPseudobulk(s ScStarrSeqSettings, inSlices [][]Read, out *fileio.EasyWriter) {
 	var i string
 	var count float64
 	var found bool
@@ -134,8 +134,8 @@ func BinnedPseudobulk(inSlices [][]Read, out *fileio.EasyWriter, norm string) {
 				mp[j.Construct] = count + 1
 			}
 		}
-		if norm != "" {
-			InputNormalize(mp, norm)
+		if s.InputNormalize != "" {
+			InputNormalize(mp, s.InputNormalize)
 		}
 		for i = range mp {
 			toWrite = append(toWrite, fmt.Sprintf("%s\t%f\t%c", i, mp[i], whichBin))

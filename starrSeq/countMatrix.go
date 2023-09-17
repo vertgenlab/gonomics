@@ -14,7 +14,8 @@ type line struct {
 	vals    []float64
 }
 
-func MakeCountMatrix(s ScStarrSeqSettings, umiSlice []Read, allConstructs []string) {
+// MakeCountMatrix takes in a setting struct, a slice of Read and a list of all constructs if the form of a slice of string. It will handle all file creating and closing within the function
+func MakeCountMatrix(s ScStarrSeqSettings, readSlice []Read, allConstructs []string) {
 	var header []string
 	var cell, cluster string
 	var norm bool = false
@@ -27,15 +28,15 @@ func MakeCountMatrix(s ScStarrSeqSettings, umiSlice []Read, allConstructs []stri
 	out := fileio.EasyCreate(s.CountMatrix)
 
 	cellTypeMap := make(map[string]string) //bx--cellType
-	if s.TransfectionNorm != "" {
-		cellTypeSlice = ReadClusterKey(s.ScAnalysis)
+	if s.CountMatrixCellTypes != "" {
+		cellTypeSlice = ReadClusterKey(s.CountMatrixCellTypes)
 		for _, i := range cellTypeSlice {
 			cellTypeMap[i.Bx] = i.Cluster
 		}
 	}
 
 	header = append(header, "cellBx")
-	if s.ScAnalysis != "" {
+	if s.CountMatrixCellTypes != "" {
 		header = append(header, "cluster")
 	}
 
@@ -60,20 +61,21 @@ func MakeCountMatrix(s ScStarrSeqSettings, umiSlice []Read, allConstructs []stri
 	}
 
 	fileio.WriteToFileHandle(out, headSmush)
-	SortUmiByCellBx(umiSlice)
-	cell = umiSlice[0].Bx
+	SortUmiByCellBx(readSlice)
+	cell = readSlice[0].Bx
 
 	l.vals = make([]float64, len(uniqueConstructs))
 	var firstTime bool = true
-	for i := range umiSlice {
-		if cell == umiSlice[i].Bx {
+	for i := range readSlice {
+		if cell == readSlice[i].Bx {
 			//add to current line
 			if firstTime {
 				firstTime = false
-				l.bx = umiSlice[i].Bx
-				l.cluster = umiSlice[i].Cluster
+				l.bx = readSlice[i].Bx
+				l.cluster = readSlice[i].Cluster
+				fmt.Println(l)
 			}
-			idx = idxMap[umiSlice[i].Construct]
+			idx = idxMap[readSlice[i].Construct]
 			l.vals[idx] = l.vals[idx] + 1
 		} else {
 			//move on
@@ -86,13 +88,13 @@ func MakeCountMatrix(s ScStarrSeqSettings, umiSlice []Read, allConstructs []stri
 				matrixSlice = append(matrixSlice, l)
 			}
 			l = line{
-				bx:      umiSlice[i].Bx,
-				cluster: umiSlice[i].Cluster,
+				bx:      readSlice[i].Bx,
+				cluster: readSlice[i].Cluster,
 				vals:    nil,
 			}
 			l.vals = make([]float64, len(uniqueConstructs))
-			cell = umiSlice[i].Bx
-			idx = idxMap[umiSlice[i].Construct]
+			cell = readSlice[i].Bx
+			idx = idxMap[readSlice[i].Construct]
 			l.vals[idx] = l.vals[idx] + 1
 		}
 	}
@@ -110,7 +112,7 @@ func MakeCountMatrix(s ScStarrSeqSettings, umiSlice []Read, allConstructs []stri
 		var found bool
 		//add GFP to matrix
 		placeHolderMap := make(map[string]int)
-		gfpUmiSlice, _ := ParseGfpBam(s.TransfectionNorm, cellTypeMap, placeHolderMap)
+		gfpUmiSlice, _ := ParseGfpBam(s, cellTypeMap, placeHolderMap)
 		cellGfpMap := make(map[string]float64)
 		for _, i := range gfpUmiSlice {
 			_, found = cellGfpMap[i.Bx]
@@ -156,7 +158,7 @@ func writeLineToFileHandle(l line, out *fileio.EasyWriter, s ScStarrSeqSettings)
 		floatSlice = append(floatSlice, fmt.Sprintf("%f", i))
 	}
 	valSmush := strings.Join(floatSlice, "\t")
-	if s.ScAnalysis != "" {
+	if s.CountMatrixCellTypes != "" {
 		toWrite := fmt.Sprintf("%s\t%s\t%s", l.bx, l.cluster, valSmush)
 		fileio.WriteToFileHandle(out, toWrite)
 	} else {

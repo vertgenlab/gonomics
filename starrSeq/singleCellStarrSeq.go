@@ -11,8 +11,10 @@ type scStarrSeqMatrix struct {
 	counts    float64
 }
 
-// SingleCellAnalysis will create a count for each construct in each cell type. This function takes
-func SingleCellAnalysis(s ScStarrSeqSettings, umiSlice []Read, allConstructs []string, allCellTypes []string, cellTypeMap map[string]string, writer *fileio.EasyWriter) {
+// SingleCellAnalysis will create a count for each construct in each cell type. This function takes in starrSeqSetting, a readSlice and some cell type info. It will create
+// an output file that has readCounts for each construct in each cell type present. It is compatible with input normalization and either transfection reporter transfection
+// cluster normalization or negative control cluster normalization
+func SingleCellAnalysis(s ScStarrSeqSettings, readSlice []Read, allConstructs []string, allCellTypes []string, cellTypeMap map[string]string, out *fileio.EasyWriter) {
 	var cellType, j, m, toWrite string
 	var outMatrix []scStarrSeqMatrix
 	var outLine scStarrSeqMatrix
@@ -26,7 +28,7 @@ func SingleCellAnalysis(s ScStarrSeqSettings, umiSlice []Read, allConstructs []s
 	}
 
 	if s.TransfectionNorm != "" {
-		_, gfpClusterMap := ParseGfpBam(s.TransfectionNorm, cellTypeMap, allCellTypesMap)
+		_, gfpClusterMap := ParseGfpBam(s, cellTypeMap, allCellTypesMap)
 		gfpNormFactorMap = CalculateGfpNormFactor(gfpClusterMap)
 	}
 
@@ -43,7 +45,7 @@ func SingleCellAnalysis(s ScStarrSeqSettings, umiSlice []Read, allConstructs []s
 		for _, j = range allConstructs {              // loop over all construct that were found in the bam file to make every construct start at 0 reads
 			singleCellTypeMap[j] = 0
 		}
-		for _, i := range umiSlice { //loop over the slice created in cellrangerBam() that that contains: cellBarcode \t construct
+		for _, i := range readSlice { //loop over the slice created in cellrangerBam() that that contains: cellBarcode \t construct
 			if i.Cluster == cellType { // if that cell is found and the cell type in the map matches the cell type we are looping through, search for the construct corresponding with that cellBarcode in the singleCellCount map and add one to the value
 				singleCellTypeMap[i.Construct] += 1
 				a++
@@ -70,13 +72,13 @@ func SingleCellAnalysis(s ScStarrSeqSettings, umiSlice []Read, allConstructs []s
 		outMatrix = NormScToNegativeCtrls(outMatrix, s.NcNorm, len(allCellTypes))
 	}
 	if s.NcNorm != "" {
-		fileio.WriteToFileHandle(writer, "cellCluster\tconstruct\tcounts/ncCounts")
+		fileio.WriteToFileHandle(out, "cellCluster\tconstruct\tcounts/ncCounts")
 	} else {
-		fileio.WriteToFileHandle(writer, "cellCluster\tconstruct\tcounts")
+		fileio.WriteToFileHandle(out, "cellCluster\tconstruct\tcounts")
 	}
 
 	for _, i := range outMatrix { //once all cell types have been looped through, write out the total count matrix
 		toWrite = fmt.Sprintf("%s\t%s\t%f", i.cluster, i.construct, i.counts)
-		fileio.WriteToFileHandle(writer, toWrite)
+		fileio.WriteToFileHandle(out, toWrite)
 	}
 }

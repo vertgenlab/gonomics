@@ -11,23 +11,33 @@ import (
 )
 
 type ScStarrSeqSettings struct {
-	InFile           string
-	OutFile          string
-	InputNormalize   string
-	ByCell           string
-	SamOut           string
-	ScAnalysis       string
-	BinCells         int
-	UmiSat           string
-	TransfectionNorm string
-	Bed              string
-	NcNorm           string
-	DetermineBins    string
-	InputSequencing  string
-	SetSeed          int64
-	CountMatrix      string
-	NoOut            bool
-	AltMapping       string
+	InFile               string
+	OutFile              string
+	InputNormalize       string
+	ByCell               string
+	SamOut               string
+	ScAnalysis           string
+	BinCells             int
+	UmiSat               string
+	TransfectionNorm     string
+	Bed                  string
+	NcNorm               string
+	DetermineBins        string
+	InputSequencing      string
+	SetSeed              int64
+	CountMatrix          string
+	NoOut                bool
+	AltMapping           string
+	CountMatrixCellTypes string
+}
+
+type ReadSliceAnalysisSettings struct {
+	FuncSettings  ScStarrSeqSettings
+	UmiBxSlice    []string
+	AllCellTypes  []string
+	AllConstructs []string
+	ReadSlice     []Read
+	CellTypeMap   map[string]string
 }
 
 // Read is a custom struct that stores data about a UMI-representitive STARR-seq read. It stores the cell barcode, the cell type and the construct that the read maps to, all as strings
@@ -81,12 +91,12 @@ func ReadInputNormTable(inFile string) []InputNormFactor {
 }
 
 // UmiSaturation randomly subsets the whole bam file (10% to 100% of all reads) and calculates how many Reads are in those subests. The output is a tab delimited text file.
-func UmiSaturation(umiBxSlice []string, file string) {
+func UmiSaturation(s ScStarrSeqSettings, umiBxSlice []string) {
 	var perc, randNum float64
 	var j string
 	var count int
 
-	out := fileio.EasyCreate(file)
+	out := fileio.EasyCreate(s.UmiSat)
 	fileio.WriteToFileHandle(out, "totalReads\tumis")
 
 	for i := 1; i <= 10; i++ {
@@ -134,4 +144,61 @@ func WritePseudobulkMap(mp map[string]float64, writer *fileio.EasyWriter) {
 	for _, i := range writeSlice {
 		fileio.WriteToFileHandle(writer, i)
 	}
+}
+
+// ReadSliceAnalysis takes in a slice of Read and the settings struct and distributes the Read slice to the specified analysis functions
+func ReadSliceAnalysis(r ReadSliceAnalysisSettings) {
+	var out *fileio.EasyWriter
+	//all non-defult output options
+	if r.FuncSettings.ByCell != "" {
+		ByCell(r.FuncSettings, r.ReadSlice)
+	}
+	if r.FuncSettings.UmiSat != "" {
+		UmiSaturation(r.FuncSettings, r.UmiBxSlice)
+	}
+	if r.FuncSettings.CountMatrix != "" {
+		MakeCountMatrix(r.FuncSettings, r.ReadSlice, r.AllConstructs)
+	}
+	// default output options
+	if !r.FuncSettings.NoOut {
+		out = fileio.EasyCreate(r.FuncSettings.OutFile)
+		if r.FuncSettings.ScAnalysis != "" {
+			SingleCellAnalysis(r.FuncSettings, r.ReadSlice, r.AllConstructs, r.AllConstructs, r.CellTypeMap, out)
+		} else if r.FuncSettings.DetermineBins != "" {
+			r.FuncSettings.BinCells = DetermineIdealBins(r.FuncSettings, r.ReadSlice)
+			fmt.Printf("Using %d bins\n", r.FuncSettings.BinCells)
+		} else if r.FuncSettings.BinCells > 1 {
+			binnedCells := DistributeCells(r.FuncSettings, r.ReadSlice, false)
+			BinnedPseudobulk(r.FuncSettings, binnedCells, out)
+		} else {
+			//default
+			pbMap := ReadSliceToPseudobulk(r.FuncSettings, r.ReadSlice)
+			WritePseudobulkMap(pbMap, out)
+		}
+		err := out.Close()
+		exception.PanicOnErr(err)
+	}
+}
+
+// ReadSliceToPseudobulk takes a settings struct slice of Read and returns a map of construct -- read counts. If an input normalization
+// table is present in the settings struct. The returned map will be input normalized
+func ReadSliceToPseudobulk(s ScStarrSeqSettings, readSlice []Read) map[string]float64 {
+	constructMap := make(map[string]float64)
+
+	for _, i := range readSlice {
+		constructMap[i.Construct] += 1
+	}
+	if s.InputNormalize != "" {
+		InputNormalize(constructMap, s.InputNormalize)
+	}
+	return constructMap
+}
+
+func ByCell(s ScStarrSeqSettings, readSlice []Read) {
+	outByCell := fileio.EasyCreate(s.ByCell)
+	for _, i := range readSlice {
+		fileio.WriteToFileHandle(outByCell, fmt.Sprintf("%s\t%s", i.Bx, i.Construct))
+	}
+	err := outByCell.Close()
+	exception.PanicOnErr(err)
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
+	"strings"
 )
 
 // InputNormFactor is a custom struct that scores input-normalization factors for STARR-seq constructs
@@ -78,6 +79,7 @@ func InputNormalize(mp map[string]float64, normalize string) {
 	var found bool
 
 	inputNormValues := ReadInputNormTable(normalize)
+
 	if len(inputNormValues) < len(mp) {
 		fmt.Println("The input normalization table has less constructs than were found in the input bam. 1 or more constructs won't be normalized. Please check your input files.")
 	} else if len(inputNormValues) > len(mp) {
@@ -120,30 +122,53 @@ func NormScToNegativeCtrls(matrix []scStarrSeqMatrix, ncNorm string, numCellType
 
 // ParseGfpBam is similar to the parseBam function but handles bams containing GFP reads. This function also takes in a map of cellBx-cellType and an empty map containing each cellType
 // It returns a map that contains [cellType] = gfpReads
-func ParseGfpBam(gfpBam string, cellTypeMap map[string]string, clusterGFP map[string]int) ([]Read, map[string]int) {
-	var bit int32
-	var cluster string
+func ParseGfpBam(s ScStarrSeqSettings, cellTypeMap map[string]string, clusterGFP map[string]int) ([]Read, map[string]int) {
+	var bit uint8
+	var cluster, cellBxFormat string
 	var gfpUmis []Read
 	var gfpStats []string
 	var found bool
+	var multipleGems bool = false
+	var gemNumber int = 1
 
-	inChan, _ := sam.GoReadToChan(gfpBam)
-	for i := range inChan {
-		num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-		bit = num.(int32)
-		if bit&8 == 8 {
-			cellBx, _, _ := sam.QueryTag(i, "CB")
-			cluster, found = cellTypeMap[cellBx.(string)]
-			if found {
-				gfpUmis = append(gfpUmis, Read{Bx: cellBx.(string), Cluster: cluster, Construct: "GFP"})
-			} else {
-				gfpUmis = append(gfpUmis, Read{Bx: cellBx.(string), Cluster: "undefined", Construct: "GFP"})
-			}
-			if found {
-				clusterGFP[cluster] += 1
-			}
+	//detect multiple bam files
+	files := strings.Split(s.TransfectionNorm, ",")
+	if len(files) > 1 {
+		multipleGems = true
+		if s.ScAnalysis != "" {
+			fmt.Println("*** WARNING *** You are using multiple GEM wells with -transfectionNorm. Using multiple GEM wells will add an additional suffix to cell barcodes to reinforce cell barcode uniqueness. " +
+				"The first bam file provided will have the '_1' suffix, the second bam file '_2' and so on. This mirrors the default behavior of both Seurat merge() and integrate() functions. " +
+				"If multiple GEM wells haven't be processed in the same way in Seurat and in the scStarrSeqAnalysis programs, cell lookup for -cellTypeAnalysis will be impaired.")
 		}
 	}
+
+	for _, bam := range files {
+		inChan, _ := sam.GoReadToChan(bam)
+		for i := range inChan {
+			num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
+			bit = num.(uint8)
+			if bit&8 == 8 {
+				cellBx, _, _ := sam.QueryTag(i, "CB")
+				if multipleGems {
+					cellBxFormat = fmt.Sprintf("%s_%d", cellBx.(string), gemNumber)
+				} else {
+					cellBxFormat = cellBx.(string)
+				}
+				cluster, found = cellTypeMap[cellBx.(string)]
+				switch {
+				case found:
+					gfpUmis = append(gfpUmis, Read{Bx: cellBxFormat, Cluster: cluster, Construct: "GFP"})
+				case !found:
+					gfpUmis = append(gfpUmis, Read{Bx: cellBxFormat, Cluster: "undefined", Construct: "GFP"})
+				}
+				if found {
+					clusterGFP[cluster] += 1
+				}
+			}
+		}
+		gemNumber++
+	}
+
 	//print out some GFP read counts / cluster
 	var gfpReads int
 	for i := range clusterGFP {
