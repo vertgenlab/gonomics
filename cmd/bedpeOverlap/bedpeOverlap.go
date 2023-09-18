@@ -53,8 +53,7 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 
 	selectRecords := bed.Read(bedSelectFile)
 	if selectRecords[0].Name == "" && keepNames {
-		keepNames = false
-		log.Panic("keepNames option was set to true, but there was no name field on select file bed. Output cannot have name field.")
+		log.Panic("keepNames option was set to true, but there was no name field on select file bed.")
 	}
 
 	inBedPe := bedpe.Read(bedpeInFile)
@@ -65,88 +64,76 @@ func SelectIsBed(bedSelectFile string, bedpeInFile string, overlapThreshold floa
 	}
 	selectTree := interval.BuildTree(selectIntervals)
 
-	for _, i := range inBedPe {
-		currOverlaps = interval.Query(selectTree, i.A, "any")
+	for _, currBedpe := range inBedPe {
+		currOverlaps = interval.Query(selectTree, currBedpe.A, "any")
 		// if A, the left side of the input bedpe, overlaps any of the select beds, write the bedpe to output.
 		if len(currOverlaps) > 0 {
 			if overlapThreshold == 0 {
 				if keepNames {
-					i.A.FieldsInitialized = 7
+					currBedpe.A.FieldsInitialized = 7
+					currBedpe.B.FieldsInitialized = 7
 					for c := range currOverlaps {
 						if c == 0 {
-							i.A.Name = currOverlaps[c].(bed.Bed).Name
+							currBedpe.A.Name = currOverlaps[c].(bed.Bed).Name
 						} else {
-							if i.A.Name == currOverlaps[c].(bed.Bed).Name {
-								continue
-							} else {
-								i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
-							}
+							currBedpe.A.Name = currBedpe.A.Name + "," + currOverlaps[c].(bed.Bed).Name
 						}
 					}
 				}
-				bedpe.WriteToFileHandle(out, i)
+				bedpe.WriteToFileHandle(out, currBedpe)
 			} else {
 				found = false
 				for _, j := range currOverlaps {
-					if !found && overlapPercent(j, i.A) >= overlapThreshold {
+					if !found && overlapPercent(j, currBedpe.A) >= overlapThreshold {
 						found = true
 						if keepNames {
-							i.A.FieldsInitialized = 7
+							currBedpe.A.FieldsInitialized = 7
+							currBedpe.B.FieldsInitialized = 7
 							for c := range currOverlaps {
 								if c == 0 {
-									i.A.Name = currOverlaps[c].(bed.Bed).Name
+									currBedpe.A.Name = currOverlaps[c].(bed.Bed).Name
 								} else {
-									if i.A.Name == currOverlaps[c].(bed.Bed).Name {
-										continue
-									} else {
-										i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
-									}
+									currBedpe.A.Name = currBedpe.A.Name + "," + currOverlaps[c].(bed.Bed).Name
 								}
 							}
 						}
-						bedpe.WriteToFileHandle(out, i)
+						bedpe.WriteToFileHandle(out, currBedpe)
 					}
 				}
 			}
 		} else {
 			// otherwise check the right side (B)
-			currOverlaps = interval.Query(selectTree, i.B, "any")
+			currOverlaps = interval.Query(selectTree, currBedpe.B, "any")
 			if len(currOverlaps) > 0 {
 				if overlapThreshold == 0 {
 					if keepNames {
-						i.A.FieldsInitialized = 7
+						currBedpe.A.FieldsInitialized = 7
+						currBedpe.B.FieldsInitialized = 7
 						for c := range currOverlaps {
 							if c == 0 {
-								i.A.Name = currOverlaps[c].(bed.Bed).Name
+								currBedpe.A.Name = currOverlaps[c].(bed.Bed).Name
 							} else {
-								if i.A.Name == currOverlaps[c].(bed.Bed).Name {
-									continue
-								} else {
-									i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
-								}
+								currBedpe.A.Name = currBedpe.A.Name + "," + currOverlaps[c].(bed.Bed).Name
 							}
 						}
 					}
-					bedpe.WriteToFileHandle(out, i)
+					bedpe.WriteToFileHandle(out, currBedpe)
 				} else {
 					found = false
 					for _, j := range currOverlaps {
-						if !found && overlapPercent(j, i.B) >= overlapThreshold {
+						if !found && overlapPercent(j, currBedpe.B) >= overlapThreshold {
 							if keepNames {
-								i.A.FieldsInitialized = 7
+								currBedpe.A.FieldsInitialized = 7
+								currBedpe.B.FieldsInitialized = 7
 								for c := range currOverlaps {
 									if c == 0 {
-										i.A.Name = currOverlaps[c].(bed.Bed).Name
+										currBedpe.A.Name = currOverlaps[c].(bed.Bed).Name
 									} else {
-										if i.A.Name == currOverlaps[c].(bed.Bed).Name {
-											continue
-										} else {
-											i.A.Name += "," + currOverlaps[c].(bed.Bed).Name
-										}
+										currBedpe.A.Name = currBedpe.A.Name + "," + currOverlaps[c].(bed.Bed).Name
 									}
 								}
 							}
-							bedpe.WriteToFileHandle(out, i)
+							bedpe.WriteToFileHandle(out, currBedpe)
 						}
 					}
 				}
