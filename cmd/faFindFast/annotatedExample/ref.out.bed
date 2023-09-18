@@ -16,7 +16,7 @@ chr1	13	24	chr1_13	3	14 // firstQuery 14 24, aln 14 27, ref 13 24
 chr1	14	25	chr1_14	3	15 // firstQuery 15 25, aln 15 28, ref 14 25
 chr1	15	26	chr1_15	3	16 // firstQuery 16 26, aln 16 29, ref 15 26
 chr1	16	27	chr1_16	3	17 // firstQuery 17 27, aln 17 30, ref 16 27
-chr1	18	28	chr1_17	2	18 // firstQuery 18 28, aln 20 31 (note that aln should be 20 not 18), ref 18 28 (TODO: make sure div is 2 not 3?)
+chr1	18	28	chr1_17	2	18 // firstQuery 18 28, aln 20 31 (note that aln should be 20 not 18), ref 18 28
 chr1	19	29	chr1_19	2	21 // firstQuery 19 29, aln 21 32, ref 19 29
 chr1	20	30	chr1_20	0	22 // firstQuery 20 30, aln 23 33, ref 20 30
 chr1	21	31	chr1_21	0	24 // firstQuery 21 31, aln 24 34, ref 21 31
