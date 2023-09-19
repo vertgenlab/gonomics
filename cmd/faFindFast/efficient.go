@@ -88,18 +88,17 @@ func incrementWindowEdge(firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOr
 // When reporting in reference positions,
 // chromStart = refIdxWindowStart, which is converted from the alnIdxBeforeWindow+(some number > 1)
 // in order to match firstQueryIdxBeforeWindow+1
-// This function recursively finds alnIdxBeforeWindow+(some number > 1), which corresponds to firstQueryIdxBeforeWindow+1
+// This function uses a while loop to find alnIdxBeforeWindow+(some number > 1), which corresponds to firstQueryIdxBeforeWindow+1
 // Note that this function is only needed for chromStart, not chromEnd
 // firstQuery[lastAlnIdxOfWindow+1] is allowed to be gap or exceed the firstQuery length
 // This is because the bed's chromStart is closed, meaning the position firstQueryIdxBeforeWindow+1 is included in the window (for all species)
 // But the bed's chromEnd is open, meaning the position lastAlnIdxOfWindow+1 is not included in the window (for all species)
 // Note also that updateAlnIdxBeforeWindow is only for translating positions and does not affect divergence calculations
-// BeforeWindow works better than trying to report WindowStart, because +1 is only needed once outside recursive function
+// BeforeWindow works better than trying to report WindowStart, because +1 is only needed once outside this function
 func updateAlnIdxBeforeWindow(firstQuery []dna.Base, alnIdxOrig int) (alnIdx int) {
 	alnIdx = alnIdxOrig
-	if alnIdx+1 < len(firstQuery) && firstQuery[alnIdx+1] == dna.Gap {
+	for alnIdx+1 < len(firstQuery) && firstQuery[alnIdx+1] == dna.Gap {
 		alnIdx++
-		updateAlnIdxBeforeWindow(firstQuery, alnIdx)
 	}
 	return
 }
