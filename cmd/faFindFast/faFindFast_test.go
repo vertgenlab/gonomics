@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"os"
 	"testing"
 
@@ -29,7 +30,7 @@ var FaFindFastTests = []struct {
 		WindowSize:      10,
 		RefChromName:    "chr1",
 		RemoveN:         false,
-		DivergenceRate:  -1,
+		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
 		OutputAlnPos:    false},
 	{InFile: "testdata/test_indel.fa",
@@ -40,7 +41,7 @@ var FaFindFastTests = []struct {
 		WindowSize:      10,
 		RefChromName:    "chr1",
 		RemoveN:         true,
-		DivergenceRate:  -1,
+		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
 		OutputAlnPos:    false},
 	{InFile: "testdata/test.endDoubleGaps.fa",
@@ -51,7 +52,7 @@ var FaFindFastTests = []struct {
 		WindowSize:      10,
 		RefChromName:    "chr1",
 		RemoveN:         false,
-		DivergenceRate:  -1,
+		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
 		OutputAlnPos:    false},
 	{InFile: "testdata/test.endGapsQuery.fa",
@@ -62,7 +63,7 @@ var FaFindFastTests = []struct {
 		WindowSize:      10,
 		RefChromName:    "chr1",
 		RemoveN:         false,
-		DivergenceRate:  -1,
+		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
 		OutputAlnPos:    false},
 	{InFile: "testdata/test.endGapsRef.fa",
@@ -73,7 +74,7 @@ var FaFindFastTests = []struct {
 		WindowSize:      10,
 		RefChromName:    "chr1",
 		RemoveN:         false,
-		DivergenceRate:  -1,
+		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
 		OutputAlnPos:    false},
 	{InFile: "testdata/test.endGapsRef.fa",
@@ -95,7 +96,7 @@ var FaFindFastTests = []struct {
 		WindowSize:      10,
 		RefChromName:    "chr1",
 		RemoveN:         false,
-		DivergenceRate:  -1,
+		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
 		OutputAlnPos:    false},
 	{InFile: "testdata/test_indel_3seq.fa",
@@ -106,7 +107,7 @@ var FaFindFastTests = []struct {
 		WindowSize:      10,
 		RefChromName:    "chr1",
 		RemoveN:         false,
-		DivergenceRate:  -1,
+		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
 		OutputAlnPos:    true}, //test for outputAlnPos
 	{InFile: "testdata/test_indel_3seq.fa",
@@ -117,7 +118,7 @@ var FaFindFastTests = []struct {
 		WindowSize:      10,
 		RefChromName:    "chr1",
 		RemoveN:         false,
-		DivergenceRate:  -1,
+		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      true, //test for longOutput AND outputAlnPos
 		OutputAlnPos:    true},
 }
