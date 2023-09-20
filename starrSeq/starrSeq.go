@@ -167,10 +167,12 @@ func ReadSliceAnalysis(r ReadSliceAnalysisSettings) {
 		} else if r.FuncSettings.DetermineBins != "" {
 			r.FuncSettings.BinCells = DetermineIdealBins(r.FuncSettings, r.ReadSlice)
 			fmt.Printf("Using %d bins\n", r.FuncSettings.BinCells)
-		} else if r.FuncSettings.BinCells > 1 {
+		}
+		if r.FuncSettings.BinCells > 1 {
 			binnedCells := DistributeCells(r.FuncSettings, r.ReadSlice, false)
 			BinnedPseudobulk(r.FuncSettings, binnedCells, out)
-		} else {
+		}
+		if r.FuncSettings.ScAnalysis == "" && r.FuncSettings.BinCells <= 1 {
 			//default
 			pbMap := ReadSliceToPseudobulk(r.FuncSettings, r.ReadSlice)
 			WritePseudobulkMap(pbMap, out)

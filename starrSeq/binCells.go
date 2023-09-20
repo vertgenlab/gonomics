@@ -37,8 +37,10 @@ func DistributeCells(s ScStarrSeqSettings, cellTypeSlice []Read, fromDB bool) []
 	prob := 1.0 / float64(s.BinCells)         // determine the probability that the cell belongs to a particular bin
 
 	SortUmiByCellBx(cellTypeSlice) //sort the slice of strings containing (cellBarcode \t construct) so that indentical cell barcodes line up next to one another
-
 	for _, i := range cellTypeSlice {
+		if i.Construct == "" {
+			fmt.Println("distribute cells empty")
+		}
 		if i.Bx == currCell { // if the cell barcode is the same as the one the loop just saw, partition that cell-construct pair into the same bin as the one before
 			binnedCells[bin] = append(binnedCells[bin], i)
 			continue
@@ -114,7 +116,8 @@ func DetermineIdealBins(s ScStarrSeqSettings, umiSlice []Read) int {
 	return int(numbers.AverageInt(binSlice))
 }
 
-// BinnedPseudobulk is the psuedobulk function if the -binCells option is used. It adds an addition column to the dataframe corresponding to bin identity
+// BinnedPseudobulk is the psuedobulk function if the -binCells option is used. It adds an addition column to the dataframe corresponding to bin identity.
+// It will handle writing of the pseudobulk maps to the provided EasyWriter input.
 func BinnedPseudobulk(s ScStarrSeqSettings, inSlices [][]Read, out *fileio.EasyWriter) {
 	var i string
 	var count float64
@@ -127,6 +130,9 @@ func BinnedPseudobulk(s ScStarrSeqSettings, inSlices [][]Read, out *fileio.EasyW
 		mp := make(map[string]float64)
 		var toWrite []string
 		for _, j = range bin {
+			if j.Construct == "" {
+				fmt.Println("empty")
+			}
 			count, found = mp[j.Construct]
 			if !found {
 				mp[j.Construct] = 1
@@ -134,6 +140,7 @@ func BinnedPseudobulk(s ScStarrSeqSettings, inSlices [][]Read, out *fileio.EasyW
 				mp[j.Construct] = count + 1
 			}
 		}
+
 		if s.InputNormalize != "" {
 			InputNormalize(mp, s.InputNormalize)
 		}

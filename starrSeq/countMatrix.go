@@ -73,7 +73,6 @@ func MakeCountMatrix(s ScStarrSeqSettings, readSlice []Read, allConstructs []str
 				firstTime = false
 				l.bx = readSlice[i].Bx
 				l.cluster = readSlice[i].Cluster
-				fmt.Println(l)
 			}
 			idx = idxMap[readSlice[i].Construct]
 			l.vals[idx] = l.vals[idx] + 1

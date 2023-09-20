@@ -35,7 +35,6 @@ func parseCellrangerBam(s starrSeq.ScStarrSeqSettings) {
 				"If multiple GEM wells haven't be processed in the same way in Seurat and in the scStarrSeqAnalysis programs, cell lookup for -cellTypeAnalysis will be impaired.")
 		}
 	}
-
 	cellTypeMap := make(map[string]string)
 	if s.ScAnalysis != "" {
 		ck := starrSeq.ReadClusterKey(s.ScAnalysis)
@@ -71,11 +70,13 @@ func parseCellrangerBam(s starrSeq.ScStarrSeqSettings) {
 		}
 		for i := range ch { //iterate of over the chanel of sam.Sam
 			if s.UmiSat != "" {
-				readUmi, _, _ := sam.QueryTag(i, "UB")
-				cb, _, _ := sam.QueryTag(i, "CB")
+				readUmi, foundUMI, _ := sam.QueryTag(i, "UB")
+				cb, foundCb, _ := sam.QueryTag(i, "CB")
 
-				umiBx = fmt.Sprintf("%s_%s", readUmi, cb)
-				umiBxSlice = append(umiBxSlice, umiBx)
+				if foundCb && foundUMI {
+					umiBx = fmt.Sprintf("%s_%s", readUmi, cb)
+					umiBxSlice = append(umiBxSlice, umiBx)
+				}
 			}
 			num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
 			bit = num.(uint8)
@@ -118,7 +119,7 @@ func parseCellrangerBam(s starrSeq.ScStarrSeqSettings) {
 		gemNumber++
 	}
 	fmt.Println("Found this many valid UMIs: ", k)
-	r := starrSeq.ReadSliceAnalysisSettings{ReadSlice: readSlice, FuncSettings: s, AllCellTypes: allCellTypes, AllConstructs: allConstructs, CellTypeMap: cellTypeMap}
+	r := starrSeq.ReadSliceAnalysisSettings{ReadSlice: readSlice, FuncSettings: s, AllCellTypes: allCellTypes, AllConstructs: allConstructs, CellTypeMap: cellTypeMap, UmiBxSlice: umiBxSlice}
 	starrSeq.ReadSliceAnalysis(r)
 }
 
@@ -183,10 +184,10 @@ func main() {
 	if *binCells < 0 {
 		log.Fatalf("Error: -binCells must be a positive intiger")
 	}
-	if *binCells > 0 && *cellTypeAnalysis != "" {
+	if (*binCells > 0 || *determineBins != "") && *cellTypeAnalysis != "" {
 		log.Fatalf("Bin cells cannot be used with -cellTypeAnalysis")
 	}
-	if *altMapping != "" && (*samOut != "" || *umiSat != "" || *noOut) {
+	if *altMapping != "" && *samOut != "" {
 		log.Fatalf("altMapping is not compatable with samOut. If you are interested in collapsing UMI in a sam file use samFilter -collapseUMI")
 	}
 
