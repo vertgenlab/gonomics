@@ -14,7 +14,7 @@ type ScStarrSeqSettings struct {
 	InFile               string
 	OutFile              string
 	InputNormalize       string
-	ByCell               string
+	ValidUmis            string
 	SamOut               string
 	ScAnalysis           string
 	BinCells             int
@@ -46,12 +46,6 @@ type Read struct {
 	Cluster   string
 	Construct string
 	UMI       string
-}
-
-// ClusterKey is a custom struct that stores a cell barcode and the cell type that that barcode belongs to, both as strings
-type ClusterKey struct {
-	Cluster string
-	Bx      string
 }
 
 // SortUmiByCellBx takes in a slice of Read and sorts the slice lexicographically according to the cell barcode
@@ -150,8 +144,8 @@ func WritePseudobulkMap(mp map[string]float64, writer *fileio.EasyWriter) {
 func ReadSliceAnalysis(r ReadSliceAnalysisSettings) {
 	var out *fileio.EasyWriter
 	//all non-defult output options
-	if r.FuncSettings.ByCell != "" {
-		ByCell(r.FuncSettings, r.ReadSlice)
+	if r.FuncSettings.ValidUmis != "" {
+		validUMIs(r.FuncSettings, r.ReadSlice)
 	}
 	if r.FuncSettings.UmiSat != "" {
 		UmiSaturation(r.FuncSettings, r.UmiBxSlice)
@@ -196,11 +190,18 @@ func ReadSliceToPseudobulk(s ScStarrSeqSettings, readSlice []Read) map[string]fl
 	return constructMap
 }
 
-func ByCell(s ScStarrSeqSettings, readSlice []Read) {
-	outByCell := fileio.EasyCreate(s.ByCell)
-	for _, i := range readSlice {
-		fileio.WriteToFileHandle(outByCell, fmt.Sprintf("%s\t%s", i.Bx, i.Construct))
+func validUMIs(s ScStarrSeqSettings, readSlice []Read) {
+	outByRead := fileio.EasyCreate(s.ValidUmis)
+	if s.ScAnalysis != "" || s.CountMatrixCellTypes != "" {
+		for _, i := range readSlice {
+			fileio.WriteToFileHandle(outByRead, fmt.Sprintf("%s\t%s\t%s\t%s", i.Bx, i.UMI, i.Cluster, i.Construct))
+		}
+	} else {
+		for _, i := range readSlice {
+			fileio.WriteToFileHandle(outByRead, fmt.Sprintf("%s\t%s\t%s", i.Bx, i.UMI, i.Construct))
+		}
 	}
-	err := outByCell.Close()
+
+	err := outByRead.Close()
 	exception.PanicOnErr(err)
 }

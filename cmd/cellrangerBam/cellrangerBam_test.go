@@ -13,7 +13,7 @@ var cellrangerBamTests = []struct {
 	OutFile              string
 	ExpectedFile         string
 	InputNormTable       string
-	ByCell               string
+	ValidUmis            string
 	SamOut               string
 	SingleCell           string
 	BinCells             int
@@ -47,7 +47,7 @@ func TestCellrangerBam(t *testing.T) {
 			InFile:               v.InFile,
 			OutFile:              v.OutFile,
 			InputNormalize:       v.InputNormTable,
-			ByCell:               v.ByCell,
+			ValidUmis:            v.ValidUmis,
 			SamOut:               v.SamOut,
 			ScAnalysis:           v.SingleCell,
 			BinCells:             v.BinCells,
@@ -94,11 +94,11 @@ func TestCellrangerBam(t *testing.T) {
 					err = os.Remove(v.ScCount)
 					exception.PanicOnErr(err)
 				}
-			case v.ByCell != "":
-				if !fileio.AreEqual(v.ByCell, v.ExpectedFile) {
-					t.Errorf("Error: cellrangerBam files %s and %s are not equal to one another...", v.ByCell, v.ExpectedFile)
+			case v.ValidUmis != "":
+				if !fileio.AreEqual(v.ValidUmis, v.ExpectedFile) {
+					t.Errorf("Error: cellrangerBam files %s and %s are not equal to one another...", v.ValidUmis, v.ExpectedFile)
 				} else {
-					err = os.Remove(v.ByCell)
+					err = os.Remove(v.ValidUmis)
 					exception.PanicOnErr(err)
 				}
 			}

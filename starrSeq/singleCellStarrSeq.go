@@ -11,6 +11,12 @@ type scStarrSeqMatrix struct {
 	counts    float64
 }
 
+// ClusterKey is a custom struct that stores a cell barcode and the cell type that that barcode belongs to, both as strings
+type ClusterKey struct {
+	Cluster string
+	Bx      string
+}
+
 // SingleCellAnalysis will create a count for each construct in each cell type. This function takes in starrSeqSetting, a readSlice and some cell type info. It will create
 // an output file that has readCounts for each construct in each cell type present. It is compatible with input normalization and either transfection reporter transfection
 // cluster normalization or negative control cluster normalization

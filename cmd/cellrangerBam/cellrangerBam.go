@@ -135,7 +135,7 @@ func usage() {
 }
 
 func main() {
-	var byCell *string = flag.String("byCell", "", "Report the construct that each UMI belongs to and which cell in which it was found in a tab-delimited table."+
+	var validUmis *string = flag.String("validUmis", "", "Report the construct that each UMI belongs to and which cell in which it was found in a tab-delimited table."+
 		" The table will be sent to the provided file name.")
 	var inputNorm *string = flag.String("inputNorm", "", "Takes in a tab delimited table with construct name and input normalization value")
 	var samOut *string = flag.String("samOut", "", "Filter the input bam file by reads that have valid UMIs and send the output, in sam format, to the provdided file name")
@@ -200,7 +200,7 @@ func main() {
 		InFile:           flag.Arg(0),
 		OutFile:          flag.Arg(1),
 		InputNormalize:   *inputNorm,
-		ByCell:           *byCell,
+		ValidUmis:        *validUmis,
 		ScAnalysis:       *cellTypeAnalysis,
 		BinCells:         *binCells,
 		UmiSat:           *umiSat,
