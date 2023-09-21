@@ -17,7 +17,7 @@ func parseCellrangerBam(s starrSeq.ScStarrSeqSettings) {
 	var k int = 0
 	var constructName, umiBx, cellType, cellFormat string
 	var found bool
-	var bit uint8
+	var bit int32
 	var multipleGems = false
 	var gemNumber int = 1
 	var allConstructs, umiBxSlice, allCellTypes []string
@@ -79,7 +79,7 @@ func parseCellrangerBam(s starrSeq.ScStarrSeqSettings) {
 				}
 			}
 			num, _, _ := sam.QueryTag(i, "xf") //xf: extra flags (cellranger flags)
-			bit = num.(uint8)
+			bit = num.(int32)
 			if bit&8 == 8 { // bit 8 is the flag for a UMI that was used in final count. I call these "valid" UMIs.
 				k++
 				if s.Bed != "" {
