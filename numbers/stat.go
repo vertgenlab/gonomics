@@ -57,6 +57,12 @@ func Pearson(a []float64, b []float64) float64 {
 	return num / (math.Sqrt(sumA) * math.Sqrt(sumB))
 }
 
+// WilcoxinRankSum performs a wilcoxin rank-sum test on two slices of float64 and returns a pValue
+/*func WilcoxinRankSum(a []float64, b []float64) float64 {
+	sort.Float64s(a)
+	sort.Float64s(b)
+}
+
 /*
 func TwoSideTTest(a []float64, b []float64) float64 {
 	aAvg := AverageFloat64(a)
