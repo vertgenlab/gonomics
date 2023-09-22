@@ -135,7 +135,7 @@ func usage() {
 }
 
 func main() {
-	var validUmis *string = flag.String("validUmis", "", "Report the construct that each UMI belongs to and which cell in which it was found in a tab-delimited table."+
+	var validUmis *string = flag.String("validUmis", "", "Report the cell barcode, UMI, construct and cell type, if applicable, for each valid / unique UMI."+
 		" The table will be sent to the provided file name.")
 	var inputNorm *string = flag.String("inputNorm", "", "Takes in a tab delimited table with construct name and input normalization value")
 	var samOut *string = flag.String("samOut", "", "Filter the input bam file by reads that have valid UMIs and send the output, in sam format, to the provdided file name")
@@ -165,6 +165,8 @@ func main() {
 		"Provde a bed file with construct names for construct determination.")
 	var countMatrixCellTypes *string = flag.String("countMatrixCellTypes", "", "Provide a tab-delimited file of cellBarcode -- cell type to add an additional column"+
 		"to a count matrix corresponding to cell type.")
+	var stats *string = flag.String("stats", "", "Provide a line-delimited list of negative controll constructs that all constructs will be compared against with a "+
+		"Wilcoxin rank sum test. An additional column with pValue will be added to the pseudobulk map. Must be used with -binCells or -determineBins.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -189,6 +191,9 @@ func main() {
 	}
 	if *altMapping != "" && *samOut != "" {
 		log.Fatalf("altMapping is not compatable with samOut. If you are interested in collapsing UMI in a sam file use samFilter -collapseUMI")
+	}
+	if *stats != "" && (*binCells < 2 || *determineBins != "") {
+		log.Fatalf("-stats must be used with -binCells or -determineBins")
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
@@ -215,6 +220,7 @@ func main() {
 		NoOut:                *noOut,
 		AltMapping:           *altMapping,
 		CountMatrixCellTypes: *countMatrixCellTypes,
+		Stats:                *stats,
 	}
 
 	//output or input sequencing

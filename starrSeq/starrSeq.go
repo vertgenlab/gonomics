@@ -29,6 +29,7 @@ type ScStarrSeqSettings struct {
 	NoOut                bool
 	AltMapping           string
 	CountMatrixCellTypes string
+	Stats                string
 }
 
 type ReadSliceAnalysisSettings struct {

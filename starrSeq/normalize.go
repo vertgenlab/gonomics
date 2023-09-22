@@ -154,15 +154,13 @@ func ParseGfpBam(s ScStarrSeqSettings, cellTypeMap map[string]string, clusterGFP
 				} else {
 					cellBxFormat = cellBx.(string)
 				}
-				cluster, found = cellTypeMap[cellBx.(string)]
+				cluster, found = cellTypeMap[cellBxFormat]
 				switch {
 				case found:
 					gfpUmis = append(gfpUmis, Read{Bx: cellBxFormat, Cluster: cluster, Construct: "GFP"})
+					clusterGFP[cluster] += 1
 				case !found:
 					gfpUmis = append(gfpUmis, Read{Bx: cellBxFormat, Cluster: "undefined", Construct: "GFP"})
-				}
-				if found {
-					clusterGFP[cluster] += 1
 				}
 			}
 		}

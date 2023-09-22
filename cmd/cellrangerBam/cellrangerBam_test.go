@@ -37,6 +37,7 @@ var cellrangerBamTests = []struct {
 	{"testdata/in.bam", "", "testdata/expected.countMatrixNorm.txt", "testdata/inputNormTable.txt", "", "", "", 0, "", "", "", true, "testdata/out.countMatrixNorm.txt", "", ""},
 	{"testdata/in.bam", "", "testdata/expected.countMatrixGFP_cellType.txt", "", "", "", "", 0, "", "testdata/in.gfp.bam", "", true, "testdata/out.countMatrixGFP_cellType.txt", "", "testdata/cellTypes.txt"},
 	{"testdata/in.bam", "testdata/out.altMapping.txt", "testdata/expected.altMapping.txt", "testdata/inputNormTable.txt", "", "", "", 0, "", "", "", false, "", "testdata/in.bed", ""},
+	{"testdata/in.bam,testdata/in2.bam", "testdata/out.pseudobulk.txt", "testdata/expected.pseudobulk2Gems.txt", "", "", "", "", 0, "", "", "", false, "", "", ""},
 }
 
 func TestCellrangerBam(t *testing.T) {
