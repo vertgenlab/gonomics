@@ -61,3 +61,22 @@ func IsSelfOverlapping(b []Bed, verbose int) bool {
 	}
 	return false
 }
+
+func OverlapSize(a Bed, b Bed) int {
+	if !Overlap(a, b) {
+		return 0
+	}
+	switch {
+	case Equal(a, b):
+		return a.ChromEnd - a.ChromStart
+	case a.ChromStart <= b.ChromStart && a.ChromEnd >= b.ChromEnd:
+		return b.ChromEnd - b.ChromStart
+	case a.ChromStart >= b.ChromStart && a.ChromEnd <= b.ChromEnd:
+		return a.ChromEnd - a.ChromStart
+	case a.ChromStart >= b.ChromStart && a.ChromEnd >= b.ChromEnd:
+		return b.ChromEnd - a.ChromStart
+	case a.ChromStart <= b.ChromStart && a.ChromEnd <= b.ChromEnd:
+		return a.ChromEnd - b.ChromStart
+	}
+	return 0
+}

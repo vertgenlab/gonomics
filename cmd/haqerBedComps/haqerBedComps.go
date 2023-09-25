@@ -1,152 +1,165 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
+	"log"
+	"strings"
 )
 
+type settings struct {
+	bedA             string
+	bedB             string
+	outFile          string
+	list             string
+	matrixAverage    string
+	matrixComponents string
+}
+
+type stats struct {
+	percA float64
+	percB float64
+	avg   float64
+}
+
+type matrixLine struct {
+	name string
+	vals []float64
+}
+
+func compareTwo(s settings) {
+	var out []string
+	a := bed.Read(s.bedA)
+	b := bed.Read(s.bedB)
+	intervalsA := interval.BedSliceToIntervals(a)
+	intervalsB := interval.BedSliceToIntervals(b)
+	overlapsA, overlapsB, overlapAverage := interval.IntervalSimilarity(intervalsA, intervalsB)
+	header := fmt.Sprintf("percent overlaps of %s in %s\tpercent overlaps of %s in %s\tbedSimilarityScore\n", s.bedA, s.bedB, s.bedA, s.bedB)
+	data := fmt.Sprintf("%f\t%f\t%f\n", overlapsA, overlapsB, overlapAverage)
+	out = append(out, header)
+	out = append(out, data)
+	fileio.Write(s.outFile, out)
+}
+
+func multipleComparisons(s settings) {
+	var a, b []bed.Bed
+	var intervalsA, intervalsB []interval.Interval
+	var aboveDiagonal bool
+	var stat stats
+	var outMatrix *fileio.EasyWriter
+	var allFiles []string = []string{"x"}
+
+	out := fileio.EasyCreate(s.outFile)
+	fileio.WriteToFileHandle(out, "A\tB\tpercent overlaps of A in B\tpercent overlaps of B in A\tbedSimilarityScore")
+
+	if s.matrixAverage != "" {
+		outMatrix = fileio.EasyCreate(s.matrixAverage)
+	}
+	if s.matrixComponents != "" {
+		outMatrix = fileio.EasyCreate(s.matrixComponents)
+	}
+
+	beds := fileio.Read(s.list)
+	for _, i := range beds {
+		var l matrixLine
+		l.name = i
+		a = bed.Read(i)
+		intervalsA = interval.BedSliceToIntervals(a)
+		for _, j := range beds {
+			aboveDiagonal = false
+			if i == j {
+				aboveDiagonal = true
+				fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%f\t%f\t%f", i, j, 1.0, 1.0, 1.0))
+				if s.matrixComponents != "" || s.matrixAverage != "" {
+					l.vals = append(l.vals, 0)
+				}
+			}
+			b = bed.Read(j)
+			intervalsB = interval.BedSliceToIntervals(b)
+			stat.percA, stat.percB, stat.avg = interval.IntervalSimilarity(intervalsA, intervalsB)
+			fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%f\t%f\t%f", i, j, 1.0, 1.0, 1.0))
+			switch {
+			case s.matrixAverage != "":
+				l.vals = append(l.vals, stat.avg)
+			case s.matrixComponents != "" && aboveDiagonal:
+				l.vals = append(l.vals, stat.percA)
+			case s.matrixComponents != "" && !aboveDiagonal:
+				l.vals = append(l.vals, stat.percB)
+			}
+		}
+		writeMatrixLine(l, outMatrix)
+	}
+
+	for _, i := range beds {
+		allFiles = append(allFiles, i)
+	}
+	tail := strings.Join(allFiles, "\t")
+	fileio.WriteToFileHandle(outMatrix, tail)
+
+	err := out.Close()
+	exception.PanicOnErr(err)
+	err = outMatrix.Close()
+	exception.PanicOnErr(err)
+}
+
+func writeMatrixLine(line matrixLine, outMatrix *fileio.EasyWriter) {
+	
+}
+
+func doWork(s settings) {
+	if s.list == "" {
+		compareTwo(s)
+	} else {
+		multipleComparisons(s)
+	}
+}
+
+func usage() {
+
+}
+
 func main() {
-	small := bed.Read("testdata/smallAJ.bed")
-	large := bed.Read("testdata/largeAJ.bed")
-	answer := asymetricJaccard(small, large, 1)
-	fmt.Println("asymetric Jaccard: ", answer)
-	answer = kulczynski2(small, large)
-	fmt.Println("kulczynski2: ", answer)
-	answer = kulczynski2point0(small, large)
-	fmt.Println("kulczynski2.0: ", answer)
-}
+	var list *string = flag.String("list", "", "Provide a list of bed files and perform an IntervalSimilarity test on all possible combinations")
+	var matrixAverage *string = flag.String("matrix", "", "Provide a filename for a matrix that will have all files from the -list option on the axes. "+
+		"The matrix will be populated with IntervalSimilarity metric. Must be used with -list")
+	var matrixComponents *string = flag.String("matrix", "", "Provide a filename for a matrix that will have all files from the -list option on the axes. The matrix will be "+
+		"populated with the overlap percentage of A in B above the diagonal and B in A below the diagonal. Must be used with -list")
 
-func asymetricJaccard(small []bed.Bed, big []bed.Bed, smallWindowSize int) float64 {
-	var overlap []interval.Interval
-	var totalOverlap int
-	var nonOverlaps int
-	var currOverlap interval.Interval
+	var expectedNumArgs int
 
-	smallIntervalMap := makeIntervalMap(small)
-
-	for _, bd := range big {
-		overlap = interval.Query(smallIntervalMap, bd, "any")
-		if len(overlap) == 0 {
-			nonOverlaps++
-		}
-		for _, currOverlap = range overlap {
-			totalOverlap += overlapSize(bd, currOverlap.(bed.Bed))
-		}
+	if *list != "" {
+		expectedNumArgs = 1
+	} else {
+		expectedNumArgs = 3
 	}
-	totalSizeSmall := bed.TotalSize(small)
-	return float64(totalOverlap) / (float64(nonOverlaps*smallWindowSize) + float64(totalSizeSmall))
-}
 
-func kulczynski2(small []bed.Bed, large []bed.Bed) float64 {
-	// 0.5 * (a/(a+b) + a/(a+c))
-	// a = present in both samples
-	// b = only in small sample
-	// c = only in large sample
+	if len(flag.Args()) != expectedNumArgs {
+		flag.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n",
+			expectedNumArgs, len(flag.Args()))
+	}
 
-	var overlap []interval.Interval
-	var a, b, c int
-
-	smallIntervalMap := makeIntervalMap(small)
-
-	for _, bd := range large {
-		overlap = interval.Query(smallIntervalMap, bd, "any")
-		a += len(overlap)
-		if len(overlap) == 0 {
-			c++
-		} else {
-			//a++
+	var s settings
+	if *list != "" {
+		s = settings{
+			list:             *list,
+			matrixAverage:    *matrixAverage,
+			matrixComponents: *matrixComponents,
+			outFile:          flag.Arg(0),
+		}
+	} else {
+		s = settings{
+			list:             *list,
+			matrixAverage:    *matrixAverage,
+			matrixComponents: *matrixComponents,
+			bedA:             flag.Arg(0),
+			bedB:             flag.Arg(1),
+			outFile:          flag.Arg(2),
 		}
 	}
-
-	bigIntervalMap := makeIntervalMap(large)
-	for _, bd := range small {
-		overlap = interval.Query(bigIntervalMap, bd, "any")
-		if len(overlap) == 0 {
-			b++
-		}
-	}
-	return 0.5 * ((float64(a) / float64(a+b)) + (float64(a) / float64(a+c)))
-}
-
-func kulczynski2point0(small []bed.Bed, large []bed.Bed) float64 {
-	var overlapSmall, overlapLarge, allLargeOverlaps, allSmallOverlaps []interval.Interval
-
-	smallIntervalMap := makeIntervalMap(small)
-	largeIntervalMap := makeIntervalMap(large)
-	for _, bd := range large {
-		overlapSmall = interval.Query(smallIntervalMap, bd, "any")
-		for _, i := range overlapSmall {
-			allSmallOverlaps = append(allSmallOverlaps, i)
-		}
-	}
-	for _, bd := range small {
-		overlapLarge = interval.Query(largeIntervalMap, bd, "any")
-		for _, i := range overlapLarge {
-			allLargeOverlaps = append(allLargeOverlaps, i)
-		}
-	}
-
-	allSmallOverlapsBed := sliceIntervalToBed(allSmallOverlaps)
-	allLargeOverlapsBed := sliceIntervalToBed(allLargeOverlaps)
-	bed.SortByCoord(allSmallOverlapsBed)
-	bed.SortByCoord(allLargeOverlapsBed)
-	uniqueSmallOverlapBeds := unique(allSmallOverlapsBed)
-	uniqueLargeOverlapBeds := unique(allLargeOverlapsBed)
-
-	smallOverlapPerc := float64(len(uniqueSmallOverlapBeds)) / float64(len(small))
-	bigOverlapPerc := float64(len(uniqueLargeOverlapBeds)) / float64(len(large))
-
-	return (smallOverlapPerc + bigOverlapPerc) / 2
-}
-
-func makeIntervalMap(inBed []bed.Bed) map[string]*interval.IntervalNode {
-	var smallWindowIntervals []interval.Interval
-
-	for bd := range inBed {
-		smallWindowIntervals = append(smallWindowIntervals, inBed[bd])
-	}
-	return interval.BuildTree(smallWindowIntervals)
-}
-
-func overlapSize(a bed.Bed, b bed.Bed) int {
-	if !bed.Overlap(a, b) {
-		return 0
-	}
-	switch {
-	case bed.Equal(a, b):
-		return a.ChromEnd - a.ChromStart
-	case a.ChromStart <= b.ChromStart && a.ChromEnd >= b.ChromEnd:
-		return b.ChromEnd - b.ChromStart
-	case a.ChromStart >= b.ChromStart && a.ChromEnd <= b.ChromEnd:
-		return a.ChromEnd - a.ChromStart
-	case a.ChromStart >= b.ChromStart && a.ChromEnd >= b.ChromEnd:
-		return b.ChromEnd - a.ChromStart
-	case a.ChromStart <= b.ChromStart && a.ChromEnd <= b.ChromEnd:
-		return a.ChromEnd - b.ChromStart
-	}
-	return 0
-}
-
-func sliceIntervalToBed(intervals []interval.Interval) []bed.Bed {
-	var bedSlice []bed.Bed
-	for _, i := range intervals {
-		bedSlice = append(bedSlice, i.(bed.Bed))
-	}
-	return bedSlice
-}
-
-func unique(regions []bed.Bed) []bed.Bed {
-	var uniqueRegions []bed.Bed
-
-	currRegion := regions[0]
-	for _, i := range regions {
-		if bed.Equal(currRegion, i) {
-			continue
-		}
-		uniqueRegions = append(uniqueRegions, currRegion)
-		currRegion = i
-	}
-	uniqueRegions = append(uniqueRegions, currRegion)
-	return uniqueRegions
+	doWork(s)
 }
