@@ -1,7 +1,6 @@
 package main
 
 //TODO : add check for self-overlap bed files
-//TODO : Remove file-name path in matrix output
 //TODO: add enrichment calculations
 
 import (
@@ -33,10 +32,8 @@ func compareTwo(s settings) {
 	var out []string
 	a := bed.Read(s.bedA)
 	b := bed.Read(s.bedB)
-	aNameSlice := strings.Split(s.bedA, "/")
-	aName := aNameSlice[len(aNameSlice)-1]
-	bNameSlice := strings.Split(s.bedB, "/")
-	bName := bNameSlice[len(bNameSlice)-1]
+	aName := separatePath(s.bedA)
+	bName := separatePath(s.bedB)
 	intervalsA := interval.BedSliceToIntervals(a)
 	intervalsB := interval.BedSliceToIntervals(b)
 	overlapsA, overlapsB, overlapAverage := interval.IntervalSimilarity(intervalsA, intervalsB)
@@ -55,7 +52,6 @@ func multipleComparisons(s settings) {
 	var err error
 	var j int
 	var l matrixLine
-	var aNameSlice, bNameSlice []string
 	var aName, bName string
 	var allFiles []string = []string{"x"}
 
@@ -73,18 +69,15 @@ func multipleComparisons(s settings) {
 
 	if s.matrixAverage != "" || s.matrixComponents != "" {
 		for _, i := range files {
-			aNameSlice = strings.Split(i, "/")
-			aName = aNameSlice[len(aNameSlice)-1]
-			allFiles = append(allFiles, aName)
+			allFiles = append(allFiles, separatePath(i))
 		}
 		header := strings.Join(allFiles, "\t")
 		fileio.WriteToFileHandle(outMatrix, header)
 	}
 
 	for i := range files {
-		aNameSlice = strings.Split(files[i], "/")
-		aName = aNameSlice[len(aNameSlice)-1]
-		l.name = aName
+		l.name = separatePath(files[i])
+		aName = separatePath(files[i])
 		l.vals = []float64{}
 		a = bed.Read(files[i])
 		intervalsA = interval.BedSliceToIntervals(a)
@@ -96,8 +89,7 @@ func multipleComparisons(s settings) {
 				continue
 			}
 			b = bed.Read(files[j])
-			bNameSlice = strings.Split(files[j], "/")
-			bName = bNameSlice[len(bNameSlice)-1]
+			bName = separatePath(files[j])
 			intervalsB = interval.BedSliceToIntervals(b)
 			percA, percB, avg = interval.IntervalSimilarity(intervalsA, intervalsB)
 			if j > i {
@@ -138,6 +130,11 @@ func bedSimilarityComp(s settings) {
 	} else {
 		multipleComparisons(s)
 	}
+}
+
+func separatePath(path string) string {
+	pathSlice := strings.Split(path, "/")
+	return pathSlice[len(pathSlice)-1]
 }
 
 func usage() {
