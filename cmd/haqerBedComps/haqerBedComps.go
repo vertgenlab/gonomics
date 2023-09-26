@@ -54,6 +54,7 @@ func multipleComparisons(s settings) {
 	var outMatrix *fileio.EasyWriter
 	var err error
 	var j int
+	var l matrixLine
 	var allFiles []string = []string{"x"}
 
 	out := fileio.EasyCreate(s.outFile)
@@ -68,8 +69,8 @@ func multipleComparisons(s settings) {
 
 	beds := fileio.Read(s.list)
 	for i := range beds {
-		var l matrixLine
 		l.name = beds[i]
+		l.vals = []float64{}
 		a = bed.Read(beds[i])
 		intervalsA = interval.BedSliceToIntervals(a)
 		for j = range beds {
