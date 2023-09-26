@@ -1,5 +1,8 @@
 package main
 
+//TODO : add check for self-overlap bed files
+//TODO : Remove file-name path in matrix output
+
 import (
 	"flag"
 	"fmt"
