@@ -2,6 +2,7 @@ package main
 
 //TODO : add check for self-overlap bed files
 //TODO : Remove file-name path in matrix output
+//TODO: add enrichment calculations
 
 import (
 	"flag"
@@ -21,12 +22,6 @@ type settings struct {
 	list             string
 	matrixAverage    string
 	matrixComponents string
-}
-
-type stats struct {
-	percA float64
-	percB float64
-	avg   float64
 }
 
 type matrixLine struct {
@@ -55,7 +50,7 @@ func compareTwo(s settings) {
 func multipleComparisons(s settings) {
 	var a, b []bed.Bed
 	var intervalsA, intervalsB []interval.Interval
-	var stat stats
+	var percA, percB, avg float64
 	var outMatrix *fileio.EasyWriter
 	var err error
 	var j int
@@ -87,15 +82,15 @@ func multipleComparisons(s settings) {
 			}
 			b = bed.Read(beds[j])
 			intervalsB = interval.BedSliceToIntervals(b)
-			stat.percA, stat.percB, stat.avg = interval.IntervalSimilarity(intervalsA, intervalsB)
+			percA, percB, avg = interval.IntervalSimilarity(intervalsA, intervalsB)
 			if j > i {
-				fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%f\t%f\t%f", beds[i], beds[j], stat.percA, stat.percB, stat.avg))
+				fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%f\t%f\t%f", beds[i], beds[j], percA, percB, avg))
 			}
 
 			if s.matrixAverage != "" {
-				l.vals = append(l.vals, stat.avg)
+				l.vals = append(l.vals, avg)
 			} else if s.matrixComponents != "" {
-				l.vals = append(l.vals, stat.percA)
+				l.vals = append(l.vals, percA)
 			}
 		}
 		if s.matrixAverage != "" || s.matrixComponents != "" {
