@@ -68,6 +68,15 @@ func multipleComparisons(s settings) {
 	}
 
 	beds := fileio.Read(s.list)
+
+	if s.matrixAverage != "" || s.matrixComponents != "" {
+		for _, i := range beds {
+			allFiles = append(allFiles, i)
+		}
+		header := strings.Join(allFiles, "\t")
+		fileio.WriteToFileHandle(outMatrix, header)
+	}
+
 	for i := range beds {
 		l.name = beds[i]
 		l.vals = []float64{}
@@ -75,7 +84,6 @@ func multipleComparisons(s settings) {
 		intervalsA = interval.BedSliceToIntervals(a)
 		for j = range beds {
 			if beds[i] == beds[j] {
-				//fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%f\t%f\t%f", beds[i], beds[j], 1.0, 1.0, 1.0))
 				if s.matrixComponents != "" || s.matrixAverage != "" {
 					l.vals = append(l.vals, 1.0)
 				}
@@ -101,13 +109,7 @@ func multipleComparisons(s settings) {
 
 	err = out.Close()
 	exception.PanicOnErr(err)
-
 	if s.matrixAverage != "" || s.matrixComponents != "" {
-		for _, i := range beds {
-			allFiles = append(allFiles, i)
-		}
-		tail := strings.Join(allFiles, "\t")
-		fileio.WriteToFileHandle(outMatrix, tail)
 		err = outMatrix.Close()
 		exception.PanicOnErr(err)
 	}
