@@ -1,0 +1,4 @@
+A	B	percent overlaps of A in B	percent overlaps of B in A	bedSimilarityScore
+testdata/smallAJ.bed	testdata/largeAJ.bed	0.750000	0.666667	0.708333
+testdata/smallAJ.bed	testdata/thirdBed.bed	0.750000	0.500000	0.625000
+testdata/largeAJ.bed	testdata/thirdBed.bed	0.333333	0.500000	0.416667

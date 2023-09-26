@@ -1,0 +1,2 @@
+percent overlaps of smallAJ.bed in largeAJ.bed	percent overlaps of largeAJ.bed in smallAJ.bed	bedSimilarityScore
+0.750000	0.666667	0.708333

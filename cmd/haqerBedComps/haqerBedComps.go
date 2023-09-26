@@ -35,11 +35,15 @@ func compareTwo(s settings) {
 	var out []string
 	a := bed.Read(s.bedA)
 	b := bed.Read(s.bedB)
+	aNameSlice := strings.Split(s.bedA, "/")
+	aName := aNameSlice[len(aNameSlice)-1]
+	bNameSlice := strings.Split(s.bedB, "/")
+	bName := bNameSlice[len(bNameSlice)-1]
 	intervalsA := interval.BedSliceToIntervals(a)
 	intervalsB := interval.BedSliceToIntervals(b)
 	overlapsA, overlapsB, overlapAverage := interval.IntervalSimilarity(intervalsA, intervalsB)
-	header := fmt.Sprintf("percent overlaps of %s in %s\tpercent overlaps of %s in %s\tbedSimilarityScore\n", s.bedA, s.bedB, s.bedA, s.bedB)
-	data := fmt.Sprintf("%f\t%f\t%f\n", overlapsA, overlapsB, overlapAverage)
+	header := fmt.Sprintf("percent overlaps of %s in %s\tpercent overlaps of %s in %s\tbedSimilarityScore", aName, bName, bName, aName)
+	data := fmt.Sprintf("%f\t%f\t%f", overlapsA, overlapsB, overlapAverage)
 	out = append(out, header)
 	out = append(out, data)
 	fileio.Write(s.outFile, out)
@@ -48,9 +52,10 @@ func compareTwo(s settings) {
 func multipleComparisons(s settings) {
 	var a, b []bed.Bed
 	var intervalsA, intervalsB []interval.Interval
-	var aboveDiagonal bool
 	var stat stats
 	var outMatrix *fileio.EasyWriter
+	var err error
+	var j int
 	var allFiles []string = []string{"x"}
 
 	out := fileio.EasyCreate(s.outFile)
@@ -64,50 +69,58 @@ func multipleComparisons(s settings) {
 	}
 
 	beds := fileio.Read(s.list)
-	for _, i := range beds {
+	for i := range beds {
 		var l matrixLine
-		l.name = i
-		a = bed.Read(i)
+		l.name = beds[i]
+		a = bed.Read(beds[i])
 		intervalsA = interval.BedSliceToIntervals(a)
-		for _, j := range beds {
-			aboveDiagonal = false
-			if i == j {
-				aboveDiagonal = true
-				fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%f\t%f\t%f", i, j, 1.0, 1.0, 1.0))
+		for j = range beds {
+			if beds[i] == beds[j] {
+				//fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%f\t%f\t%f", beds[i], beds[j], 1.0, 1.0, 1.0))
 				if s.matrixComponents != "" || s.matrixAverage != "" {
-					l.vals = append(l.vals, 0)
+					l.vals = append(l.vals, 1.0)
 				}
+				continue
 			}
-			b = bed.Read(j)
+			b = bed.Read(beds[j])
 			intervalsB = interval.BedSliceToIntervals(b)
 			stat.percA, stat.percB, stat.avg = interval.IntervalSimilarity(intervalsA, intervalsB)
-			fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%f\t%f\t%f", i, j, 1.0, 1.0, 1.0))
-			switch {
-			case s.matrixAverage != "":
+			if j > i {
+				fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%f\t%f\t%f", beds[i], beds[j], stat.percA, stat.percB, stat.avg))
+			}
+
+			if s.matrixAverage != "" {
 				l.vals = append(l.vals, stat.avg)
-			case s.matrixComponents != "" && aboveDiagonal:
+			} else if s.matrixComponents != "" {
 				l.vals = append(l.vals, stat.percA)
-			case s.matrixComponents != "" && !aboveDiagonal:
-				l.vals = append(l.vals, stat.percB)
 			}
 		}
-		writeMatrixLine(l, outMatrix)
+		if s.matrixAverage != "" || s.matrixComponents != "" {
+			writeMatrixLine(l, outMatrix)
+		}
 	}
 
-	for _, i := range beds {
-		allFiles = append(allFiles, i)
-	}
-	tail := strings.Join(allFiles, "\t")
-	fileio.WriteToFileHandle(outMatrix, tail)
+	err = out.Close()
+	exception.PanicOnErr(err)
 
-	err := out.Close()
-	exception.PanicOnErr(err)
-	err = outMatrix.Close()
-	exception.PanicOnErr(err)
+	if s.matrixAverage != "" || s.matrixComponents != "" {
+		for _, i := range beds {
+			allFiles = append(allFiles, i)
+		}
+		tail := strings.Join(allFiles, "\t")
+		fileio.WriteToFileHandle(outMatrix, tail)
+		err = outMatrix.Close()
+		exception.PanicOnErr(err)
+	}
 }
 
 func writeMatrixLine(line matrixLine, outMatrix *fileio.EasyWriter) {
-	
+	toWrite := []string{line.name}
+	for _, i := range line.vals {
+		toWrite = append(toWrite, fmt.Sprintf("%f", i))
+	}
+	write := strings.Join(toWrite, "\t")
+	fileio.WriteToFileHandle(outMatrix, write)
 }
 
 func doWork(s settings) {
@@ -119,17 +132,31 @@ func doWork(s settings) {
 }
 
 func usage() {
-
+	fmt.Print("haqerBedComps -- Takes in 2 bed files or a list of bed files and give similarity statistics based on number of overlaps" +
+		"for the input bed files.\n" +
+		"If the -list option is used, all combinations of provided files (excluding the comparison with itself) will be performed. " +
+		"The statistics are: the percentage of elements that have an overlap an element in the second bed file, " +
+		"the percentage of elements in the second bed file that overlap an element in the first bed file, and " +
+		"the average of the two overlap percentages (a metric of overall similarity between the two bed files)." +
+		"When using the -list option, either matrix option can be used to create a heatmap of similarities scores for all bed files in the list\n\n" +
+		"Usage: \n" +
+		"haqerBedComps inBedA inBedB outFile\n" +
+		"or\n" +
+		"haqerBedComps -list list.txt [options] outFile\n\n")
+	flag.PrintDefaults()
 }
 
 func main() {
 	var list *string = flag.String("list", "", "Provide a list of bed files and perform an IntervalSimilarity test on all possible combinations")
-	var matrixAverage *string = flag.String("matrix", "", "Provide a filename for a matrix that will have all files from the -list option on the axes. "+
+	var matrixAverage *string = flag.String("matrixAverage", "", "Provide a filename for a matrix that will have all files from the -list option on both axes. "+
 		"The matrix will be populated with IntervalSimilarity metric. Must be used with -list")
-	var matrixComponents *string = flag.String("matrix", "", "Provide a filename for a matrix that will have all files from the -list option on the axes. The matrix will be "+
-		"populated with the overlap percentage of A in B above the diagonal and B in A below the diagonal. Must be used with -list")
+	var matrixComponents *string = flag.String("matrixComponents", "", "Provide a filename for a matrix that will have all files from the -list option on both axes. "+
+		"The matrix will be populated with the overlap percentage of elements from the file on the vertical axis with the file on the horizontal axis. Must be used with -list")
 
 	var expectedNumArgs int
+	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	flag.Parse()
 
 	if *list != "" {
 		expectedNumArgs = 1
@@ -141,6 +168,10 @@ func main() {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(flag.Args()))
+	}
+
+	if *matrixAverage != "" && *matrixComponents != "" {
+		log.Fatalf("-matrixAverage and -matrixComponents cannot be used together")
 	}
 
 	var s settings

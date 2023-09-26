@@ -1,0 +1,4 @@
+testdata/smallAJ.bed	1.000000	0.750000	0.750000
+testdata/largeAJ.bed	0.666667	1.000000	0.333333
+testdata/thirdBed.bed	0.500000	0.500000	1.000000
+x	testdata/smallAJ.bed	testdata/largeAJ.bed	testdata/thirdBed.bed

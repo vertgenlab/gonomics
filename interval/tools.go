@@ -13,7 +13,7 @@ func CoordsToString(i Interval) string {
 }
 
 // IntervalSimilarity takes in two slices of interval and returns the proportion of elements in the first slice that overlap an element in the second slice, the proportion of elements in the second slice
-// that overlap an element in the first slice and the average of those two metrics (a metric of how similar the two interval sets are). Interval sets must not be self-overlapping
+// that overlap an element in the first slice, and the average of those two metrics (a metric of how similar the two interval sets are). Interval sets must not be self-overlapping
 func IntervalSimilarity(a []Interval, b []Interval) (float64, float64, float64) {
 	var overlapSmall, overlapLarge, allLargeOverlaps, allSmallOverlaps []Interval
 
@@ -104,6 +104,7 @@ func Unique(regions []Interval) []Interval {
 	return uniqueRegions
 }
 
+// BedSliceToIntervals takes in a slice of beds and returns a slice of intervals. Useful before using BuildTree
 func BedSliceToIntervals(inBed []bed.Bed) []Interval {
 	var intervalSlice []Interval
 
