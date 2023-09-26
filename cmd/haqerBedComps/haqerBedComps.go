@@ -40,7 +40,7 @@ func compareTwo(s settings) {
 	intervalsA := interval.BedSliceToIntervals(a)
 	intervalsB := interval.BedSliceToIntervals(b)
 	overlapsA, overlapsB, overlapAverage := interval.IntervalSimilarity(intervalsA, intervalsB)
-	header := fmt.Sprintf("percent overlaps of %s in %s\tpercent overlaps of %s in %s\tbedSimilarityScore", aName, bName, bName, aName)
+	header := fmt.Sprintf("proportion overlaps of %s in %s\tproportion overlaps of %s in %s\tbedSimilarityScore", aName, bName, bName, aName)
 	data := fmt.Sprintf("%f\t%f\t%f", overlapsA, overlapsB, overlapAverage)
 	out = append(out, header)
 	out = append(out, data)
@@ -57,7 +57,7 @@ func multipleComparisons(s settings) {
 	var allFiles []string = []string{"x"}
 
 	out := fileio.EasyCreate(s.outFile)
-	fileio.WriteToFileHandle(out, "A\tB\tpercent overlaps of A in B\tpercent overlaps of B in A\tbedSimilarityScore")
+	fileio.WriteToFileHandle(out, "A\tB\tproportion overlaps of A in B\tproportion overlaps of B in A\tbedSimilarityScore")
 
 	if s.matrixAverage != "" {
 		outMatrix = fileio.EasyCreate(s.matrixAverage)
@@ -121,7 +121,7 @@ func writeMatrixLine(line matrixLine, outMatrix *fileio.EasyWriter) {
 	fileio.WriteToFileHandle(outMatrix, write)
 }
 
-func doWork(s settings) {
+func bedSimilarityComp(s settings) {
 	if s.list == "" {
 		compareTwo(s)
 	} else {
@@ -190,5 +190,5 @@ func main() {
 			outFile:          flag.Arg(2),
 		}
 	}
-	doWork(s)
+	bedSimilarityComp(s)
 }

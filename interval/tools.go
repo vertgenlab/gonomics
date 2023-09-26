@@ -68,6 +68,7 @@ func SortByCoord(in []Interval) {
 	sort.Slice(in, func(i, j int) bool { return compare(in[i], in[j]) == -1 })
 }
 
+// compare is a helper function for SortByCoord. It returns -1 if a is before b, and 1 if b is before a. It will return 0 if the intervals are identical.haqerBedComps_test.go
 func compare(a Interval, b Interval) int {
 	chromComp := strings.Compare(a.GetChrom(), b.GetChrom())
 	if chromComp != 0 {
@@ -88,7 +89,7 @@ func compare(a Interval, b Interval) int {
 	return 0
 }
 
-// Unique takes in a slice of Interval and returns a slice of Interval with only unique interval entries (determined by coordinates). The last instance of each interval is kept.
+// Unique takes in a slice of Interval and returns a slice of Interval with only unique interval entries (determined by coordinates). The first instance of each interval is kept.
 func Unique(regions []Interval) []Interval {
 	var uniqueRegions []Interval
 
