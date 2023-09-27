@@ -33,9 +33,6 @@ func gafFilter(s Settings) {
 			}
 		}
 
-		//debugging
-		fmt.Printf("curr.Qualifier: %s\n", curr.Qualifier)
-
 		if pass {
 			gaf.WriteGaf(out, curr)
 		}
