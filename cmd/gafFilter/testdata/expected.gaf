@@ -1,3 +1,44 @@
+!gaf-version: 2.2
+!
+!generated-by: GOC
+!
+!date-generated: 2023-07-29T02:43
+!
+!Header from source association file:
+!=================================
+!
+!generated-by: GOC
+!
+!date-generated: 2023-07-28T14:15
+!
+!Header from goa_human source association file:
+!=================================
+!
+!The set of protein accessions included in this file is based on UniProt reference proteomes, which provide one protein per gene.
+!They include the protein sequences annotated in Swiss-Prot or the longest TrEMBL transcript if there is no Swiss-Prot record.
+!If a particular protein accession is not annotated with GO, then it will not appear in this file.
+!
+!Note that the annotation set in this file is filtered in order to reduce redundancy; the full, unfiltered set can be found in
+!ftp://ftp.ebi.ac.uk/pub/databases/GO/goa/UNIPROT/goa_uniprot_all.gz
+!
+!date-generated: 2023-07-12 10:33
+!generated-by: UniProt
+!go-version: http://purl.obolibrary.org/obo/go/releases/2023-07-10/extensions/go-plus.owl
+!
+!=================================
+!
+!Header copied from paint_goa_human_valid.gaf
+!=================================
+!Created on Mon Jun  5 16:28:57 2023.
+!generated-by: PANTHER
+!date-generated: 2023-06-05
+!PANTHER version: v.17.0.
+!GO version: 2023-05-10.
+!
+!=================================
+!
+!Documentation about this header can be found here: https://github.com/geneontology/go-site/blob/master/docs/gaf_validation.md
+!
 UniProtKB	A0A024RBG1	NUDT4B	enables	GO:0003723	GO_REF:0000043	IEA	UniProtKB-KW:KW-0694	F	Diphosphoinositol polyphosphate phosphohydrolase NUDT4B	NUDT4B	protein	taxon:9606	20230703	UniProt		
 UniProtKB	A0A024RBG1	NUDT4B	enables	GO:0046872	GO_REF:0000043	IEA	UniProtKB-KW:KW-0479	F	Diphosphoinositol polyphosphate phosphohydrolase NUDT4B	NUDT4B	protein	taxon:9606	20230703	UniProt		
 UniProtKB	A0A024RBG1	NUDT4B	located_in	GO:0005829	GO_REF:0000052	IDA		C	Diphosphoinositol polyphosphate phosphohydrolase NUDT4B	NUDT4B	protein	taxon:9606	20230619	HPA		

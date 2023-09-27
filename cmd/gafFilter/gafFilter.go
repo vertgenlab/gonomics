@@ -22,8 +22,10 @@ type Settings struct {
 func gafFilter(s Settings) {
 	var pass bool = false
 
-	gafChan, _ := gaf.GoReadToChan(s.InFile)
+	gafChan, header := gaf.GoReadToChan(s.InFile)
 	out := fileio.EasyCreate(s.OutFile)
+
+	gaf.WriteHeaderToFileHandle(out, header)
 
 	for curr := range gafChan {
 		pass = true
