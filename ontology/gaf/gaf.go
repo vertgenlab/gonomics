@@ -86,7 +86,7 @@ func ReadHeader(file *fileio.EasyReader) Header {
 	return answer
 }
 
-// WriteGaf writes an input Bed struct to an io.Writer.
+// WriteGaf writes an input Gaf struct to an io.Writer.
 func WriteGaf(file io.Writer, input Gaf) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", input)
