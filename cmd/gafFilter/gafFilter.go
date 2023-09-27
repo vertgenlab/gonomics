@@ -10,6 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/ontology/gaf"
 	"log"
+	"strings"
 )
 
 type Settings struct {
@@ -26,13 +27,14 @@ func gafFilter(s Settings) {
 
 	for curr := range gafChan {
 		pass = true
-		/*if s.Chrom != "" {
-			if curr.Chrom != s.Chrom {
+		if s.RemoveNot {
+			if strings.Contains(curr.Qualifier, "NOT") {
 				pass = false
 			}
-		}*/
+		}
 
-		fmt.Printf("curr.Qualifier: %s", curr.Qualifier)
+		//debugging
+		fmt.Printf("curr.Qualifier: %s\n", curr.Qualifier)
 
 		if pass {
 			gaf.WriteGaf(out, curr)
