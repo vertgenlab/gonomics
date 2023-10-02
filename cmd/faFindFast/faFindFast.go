@@ -9,6 +9,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"math"
+	"os"
+	"runtime/pprof"
 
 	"github.com/vertgenlab/gonomics/fasta"
 )
@@ -88,6 +90,8 @@ func main() {
 	var longOutput *bool = flag.Bool("longOutput", false, "Print percent diverged and raw -Log10PValue in output. Requires the 'divergenceRate' argument.")
 	var divergenceRate *float64 = flag.Float64("divergenceRate", math.MaxFloat64, "Set the null divergence rate for p value calculations with 'longOutput'.")
 	var outputAlnPos *bool = flag.Bool("outputAlnPos", false, "Print the alignment position of the window's start in output as the last column.")
+	// for go proflier cpu
+	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 	if *longOutput && *divergenceRate == math.MaxFloat64 {
 		log.Fatalf("Error: must set a 'divergenceRate' if using the 'longOutput' option.\n")
@@ -102,6 +106,16 @@ func main() {
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
+
+	// for go profiler cpu
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
