@@ -32,9 +32,6 @@ func IntervalSimilarity(a []Interval, b []Interval) (float64, float64, float64) 
 		}
 	}
 
-	SortByCoord(allOverlapsA)
-	SortByCoord(allOverlapsB)
-
 	allUniqOverlapsA := Unique(allOverlapsA)
 	allUniqOverlapsB := Unique(allOverlapsB)
 
@@ -90,9 +87,11 @@ func compare(a Interval, b Interval) int {
 }
 
 // Unique takes in a slice of Interval and returns a slice of Interval with only unique interval entries (determined by coordinates). The first instance of each interval is kept.
+// The output will be sorted by position
 func Unique(regions []Interval) []Interval {
 	var uniqueRegions []Interval
 
+	SortByCoord(regions)
 	currRegion := regions[0]
 	for _, i := range regions {
 		if AreEqual(currRegion, i) {
