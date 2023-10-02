@@ -34,7 +34,7 @@ func TestHaqerBedComps(t *testing.T) {
 			matrixComponents: i.matrixComponents,
 			matrixAverage:    i.matrixAverage,
 		}
-		bedSimilarityComp(s)
+		bedSimilarity(s)
 		if !fileio.AreEqual(i.outFile, i.expFile) {
 			t.Errorf("Error: test files %s and %s are not equal to one another...", i.outFile, i.expFile)
 		} else {

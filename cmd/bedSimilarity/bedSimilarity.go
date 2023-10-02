@@ -124,7 +124,7 @@ func writeMatrixLine(line matrixLine, outMatrix *fileio.EasyWriter) {
 	fileio.WriteToFileHandle(outMatrix, write)
 }
 
-func bedSimilarityComp(s settings) {
+func bedSimilarity(s settings) {
 	if s.list == "" {
 		compareTwo(s)
 	} else {
@@ -198,5 +198,5 @@ func main() {
 			outFile:          flag.Arg(2),
 		}
 	}
-	bedSimilarityComp(s)
+	bedSimilarity(s)
 }
