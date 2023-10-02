@@ -2,9 +2,9 @@ package bed
 
 import (
 	"fmt"
-
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record.
@@ -66,17 +66,5 @@ func OverlapSize(a Bed, b Bed) int {
 	if !Overlap(a, b) {
 		return 0
 	}
-	switch {
-	case Equal(a, b):
-		return a.ChromEnd - a.ChromStart
-	case a.ChromStart <= b.ChromStart && a.ChromEnd >= b.ChromEnd:
-		return b.ChromEnd - b.ChromStart
-	case a.ChromStart >= b.ChromStart && a.ChromEnd <= b.ChromEnd:
-		return a.ChromEnd - a.ChromStart
-	case a.ChromStart >= b.ChromStart && a.ChromEnd >= b.ChromEnd:
-		return b.ChromEnd - a.ChromStart
-	case a.ChromStart <= b.ChromStart && a.ChromEnd <= b.ChromEnd:
-		return a.ChromEnd - b.ChromStart
-	}
-	return 0
+	return numbers.Min(a.ChromEnd, b.ChromEnd) - numbers.Max(a.ChromStart, b.ChromStart)
 }
