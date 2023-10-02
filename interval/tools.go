@@ -15,33 +15,33 @@ func CoordsToString(i Interval) string {
 // IntervalSimilarity takes in two slices of interval and returns the proportion of elements in the first slice that overlap an element in the second slice, the proportion of elements in the second slice
 // that overlap an element in the first slice, and the average of those two metrics (a metric of how similar the two interval sets are). Interval sets must not be self-overlapping
 func IntervalSimilarity(a []Interval, b []Interval) (float64, float64, float64) {
-	var overlapSmall, overlapLarge, allLargeOverlaps, allSmallOverlaps []Interval
+	var overlapsA, overlapsB, allOverlapsA, allOverlapsB []Interval
 
-	smallIntervalMap := BuildTree(a)
-	largeIntervalMap := BuildTree(b)
+	intervalMapA := BuildTree(a)
+	intervalMapB := BuildTree(b)
 	for _, bd := range b {
-		overlapSmall = Query(smallIntervalMap, bd, "any")
-		for _, i := range overlapSmall {
-			allSmallOverlaps = append(allSmallOverlaps, i)
+		overlapsA = Query(intervalMapA, bd, "any")
+		for _, i := range overlapsA {
+			allOverlapsA = append(allOverlapsA, i)
 		}
 	}
 	for _, bd := range a {
-		overlapLarge = Query(largeIntervalMap, bd, "any")
-		for _, i := range overlapLarge {
-			allLargeOverlaps = append(allLargeOverlaps, i)
+		overlapsB = Query(intervalMapB, bd, "any")
+		for _, i := range overlapsB {
+			allOverlapsB = append(allOverlapsB, i)
 		}
 	}
 
-	SortByCoord(allSmallOverlaps)
-	SortByCoord(allLargeOverlaps)
+	SortByCoord(allOverlapsA)
+	SortByCoord(allOverlapsB)
 
-	allSmallOverlapsUniq := Unique(allSmallOverlaps)
-	allLargeOverlapsUniq := Unique(allLargeOverlaps)
+	allUniqOverlapsA := Unique(allOverlapsA)
+	allUniqOverlapsB := Unique(allOverlapsB)
 
-	smallOverlapPerc := float64(len(allSmallOverlapsUniq)) / float64(len(a))
-	bigOverlapPerc := float64(len(allLargeOverlapsUniq)) / float64(len(b))
+	overlapPercA := float64(len(allUniqOverlapsA)) / float64(len(a))
+	overlapPercB := float64(len(allUniqOverlapsB)) / float64(len(b))
 
-	return smallOverlapPerc, bigOverlapPerc, (smallOverlapPerc + bigOverlapPerc) / 2
+	return overlapPercA, overlapPercB, (overlapPercA + overlapPercB) / 2
 }
 
 // BedSliceToIntervalMap takes in a slice of bed and returns a map of string -- *IntervalNode which can be used for interval.Query

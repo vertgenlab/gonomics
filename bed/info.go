@@ -62,6 +62,7 @@ func IsSelfOverlapping(b []Bed, verbose int) bool {
 	return false
 }
 
+// OverlapSize will return an int corresponding to the overlap size between two Bed elements. If the elements are non-overlapping it will return 0.
 func OverlapSize(a Bed, b Bed) int {
 	if !Overlap(a, b) {
 		return 0
