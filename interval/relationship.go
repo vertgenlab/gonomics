@@ -7,7 +7,7 @@ import (
 
 const (
 	xMin = 0
-	xMax = 10000000000 // maximum size of genome
+	xMax = 10_000_000_000 // maximum size of genome
 )
 
 // TestValidRelationship tests that the input relationship string for a query is supported.

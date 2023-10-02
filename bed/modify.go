@@ -1,9 +1,8 @@
 package bed
 
 import (
-	"log"
-
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
 )
 
 // Trim shortens bed entries on the left and right side by an input-specified number of bases. These values must not exceed the length of the bed entry and must be non-negative.
@@ -76,7 +75,7 @@ func MergeHighMem(records []Bed, mergeAdjacent bool, keepAllNames bool) []Bed {
 		return records //empty and nil slices are returned as is.
 	}
 	SortByCoord(records)
-	var currentMax Bed = records[0]
+	var currentMax = records[0]
 
 	for i := 1; i < len(records); i++ {
 		if Overlap(currentMax, records[i]) || mergeAdjacent && Adjacent(currentMax, records[i]) {

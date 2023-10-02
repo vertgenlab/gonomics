@@ -34,7 +34,7 @@ const (
 	None     Strand = '.'
 )
 
-// String converts a bed struct to a string so it will be automatically formatted when printing with the fmt package.
+// String converts a Bed struct to a string so it will be automatically formatted when printing with the fmt package.
 func (b Bed) String() string {
 	return ToString(b, b.FieldsInitialized)
 }

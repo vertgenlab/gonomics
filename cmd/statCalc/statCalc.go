@@ -53,7 +53,7 @@ func statCalc(s Settings) {
 		}
 		if len(s.Args) == 1 {
 			i := parse.StringToInt(s.Args[0])
-			answer, _ := numbers.BinomialDist(n, i, p)
+			answer, _ := numbers.BinomialDist(n, i, p, false)
 			_, err = fmt.Fprintf(out, "%e\n", answer)
 			exception.PanicOnErr(err)
 		} else if len(s.Args) == 2 {
@@ -63,16 +63,16 @@ func statCalc(s Settings) {
 					_, err = fmt.Fprintf(out, "%e\n", 1.00000)
 					exception.PanicOnErr(err)
 				} else {
-					_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialRightSummation(n, left, p))
+					_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialRightSummation(n, left, p, false))
 					exception.PanicOnErr(err)
 				}
 			} else if left == 0 {
 				right := parse.StringToInt(s.Args[1])
-				_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialLeftSummation(n, right, p))
+				_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialLeftSummation(n, right, p, false))
 				exception.PanicOnErr(err)
 			} else {
 				right := parse.StringToInt(s.Args[1])
-				_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialSum(left, right, n, p))
+				_, err = fmt.Fprintf(out, "%e\n", numbers.BinomialSum(left, right, n, p, false))
 				exception.PanicOnErr(err)
 			}
 		}

@@ -43,7 +43,7 @@ func MakeBinomialAlias(n int, p float64) BinomialAlias {
 	oneOverNPlusOne := 1.0 / float64(n+1)                                               // oneOverNPlusOne is the amount of probability in a full bucket
 
 	for currIndex = range answer.Probability {
-		answer.Probability[currIndex], underflow = BinomialDist(n, currIndex, p)
+		answer.Probability[currIndex], underflow = BinomialDist(n, currIndex, p, false)
 		if underflow {
 			answer.Probability[currIndex] = 0
 		}

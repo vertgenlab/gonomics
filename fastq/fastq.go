@@ -17,12 +17,12 @@ type Fastq struct {
 	Qual []uint8
 }
 
-// Read sends all records in a fastq format file to a []*Fastq.TODO: Pointer cleanup in this package?
+// Read sends all records in a fastq format file to a []Fastq.
 func Read(filename string) []Fastq {
 	file := fileio.EasyOpen(filename)
-	defer file.Close()
-
 	answer := ReadFastqs(file)
+	err := file.Close()
+	exception.PanicOnErr(err)
 	return answer
 }
 
@@ -32,7 +32,8 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Fastq, wg *sync.WaitGroup) 
 	for curr, done := NextFastq(file); !done; curr, done = NextFastq(file) {
 		data <- curr
 	}
-	file.Close()
+	err := file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }
 
@@ -55,10 +56,11 @@ func GoReadToChan(filename string) <-chan Fastq {
 // Write writes all records in an input []Fastq to a file at an input filename string.
 func Write(filename string, records []Fastq) {
 	file := fileio.EasyCreate(filename)
-	defer file.Close()
 	for _, fq := range records {
 		WriteToFileHandle(file, fq)
 	}
+	err := file.Close()
+	exception.PanicOnErr(err)
 }
 
 // WriteToFileHandle writes an individual fastq record to a given fileio.EasyWriter.

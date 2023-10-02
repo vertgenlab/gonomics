@@ -55,7 +55,7 @@ func BasesToUint64RightAln(seq []dna.Base, start int, end int) uint64 {
 	return answer
 }
 
-// GetBase decodes a dna.Base stuct from a position of an input TwoBit sequence.
+// GetBase decodes a dna.Base struct from a position of an input TwoBit sequence.
 func GetBase(frag *TwoBit, pos uint) dna.Base {
 	var lastBase uint64 = 3
 	var idx uint = pos / 32
