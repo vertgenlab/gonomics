@@ -1,10 +1,9 @@
 package interval
 
 import (
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/numbers"
 	"testing"
-
-	"github.com/vertgenlab/gonomics/bed"
 )
 
 var CoordsToStringTests = []struct {
