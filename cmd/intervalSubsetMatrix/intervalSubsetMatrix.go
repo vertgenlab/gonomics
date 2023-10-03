@@ -41,11 +41,8 @@ func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string,
 
 	for i = range files {
 		currIntervalChan = interval.GoReadToChan(files[i])
-		//fmt.Printf("about to range currIntervalChan\n") //TODO: for debugging test3 (multiple overlaps)
 		for j = range currIntervalChan {
-			//fmt.Printf("about to set currOverlaps. j: %v\n", j) //TODO: for debugging test3 (multiple overlaps)
 			currOverlaps = interval.Query(unionTree, j, "any") // each j (1 bed region from the file of the column) would only overlap 1 bed region of the row
-			//TODO: test3. What about multiple overlaps? Even if assuming unique beds where the same region is not repeated, 1 bed region of the row might overlap multiple beds in same file, and vice versa 1 file bed might overlap multiple in bed region
 			if len(currOverlaps) > 0 {
 				if fraction {
 					overlapSize := interval.OverlapSize(currOverlaps[0], j)

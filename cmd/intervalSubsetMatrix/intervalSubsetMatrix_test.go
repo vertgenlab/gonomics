@@ -17,7 +17,7 @@ var BedSubsetMatrixTests = []struct {
 }{
 	{"testdata/union.bed", "testdata/files.list", false, "testdata/out1.txt", "testdata/expected.txt"},
 	{"testdata/union.bed", "testdata/files.fraction1.list", true, "testdata/out2.txt", "testdata/expected.fraction1.txt"},
-	//{"testdata/union.bed", "testdata/files.fraction2.list", true, "testdata/out3.txt", "testdata/expected.fraction2.txt"},
+	{"testdata/union.bed", "testdata/files.fraction2.list", true, "testdata/out3.txt", "testdata/expected.fraction2.txt"},
 }
 
 func TestBedSubsetMatrix(t *testing.T) {
