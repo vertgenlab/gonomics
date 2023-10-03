@@ -5,8 +5,8 @@ import (
 )
 
 func TestSortUmiByCellBx(t *testing.T) {
-	var pre []UMI = []UMI{{Bx: "GATC", Construct: "1"}, {Bx: "CATG", Construct: "2"}, {Bx: "GATC", Construct: "3"}, {Bx: "AAAA", Construct: "4"}}
-	var exp []UMI = []UMI{{Bx: "AAAA", Construct: "4"}, {Bx: "CATG", Construct: "2"}, {Bx: "GATC", Construct: "1"}, {Bx: "GATC", Construct: "3"}}
+	var pre []Read = []Read{{Bx: "GATC", Construct: "1"}, {Bx: "CATG", Construct: "2"}, {Bx: "GATC", Construct: "3"}, {Bx: "AAAA", Construct: "4"}}
+	var exp []Read = []Read{{Bx: "AAAA", Construct: "4"}, {Bx: "CATG", Construct: "2"}, {Bx: "GATC", Construct: "1"}, {Bx: "GATC", Construct: "3"}}
 
 	SortUmiByCellBx(pre)
 
