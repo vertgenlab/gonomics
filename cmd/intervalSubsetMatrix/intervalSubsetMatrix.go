@@ -14,7 +14,7 @@ import (
 	"github.com/vertgenlab/gonomics/interval"
 )
 
-func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string) {
+func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string, fraction bool) {
 	var err error
 	var i int
 	var j interval.Interval
@@ -32,17 +32,27 @@ func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string)
 	}
 	unionTree := interval.BuildTree(unionIntervals)
 
-	var mat = make(map[string][]int) //this will be our output feature matrix. mat[row] => col, where rows are genomic regions, cols are files.
+	//this will be our output feature matrix. mat[row] => col, where rows are genomic regions, cols are files.
+	var mat = make(map[string][]float64)
+
 	for _, u := range unionIntervals {
-		mat[interval.CoordsToString(u)] = make([]int, len(files)) //initialize all rows to zeros based on the number of files. Map is indexed by coords of regions.
+		mat[interval.CoordsToString(u)] = make([]float64, len(files)) //initialize all rows to zeros based on the number of files. Map is indexed by coords of regions.
 	}
 
 	for i = range files {
 		currIntervalChan = interval.GoReadToChan(files[i])
+		//fmt.Printf("about to range currIntervalChan\n") //TODO: for debugging test3 (multiple overlaps)
 		for j = range currIntervalChan {
-			currOverlaps = interval.Query(unionTree, j, "any")
+			//fmt.Printf("about to set currOverlaps. j: %v\n", j) //TODO: for debugging test3 (multiple overlaps)
+			currOverlaps = interval.Query(unionTree, j, "any") // each j (1 bed region from the file of the column) would only overlap 1 bed region of the row
+			//TODO: test3. What about multiple overlaps? Even if assuming unique beds where the same region is not repeated, 1 bed region of the row might overlap multiple beds in same file, and vice versa 1 file bed might overlap multiple in bed region
 			if len(currOverlaps) > 0 {
-				mat[interval.CoordsToString(currOverlaps[0])][i] = 1
+				if fraction {
+					overlapSize := interval.OverlapSize(currOverlaps[0], j)
+					mat[interval.CoordsToString(currOverlaps[0])][i] += float64(overlapSize) / float64(interval.IntervalSize(currOverlaps[0])) // add number in case 1 bed region of the row overlaps multiple bed regions in the files of the columns
+				} else {
+					mat[interval.CoordsToString(currOverlaps[0])][i] = 1
+				}
 			}
 		}
 	}
@@ -73,7 +83,7 @@ func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string)
 }
 
 func usage() {
-	fmt.Print("intervalSubsetMatrix - Produces a binary matrix for accessibility breadth analysis.\n" +
+	fmt.Print("intervalSubsetMatrix - Produces a matrix for accessibility breadth analysis.\n" +
 		"Rows correspond to genomic regions. Columns correspond to queried interval files.\n" +
 		"Usage:\n" +
 		"intervalSubsetMatrix union.interval files.list out.txt\n" +
@@ -84,6 +94,8 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 3
+	var fraction *bool = flag.Bool("fraction", false, "fraction mode outputs a fraction matrix (each entry is a fraction, the number of bases of overlap between the bed region of the row and the file of the column divided by the size of the bed region of the row), unlike the default mode, which outputs a binary matrix (each entry is 1 if the bed region of the row overlaps any bed region in the file of the column, and 0 if otherwise")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -97,5 +109,5 @@ func main() {
 	fileListFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	intervalSubsetMatrix(unionFile, fileListFile, outFile)
+	intervalSubsetMatrix(unionFile, fileListFile, outFile, *fraction)
 }
