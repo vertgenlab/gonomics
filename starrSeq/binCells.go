@@ -36,7 +36,7 @@ func DistributeCells(s ScStarrSeqSettings, cellTypeSlice []Read, fromDB bool) []
 	binnedCells := make([][]Read, s.BinCells) //make a slice of slice of string with the size of the user-specified number of bins
 	prob := 1.0 / float64(s.BinCells)         // determine the probability that the cell belongs to a particular bin
 
-	SortUmiByCellBx(cellTypeSlice) //sort the slice of strings containing (cellBarcode \t construct) so that indentical cell barcodes line up next to one another
+	SortReadByCellBx(cellTypeSlice) //sort the slice of strings containing (cellBarcode \t construct) so that indentical cell barcodes line up next to one another
 	for _, i := range cellTypeSlice {
 		if i.Construct == "" {
 			fmt.Println("distribute cells empty")

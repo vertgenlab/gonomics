@@ -61,7 +61,7 @@ func MakeCountMatrix(s ScStarrSeqSettings, readSlice []Read, allConstructs []str
 	}
 
 	fileio.WriteToFileHandle(out, headSmush)
-	SortUmiByCellBx(readSlice)
+	SortReadByCellBx(readSlice)
 	cell = readSlice[0].Bx
 
 	l.vals = make([]float64, len(uniqueConstructs))

@@ -49,8 +49,8 @@ type Read struct {
 	UMI       string
 }
 
-// SortUmiByCellBx takes in a slice of Read and sorts the slice lexicographically according to the cell barcode
-func SortUmiByCellBx(umiSlice []Read) {
+// SortReadByCellBx takes in a slice of Read and sorts the slice lexicographically according to the cell barcode
+func SortReadByCellBx(umiSlice []Read) {
 	sort.Slice(umiSlice, func(i, j int) bool {
 		return umiSlice[i].Bx < umiSlice[j].Bx
 	})
