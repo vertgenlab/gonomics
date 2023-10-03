@@ -51,6 +51,13 @@ func ParseInputSequencingSam(s ScStarrSeqSettings) {
 		countsMap[constructName] = counts + 1
 		currEntry = i
 	}
+	//do the loop for the last read in the file
+	overlappedBedEntry := interval.Query(selectTree, currEntry, "any")
+	if len(overlappedBedEntry) == 1 {
+		constructName = overlappedBedEntry[0].(bed.Bed).Name
+		counts, _ = countsMap[constructName]
+		countsMap[constructName] = counts + 1
+	}
 	//normalize reads to 500bp
 	for i := range countsMap {
 		counts, _ = countsMap[i]

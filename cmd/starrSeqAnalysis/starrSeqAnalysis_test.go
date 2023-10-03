@@ -24,20 +24,22 @@ var cellrangerBamTests = []struct {
 	ScCount              string
 	AltMapping           string
 	CountMatrixCellTypes string
+	InputSequencing      string
 }{
-	{"testdata/in.bam", "", "testdata/expected.default.txt", "", "testdata/out.default.txt", "", "", 0, "", "", "", true, "", "", ""},
-	{"testdata/in.bam", "testdata/out.pseudobulk.txt", "testdata/expected.pseudobulk.txt", "", "", "", "", 0, "", "", "", false, "", "", ""},
-	{"testdata/in.bam", "testdata/out.pseudobulkNormalized.txt", "testdata/expected.pseudobulkNormalized.txt", "testdata/inputNormTable.txt", "", "false", "", 0, "", "", "", false, "", "", ""},
+	{"testdata/in.bam", "", "testdata/expected.default.txt", "", "testdata/out.default.txt", "", "", 0, "", "", "", true, "", "", "", ""},
+	{"testdata/in.bam", "testdata/out.pseudobulk.txt", "testdata/expected.pseudobulk.txt", "", "", "", "", 0, "", "", "", false, "", "", "", ""},
+	{"testdata/in.bam", "testdata/out.pseudobulkNormalized.txt", "testdata/expected.pseudobulkNormalized.txt", "testdata/inputNormTable.txt", "", "false", "", 0, "", "", "", false, "", "", "", ""},
 	//{"testdata/in.bam", "testdata/out.samOut.sam", "testdata/expected.samOut.sam", "", false, true, "", 0, false},
-	{"testdata/in.bam", "testdata/out.singleCell.txt", "testdata/expected.singleCell.txt", "", "", "", "testdata/cellTypes.txt", 0, "", "", "", false, "", "", ""},
-	{"testdata/in.bam", "testdata/out.singleCellNormalized.txt", "testdata/expected.singleCellNormalized.txt", "testdata/inputNormTable.txt", "", "", "testdata/cellTypes.txt", 0, "", "", "", false, "", "", ""},
-	{"testdata/in.bam", "testdata/out.singleCellGfpNormalized.txt", "testdata/expected.singleCellGfpNormalized.txt", "testdata/inputNormTable.txt", "", "", "testdata/cellTypes.txt", 0, "", "testdata/in.gfp.bam", "", false, "", "", ""},
-	{"testdata/in.bam", "testdata/out.pseudobulkNormalized.txt", "testdata/expected.pseudobulkNormalized.txt", "testdata/inputNormTable.txt", "", "", "", 0, "", "", "testdata/in.bed", false, "", "", ""},
-	{"testdata/in.bam", "", "testdata/expected.countMatrix.txt", "", "", "", "", 0, "", "", "", true, "testdata/out.countMatrix.txt", "", ""},
-	{"testdata/in.bam", "", "testdata/expected.countMatrixNorm.txt", "testdata/inputNormTable.txt", "", "", "", 0, "", "", "", true, "testdata/out.countMatrixNorm.txt", "", ""},
-	{"testdata/in.bam", "", "testdata/expected.countMatrixGFP_cellType.txt", "", "", "", "", 0, "", "testdata/in.gfp.bam", "", true, "testdata/out.countMatrixGFP_cellType.txt", "", "testdata/cellTypes.txt"},
-	{"testdata/in.bam", "testdata/out.altMapping.txt", "testdata/expected.altMapping.txt", "testdata/inputNormTable.txt", "", "", "", 0, "", "", "", false, "", "testdata/in.bed", ""},
-	{"testdata/in.bam,testdata/in2.bam", "testdata/out.pseudobulk.txt", "testdata/expected.pseudobulk2Gems.txt", "", "", "", "", 0, "", "", "", false, "", "", ""},
+	{"testdata/in.bam", "testdata/out.singleCell.txt", "testdata/expected.singleCell.txt", "", "", "", "testdata/cellTypes.txt", 0, "", "", "", false, "", "", "", ""},
+	{"testdata/in.bam", "testdata/out.singleCellNormalized.txt", "testdata/expected.singleCellNormalized.txt", "testdata/inputNormTable.txt", "", "", "testdata/cellTypes.txt", 0, "", "", "", false, "", "", "", ""},
+	{"testdata/in.bam", "testdata/out.singleCellGfpNormalized.txt", "testdata/expected.singleCellGfpNormalized.txt", "testdata/inputNormTable.txt", "", "", "testdata/cellTypes.txt", 0, "", "testdata/in.gfp.bam", "", false, "", "", "", ""},
+	{"testdata/in.bam", "testdata/out.pseudobulkNormalized.txt", "testdata/expected.pseudobulkNormalized.txt", "testdata/inputNormTable.txt", "", "", "", 0, "", "", "testdata/in.bed", false, "", "", "", ""},
+	{"testdata/in.bam", "", "testdata/expected.countMatrix.txt", "", "", "", "", 0, "", "", "", true, "testdata/out.countMatrix.txt", "", "", ""},
+	{"testdata/in.bam", "", "testdata/expected.countMatrixNorm.txt", "testdata/inputNormTable.txt", "", "", "", 0, "", "", "", true, "testdata/out.countMatrixNorm.txt", "", "", ""},
+	{"testdata/in.bam", "", "testdata/expected.countMatrixGFP_cellType.txt", "", "", "", "", 0, "", "testdata/in.gfp.bam", "", true, "testdata/out.countMatrixGFP_cellType.txt", "", "testdata/cellTypes.txt", ""},
+	{"testdata/in.bam", "testdata/out.altMapping.txt", "testdata/expected.altMapping.txt", "testdata/inputNormTable.txt", "", "", "", 0, "", "", "", false, "", "testdata/in.bed", "", ""},
+	{"testdata/in.bam,testdata/in2.bam", "testdata/out.pseudobulk.txt", "testdata/expected.pseudobulk2Gems.txt", "", "", "", "", 0, "", "", "", false, "", "", "", ""},
+	{"testdata/in.bam", "testdata/out.inputSeq.txt", "testdata/expected.inputSeq.txt", "", "", "", "", 0, "", "", "", false, "", "", "", "testdata/in.bed"},
 }
 
 func TestCellrangerBam(t *testing.T) {
@@ -59,8 +61,11 @@ func TestCellrangerBam(t *testing.T) {
 			CountMatrix:          v.ScCount,
 			AltMapping:           v.AltMapping,
 			CountMatrixCellTypes: v.CountMatrixCellTypes,
+			InputSequencing:      v.InputSequencing,
 		}
-		if v.AltMapping == "" {
+		if v.InputSequencing != "" {
+			starrSeq.ParseInputSequencingSam(s)
+		} else if v.AltMapping == "" {
 			parseCellrangerBam(s)
 		} else {
 			starrSeq.Alt(s)
