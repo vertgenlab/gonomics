@@ -46,9 +46,9 @@ func gafFilter(s Settings) {
 
 func usage() {
 	fmt.Print(
-		"bedFilter\n" +
+		"gafFilter\n" +
 			"Usage:\n" +
-			"bedFilter input.bed output.bed\n" +
+			"gafFilter input.gaf output.gaf\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
