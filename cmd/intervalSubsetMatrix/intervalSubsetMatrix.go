@@ -22,6 +22,7 @@ func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string,
 	var currIntervalChan <-chan interval.Interval
 	var unionIntervals = make([]interval.Interval, 0)
 	var currLineString string
+	var overlapSize int
 
 	unionRecChan := interval.GoReadToChan(unionFile)
 	files := fileio.Read(fileListFile)
@@ -42,13 +43,15 @@ func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string,
 	for i = range files {
 		currIntervalChan = interval.GoReadToChan(files[i])
 		for j = range currIntervalChan {
-			currOverlaps = interval.Query(unionTree, j, "any") // each j (1 bed region from the file of the column) would only overlap 1 bed region of the row
+			currOverlaps = interval.Query(unionTree, j, "any") // each j (1 bed region from the file of the column) can overlap 0 or 1 or more bed region of the row
 			if len(currOverlaps) > 0 {
-				if fraction {
-					overlapSize := interval.OverlapSize(currOverlaps[0], j)
-					mat[interval.CoordsToString(currOverlaps[0])][i] += float64(overlapSize) / float64(interval.IntervalSize(currOverlaps[0])) // add number in case 1 bed region of the row overlaps multiple bed regions in the files of the columns
-				} else {
-					mat[interval.CoordsToString(currOverlaps[0])][i] = 1
+				for _, k := range currOverlaps {
+					if fraction {
+						overlapSize = interval.OverlapSize(k, j)
+						mat[interval.CoordsToString(k)][i] += float64(overlapSize) / float64(interval.IntervalSize(k)) // add number rather than assign number, in case 1 bed region of the row overlaps multiple bed regions in the files of the columns
+					} else {
+						mat[interval.CoordsToString(k)][i] = 1
+					}
 				}
 			}
 		}
@@ -82,6 +85,7 @@ func intervalSubsetMatrix(unionFile string, fileListFile string, outFile string,
 func usage() {
 	fmt.Print("intervalSubsetMatrix - Produces a matrix for accessibility breadth analysis.\n" +
 		"Rows correspond to genomic regions. Columns correspond to queried interval files.\n" +
+		"Intervals must be unique in union.interval and each file in files.list (each genomic position can only be in at most 1 interval).\n" +
 		"Usage:\n" +
 		"intervalSubsetMatrix union.interval files.list out.txt\n" +
 		"options:\n",
