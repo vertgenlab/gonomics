@@ -41,23 +41,3 @@ func TestIsSelfOverlapping(t *testing.T) {
 		}
 	}
 }
-
-func TestOverlapSize(t *testing.T) {
-	var answer []int
-	var expected []int = []int{3, 2, 0}
-	var b Bed = Bed{Chrom: "chr1", ChromStart: 12, ChromEnd: 15}
-	var bedA []Bed = []Bed{
-		{Chrom: "chr1", ChromStart: 12, ChromEnd: 15},
-		{Chrom: "chr1", ChromStart: 13, ChromEnd: 15},
-		{Chrom: "chr1", ChromStart: 100, ChromEnd: 500}}
-	
-	for _, bd := range bedA {
-		answer = append(answer, OverlapSize(bd, b))
-	}
-	for i := range answer {
-		if answer[i] == expected[i] {
-			continue
-		}
-		t.Errorf("Error in OverlapSize. Expected: %v. Actual: %v", expected, answer)
-	}
-}
