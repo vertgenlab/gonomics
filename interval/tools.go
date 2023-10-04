@@ -24,6 +24,6 @@ func OverlapSize(a, b Interval) int {
 	if end <= start {
 		return 0
 	} else {
-		return overlapSize
+		return end - start
 	}
 }
