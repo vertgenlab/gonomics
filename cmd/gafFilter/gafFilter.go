@@ -1,6 +1,6 @@
 // Command Group:
 
-// Output a subset of a gaf file without "NOT" entries in qualifier field
+// Filter gaf file.
 package main
 
 import (
