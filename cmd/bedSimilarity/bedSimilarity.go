@@ -45,7 +45,6 @@ func compareTwo(s settings) {
 }
 
 func multipleComparisons(s settings) {
-	var a, b []bed.Bed
 	var intervalsA, intervalsB []interval.Interval
 	var percA, percB, avg float64
 	var outMatrix *fileio.EasyWriter
@@ -75,12 +74,21 @@ func multipleComparisons(s settings) {
 		fileio.WriteToFileHandle(outMatrix, header)
 	}
 
+	// Read data from files once and store
+	numFiles := len(files)
+	intervalData := make([][]interval.Interval, numFiles) // make slice of slices to put interval data in
+	names := make([]string, numFiles)                     // make slice of string for file names
+
+	for i, file := range files { // loop through files
+		intervalData[i] = interval.BedSliceToIntervals(bed.Read(file)) //put the []interval.Intervals from the files into the correct index in intervalData
+		names[i] = separatePath(file)                                  //put the name of the file in the same index as used for the interval data
+	}
+
 	for i := range files {
-		l.name = separatePath(files[i])
-		aName = separatePath(files[i])
+		l.name = names[i]
+		aName = names[i]
 		l.vals = []float64{}
-		a = bed.Read(files[i])
-		intervalsA = interval.BedSliceToIntervals(a)
+		intervalsA = intervalData[i]
 		for j = range files {
 			if files[i] == files[j] {
 				if s.matrixComponents != "" || s.matrixAverage != "" {
@@ -88,11 +96,10 @@ func multipleComparisons(s settings) {
 				}
 				continue
 			}
-			b = bed.Read(files[j])
-			bName = separatePath(files[j])
-			intervalsB = interval.BedSliceToIntervals(b)
+			intervalsB = intervalData[j]
 			percA, percB, avg = interval.IntervalSimilarity(intervalsA, intervalsB)
 			if j > i {
+				bName = names[j]
 				fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%f\t%f\t%f", aName, bName, percA, percB, avg))
 			}
 
