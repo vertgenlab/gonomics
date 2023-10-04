@@ -21,7 +21,7 @@ func OverlapSize(a, b Interval) int {
 	end := numbers.Min(a.GetChromEnd(), b.GetChromEnd())
 	start := numbers.Max(a.GetChromStart(), b.GetChromStart())
 	// overlapSize := end - start
-	if overlapSize <= 0 {
+	if end <= start {
 		return 0
 	} else {
 		return overlapSize
