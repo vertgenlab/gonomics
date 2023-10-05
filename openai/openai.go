@@ -41,12 +41,12 @@ func GetAPIToken(apiKey string) string {
 }
 
 // PostChatResponse sends a series of messages to the OpenAI ChatGPT API and returns the assistant's response.
-// It takes a slice of messages and constructs the API request. If there's an error at any step, it terminates the program.
+// Takes a slice of messages and constructs the API request. If there's an error at any step, it terminates the program.
 func (c *ChatGPTClient) PostChatResponse(messages []interface{}) string {
 	jsonBody, err := json.Marshal(map[string]interface{}{
 		"model":      gptThreeFiveTurbo,
 		"messages":   messages,
-		"max_tokens": 248,
+		"max_tokens": maxThreeTokens,
 	})
 	if err != nil {
 		log.Fatalf("Error: Encoding request body: %v", err)
