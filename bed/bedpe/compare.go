@@ -111,6 +111,7 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		}
 	}
 
+	log.Printf("Count of regions in Gasperini with no guide: %v", counter)
 	log.Printf("matches: %v, nonMatches: %v", matchCount, nonMatchCount)
 	matchCountFreq = float64(matchCount) / float64(nonMatchCount+matchCount)
 	return matchCountFreq, matches
