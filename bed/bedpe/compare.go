@@ -74,9 +74,6 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	for currTestBed := range test {
 		matched = false
 		found = false
-		log.Printf("length of test: %v", len(test))
-		log.Printf("Chrom List: %s", chromList)
-
 		for l = range chromList {
 			if test[currTestBed].Chrom == chromList[l] {
 				found = true
@@ -91,9 +88,6 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		}
 
 		for j = range currNearest {
-			if matched {
-				continue
-			}
 			currNearestBed = currNearest[j].(bed.Bed)
 			names = strings.Split(currNearestBed.Name, ",")
 			for name = range names {
