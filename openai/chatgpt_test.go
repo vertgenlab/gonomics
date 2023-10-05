@@ -64,3 +64,12 @@ func TestGetAPIToken(t *testing.T) {
 		t.Errorf("Expected token '%s', got %s", mockToken, token)
 	}
 }
+
+func TestGetAPITokenMissing(t *testing.T) {
+	// The environment variable MOCK_MISSING_TOKEN is not set.
+	token := GetAPIToken("MOCK_MISSING_TOKEN")
+
+	if token != "" {
+		t.Errorf("Expected empty token, got %s", token)
+	}
+}
