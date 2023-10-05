@@ -71,7 +71,6 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	}
 
 	truthTree := interval.BuildTree(truthIntervals)
-
 	for currTestBed := range test {
 		matched = false
 		found = false
@@ -85,6 +84,7 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		}
 		currNearest = interval.Query(truthTree, test[currTestBed], "any")
 		if len(currNearest) == 0 || len(currNearest) > 1 {
+			log.Print(test[currTestBed])
 			log.Fatalf("Should return one nearest bed entry, returned %v.", len(currNearest))
 		}
 
