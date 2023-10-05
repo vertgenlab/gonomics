@@ -40,7 +40,7 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	var matchCount, nonMatchCount, name int
 	var matchCountFreq float64
 	var truthIntervals, currNearest []interval.Interval
-	var trueBed, currNearestBed bed.Bed
+	var trueBed, currNearestBed, matchedBed bed.Bed
 	var names []string
 	var matched bool
 
@@ -76,10 +76,22 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		currNearestBed = currNearest[0].(bed.Bed)
 		names = strings.Split(currNearestBed.Name, ",")
 		for name = range names {
+			matchedBed = bed.Bed{Chrom: "",
+				ChromStart:        0,
+				ChromEnd:          0,
+				Name:              "",
+				FieldsInitialized: 7,
+				Annotation:        []string{}}
 			if names[name] == test[currTestBed].Name {
 				matchCount++
 				matched = true
-				matches = append(matches, test[currTestBed])
+				matchedBed = bed.Bed{Chrom: test[currTestBed].Chrom,
+					ChromStart:        test[currTestBed].ChromStart,
+					ChromEnd:          test[currTestBed].ChromEnd,
+					Name:              test[currTestBed].Name,
+					FieldsInitialized: 7,
+					Annotation:        append(matchedBed.Annotation, currNearestBed.Annotation[name])}
+				matches = append(matches, matchedBed)
 			} else {
 				continue
 			}
