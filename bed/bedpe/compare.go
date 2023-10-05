@@ -45,6 +45,7 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	var matched bool
 	var chromList []string
 	var j int
+	counter := 0
 
 	annotateTruthFeetDist(truth)
 
@@ -76,6 +77,7 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		matched = false
 		currNearest = interval.Query(truthTree, test[currTestBed], "any")
 		if len(currNearest) == 0 { //we can have regions that don't have a contact in them, we will ignore those and not include them in our counts
+			counter++
 			continue
 		}
 
