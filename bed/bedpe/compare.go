@@ -83,9 +83,10 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 			continue
 		}
 		currNearest = interval.Query(truthTree, test[currTestBed], "any")
-		if len(currNearest) == 0 || len(currNearest) > 1 {
-			log.Print(test[currTestBed])
+		if len(currNearest) > 1 {
 			log.Fatalf("Should return one nearest bed entry, returned %v.", len(currNearest))
+		} else if len(currNearest) == 0 { //we can have regions that dont have a contact in them, we will ignore those and not include them in our counts
+			continue
 		}
 
 		currNearestBed = currNearest[0].(bed.Bed)
