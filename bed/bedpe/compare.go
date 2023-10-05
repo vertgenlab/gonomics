@@ -5,7 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 	"strings"
 )
 
@@ -44,7 +43,7 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	var names []string
 	var matched, found bool
 	var chromList []string
-	var l int
+	var l, j int
 
 	annotateTruthFeetDist(truth)
 
@@ -83,42 +82,43 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 			continue
 		}
 		currNearest = interval.Query(truthTree, test[currTestBed], "any")
-		if len(currNearest) > 1 {
-			log.Fatalf("Should return one nearest bed entry, returned %v.", len(currNearest))
-		} else if len(currNearest) == 0 { //we can have regions that dont have a contact in them, we will ignore those and not include them in our counts
+		if len(currNearest) == 0 { //we can have regions that don't have a contact in them, we will ignore those and not include them in our counts
 			continue
 		}
 
-		currNearestBed = currNearest[0].(bed.Bed)
-		names = strings.Split(currNearestBed.Name, ",")
-		for name = range names {
-			matchedBed = bed.Bed{Chrom: "",
-				ChromStart:        0,
-				ChromEnd:          0,
-				Name:              "",
-				FieldsInitialized: 7,
-				Annotation:        []string{}}
-			if names[name] == test[currTestBed].Name {
-				matchCount++
-				matched = true
-				matchedBed = bed.Bed{Chrom: test[currTestBed].Chrom,
-					ChromStart:        test[currTestBed].ChromStart,
-					ChromEnd:          test[currTestBed].ChromEnd,
-					Name:              test[currTestBed].Name,
-					FieldsInitialized: 7,
-					Annotation:        append(matchedBed.Annotation, currNearestBed.Annotation[name])}
-				matches = append(matches, matchedBed)
-			} else {
+		for j = range currNearest {
+			if matched {
 				continue
+			}
+			currNearestBed = currNearest[j].(bed.Bed)
+			names = strings.Split(currNearestBed.Name, ",")
+			for name = range names {
+				matchedBed = bed.Bed{Chrom: "",
+					ChromStart:        0,
+					ChromEnd:          0,
+					Name:              "",
+					FieldsInitialized: 7,
+					Annotation:        []string{}}
+				if names[name] == test[currTestBed].Name {
+					matchCount++
+					matched = true
+					matchedBed = bed.Bed{Chrom: test[currTestBed].Chrom,
+						ChromStart:        test[currTestBed].ChromStart,
+						ChromEnd:          test[currTestBed].ChromEnd,
+						Name:              test[currTestBed].Name,
+						FieldsInitialized: 7,
+						Annotation:        append(matchedBed.Annotation, currNearestBed.Annotation[name])}
+					matches = append(matches, matchedBed)
+				} else {
+					continue
+				}
 			}
 		}
 		if !matched {
 			nonMatchCount++
 		}
 	}
-
 	matchCountFreq = float64(matchCount) / float64(nonMatchCount+matchCount)
-
 	return matchCountFreq, matches
 }
 
