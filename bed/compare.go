@@ -44,6 +44,25 @@ func MergeBeds(bedFile []Bed) []Bed {
 	return bedFile
 }
 
+// MergeBedsKeepNamesAndAnnotations will merge beds if overlapping and keep an index in the form of a comma separated list
+// of the name fields of merged beds, and add the annotation fields together into a single field ([]string)
+func MergeBedsKeepNamesAndAnnotations(bedFile []Bed) []Bed {
+	SortByCoord(bedFile)
+	var i, j int
+	for i = 0; i < len(bedFile)-1; {
+		if !Overlap(bedFile[i], bedFile[i+1]) {
+			i++
+		} else {
+			bedFile[i].ChromStart, bedFile[i].ChromEnd, bedFile[i].Score, bedFile[i].Name, bedFile[i].Annotation = numbers.Min(bedFile[i].ChromStart, bedFile[i+1].ChromStart), numbers.Max(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd), bedFile[i].Score+bedFile[i+1].Score, bedFile[i].Name+","+bedFile[i+1].Name, append(bedFile[i].Annotation, bedFile[i].Annotation...)
+			for j = i + 1; j < len(bedFile)-1; j++ {
+				bedFile[j] = bedFile[j+1]
+			}
+			bedFile = bedFile[:len(bedFile)-1]
+		}
+	}
+	return bedFile
+}
+
 // Adjacent returns true if two input Bed entries are adjacent (one immediately follows the other).
 func Adjacent(alpha Bed, beta Bed) bool {
 	if alpha.Chrom != beta.Chrom {
