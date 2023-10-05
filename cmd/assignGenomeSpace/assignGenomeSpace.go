@@ -24,7 +24,7 @@ type Settings struct {
 	Output1d       string
 }
 
-func great3d(s Settings) {
+func assignGenomeSpace(s Settings) {
 	var tss []bed.Bed
 	sizes := chromInfo.ReadToMap(s.SizesFile)
 	if s.GeneBed {
@@ -48,16 +48,15 @@ func great3d(s Settings) {
 
 func usage() {
 	fmt.Print(
-		"great3d - Perform functional enrichment analysis by associating genomic regions\n" +
-			"with their nearest gene in 3d space using bedPe contact sites.\n" +
+		"assignGenomeSpace - determine the closest gene to every base in a genome using proximity or 3D contacts\n" +
 			"Usage:\n" +
-			" great3d genes.gtf genome.chrom.sizes output?\n" +
+			"assignGenomeSpace [options] genes.gtf genome.chrom.sizes\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs = 3
+	var expectedNumArgs = 2
 	var nearestGeneBed *string = flag.String("nearestGeneBed", "", "Write a bed representing the nearest genes in 3d space to every position in the genome.")
 	var geneBed *bool = flag.Bool("geneBed", false, "If set to true user has provided a bed in place of a gtf for te first argument that contains information about a gene TSS already spanning a single bp distance, and therefore GTF processing can be skipped.")
 	var proximityFile *string = flag.String("proximity", "", "If given a file name the program will output a file that contains the closest gene to a bp based only on proximity as well as any other file requested. No bedpe file necessary if this is your only desired output.")
@@ -82,5 +81,5 @@ func main() {
 		Output1d:       *proximityFile,
 	}
 
-	great3d(s)
+	assignGenomeSpace(s)
 }
