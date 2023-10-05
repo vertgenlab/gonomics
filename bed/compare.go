@@ -53,7 +53,7 @@ func MergeBedsKeepNamesAndAnnotations(bedFile []Bed) []Bed {
 		if !Overlap(bedFile[i], bedFile[i+1]) {
 			i++
 		} else {
-			bedFile[i].ChromStart, bedFile[i].ChromEnd, bedFile[i].Score, bedFile[i].Name, bedFile[i].Annotation = numbers.Min(bedFile[i].ChromStart, bedFile[i+1].ChromStart), numbers.Max(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd), bedFile[i].Score+bedFile[i+1].Score, bedFile[i].Name+","+bedFile[i+1].Name, append(bedFile[i].Annotation, bedFile[i].Annotation...)
+			bedFile[i].ChromStart, bedFile[i].ChromEnd, bedFile[i].Score, bedFile[i].Name, bedFile[i].Annotation = numbers.Min(bedFile[i].ChromStart, bedFile[i+1].ChromStart), numbers.Max(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd), bedFile[i].Score+bedFile[i+1].Score, bedFile[i].Name+","+bedFile[i+1].Name, append(bedFile[i].Annotation, bedFile[i].Annotation[0])
 			for j = i + 1; j < len(bedFile)-1; j++ {
 				bedFile[j] = bedFile[j+1]
 			}

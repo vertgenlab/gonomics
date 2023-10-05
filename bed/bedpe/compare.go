@@ -48,19 +48,19 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 
 	for currTruth := range truth {
 		trueBed = bed.Bed{
-			Chrom:      truth[currTruth].A.Chrom,
-			ChromStart: truth[currTruth].A.ChromStart,
-			ChromEnd:   truth[currTruth].A.ChromEnd,
-			Name:       truth[currTruth].A.Name,
-			Annotation: truth[currTruth].A.Annotation}
-
+			Chrom:             truth[currTruth].A.Chrom,
+			ChromStart:        truth[currTruth].A.ChromStart,
+			ChromEnd:          truth[currTruth].A.ChromEnd,
+			Name:              truth[currTruth].A.Name,
+			Annotation:        truth[currTruth].A.Annotation,
+			FieldsInitialized: 7}
 		truthAsBeds = append(truthAsBeds, trueBed)
 	}
 
-	bed.MergeBedsKeepNamesAndAnnotations(truthAsBeds)
+	mergedTruthBeds := bed.MergeBedsKeepNamesAndAnnotations(truthAsBeds)
 
-	for t := range truth {
-		truthIntervals = append(truthIntervals, truthAsBeds[t])
+	for t := range mergedTruthBeds {
+		truthIntervals = append(truthIntervals, mergedTruthBeds[t])
 	}
 
 	truthTree := interval.BuildTree(truthIntervals)
@@ -69,7 +69,8 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		matched = false
 		currNearest = interval.Query(truthTree, test[currTestBed], "any")
 		if len(currNearest) == 0 || len(currNearest) > 1 {
-			log.Fatalf("Space Filled bed should return one nearest bed entry, returned %v. Only checked for A foot overlap.", len(currNearest))
+			log.Print(currNearest)
+			log.Fatalf("Space Filled bed should return one nearest bed entry, returned %v.", len(currNearest))
 		}
 
 		currNearestBed = currNearest[0].(bed.Bed)
@@ -88,7 +89,7 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		}
 	}
 
-	matchCountFreq = float64(matchCount / (nonMatchCount + matchCount))
+	matchCountFreq = float64(matchCount) / float64(nonMatchCount+matchCount)
 
 	return matchCountFreq, matches
 }
