@@ -3,7 +3,6 @@ package fileio
 import (
 	"bufio"
 	"bytes"
-	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/klauspost/pgzip"
 	"github.com/vertgenlab/gonomics/exception"
 )
 
@@ -33,7 +33,7 @@ const (
 type ByteReader struct {
 	*bufio.Reader
 	File         *os.File
-	internalGzip *gzip.Reader
+	internalGzip *pgzip.Reader
 	line         []byte
 	Buffer       *bytes.Buffer
 }
@@ -56,9 +56,9 @@ func NewByteReader(filename string) *ByteReader {
 	}
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
-		answer.internalGzip, err = gzip.NewReader(file)
+		answer.internalGzip, err = pgzip.NewReader(file)
 		exception.PanicOnErr(err)
-		answer.Reader = bufio.NewReader(answer.internalGzip)
+		answer.Reader = bufio.NewReaderSize(answer.internalGzip, defaultBufSize)
 	default:
 		answer.Reader = bufio.NewReader(file)
 	}
