@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"bufio"
 	"fmt"
 	"log"
 	"os"
@@ -10,43 +10,43 @@ import (
 )
 
 func main() {
-	// Define command-line flags
-	tokenFlag := flag.String("token", "", "API token")
-	questionFlag := flag.String("question", "", "Question to ask the Chatbot")
+	apiKey := openai.GetAPIToken("OPENAI_API_TOKEN")
+	if apiKey == "" {
+		log.Fatalf("Error: API Token OPENAI_API_KEY=\"\" not set")
+	}
 
-	flag.Parse()
-	var apiToken string
+	client := openai.NewClient(openai.ApiEndpoint, apiKey)
 
-	// Check if API token is provided
-	if *tokenFlag == "" {
-		// Attempt to retrieve API token from environment variable
-		apiToken := os.Getenv("OPENAI_API_TOKEN")
-		if apiToken != "" {
-			tokenFlag = &apiToken
-		} else {
-			log.Fatal(
-				"Error: API token is missing. Please provide it using the -token flag or set GPT_API_TOKEN environment variable.",
-			)
+	messages := []interface{}{
+		map[string]interface{}{
+			"role":    "system",
+			"content": "You are a helpful assistant.",
+		},
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("You: ")
+		userInput, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatalf("Error reading input: %v", err)
 		}
-	}
-	*tokenFlag = apiToken
 
-	// Create ChatGPT client
-	client := openai.NewClient("https://api.openai.com/v1", *tokenFlag)
+		// Remove the trailing newline
+		userInput = userInput[:len(userInput)-1]
 
-	// Check if question is provided
-	if *questionFlag == "" {
-		log.Fatal("Error: Question is missing. Please provide it using the -question flag.")
-	}
+		if userInput == "exit" {
+			break
+		}
 
-	// Generate a response
-	responses, err := client.GetChatResponse(*questionFlag)
-	if err != nil {
-		log.Fatal("Failed to generate a response:", err)
-	}
+		// Append the user's message
+		messages = append(messages, map[string]interface{}{"role": "user", "content": userInput})
 
-	fmt.Println("Response:")
-	for _, response := range responses {
-		fmt.Println(response)
+		// Get the assistant's response and then append it
+		response := client.PostChatResponse(messages)
+		messages = append(messages, map[string]interface{}{"role": "assistant", "content": response})
+
+		fmt.Println("Assistant:", response)
 	}
 }

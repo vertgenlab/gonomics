@@ -1,53 +1,66 @@
 package openai
 
 import (
-	"encoding/json"
+	"bytes"
+	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
-	"reflect"
+	"os"
 	"testing"
 )
 
-func TestGetChatResponse(t *testing.T) {
-	// Create a mock API server for testing
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check the request headers and body
-		if r.Header.Get("Authorization") != "Bearer your-api-token" {
-			t.Errorf("Error: Unexpected Authorization header")
-		}
-		if r.Header.Get("Content-Type") != "application/json" {
-			t.Errorf("Error: Unexpected Content-Type header")
-		}
+// MockRoundTripper struct to mock HTTP calls
+type MockRoundTripper struct {
+	resp *http.Response
+	err  error
+}
 
-		// Simulate a successful API response
-		response := ChatGPTResponse{
-			Choices: []string{"Hello", "Hi there"},
-		}
-		jsonResponse, err := json.Marshal(response)
-		if err != nil {
-			t.Errorf("Failed to marshal JSON response")
-		}
+// RoundTrip is the mock implementation of http.RoundTripper interface
+func (m *MockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	return m.resp, m.err
+}
 
-		// Return the JSON response
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(jsonResponse)
-	}))
-	defer mockServer.Close()
+func TestPostChatResponse(t *testing.T) {
+	client := NewClient("http://mockapi", "mocktoken")
 
-	// Initialize the ChatGPTClient with the mock API server URL and token
-	client := NewClient(mockServer.URL, "your-api-token")
+	// Creating a mocked HTTP response
+	body := `{
+		"choices": [{
+			"message": {
+				"role": "assistant",
+				"content": "Hello, world!"
+			}
+		}]
+	}`
+	rt := &MockRoundTripper{
+		resp: &http.Response{
+			StatusCode: 200,
+			Body:       ioutil.NopCloser(bytes.NewReader([]byte(body))),
+		},
+	}
+	client.Client.Transport = rt
 
-	// Call the GetChatResponse function
-	prompt := "Hello"
-	choices, err := client.GetChatResponse(prompt)
-	if err != nil {
-		t.Errorf("Error: Failed to get chat response: %v", err)
+	messages := []interface{}{
+		map[string]interface{}{
+			"role":    "system",
+			"content": "You are a helpful assistant.",
+		},
 	}
 
-	// Validate the response
-	expectedChoices := []string{"Hello", "Hi there"}
-	if !reflect.DeepEqual(choices, expectedChoices) {
-		t.Errorf("Unexpected chat response. Expected: %v, Got: %v", expectedChoices, choices)
+	resp := client.PostChatResponse(messages)
+
+	if resp != "Hello, world!" {
+		t.Errorf("Expected response 'Hello, world!', got %s", resp)
+	}
+}
+
+func TestGetAPIToken(t *testing.T) {
+	const mockToken = "mocktokenvalue"
+	_ = os.Setenv("MOCK_API_TOKEN", mockToken) // Ignoring error for simplicity
+	defer os.Unsetenv("MOCK_API_TOKEN")
+
+	token := GetAPIToken("MOCK_API_TOKEN")
+
+	if token != mockToken {
+		t.Errorf("Expected token '%s', got %s", mockToken, token)
 	}
 }
