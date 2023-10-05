@@ -42,7 +42,9 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	var truthIntervals, currNearest []interval.Interval
 	var trueBed, currNearestBed, matchedBed bed.Bed
 	var names []string
-	var matched bool
+	var matched, found bool
+	var chromList []string
+	var l int
 
 	annotateTruthFeetDist(truth)
 
@@ -60,6 +62,11 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	mergedTruthBeds := bed.MergeBedsKeepNamesAndAnnotations(truthAsBeds)
 
 	for t := range mergedTruthBeds {
+		if t == 0 {
+			chromList = append(chromList, mergedTruthBeds[t].Chrom)
+		} else if mergedTruthBeds[t].Chrom != mergedTruthBeds[t-1].Chrom {
+			chromList = append(chromList, mergedTruthBeds[t].Chrom)
+		}
 		truthIntervals = append(truthIntervals, mergedTruthBeds[t])
 	}
 
@@ -67,10 +74,18 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 
 	for currTestBed := range test {
 		matched = false
+		found = false
+		for l = range chromList {
+			if test[currTestBed].Chrom == chromList[l] {
+				found = true
+			}
+		}
+		if !found {
+			continue
+		}
 		currNearest = interval.Query(truthTree, test[currTestBed], "any")
 		if len(currNearest) == 0 || len(currNearest) > 1 {
-			log.Print(currNearest)
-			log.Fatalf("Space Filled bed should return one nearest bed entry, returned %v.", len(currNearest))
+			log.Fatalf("Should return one nearest bed entry, returned %v.", len(currNearest))
 		}
 
 		currNearestBed = currNearest[0].(bed.Bed)
