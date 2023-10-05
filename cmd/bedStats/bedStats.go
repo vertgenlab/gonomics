@@ -29,9 +29,12 @@ func bedStats(s Settings) {
 
 func usage() {
 	fmt.Print(
-		"bedpeFilter\n" +
+		"bedStats - takes a bedpe containing tru contacts from empirical data which assigns regions of the genome \n" +
+			"to putative target genes and compares an output from assignGenomeSpace command to determine how \n" +
+			"accurate the nearest gene in 3d space calculation was. Writes out a frequency of correct assignments \n" +
+			"and outputs a bed containing the matching regions.\n" +
 			"Usage:\n" +
-			"bedpeFilter input.bedpe output.bedpe\n" +
+			"bedStats true.bedpe test.bed matched.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
