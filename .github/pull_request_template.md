@@ -1,6 +1,6 @@
 # Description
 <!-- Please add a summary for this PR. Summary should scale w/ PR size! -->
-[🐛 Bug Report]
+🐛 Bug Report
 
 <!-- ## Relevant Links
 Please add any relevant links or resources, ideally links to related PRs, technical concepts and/or literature!
