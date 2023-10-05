@@ -74,6 +74,8 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	for currTestBed := range test {
 		matched = false
 		found = false
+		log.Printf("Chrom List: %s", chromList)
+
 		for l = range chromList {
 			if test[currTestBed].Chrom == chromList[l] {
 				found = true
