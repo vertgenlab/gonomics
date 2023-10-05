@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
 	"strings"
 )
 
@@ -118,6 +119,8 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 			nonMatchCount++
 		}
 	}
+
+	log.Printf("matches: %v, nonMatches: %v", matchCount, nonMatchCount)
 	matchCountFreq = float64(matchCount) / float64(nonMatchCount+matchCount)
 	return matchCountFreq, matches
 }
