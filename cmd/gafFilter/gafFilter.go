@@ -1,4 +1,4 @@
-// Command Group:
+// Command Group: Ontology Tools
 
 // Filter gaf file.
 package main
@@ -29,10 +29,8 @@ func gafFilter(s Settings) {
 
 	for curr := range gafChan {
 		pass = true
-		if s.RemoveNot {
-			if strings.Contains(curr.Qualifier, "NOT") {
-				pass = false
-			}
+		if s.RemoveNot && strings.Contains(curr.Qualifier, "NOT") {
+			pass = false
 		}
 
 		if pass {
