@@ -13,7 +13,7 @@ None
 ### Checklist before requesting a review
 
 - [ ] I performed a self-review of my code
-- [ ] If it this a core feature, I have added thorough tests
+- [ ] If it this a core feature, I added thorough tests
 - [ ] The command `go fmt` or `make clean` was used on all files included
 
 <!-- ### Screenshots & Media
