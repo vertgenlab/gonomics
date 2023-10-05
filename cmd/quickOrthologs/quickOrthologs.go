@@ -1,3 +1,6 @@
+// Command Group: "General Tools"
+
+// Find corresponding orthologous transcription start
 package main
 
 import (
@@ -39,7 +42,7 @@ func quickOrthologs(s Settings) {
 	if s.CanonicalTranscript {
 		tssBeds = gtf.GenesToCanonicalTranscriptsTssBed(genes, chroms)
 	} else {
-		tssBeds = gtf.GenesToTssBed(genes, chroms)
+		tssBeds = gtf.GenesToTssBed(genes, chroms, false)
 	}
 	chainChan, _ := chain.GoReadToChan(s.ChainFile)
 	for val := range chainChan {

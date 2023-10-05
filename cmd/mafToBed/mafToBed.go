@@ -1,5 +1,6 @@
 // Command Group: "Data Conversion"
 
+// Convert a maf alignment into a bed, where the bed score is the alignment score
 package main
 
 import (

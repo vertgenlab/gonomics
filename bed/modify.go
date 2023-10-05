@@ -1,9 +1,8 @@
 package bed
 
 import (
-	"log"
-
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
 )
 
 // Trim shortens bed entries on the left and right side by an input-specified number of bases. These values must not exceed the length of the bed entry and must be non-negative.
@@ -70,13 +69,13 @@ func MergeLowMem(b <- chan Bed, mergeAdjacent bool) <- chan Bed {
 
 // MergeHighMem retains input Bed entries that are non-overlapping with other input bed entries and merges together overlapping bed entries.
 // Merged bed entries will retain the maximum score in the output.
-func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
+func MergeHighMem(records []Bed, mergeAdjacent bool, keepAllNames bool) []Bed {
 	var outList []Bed
 	if len(records) == 0 {
 		return records //empty and nil slices are returned as is.
 	}
 	SortByCoord(records)
-	var currentMax Bed = records[0]
+	var currentMax = records[0]
 
 	for i := 1; i < len(records); i++ {
 		if Overlap(currentMax, records[i]) || mergeAdjacent && Adjacent(currentMax, records[i]) {
@@ -84,6 +83,13 @@ func MergeHighMem(records []Bed, mergeAdjacent bool) []Bed {
 				currentMax.Score = records[i].Score
 			}
 			currentMax.ChromEnd = numbers.Max(records[i].ChromEnd, currentMax.ChromEnd)
+			if keepAllNames && records[i].Name != "" {
+				if currentMax.Name != "" {
+					currentMax.Name = currentMax.Name + "," + records[i].Name
+				} else {
+					currentMax.Name = records[i].Name
+				}
+			}
 		} else {
 			outList = append(outList, currentMax)
 			currentMax = records[i]

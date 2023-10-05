@@ -1,14 +1,11 @@
 name: Go
-
 on:
   push:
     branches: main
   pull_request:
     branches: main
-
 env:
   GOLANG: 1.20.3
-
 jobs:
   format:
     runs-on: ubuntu-latest
@@ -20,7 +17,7 @@ jobs:
         with:
           go-version: ${{ env.GOLANG }}
       - name: Setup lint
-        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.0 && go install github.com/google/yamlfmt/cmd/yamlfmt@latest
       - name: Test then Install
         run: go test ./... && go install ./...
       - name: Lint and automate clean up

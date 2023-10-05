@@ -32,6 +32,8 @@ func LogIntegrate(f func(float64) float64, a float64, b float64, n int) float64 
 	return answer
 }
 
+// LogIntegrateIterative repeatedly calls LogIntegrate with progressively more bins until the relative error between
+// iterations is less than the relativeError inut variable.  Each interation uses 10x more bins.
 func LogIntegrateIterative(f func(float64) float64, a float64, b float64, maxIter int, relativeError float64) float64 {
 	if maxIter < 2 {
 		log.Fatalf("maxIterations for LogIntegrateIterative must be at least 2.")

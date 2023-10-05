@@ -9,24 +9,69 @@ import (
 )
 
 var FaFindFastTests = []struct {
-	InFile       string
-	OutFile      string
-	ExpectedFile string
-	WindowSize   int
-	ChromName    string
-	RemoveN      bool
+	InFile         string
+	OutFile        string
+	ExpectedFile   string
+	WindowSize     int
+	ChromName      string
+	RemoveN        bool
+	DivergenceRate float64
+	LongOutput     bool
 }{
-	{"testdata/test_indel.fa", "testdata/tmp.out.bed", "testdata/expected.bed", 10, "chr1", false},
-	{"testdata/test_indel.fa", "testdata/tmp.noN.bed", "testdata/expected.noN.bed", 10, "chr1", true},
-	{"testdata/test.endDoubleGaps.fa", "testdata/tmp.doubleGaps.bed", "testdata/expected.bed", 10, "chr1", false},
-	{"testdata/test.endGapsQuery.fa", "testdata/tmp.queryGaps.bed", "testdata/expected.endGapsQuery.bed", 10, "chr1", false},
-	{"testdata/test.endGapsRef.fa", "testdata/tmp.refGaps.bed", "testdata/expected.endGapsRef.bed", 10, "chr1", false},
+	{InFile: "testdata/test_indel.fa",
+		OutFile:        "testdata/tmp.out.bed",
+		ExpectedFile:   "testdata/expected.bed",
+		WindowSize:     10,
+		ChromName:      "chr1",
+		RemoveN:        false,
+		DivergenceRate: -1,
+		LongOutput:     false},
+	{InFile: "testdata/test_indel.fa",
+		OutFile:        "testdata/tmp.noN.bed",
+		ExpectedFile:   "testdata/expected.noN.bed",
+		WindowSize:     10,
+		ChromName:      "chr1",
+		RemoveN:        true,
+		DivergenceRate: -1,
+		LongOutput:     false},
+	{InFile: "testdata/test.endDoubleGaps.fa",
+		OutFile:        "testdata/tmp.doubleGaps.bed",
+		ExpectedFile:   "testdata/expected.bed",
+		WindowSize:     10,
+		ChromName:      "chr1",
+		RemoveN:        false,
+		DivergenceRate: -1,
+		LongOutput:     false},
+	{InFile: "testdata/test.endGapsQuery.fa",
+		OutFile:        "testdata/tmp.queryGaps.bed",
+		ExpectedFile:   "testdata/expected.endGapsQuery.bed",
+		WindowSize:     10,
+		ChromName:      "chr1",
+		RemoveN:        false,
+		DivergenceRate: -1,
+		LongOutput:     false},
+	{InFile: "testdata/test.endGapsRef.fa",
+		OutFile:        "testdata/tmp.refGaps.bed",
+		ExpectedFile:   "testdata/expected.endGapsRef.bed",
+		WindowSize:     10,
+		ChromName:      "chr1",
+		RemoveN:        false,
+		DivergenceRate: -1,
+		LongOutput:     false},
+	{InFile: "testdata/test.endGapsRef.fa",
+		OutFile:        "testdata/tmp.longOutput.bed",
+		ExpectedFile:   "testdata/expected.longOutput.bed",
+		WindowSize:     10,
+		ChromName:      "chr1",
+		RemoveN:        false,
+		DivergenceRate: 0.01,
+		LongOutput:     true},
 }
 
 func TestFaFindFast(t *testing.T) {
 	var err error
 	for _, v := range FaFindFastTests {
-		faFindFast(v.InFile, v.OutFile, v.WindowSize, v.ChromName, v.RemoveN, false)
+		faFindFast(v.InFile, v.OutFile, v.WindowSize, v.ChromName, v.RemoveN, v.LongOutput, v.DivergenceRate)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in faFindFast. Output did not match expected.")
 		} else {

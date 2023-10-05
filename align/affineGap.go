@@ -53,6 +53,8 @@ func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, check
 	return trace
 }
 
+// AffineGap aligns two DNA sequences (alpha and beta), using a score matrix (i.e. scores), along with a gap opening and gap extension penalities.
+// The alignment score and a cigar describing the alignment are the return values.
 // This version of AffineGap has a fixed checkersize of 10000*10000.
 func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
 	var checkersize_i, checkersize_j int
@@ -65,6 +67,8 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 	return score_highest, route
 }
 
+// AffineGap_customizeCheckersize aligns two DNA sequences (alpha and beta), using a score matrix (i.e. scores), along with a gap opening and gap extension penalities.
+// The alignment score and a cigar describing the alignment are the return values.
 // This version of AffineGap needs additional inputs and allows customization of checkersize_i and checkersize_j.
 func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, checkersize_i int, checkersize_j int) (int64, []Cigar) { //input=same as AffineGap_step1 for now, output=route
 	//Step 1: find highest score, as well as get the position (i and j) of the highest score,

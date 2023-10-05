@@ -4,14 +4,13 @@ package bed
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"strings"
 	"sync"
-
-	"github.com/vertgenlab/gonomics/common"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Bed stores information about genomic regions, including their location, name, score, strand, and other annotations.
@@ -35,7 +34,7 @@ const (
 	None     Strand = '.'
 )
 
-// String converts a bed struct to a string so it will be automatically formatted when printing with the fmt package.
+// String converts a Bed struct to a string so it will be automatically formatted when printing with the fmt package.
 func (b Bed) String() string {
 	return ToString(b, b.FieldsInitialized)
 }
@@ -110,15 +109,15 @@ func Read(filename string) []Bed {
 // processBedLine is a helper function of Read that returns a Bed struct from an input line of a file.
 func processBedLine(line string) Bed {
 	words := strings.Split(line, "\t")
-	startNum := common.StringToInt(words[1])
-	endNum := common.StringToInt(words[2])
+	startNum := parse.StringToInt(words[1])
+	endNum := parse.StringToInt(words[2])
 
 	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Strand: None, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
 	}
 	if len(words) >= 5 {
-		current.Score = common.StringToInt(words[4])
+		current.Score = parse.StringToInt(words[4])
 	}
 	if len(words) >= 6 {
 		current.Strand = StringToStrand(words[5])
@@ -169,7 +168,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Bed, wg *sync.WaitGroup) {
 func GoReadToChan(filename string) <-chan Bed {
 	file := fileio.EasyOpen(filename)
 	var wg sync.WaitGroup
-	data := make(chan Bed)
+	data := make(chan Bed, 1000)
 	wg.Add(1)
 	go ReadToChan(file, data, &wg)
 

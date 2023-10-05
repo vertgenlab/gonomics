@@ -1,10 +1,10 @@
 package binaryGiraf
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"sync"
 
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
@@ -23,12 +23,12 @@ func Read(giraffeFile string, graphFile string) []giraf.Giraf {
 	}
 
 	if err != io.EOF {
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 
 	// Close reader
 	err = reader.bg.Close()
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 
 	return answer
 }
@@ -44,14 +44,15 @@ func ReadToChan(file *fileio.EasyReader, graph *genomeGraph.GenomeGraph, data ch
 	}
 
 	if err != io.EOF {
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 
 	// Close reader
 	err = reader.bg.Close()
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 
-	file.Close()
+	err = file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }
 
@@ -73,19 +74,21 @@ func GoReadToChan(giraffeFile string, graphFile string) <-chan giraf.Giraf {
 	return data
 }
 
-// TODO: move GoReadToChan functions in the giraf package from *Giraf to Giraf.
 // GirafChanToBinary inputs a channel of *giraf.Giraf and compresses records from the stream into a output giraf.fe file.
+// TODO: move GoReadToChan functions in the giraf package from *Giraf to Giraf.
 func GirafChanToBinary(filename string, input <-chan *giraf.Giraf, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	writer := NewBinWriter(file)
 	var err error
-	defer file.Close()
 
 	for record := range input {
 		err = WriteGiraf(writer, record)
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 	}
 	err = writer.bg.Close()
-	common.ExitIfError(err)
+	exception.PanicOnErr(err)
 	wg.Done()
+
+	err = file.Close()
+	exception.PanicOnErr(err)
 }

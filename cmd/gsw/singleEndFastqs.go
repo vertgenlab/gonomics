@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"path/filepath"
@@ -9,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vertgenlab/gonomics/common"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
@@ -93,13 +93,15 @@ func writeSingleGiraf(filename string, input <-chan giraf.Giraf, wg *sync.WaitGr
 	for g := range input {
 		buf = simplePool.Get().(*bytes.Buffer)
 		_, err = buf.WriteString(giraf.ToString(&g))
-		common.ExitIfError(err)
+		exception.PanicOnErr(err)
 		err = buf.WriteByte('\n')
-		common.ExitIfError(err)
-		io.Copy(file, buf)
+		exception.PanicOnErr(err)
+		_, err = io.Copy(file, buf)
+		exception.PanicOnErr(err)
 		buf.Reset()
 		simplePool.Put(buf)
 	}
-	file.Close()
+	err = file.Close()
+	exception.PanicOnErr(err)
 	wg.Done()
 }

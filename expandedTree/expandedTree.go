@@ -1,3 +1,4 @@
+// Package expandedTree contains structs and functions that build and utilize information in a binary tree format that can be used for genome simulation and reconstruction
 package expandedTree
 
 import (
@@ -11,21 +12,24 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// Tree structure for simulation and reconstruction.
+// ETree is a struct that represents a node in a binary tree, and has additional fields for simulation and reconstruction.
 type ETree struct {
-	Name         string
-	BranchLength float64
-	OnlyTopology bool
-	Fasta        *fasta.Fasta //assigning fastas to nodes
-	State        int          //corresponds to a base
-	Stored       []float64    //a list of probabilities for each base at any given site of the genome
-	Scrap        float64
-	Left         *ETree
-	Right        *ETree
-	Up           *ETree //traversing the tree for reconstruction
+	Name                  string
+	BranchLength          float64 // This is the branch length between this node and Up.
+	OnlyTopology          bool
+	Fasta                 *fasta.Fasta // Contains the sequence associated with this node. Fasta.Name should equal Name.
+	State                 int          // corresponds to a base
+	Stored                []float64    // a list of probabilities for each base at any given site of the genome
+	Scrap                 float64
+	Left                  *ETree
+	Right                 *ETree
+	Up                    *ETree // The immediate ancestral node.
+	DescendentBasePresent bool   // True if any descendent nodes have a base, in a specific position
+	BasePresent           bool   // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
 }
 
-// read tree from filename and add fastas and up pointers to the tree.
+// ReadTree takes a filename of a tree in newick format and a filename of a fasta file.  The names in the tree will be assigned
+// a sequence in the fasta file if they have identical names.  The function returns a pointer to the root node.
 func ReadTree(newickFilename string, fastasFilename string) (*ETree, error) {
 	tr, err := ReadNewick(newickFilename)
 	if err != nil {
@@ -35,7 +39,7 @@ func ReadTree(newickFilename string, fastasFilename string) (*ETree, error) {
 	return tr, nil
 }
 
-// read in tree from filename.
+// ReadNewick takes a filename of a tree in newick format and returns a pointer to the root node.
 func ReadNewick(filename string) (*ETree, error) {
 	var singleLineTree string
 	singleLineTree = fileio.ReadFileToSingleLineString(filename)
@@ -43,7 +47,7 @@ func ReadNewick(filename string) (*ETree, error) {
 	return parseNewick(singleLineTree[strings.Index(singleLineTree, "(") : 1+strings.LastIndex(singleLineTree, ";")])
 }
 
-// read in tree from string of newick.
+// NewickToTree takes a newick tree stored in a single string, and returns a pointer to the root node.
 func NewickToTree(tree string) *ETree {
 	makeTree, err := parseNewick(tree)
 	if err != nil {
@@ -51,6 +55,7 @@ func NewickToTree(tree string) *ETree {
 	return makeTree
 }
 
+// GetTree takes a root node and returns a slice of all nodes in the tree.
 func GetTree(node *ETree) []*ETree {
 	var branch []*ETree
 	branch = append(branch, node)
@@ -61,10 +66,11 @@ func GetTree(node *ETree) []*ETree {
 	if node.Left != nil {
 		a := GetTree(node.Left)
 		branch = append(branch, a...)
-	} //add piece to get leaves
+	}
 	return branch
 }
 
+// CopyTree takes a root node and returns a pointer to the root node of a copy of the entire tree.
 func CopyTree(tree *ETree) *ETree {
 	var treeCopy *ETree
 	*treeCopy = *tree
@@ -78,6 +84,7 @@ func CopyTree(tree *ETree) *ETree {
 	return treeCopy
 }
 
+// GetBranch takes a root node and returns a slice of all internal nodes in the tree.
 func GetBranch(node *ETree) []*ETree {
 	var branch []*ETree
 	if node.Left != nil && node.Right != nil {
@@ -90,6 +97,7 @@ func GetBranch(node *ETree) []*ETree {
 	return branch
 }
 
+// GetLeaves takes a root node and returns a slice of all leaf nodes in the tree.
 func GetLeaves(node *ETree) []*ETree {
 	var leaf []*ETree
 	if node.Left != nil && node.Right != nil {
@@ -191,7 +199,8 @@ func parseNewick(input string) (*ETree, error) {
 	return parseNewickHelper(input[:len(input)-1])
 }
 
-// tell tree what "up" is.
+// SetUp takes a pointer to a node, root, and a "previous" node and sets the "Up" pointer
+// of root to point to prevNode.
 func SetUp(root *ETree, prevNode *ETree) {
 	if prevNode != nil {
 		root.Up = prevNode
@@ -204,7 +213,9 @@ func SetUp(root *ETree, prevNode *ETree) {
 	}
 }
 
-// set up tree with fastas.
+// AssignFastas takes a root node and the name of a fasta file.
+// The function will assign fasta sequences to all the nodes
+// in the tree if the names are identical.
 func AssignFastas(root *ETree, fastaFilename string) {
 	fastas := fasta.Read(fastaFilename)
 	SetUp(root, nil)
@@ -225,6 +236,9 @@ func AssignFastas(root *ETree, fastaFilename string) {
 	}
 }
 
+// FindNodeName takes a root node the name of the node we are searching for
+// if the name is found at the root or below, a pointer to that node
+// is the return value, and nil otherwise.
 func FindNodeName(node *ETree, findMe string) *ETree {
 	var searchResult *ETree
 	if node == nil {

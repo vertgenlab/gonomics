@@ -1,6 +1,7 @@
 // Command Group: "Sequence Evolution & Reconstruction"
 // Command Usage: "Simulate evolution along a tree and perform ancestral reconstruction"
 
+// Simulates evolution from the root of a newick tree to the extant species of the trees and then uses the leaf nodes to reconstruct the ancestral nodes and compares the answers for percent accuracy.
 package main
 
 import (
@@ -44,7 +45,7 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 	var treeFastas []fasta.Fasta
 
 	for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
-		reconstruct.LoopNodes(tree, i)
+		reconstruct.LoopNodes(tree, i, "", 0, 0)
 	}
 	for j := 0; j < len(leaves); j++ {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)

@@ -1,0 +1,15 @@
+Header
+
+[Term]
+id: GO:1
+name: Parent
+namespace: biological_process
+def: "A Parent Term"
+
+[Term]
+id: GO:2
+name: Child
+namespace: biological_process
+def: "A subterm of Parent"
+is_a: GO:1 ! Parent
+

@@ -2,6 +2,7 @@ package simulate
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"strings"
 
@@ -12,20 +13,50 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-// IlluminaPairedSam generates a pair of sam reads randomly distributed across the input ref.
-func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFragmentSize int, avgFragmentStdDev float64, flatErrorRate float64, binomialAlias numbers.BinomialAlias, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool) {
-	var fragmentSize, midpoint, startFor, startRev, endFor, endRev int
+// IlluminaPairedSam generates pairs of sam reads randomly distributed across the input DNA sequence.
+// The inputs are the name of the input DNA sequence, the sequence itself, the number of read pairs to generate, the length of each read,
+// the average fragment size, the standard deviation of fragment sizes, the error rate where a base in
+// the read will not match the input DNA, a numbers.binomialAlias that is used to speed up calculations, and
+// output file handles for sam, bam, and a bool denoting if bam (or sam) should be the output.
+// Whichever handle (sam or bam) is not being used can be nil.
+func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFragmentSize int, avgFragmentStdDev float64, flatErrorRate float64, ancientErrorRate float64, flatBinomialAlias numbers.BinomialAlias, ancientBinomialAlias numbers.BinomialAlias, geometricParam float64, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool, deaminationDistributionSlice []int) {
+	var fragmentSize, midpoint, startFor, endRev, newCapacity int
 	var currFor, currRev sam.Sam
+	var fragment []dna.Base = make([]dna.Base, 0, avgFragmentSize+int(5*avgFragmentStdDev)) //set initial fragment slice capacity to 5 deviations above average fragment size
+	var newFragment []dna.Base                                                              //this will be used if we run out of capacity in 'fragment'
+	if avgFragmentSize < readLen {
+		log.Fatalf("Error: average fragment size %v is less than read length %v.\n", avgFragmentSize, readLen)
+	}
+
 	for i := 0; i < numPairs; i++ {
 		fragmentSize = numbers.Max(readLen, int(numbers.SampleInverseNormal(float64(avgFragmentSize), avgFragmentStdDev)))
 		midpoint = numbers.RandIntInRange(0, len(ref))
-		startFor = midpoint - (fragmentSize / 2)
-		endFor = startFor + readLen
-		endRev = midpoint + (fragmentSize / 2)
-		startRev = endRev - readLen
+		startFor = numbers.Max(midpoint-(fragmentSize/2), 0)
+		endRev = numbers.Min(midpoint+(fragmentSize/2), len(ref))
 
-		currFor = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startFor, endFor, flatErrorRate, binomialAlias)
-		currRev = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, ref, startRev, endRev, flatErrorRate, binomialAlias)
+		if fragmentSize < readLen {
+			readLen = fragmentSize
+		}
+
+		//here we check if fragment has sufficient capacity for the next fragment we drew. If not, we extend capacity.
+		if len(fragment)+fragmentSize > cap(fragment) {
+			newCapacity = len(fragment) + fragmentSize
+			newFragment = make([]dna.Base, fragmentSize, newCapacity)
+			fragment = newFragment
+		} else {
+			fragment = fragment[:fragmentSize]
+		}
+		copy(fragment, ref[startFor:endRev])
+
+		if endRev > len(ref) || startFor < 0 {
+			currFor, currRev = generateUnmapped(readLen)
+		} else {
+			if ancientErrorRate > 0 {
+				ancientDamage(fragment, ancientBinomialAlias, geometricParam, deaminationDistributionSlice)
+			}
+			currFor, currRev = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, fragment, readLen, startFor, flatErrorRate, flatBinomialAlias)
+		}
+
 		if currFor.Cigar == nil && currRev.Cigar == nil {
 			i -= 1 // retry
 			continue
@@ -51,60 +82,69 @@ func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFra
 	}
 }
 
+// generateUnmapped creates a paired end read with a random sequence that is unmapped.
+func generateUnmapped(readLen int) (sam.Sam, sam.Sam) {
+	var forRead, revRead sam.Sam
+	forRead.RName = "*"
+	revRead.RName = "*"
+	forRead.Seq = make([]dna.Base, readLen)
+	revRead.Seq = make([]dna.Base, readLen)
+	for i := range forRead.Seq {
+		forRead.Seq[i] = dna.Base(numbers.RandIntInRange(0, 4))
+		revRead.Seq[i] = dna.Base(numbers.RandIntInRange(0, 4))
+	}
+	return forRead, revRead
+}
+
 // generateSamReadNoFlag generates a sam record for the input position.
+// the second return is a deaminationDistributionSlice, recording the positions of observed cytosine deamination events.
 // Soft clips sequence that is off template and does not generate Flag, RNext, or PNext.
-func generateSamReadNoFlag(readName string, refName string, ref []dna.Base, start, end int, flatErrorRate float64, alias numbers.BinomialAlias) sam.Sam {
-	var currSam sam.Sam
-	currSam.QName = readName
-	currSam.Seq = make([]dna.Base, end-start)
-	// generate qual
-	var bldr strings.Builder
-	for range currSam.Seq {
-		bldr.WriteRune(rune(numbers.RandIntInRange(30, 40) + 33)) // high quality seq + ascii offset
+func generateSamReadNoFlag(readName string, refName string, fragment []dna.Base, readLength int, fragmentStart int, flatErrorRate float64, flatAlias numbers.BinomialAlias) (sam.Sam, sam.Sam) {
+	var currForSam = sam.Sam{
+		QName: readName,
+		Seq:   make([]dna.Base, readLength),
 	}
-	currSam.Qual = bldr.String()
-
-	// check if unmapped
-	if end < 0 || start > len(ref) {
-		currSam.RName = "*"
-		for i := range currSam.Seq {
-			currSam.Seq[i] = dna.Base(numbers.RandIntInRange(0, 4))
-		}
-		return currSam
+	var currRevSam = sam.Sam{
+		QName: readName,
+		Seq:   make([]dna.Base, readLength),
 	}
 
-	currSam.MapQ = uint8(numbers.RandIntInRange(30, 40))
-	currSam.RName = refName
+	// generate quality scores for forward and reverse read
+	var bldrFor strings.Builder
+	for range currForSam.Seq {
+		bldrFor.WriteRune(rune(numbers.RandIntInRange(30, 40) + 33)) // high quality seq + ascii offset
+	}
+	currForSam.Qual = bldrFor.String()
+	var bldrRev strings.Builder
+	for range currRevSam.Seq {
+		bldrRev.WriteRune(rune(numbers.RandIntInRange(30, 40) + 33)) // high quality seq + ascii offset
+	}
+	currRevSam.Qual = bldrRev.String()
 
-	// generate random seq if off template
-	var realSeqStartIdx, realSeqEndIdx int
-	for realSeqStartIdx = start; realSeqStartIdx < 0; realSeqStartIdx++ {
-		currSam.Seq[realSeqStartIdx-start] = dna.Base(numbers.RandIntInRange(0, 4))
-	}
-	for realSeqEndIdx = end; realSeqEndIdx > len(ref); realSeqEndIdx-- {
-		currSam.Seq[len(currSam.Seq)-(1+(end-realSeqEndIdx))] = dna.Base(numbers.RandIntInRange(0, 4))
-	}
-	copy(currSam.Seq[realSeqStartIdx-start:len(currSam.Seq)-(end-realSeqEndIdx)], ref[realSeqStartIdx:realSeqEndIdx])
+	currForSam.MapQ = uint8(numbers.RandIntInRange(30, 40))
+	currRevSam.MapQ = uint8(numbers.RandIntInRange(30, 40))
+	currForSam.RName, currRevSam.RName = refName, refName
+
+	copy(currForSam.Seq, fragment[0:readLength])
+	copy(currRevSam.Seq, fragment[len(fragment)-readLength:])
 
 	// now we will simulate sequencing/PCR error with a flat error rate
 	if flatErrorRate > 0 {
-		currSam = sequencingError(currSam, alias)
+		currForSam = sequencingError(currForSam, flatAlias)
+		currRevSam = sequencingError(currRevSam, flatAlias)
 	}
 
 	// generate other values
-	currSam.Pos = uint32(realSeqStartIdx) + 1
-	currSam.TLen = int32(realSeqEndIdx - realSeqStartIdx)
+	currForSam.Pos = uint32(fragmentStart) + 1
+	currRevSam.Pos = uint32(fragmentStart+len(fragment)-readLength) + 1
+	currForSam.TLen = int32(readLength)
+	currRevSam.TLen = int32(readLength)
 
 	// assemble cigar
-	if realSeqStartIdx > start {
-		currSam.Cigar = append(currSam.Cigar, cigar.Cigar{RunLength: realSeqStartIdx - start, Op: 'S'})
-	}
-	currSam.Cigar = append(currSam.Cigar, cigar.Cigar{RunLength: realSeqEndIdx - realSeqStartIdx, Op: 'M'})
-	if realSeqEndIdx < end {
-		currSam.Cigar = append(currSam.Cigar, cigar.Cigar{RunLength: end - realSeqEndIdx, Op: 'S'})
-	}
+	currForSam.Cigar = append(currForSam.Cigar, cigar.Cigar{RunLength: readLength, Op: 'M'})
+	currRevSam.Cigar = append(currRevSam.Cigar, cigar.Cigar{RunLength: readLength, Op: 'M'})
 
-	return currSam
+	return currForSam, currRevSam
 }
 
 // addPairedFlags adds the flag for a pair of sam records.
@@ -168,4 +208,48 @@ func sequencingError(currSam sam.Sam, alias numbers.BinomialAlias) sam.Sam {
 		}
 	}
 	return currSam
+}
+
+// ancientDamage introduces cytosine deamination events into a DNA fragment ([]dna.Base).
+// ancientAlias is a numbers.BinomialAlias which allows rapid generation of binomial-distributed random variates.
+// cytosine deamination events are distributed geometrically from fragment ends, based on an input geometric parameter.
+// deaminationDistributionSlice records the locations of cytosine deamination events for debugging.
+func ancientDamage(currFrag []dna.Base, ancientAlias numbers.BinomialAlias, geometricParam float64, deaminationDistributionSlice []int) {
+	var currRandPos int
+	var distanceToEnd int
+	var foundInMap bool
+	var whichSideRand float64
+	numAncientErrorAttempts := numbers.RandBinomial(ancientAlias)
+	damagedPositions := make(map[int]int, numAncientErrorAttempts)
+	var currError int = 0
+	for currError < numAncientErrorAttempts {
+		distanceToEnd = numbers.RandGeometric(geometricParam)
+		for distanceToEnd >= len(currFrag) {
+			distanceToEnd = numbers.RandGeometric(geometricParam)
+		}
+		whichSideRand = rand.Float64() // we call a random number here to decide if the deamination attempt occurs on the left or right of the fragment
+		if whichSideRand < 0.5 {
+			currRandPos = len(currFrag) - distanceToEnd - 1 // distance from end, instead of distance from start
+		} else {
+			currRandPos = distanceToEnd // distance from start of read
+		}
+		if _, foundInMap = damagedPositions[currRandPos]; !foundInMap {
+			damagedPositions[currRandPos] = 1
+			switch currFrag[currRandPos] {
+			case dna.A:
+				// nothing to do
+			case dna.C:
+				currFrag[currRandPos] = dna.T
+				deaminationDistributionSlice[distanceToEnd]++
+			case dna.G:
+				currFrag[currRandPos] = dna.A
+				deaminationDistributionSlice[distanceToEnd]++
+			case dna.T:
+				// nothing to do
+			default:
+				log.Fatalf("Error: Unrecognized base: %v.\n", currFrag[currRandPos])
+			}
+			currError++
+		}
+	}
 }

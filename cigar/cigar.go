@@ -1,14 +1,12 @@
 // Package cigar contains functions to manipulate cigar data in the SAM file format.
 // More information on cigars can be found in http://samtools.github.io/hts-specs/SAMv1.pdf
-
 package cigar
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"unicode"
-
-	"github.com/vertgenlab/gonomics/common"
 )
 
 // Cigar contains information on the runLength, operation, and DNA sequence associated with a particular cigar character.
@@ -75,7 +73,7 @@ func FromString(input string) []Cigar {
 		if unicode.IsDigit(v) {
 			currentNumber = currentNumber + fmt.Sprintf("%c", v)
 		} else if validOp(v) {
-			currentCigar := Cigar{RunLength: common.StringToInt(currentNumber), Op: v}
+			currentCigar := Cigar{RunLength: parse.StringToInt(currentNumber), Op: v}
 			output = append(output, currentCigar)
 			currentNumber = ""
 		} else {
