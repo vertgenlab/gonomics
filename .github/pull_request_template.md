@@ -8,6 +8,7 @@ Please add any relevant links or resources, ideally links to related PRs, techni
 
 ### Testing
 <!-- if relevant, document how you tested this code, and how someone else might also test it -->
+\U0001F41B Bug Report
 
 ### Checklist before requesting a review
 
