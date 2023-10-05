@@ -1,4 +1,4 @@
-// Command Group: Ontology Tools
+// Command Group: "Ontology Tools"
 
 // Filter gaf file.
 package main
