@@ -47,17 +47,17 @@ func MergeBeds(bedFile []Bed) []Bed {
 // MergeBedsKeepNamesAndAnnotations will merge beds if overlapping and keep an index in the form of a comma separated list
 // of the name fields of merged beds, and add the annotation fields together into a single field ([]string)
 func MergeBedsKeepNamesAndAnnotations(bedFile []Bed) []Bed {
-	log.Print("is this taking a long time?")
 	SortByCoord(bedFile)
-	log.Print("or is it just me")
 	var i, j int
 	for i = 0; i < len(bedFile)-1; {
 		if !Overlap(bedFile[i], bedFile[i+1]) {
-			log.Print("no its me")
 			i++
 		} else {
-			log.Print("i'm taking forever")
-			bedFile[i].ChromStart, bedFile[i].ChromEnd, bedFile[i].Score, bedFile[i].Name, bedFile[i].Annotation = numbers.Min(bedFile[i].ChromStart, bedFile[i+1].ChromStart), numbers.Max(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd), bedFile[i].Score+bedFile[i+1].Score, bedFile[i].Name+","+bedFile[i+1].Name, append(bedFile[i].Annotation, bedFile[i].Annotation[0])
+			bedFile[i].ChromStart = numbers.Min(bedFile[i].ChromStart, bedFile[i+1].ChromStart)
+			bedFile[i].ChromEnd = numbers.Max(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd)
+			bedFile[i].Score = bedFile[i].Score + bedFile[i+1].Score
+			bedFile[i].Name = bedFile[i].Name + "," + bedFile[i+1].Name
+			bedFile[i].Annotation = append(bedFile[i].Annotation, bedFile[i].Annotation[0])
 			for j = i + 1; j < len(bedFile)-1; j++ {
 				bedFile[j] = bedFile[j+1]
 			}
