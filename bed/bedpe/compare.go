@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
 	"strings"
 )
 
@@ -111,6 +112,7 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	}
 	//divided by the number of regions in the true data set
 	matchCountFreq = float64(matchCount) / float64(len(mergedTruthBeds))
+	log.Printf("Matched: %v, Total: %v", matchCount, len(mergedTruthBeds))
 	return matchCountFreq, matches
 }
 
