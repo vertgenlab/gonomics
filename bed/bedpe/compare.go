@@ -37,7 +37,7 @@ func Equal(a BedPe, b BedPe) bool {
 // This can be used to compare any bedpe to any bed based off of overlap and name matching categories. Only the A foot of a bedpe will be checked if checkBothFeet is not set to true
 func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency float64, matchesWithDistance []bed.Bed) {
 	var matches, truthAsBeds []bed.Bed
-	var matchCount, nonMatchCount, name int
+	var matchCount, name int
 	var matchCountFreq float64
 	var truthIntervals, currNearest []interval.Interval
 	var trueBed, currNearestBed, matchedBed bed.Bed
@@ -82,6 +82,9 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		}
 
 		for j = range currNearest {
+			if matched {
+				continue
+			}
 			currNearestBed = currNearest[j].(bed.Bed)
 			names = strings.Split(currNearestBed.Name, ",")
 			for name = range names {
@@ -105,9 +108,6 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 					continue
 				}
 			}
-		}
-		if !matched {
-			nonMatchCount++
 		}
 	}
 	//divided by the number of regions in the true data set
