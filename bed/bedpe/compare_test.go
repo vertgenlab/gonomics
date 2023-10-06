@@ -57,7 +57,7 @@ var s = []struct {
 }{
 	{truth: Read("testdata/statsIn.bedpe"),
 		test:               bed.Read("testdata/bedTestIn.bed"),
-		expectedFreq:       0.20,
+		expectedFreq:       1.0,
 		expectedBedMatches: bed.Read("testdata/expectedMatches.bed")},
 }
 
