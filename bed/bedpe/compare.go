@@ -47,8 +47,10 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	var j int
 	counter := 0
 
+	log.Print("annotating")
 	annotateTruthFeetDist(truth)
 
+	log.Print("bedpe to bed")
 	for currTruth := range truth {
 		trueBed = bed.Bed{
 			Chrom:             truth[currTruth].A.Chrom,
@@ -60,8 +62,10 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		truthAsBeds = append(truthAsBeds, trueBed)
 	}
 
+	log.Print("merging")
 	mergedTruthBeds := bed.MergeBedsKeepNamesAndAnnotations(truthAsBeds)
 
+	log.Print("making intervals")
 	for t := range mergedTruthBeds {
 		if t == 0 {
 			chromList = append(chromList, mergedTruthBeds[t].Chrom)
@@ -71,8 +75,10 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		truthIntervals = append(truthIntervals, mergedTruthBeds[t])
 	}
 
+	log.Print("building tree")
 	truthTree := interval.BuildTree(truthIntervals)
 
+	log.Print("ranging test")
 	for currTestBed := range test {
 		matched = false
 		currNearest = interval.Query(truthTree, test[currTestBed], "any")
@@ -81,6 +87,7 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 			continue
 		}
 
+		log.Print("ranging currNearest")
 		for j = range currNearest {
 			if matched {
 				continue
@@ -110,6 +117,9 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 			}
 		}
 	}
+
+	log.Print("doing math")
+
 	//divided by the number of regions in the true data set
 	matchCountFreq = float64(matchCount) / float64(len(mergedTruthBeds))
 	log.Printf("Matched: %v, Total: %v", matchCount, len(mergedTruthBeds))
