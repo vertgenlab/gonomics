@@ -14,8 +14,8 @@ func RoutineFqToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	seedBuildHelper := newSeedBuilder()
-	scorekeeper := scoreKeeper{}
-	dynamicKeeper := dynamicScoreKeeper{}
+	scorekeeper := &scoreKeeper{}
+	dynamicKeeper := &dynamicScoreKeeper{}
 	for read := range inputChan {
 		outputChan <- *GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper)
 	}
@@ -27,8 +27,8 @@ func RoutineFqPairToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	seedBuildHelper := newSeedBuilder()
-	scorekeeper := scoreKeeper{}
-	dynamicKeeper := dynamicScoreKeeper{}
+	scorekeeper := &scoreKeeper{}
+	dynamicKeeper := &dynamicScoreKeeper{}
 	for read := range input {
 		output <- WrapPairGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper)
 	}
@@ -40,8 +40,8 @@ func RoutineGirafToSamSingle(gg *GenomeGraph, seedHash map[uint64][]uint64, seed
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	seedBuildHelper := newSeedBuilder()
-	scorekeeper := scoreKeeper{}
-	dynamicKeeper := dynamicScoreKeeper{}
+	scorekeeper := &scoreKeeper{}
+	dynamicKeeper := &dynamicScoreKeeper{}
 	for read := range inputChan {
 		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, seedLen, stepSize, &matrix, scoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper))
 	}
@@ -52,8 +52,8 @@ func RoutineGirafToSam(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen in
 	matrix := NewSwMatrix(defaultMatrixSize)
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
-	scorekeeper := scoreKeeper{}
-	dynamicKeeper := dynamicScoreKeeper{}
+	scorekeeper := &scoreKeeper{}
+	dynamicKeeper := &dynamicScoreKeeper{}
 	seedBuildHelper := newSeedBuilder()
 	var pair sam.MatePair
 	for read := range input {
