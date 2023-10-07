@@ -1,6 +1,7 @@
-package numbers
+package fit
 
 import (
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math"
 	"math/rand"
@@ -274,7 +275,7 @@ func sampleWithoutReplacement(data []float64, k int) []float64 {
 	var max int = origSize
 	var idx int
 	for i := range ans {
-		idx = RandIntInRange(0, max)
+		idx = numbers.RandIntInRange(0, max)
 		ans[i] = data[idx]
 		data[idx], data[len(data)-1] = data[len(data)-1], data[idx]
 		max--
