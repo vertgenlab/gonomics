@@ -10,19 +10,32 @@ import (
 )
 
 func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) sam.Sam {
-	var currBest sam.Sam = sam.Sam{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
-	var leftAlignment, rightAlignment []cigar.Cigar
-	var minTarget int
-	var minQuery int
-	var leftScore, rightScore int64
-	var bestScore int64
-	var leftPath, rightPath, bestPath []uint32
-	var currScore int64 = 0
-	perfectScore := perfectMatchBig(read, scoreMatrix)
+	var currBest sam.Sam = sam.Sam{
+		QName: read.Name,
+		Flag:  4,
+		RName: "*",
+		Pos:   0,
+		MapQ:  255,
+		Cigar: []cigar.Cigar{{Op: '*'}},
+		RNext: "*",
+		PNext: 0,
+		TLen:  0,
+		Seq:   read.Seq,
+		Qual:  "",
+		Extra: "BZ:i:0\tGP:Z:-1",
+	}
 
-	var seeds []*SeedDev
-	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
+	var leftAlignment, rightAlignment []cigar.Cigar
+	var minTarget, minQuery int
+	var leftScore, rightScore, bestScore, currScore int64
+	var leftPath, rightPath, bestPath []uint32
+
+	perfectScore := perfectMatchBig(read, scoreMatrix)
+	seeds := searchSeedMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
 	SortSeedDevByLen(seeds)
+
+	// Declare outside to avoid repetitive allocations
+	var seedPath, concatenatedPath []uint32
 	var tailSeed *SeedDev
 	var seedScore int64
 	var currSeq []dna.Base
@@ -31,38 +44,36 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		currSeed = seeds[i]
 		tailSeed = getLastPart(currSeed)
-		if currSeed.PosStrand {
-			currSeq = read.Seq
-		} else {
+
+		currSeq = read.Seq
+		if !currSeed.PosStrand {
 			currSeq = read.SeqRc
 		}
-		if int(currSeed.TotalLength) == len(currSeq) {
-			currScore = seedScore
-			leftScore = 0
-			minTarget = int(currSeed.TargetStart)
-			minQuery = int(currSeed.QueryStart)
-			rightScore = 0
-		}
+
 		seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
 		currScore = leftScore + seedScore + rightScore
+
 		if currScore > bestScore {
-			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath)
+			seedPath = getSeedPath(currSeed)
+			concatenatedPath = CatPaths(CatPaths(leftPath, seedPath), rightPath)
+			bestPath = append(bestPath[:0], concatenatedPath...) // Reuse the slice
 			bestScore = currScore
-			if currSeed.PosStrand {
-				currBest.Flag = 0
-			} else {
+
+			// Direct assignments
+			currBest.Flag = 0
+			if !currSeed.PosStrand {
 				currBest.Flag = 16
 			}
-			currBest.Seq = currSeq // unsure why this line was lost
+			currBest.Seq = currSeq
 			currBest.Qual = string(read.Qual)
 			currBest.RName = fmt.Sprintf("%d", bestPath[0])
 			currBest.Pos = uint32(minTarget + 1)
-			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath))
-
+			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(concatenatedPath)
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
 		}
 	}
+
 	if bestScore < 1200 {
 		currBest.Flag = 4
 	}
@@ -107,7 +118,7 @@ func scoreSeedPart(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64
 }
 
 func scoreSeed(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
-	var score int64 = 0
+	score := int64(0)
 	for ; seed != nil; seed = seed.NextPart {
 		score += scoreSeedPart(seed, read, scoreMatrix)
 	}
@@ -123,20 +134,21 @@ var HumanChimpTwoScoreMatrix = [][]int64{
 }
 
 func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
-	var runLen int = cigar.QueryLength(cig)
-	if runLen < lengthOfRead {
-		answer := make([]cigar.Cigar, 0, len(cig)+2)
-		if front > 0 {
-			answer = append(answer, cigar.Cigar{RunLength: front, Op: 'S'})
-		}
-		answer = append(answer, cig...)
-		if front+int(cigar.QueryLength(cig)) < lengthOfRead {
-			answer = append(answer, cigar.Cigar{RunLength: lengthOfRead - front - runLen, Op: 'S'})
-		}
-		return answer
-	} else {
+	runLen := cigar.QueryLength(cig)
+	if runLen >= lengthOfRead {
 		return cig
 	}
+
+	answer := make([]cigar.Cigar, 0, len(cig)+2)
+	if front > 0 {
+		answer = append(answer, cigar.Cigar{RunLength: front, Op: 'S'})
+	}
+	answer = append(answer, cig...)
+	if remaining := lengthOfRead - front - runLen; remaining > 0 {
+		answer = append(answer, cigar.Cigar{RunLength: remaining, Op: 'S'})
+	}
+
+	return answer
 }
 
 // perfect match.
@@ -161,32 +173,26 @@ func perfectMatch(read fastq.Fastq, scoreMatrix [][]int64) int64 {
 }*/
 
 func ChromAndPosToNumber(chrom int, start int) uint64 {
-	var chromCode uint64 = uint64(chrom)
-	chromCode = chromCode << 32
-	var answer uint64 = chromCode | uint64(start)
-	return answer
+	return (uint64(chrom) << 32) | uint64(start)
 }
 
 func dnaToNumber(seq []dna.Base, start int, end int) uint64 {
-	var answer uint64 = uint64(seq[start])
+	answer := uint64(seq[start])
 	for i := start + 1; i < end; i++ {
-		answer = answer << 2
-		answer = answer | uint64(seq[i])
+		answer = (answer << 2) | uint64(seq[i])
 	}
 	return answer
 }
 
 func numberToChromAndPos(code uint64) (int64, int64) {
-	var rightSideOnes uint64 = 4294967295
-	var leftSideOnes uint64 = rightSideOnes << 32
-	var chromIdx uint64 = code & leftSideOnes
-	chromIdx = chromIdx >> 32
-	var pos uint64 = code & rightSideOnes
-	return int64(chromIdx), int64(pos)
+	const rightSideOnes uint64 = 4294967295
+	return int64(code >> 32), int64(code & rightSideOnes)
 }
 
 func ViewMatrix(m [][]int64) string {
-	var message string = ""
-	message += fmt.Sprintf("\t\t %d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t %d\n", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3])
-	return message
+	return fmt.Sprintf("\t\t %d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t %d\n",
+		m[0][0], m[0][1], m[0][2], m[0][3],
+		m[1][0], m[1][1], m[1][2], m[1][3],
+		m[2][0], m[2][1], m[2][2], m[2][3],
+		m[3][0], m[3][1], m[3][2], m[3][3])
 }

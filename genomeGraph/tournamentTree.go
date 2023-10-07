@@ -349,3 +349,50 @@ func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []Node, 
 
 	return allHits
 }*/
+
+func searchSeedMemPool(seedHash map[uint64][]uint64, nodes []Node, read fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
+	const basesPerInt int64 = 32
+	var keyShift uint = 64 - (uint(seedLen) * 2)
+	var finalSeeds []*SeedDev
+
+	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
+		keyIdx := (readStart + 31) / 32
+		keyOffset := 31 - ((readStart + 31) % 32)
+
+		// Forward Strand
+		seqKey := read.Rainbow[keyOffset].Seq[keyIdx] >> keyShift
+		currHits := seedHash[seqKey]
+
+		for _, codedNodeCoord := range currHits {
+			nodeIdx, nodePos := numberToChromAndPos(codedNodeCoord)
+			nodeOffset := int(nodePos % basesPerInt)
+			readOffset := 31 - ((readStart - nodeOffset + 31) % 32)
+
+			leftMatches := numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.Rainbow[readOffset], readStart+readOffset))
+			tempSeeds := extendToTheRight(&nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true)
+
+			for _, tempSeed := range tempSeeds {
+				finalSeeds = append(finalSeeds, extendToTheLeft(&nodes[nodeIdx], read, tempSeed)...)
+			}
+		}
+
+		// Reverse Strand
+		seqKeyRC := read.RainbowRc[keyOffset].Seq[keyIdx] >> keyShift
+		currHitsRC := seedHash[seqKeyRC]
+
+		for _, codedNodeCoord := range currHitsRC {
+			nodeIdx, nodePos := numberToChromAndPos(codedNodeCoord)
+			nodeOffset := int(nodePos % basesPerInt)
+			readOffset := 31 - ((readStart - nodeOffset + 31) % 32)
+
+			leftMatches := numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.RainbowRc[readOffset], readStart+readOffset))
+			tempSeeds := extendToTheRight(&nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false)
+
+			for _, tempSeed := range tempSeeds {
+				finalSeeds = append(finalSeeds, extendToTheLeft(&nodes[nodeIdx], read, tempSeed)...)
+			}
+		}
+	}
+
+	return finalSeeds
+}
