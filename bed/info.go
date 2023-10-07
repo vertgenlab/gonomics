@@ -2,12 +2,47 @@ package bed
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-// UngappedRegionsFromFa: finds all regions outside gaps in a given fasta record.
+func MultiFaUngappedRegions(records []fasta.Fasta, chromName string, seqName string) []Bed {
+	var answer = make([]Bed, 0)
+	var seqNameIndex int = -1
+	var inRegion bool = false
+	var startRefPos, endRefPos int = 0, 0
+	var lastRefPos, lastAlnPos = 0, 0
+
+	//first we find the index of seqName
+	for i := 0; i < len(records); i++ {
+		if records[i].Name == seqName {
+			seqNameIndex = i
+			break
+		}
+	}
+
+	if seqNameIndex == -1 {
+		log.Fatalf("Error: seqName: %s, not found in records.\n", seqName)
+	}
+
+	for currAlnPos := 0; currAlnPos < len(records[0].Seq); currAlnPos++ {
+		if dna.DefineBase(records[seqNameIndex].Seq[currAlnPos]) && !inRegion {
+			inRegion = true
+			startRefPos = fasta.AlnPosToRefPosCounter(records[0], currAlnPos, lastRefPos, lastAlnPos)
+			lastRefPos, lastAlnPos = startRefPos, currAlnPos
+		} else if !(dna.DefineBase(records[seqNameIndex].Seq[currAlnPos])) && inRegion {
+			endRefPos = fasta.AlnPosToRefPosCounter(records[0], currAlnPos, lastRefPos, lastAlnPos)
+			lastRefPos, lastAlnPos = endRefPos, currAlnPos
+			answer = append(answer, Bed{Chrom: chromName, ChromStart: startRefPos, ChromEnd: endRefPos, FieldsInitialized: 3})
+		}
+	}
+
+	return answer
+}
+
+// UngappedRegionsFromFa finds all regions outside gaps in a given fasta record.
 func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 	var answer []Bed
 	var inRegion bool = false
@@ -27,7 +62,7 @@ func UngappedRegionsFromFa(fa fasta.Fasta) []Bed {
 	return answer
 }
 
-// UngappedRegionsAllFromFa: Finds ungapped regions or bases that do not contain Ns. Returns a slice of bed records.
+// UngappedRegionsAllFromFa finds ungapped regions or bases that do not contain Ns. Returns a slice of bed records.
 func UngappedRegionsAllFromFa(records []fasta.Fasta) []Bed {
 	var answer []Bed
 	var idx int = 0
@@ -47,7 +82,7 @@ func TotalSize(b []Bed) int {
 	return ans
 }
 
-// IsNonOverlapping returns true if any elements in a Bed slice overlap another element in the same slice. False otherwise.
+// IsSelfOverlapping returns true if any elements in a Bed slice overlap another element in the same slice. False otherwise.
 // b must be presorted with SortByCoord. Verbose > 0 reveals debug prints.
 func IsSelfOverlapping(b []Bed, verbose int) bool {
 	for i := 0; i < len(b)-1; i++ {
