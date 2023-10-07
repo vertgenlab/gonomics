@@ -36,6 +36,7 @@ func MultiFaUngappedRegions(records []fasta.Fasta, chromName string, seqName str
 			endRefPos = fasta.AlnPosToRefPosCounter(records[0], currAlnPos, lastRefPos, lastAlnPos)
 			lastRefPos, lastAlnPos = endRefPos, currAlnPos
 			answer = append(answer, Bed{Chrom: chromName, ChromStart: startRefPos, ChromEnd: endRefPos, FieldsInitialized: 3})
+			inRegion = false
 		}
 	}
 
