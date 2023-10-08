@@ -14,6 +14,7 @@ func MultiFaUngappedRegions(records []fasta.Fasta, chromName string, seqName str
 	var inRegion bool = false
 	var startRefPos, endRefPos int = 0, 0
 	var lastRefPos, lastAlnPos = 0, 0
+	var currAlnPos int = 0
 
 	//first we find the index of seqName
 	for i := 0; i < len(records); i++ {
@@ -27,7 +28,7 @@ func MultiFaUngappedRegions(records []fasta.Fasta, chromName string, seqName str
 		log.Fatalf("Error: seqName: %s, not found in records.\n", seqName)
 	}
 
-	for currAlnPos := 0; currAlnPos < len(records[0].Seq); currAlnPos++ {
+	for currAlnPos = 0; currAlnPos < len(records[0].Seq); currAlnPos++ {
 		if dna.DefineBase(records[seqNameIndex].Seq[currAlnPos]) && !inRegion {
 			inRegion = true
 			startRefPos = fasta.AlnPosToRefPosCounter(records[0], currAlnPos, lastRefPos, lastAlnPos)
@@ -38,6 +39,11 @@ func MultiFaUngappedRegions(records []fasta.Fasta, chromName string, seqName str
 			answer = append(answer, Bed{Chrom: chromName, ChromStart: startRefPos, ChromEnd: endRefPos, FieldsInitialized: 3})
 			inRegion = false
 		}
+	}
+
+	if inRegion {
+		endRefPos = fasta.AlnPosToRefPosCounter(records[0], currAlnPos, lastRefPos, lastAlnPos)
+		answer = append(answer, Bed{Chrom: chromName, ChromStart: startRefPos, ChromEnd: endRefPos, FieldsInitialized: 3})
 	}
 
 	return answer

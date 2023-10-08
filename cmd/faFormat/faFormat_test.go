@@ -10,55 +10,142 @@ import (
 )
 
 var FaFormatTests = []struct {
-	inputFile        string
-	outputFile       string
-	expectedFile     string
-	lineLength       int
-	nameFile         string
-	trimName         bool
-	toUpper          bool
-	revComp          bool
-	noGaps           bool
-	noGapBed         string
-	noGapBedExpected string
-	maskInvalid      bool
+	InputFile               string
+	OutputFile              string
+	ExpectedFile            string
+	LineLength              int
+	NameFile                string
+	TrimName                bool
+	ToUpper                 bool
+	RevComp                 bool
+	NoGaps                  bool
+	NoGapBed                string
+	NoGapBedExpected        string
+	MaskInvalid             bool
+	MultiFaNoGapBed         string
+	QuerySeqName            string
+	ChromName               string
+	ExpectedMultiFaNoGapBed string
 }{
-	{"testdata/faFormatTest.fa", "testdata/faFormatOutput.fa", "testdata/faFormatExpected.fa", 50, "", true, true, false, true, "testdata/test.NoGap.bed", "testdata/expected.NoGap.bed", false},
-	{"testdata/faFormatTest.fa", "testdata/faFormatOutput.fa", "testdata/faFormatNamesExpected.fa", 50, "testdata/fastaNames.txt", true, true, false, false, "", "", false},
-	{"testdata/revCompTest.fa", "testdata/revCompOutput.fa", "testdata/revCompExpected.fa", 50, "", false, false, true, false, "", "", false},
-	{"testdata/revCompTest.fa", "testdata/revCompNamesOutput.fa", "testdata/revCompNamesExpected.fa", 50, "testdata/fastaNames.txt", false, false, true, false, "", "", false},
-	{"testdata/maskInput.fa", "testdata/maskOutput.fa", "testdata/maskExpected.fa", 19, "", false, false, false, false, "", "", true},
+	{InputFile: "testdata/faFormatTest.fa",
+		OutputFile:       "testdata/faFormatOutput.fa",
+		ExpectedFile:     "testdata/faFormatExpected.fa",
+		LineLength:       50,
+		NameFile:         "",
+		TrimName:         true,
+		ToUpper:          true,
+		RevComp:          false,
+		NoGaps:           true,
+		NoGapBed:         "testdata/test.NoGap.bed",
+		NoGapBedExpected: "testdata/expected.NoGap.bed",
+		MaskInvalid:      false},
+	{InputFile: "testdata/faFormatTest.fa",
+		OutputFile:       "testdata/faFormatOutput.fa",
+		ExpectedFile:     "testdata/faFormatNamesExpected.fa",
+		LineLength:       50,
+		NameFile:         "testdata/fastaNames.txt",
+		TrimName:         true,
+		ToUpper:          true,
+		RevComp:          false,
+		NoGaps:           false,
+		NoGapBed:         "",
+		NoGapBedExpected: "",
+		MaskInvalid:      false},
+	{InputFile: "testdata/revCompTest.fa",
+		OutputFile:       "testdata/revCompOutput.fa",
+		ExpectedFile:     "testdata/revCompExpected.fa",
+		LineLength:       50,
+		NameFile:         "",
+		TrimName:         false,
+		ToUpper:          false,
+		RevComp:          true,
+		NoGaps:           false,
+		NoGapBed:         "",
+		NoGapBedExpected: "",
+		MaskInvalid:      false},
+	{InputFile: "testdata/revCompTest.fa",
+		OutputFile:       "testdata/revCompNamesOutput.fa",
+		ExpectedFile:     "testdata/revCompNamesExpected.fa",
+		LineLength:       50,
+		NameFile:         "testdata/fastaNames.txt",
+		TrimName:         false,
+		ToUpper:          false,
+		RevComp:          true,
+		NoGaps:           false,
+		NoGapBed:         "",
+		NoGapBedExpected: "",
+		MaskInvalid:      false},
+	{InputFile: "testdata/maskInput.fa",
+		OutputFile:       "testdata/maskOutput.fa",
+		ExpectedFile:     "testdata/maskExpected.fa",
+		LineLength:       19,
+		NameFile:         "",
+		TrimName:         false,
+		ToUpper:          false,
+		RevComp:          false,
+		NoGaps:           false,
+		NoGapBed:         "",
+		NoGapBedExpected: "",
+		MaskInvalid:      true},
+	{InputFile: "testdata/multiFaGaps.fa",
+		OutputFile:              "testdata/out.multiFaGaps.fa",
+		ExpectedFile:            "testdata/expected.multiFaGaps.fa",
+		LineLength:              50,
+		NameFile:                "",
+		TrimName:                false,
+		ToUpper:                 false,
+		RevComp:                 false,
+		NoGaps:                  false,
+		NoGapBed:                "",
+		NoGapBedExpected:        "",
+		MaskInvalid:             false,
+		MultiFaNoGapBed:         "testdata/out.multiFaNoGap.bed",
+		QuerySeqName:            "hca",
+		ChromName:               "chr1",
+		ExpectedMultiFaNoGapBed: "testdata/expected.multiFaNoGap.bed",
+	},
 }
 
 func TestFaFormat(t *testing.T) {
 	var err error
 	for _, v := range FaFormatTests {
 		s := Settings{
-			InFile:      v.inputFile,
-			OutFile:     v.outputFile,
-			LineLength:  v.lineLength,
-			NamesFile:   v.nameFile,
-			TrimName:    v.trimName,
-			ToUpper:     v.toUpper,
-			RevComp:     v.revComp,
-			NoGaps:      v.noGaps,
-			NoGapBed:    v.noGapBed,
-			MaskInvalid: v.maskInvalid,
+			InFile:          v.InputFile,
+			OutFile:         v.OutputFile,
+			LineLength:      v.LineLength,
+			NamesFile:       v.NameFile,
+			TrimName:        v.TrimName,
+			ToUpper:         v.ToUpper,
+			RevComp:         v.RevComp,
+			NoGaps:          v.NoGaps,
+			NoGapBed:        v.NoGapBed,
+			MaskInvalid:     v.MaskInvalid,
+			MultiFaNoGapBed: v.MultiFaNoGapBed,
+			QuerySeqName:    v.QuerySeqName,
+			ChromName:       v.ChromName,
 		}
 		faFormat(s)
-		records := fasta.Read(v.outputFile)
-		expected := fasta.Read(v.expectedFile)
+		records := fasta.Read(v.OutputFile)
+		expected := fasta.Read(v.ExpectedFile)
 		if !fasta.AllAreEqual(records, expected) {
-			t.Errorf("Error in faFormat.")
+			t.Errorf("Error: in faFormat.")
 		} else {
-			err = os.Remove(v.outputFile)
+			err = os.Remove(v.OutputFile)
 			exception.PanicOnErr(err)
 		}
-		if v.noGapBed != "" {
-			if !fileio.AreEqual(v.noGapBed, v.noGapBedExpected) {
-				t.Errorf("Error in faFormat, noGapBed did not match expected.")
+		if v.NoGapBed != "" {
+			if !fileio.AreEqual(v.NoGapBed, v.NoGapBedExpected) {
+				t.Errorf("Error: in faFormat, noGapBed did not match expected.")
 			} else {
-				err = os.Remove(v.noGapBed)
+				err = os.Remove(v.NoGapBed)
+				exception.PanicOnErr(err)
+			}
+		}
+		if v.MultiFaNoGapBed != "" {
+			if !fileio.AreEqual(v.MultiFaNoGapBed, v.ExpectedMultiFaNoGapBed) {
+				t.Errorf("Error: in faFormat, MultiFaNoGapBed did not match expected.")
+			} else {
+				err = os.Remove(v.MultiFaNoGapBed)
 				exception.PanicOnErr(err)
 			}
 		}
