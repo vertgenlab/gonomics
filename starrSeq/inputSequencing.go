@@ -10,7 +10,8 @@ import (
 	"sort"
 )
 
-// ParseInputSequencingSam reads and parses an alignment file for an input library sequencing run. It creates a read-count map for all constructs in the provided GTF
+// ParseInputSequencingSam reads and parses an alignment file for an input library sequencing run. It creates a read-count map for all constructs in the provided bed file.
+// input sam file must be position sorted
 func ParseInputSequencingSam(s ScStarrSeqSettings) {
 	var tree = make([]interval.Interval, 0)
 	var bedSizeMap = make(map[string]int)
@@ -32,6 +33,9 @@ func ParseInputSequencingSam(s ScStarrSeqSettings) {
 
 	currEntry = <-inChan
 	for i := range inChan {
+		if !sam.FilterByQuality(i, 0) { //filter out MAPQ = 0 reads
+			continue
+		}
 		//remove PCR duplicates
 		if interval.AreEqual(currEntry, i) {
 			if currEntry.Qual >= i.Qual {
