@@ -45,7 +45,6 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 	var matched bool
 	var chromList []string
 	var j int
-	counter := 0
 
 	annotateTruthFeetDist(truth)
 
@@ -77,7 +76,6 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 		matched = false
 		currNearest = interval.Query(truthTree, test[currTestBed], "any")
 		if len(currNearest) == 0 { //we can have regions that don't have a contact in them, we will ignore those and not include them in our counts
-			counter++
 			continue
 		}
 
@@ -88,6 +86,9 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 			currNearestBed = currNearest[j].(bed.Bed)
 			names = strings.Split(currNearestBed.Name, ",")
 			for name = range names {
+				if matched {
+					continue
+				}
 				matchedBed = bed.Bed{Chrom: "",
 					ChromStart:        0,
 					ChromEnd:          0,
@@ -110,7 +111,7 @@ func GeneAssignmentCheck(truth []BedPe, test []bed.Bed) (regionMatchFrequency fl
 			}
 		}
 	}
-	//divided by the number of regions in the true data set
+	//divided thenumber of regions with overlap and matching names by the number of regions in the true data set
 	matchCountFreq = float64(matchCount) / float64(len(mergedTruthBeds))
 	log.Printf("Matched: %v, Total: %v", matchCount, len(mergedTruthBeds))
 	return matchCountFreq, matches
