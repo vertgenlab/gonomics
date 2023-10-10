@@ -145,11 +145,11 @@ func separatePath(path string) string {
 }
 
 func usage() {
-	fmt.Print("haqerBedComps -- Takes in 2 bed files or a list of bed files and give similarity statistics based on number of overlaps" +
+	fmt.Print("bedSimilarity -- Takes in 2 bed files or a list of bed files and gives similarity statistics based on number of overlaps" +
 		"for the input bed files.\n" +
 		"If the -list option is used, all combinations of provided files (excluding the comparison with itself) will be performed. " +
-		"The statistics are: the percentage of elements that have an overlap an element in the second bed file, " +
-		"the percentage of elements in the second bed file that overlap an element in the first bed file, and " +
+		"The statistics are: the proportion of elements that have an overlap an element in the second bed file, " +
+		"the proportion of elements in the second bed file that overlap an element in the first bed file, and " +
 		"the average of the two overlap percentages (a metric of overall similarity between the two bed files)." +
 		"When using the -list option, either matrix option can be used to create a heatmap of similarities scores for all bed files in the list\n\n" +
 		"Usage: \n" +
@@ -160,11 +160,11 @@ func usage() {
 }
 
 func main() {
-	var list *string = flag.String("list", "", "Provide a list of bed files and perform an IntervalSimilarity test on all possible combinations")
+	var list *string = flag.String("list", "", "Provide a list of bed files and perform an bedSimilarity test on all possible combinations")
 	var matrixAverage *string = flag.String("matrixAverage", "", "Provide a filename for a matrix that will have all files from the -list option on both axes. "+
-		"The matrix will be populated with IntervalSimilarity metric. Must be used with -list")
+		"The matrix will be populated with average bedSimilarity metric. Must be used with -list")
 	var matrixComponents *string = flag.String("matrixComponents", "", "Provide a filename for a matrix that will have all files from the -list option on both axes. "+
-		"The matrix will be populated with the overlap percentage of elements from the file on the vertical axis with the file on the horizontal axis. Must be used with -list")
+		"The matrix will be populated with the overlap proportion of elements from the file on the vertical axis with the file on the horizontal axis. Must be used with -list")
 
 	var expectedNumArgs int
 	flag.Usage = usage
