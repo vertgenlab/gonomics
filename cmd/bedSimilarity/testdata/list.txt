@@ -1,0 +1,3 @@
+testdata/smallAJ.bed
+testdata/largeAJ.bed
+testdata/thirdBed.bed
