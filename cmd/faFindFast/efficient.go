@@ -169,14 +169,10 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 				// in order to only scan the genome once, call fasta.AlnPosToRefPosCounterSeq on saved refStart and alnStart once refStart and alnStart both exceed 0
 				if lastRefIdxOfWindowPlusOne < 0 || lastAlnIdxOfWindow+1 < 0 {
 					refIdxWindowStart = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1, 0, 0)
-					fmt.Printf("refIdxWindowStart = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1, 0, 0)\n") //TODO: remove in next commit
 					lastRefIdxOfWindowPlusOne = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow+1, refIdxWindowStart, alnIdxBeforeWindowForRef+1)
-					fmt.Printf("lastRefIdxOfWindowPlusOne: %v = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow+1: %v, refIdxWindowStart: %v, alnIdxBeforeWindowForRef+1: %v)\n", lastRefIdxOfWindowPlusOne, lastAlnIdxOfWindow+1, refIdxWindowStart, alnIdxBeforeWindowForRef+1) // TODO: remove in next commit
 				} else {
 					refIdxWindowStart = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1, prevRefIdxWindowStart, prevAlnIdxBeforeWindowForRefPlusOne)
-					fmt.Printf("refIdxWindowStart: %v = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1: %v, prevRefIdxWindowStart: %v, prevAlnIdxBeforeWindowForRefPlusOne: %v)\n", refIdxWindowStart, alnIdxBeforeWindowForRef+1, prevRefIdxWindowStart, prevAlnIdxBeforeWindowForRefPlusOne) // TODO: remove in next commit
 					lastRefIdxOfWindowPlusOne = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow+1, prevLastRefIdxOfWindowPlusOne, prevLastAlnIdxOfWindowPlusOne)
-					fmt.Printf("lastRefIdxOfWindowPlusOne: %v = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow+1: %v, prevLastRefIdxOfWindowPlusOne: %v, prevLastAlnIdxOfWindowPlusOne: %v)\n", lastRefIdxOfWindowPlusOne, lastAlnIdxOfWindow+1, prevLastRefIdxOfWindowPlusOne, prevLastAlnIdxOfWindowPlusOne) // TODO: remove in next commit
 				}
 
 				prevRefIdxWindowStart = refIdxWindowStart
