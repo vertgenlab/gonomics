@@ -115,6 +115,7 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 	var gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base.
 	var err error
 	var percentDiverged, rawPValue float64
+	var prevRefIdxWindowStart, prevAlnIdxBeforeWindowForRefPlusOne, prevLastRefIdxOfWindowPlusOne, prevLastAlnIdxOfWindowPlusOne int = 0, 0, 0, 0
 
 	// this caches map[k] to -log10(BinomialDist(n, k, p, true)), which is the -log10 p Value.
 	var scorePValueCache map[int]float64
@@ -168,11 +169,22 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 				// in order to only scan the genome once, call fasta.AlnPosToRefPosCounterSeq on saved refStart and alnStart once refStart and alnStart both exceed 0
 				if lastRefIdxOfWindowPlusOne < 0 || lastAlnIdxOfWindow+1 < 0 {
 					refIdxWindowStart = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1, 0, 0)
+					fmt.Printf("refIdxWindowStart = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1, 0, 0)\n") //TODO: remove in next commit
+					lastRefIdxOfWindowPlusOne = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow+1, refIdxWindowStart, alnIdxBeforeWindowForRef+1)
+					fmt.Printf("lastRefIdxOfWindowPlusOne: %v = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow+1: %v, refIdxWindowStart: %v, alnIdxBeforeWindowForRef+1: %v)\n", lastRefIdxOfWindowPlusOne, lastAlnIdxOfWindow+1, refIdxWindowStart, alnIdxBeforeWindowForRef+1) // TODO: remove in next commit
 				} else {
-					refIdxWindowStart = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1, lastRefIdxOfWindowPlusOne, lastAlnIdxOfWindow+1)
+					refIdxWindowStart = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1, prevRefIdxWindowStart, prevAlnIdxBeforeWindowForRefPlusOne)
+					fmt.Printf("refIdxWindowStart: %v = fasta.AlnPosToRefPosCounterSeq(reference, alnIdxBeforeWindowForRef+1: %v, prevRefIdxWindowStart: %v, prevAlnIdxBeforeWindowForRefPlusOne: %v)\n", refIdxWindowStart, alnIdxBeforeWindowForRef+1, prevRefIdxWindowStart, prevAlnIdxBeforeWindowForRefPlusOne) // TODO: remove in next commit
+					lastRefIdxOfWindowPlusOne = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow+1, prevLastRefIdxOfWindowPlusOne, prevLastAlnIdxOfWindowPlusOne)
+					fmt.Printf("lastRefIdxOfWindowPlusOne: %v = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow+1: %v, prevLastRefIdxOfWindowPlusOne: %v, prevLastAlnIdxOfWindowPlusOne: %v)\n", lastRefIdxOfWindowPlusOne, lastAlnIdxOfWindow+1, prevLastRefIdxOfWindowPlusOne, prevLastAlnIdxOfWindowPlusOne) // TODO: remove in next commit
 				}
-				lastRefIdxOfWindowPlusOne = fasta.AlnPosToRefPosCounterSeq(reference, lastAlnIdxOfWindow+1, refIdxWindowStart, alnIdxBeforeWindowForRef+1)
 
+				prevRefIdxWindowStart = refIdxWindowStart
+				prevAlnIdxBeforeWindowForRefPlusOne = alnIdxBeforeWindowForRef + 1
+				prevLastRefIdxOfWindowPlusOne = lastRefIdxOfWindowPlusOne
+				prevLastAlnIdxOfWindowPlusOne = lastAlnIdxOfWindow + 1
+
+				// print output
 				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
 				if !s.RemoveN || totalNs == 0 {
 					if s.LongOutput && !s.OutputAlnPos {
