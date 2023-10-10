@@ -2,10 +2,9 @@ package bed
 
 import (
 	"fmt"
-	"log"
-
-	"github.com/vertgenlab/gonomics/dna"
+  "github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"log"
 )
 
 func MultiFaUngappedRegions(records []fasta.Fasta, chromName string, seqName string) []Bed {

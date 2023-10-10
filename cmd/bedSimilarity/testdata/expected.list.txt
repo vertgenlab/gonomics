@@ -1,0 +1,4 @@
+A	B	proportion overlaps of A in B	proportion overlaps of B in A	bedSimilarityScore
+smallAJ.bed	largeAJ.bed	0.750000	0.666667	0.708333
+smallAJ.bed	thirdBed.bed	0.750000	0.500000	0.625000
+largeAJ.bed	thirdBed.bed	0.333333	0.500000	0.416667
