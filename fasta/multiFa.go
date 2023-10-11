@@ -8,13 +8,23 @@ import (
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
 func RefPosToAlnPos(record Fasta, RefPos int) int {
-	return RefPosToAlnPosCounter(record, RefPos, 0, 0)
+	var refStart, alnStart = 0, 0
+	for t := alnStart; refStart < RefPos; alnStart++ {
+		t++
+		if t == len(record.Seq) {
+			log.Fatalf("Ran out of chromosome.")
+		} else if record.Seq[t] != dna.Gap {
+			refStart++
+		}
+	}
+	return alnStart
 }
 
 // RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
 func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
 	if refStart > RefPos {
-		refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
+		//refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
+		log.Fatalf("refStart > RefPos")
 	}
 	for t := alnStart; refStart < RefPos; alnStart++ {
 		t++
@@ -35,13 +45,18 @@ func AlnPosToRefPos(record Fasta, AlnPos int) int {
 
 // AlnPosToRefPosCounter is like AlnPosToRefPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined with the input variables refStart and alnStart.
 func AlnPosToRefPosCounter(record Fasta, AlnPos int, refStart int, alnStart int) int {
+	return AlnPosToRefPosCounterSeq(record.Seq, AlnPos, refStart, alnStart)
+}
+
+// AlnPosToRefPosCounterSeq is AlnPosToRefPosCounter but the input record is just the sequence of the fasta struct
+func AlnPosToRefPosCounterSeq(record []dna.Base, AlnPos int, refStart int, alnStart int) int {
 	if alnStart > AlnPos {
 		refStart, alnStart = 0, 0 //in case the alnStart was improperly set (greater than the desired position, we reset the counters to 0.
 	}
 	for t := alnStart; t < AlnPos; t++ {
-		if t == len(record.Seq) {
+		if t == len(record) {
 			log.Fatalf("Ran out of chromosome.")
-		} else if record.Seq[t] != dna.Gap {
+		} else if record[t] != dna.Gap {
 			refStart++
 		}
 	}

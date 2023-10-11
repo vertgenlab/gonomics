@@ -1,0 +1,22 @@
+chr1	0	9	chr1_0	2	0 // firstQuery 0 10, aln 0 10, ref 0 9
+chr1	1	10	chr1_1	2	1 // firstQuery 1 11, aln 1 11, ref 1 10
+// firstQuery 2 12, aln 2 12, ref - 11, not reported
+chr1	2	12	chr1_3	3	3 // firstQuery 3 13, aln 3 13, ref 2 12
+chr1	3	13	chr1_3	3	4 // firstQuery 4 14, aln 4 14, ref 3 13
+chr1	4	14	chr1_4	3	5 // firstQuery 5 15, aln 5 15, ref 4 14
+chr1	5	15	chr1_5	3	6 // firstQuery 6 16, aln 6 16, ref 5 15
+chr1	6	16	chr1_6	2	7 // firstQuery 7 17, aln 7 17, ref 6 16
+chr1	7	17	chr1_7	2	8 // firstQuery 8 18 (note that 17 is included in the window but not 18), aln 8 18, ref 7 17
+chr1	8	19	chr1_8	3	9 // firstQuery 9 19, aln 9 21, ref 8 19
+chr1	9	20	chr1_9	3	10 // firstQuery 10 20, aln 10 23, ref 9 20
+chr1	10	21	chr1_10	4	11 // firstQuery 11 21, aln 11 24, ref 10 21
+chr1	11	22	chr1_11	4	12 // firstQuery 12 22, aln 12 25, ref 11 22
+chr1	12	23	chr1_12	3	13 // firstQuery 13 23, aln 13 26, ref 12 23
+chr1	13	24	chr1_13	3	14 // firstQuery 14 24, aln 14 27, ref 13 24
+chr1	14	25	chr1_14	3	15 // firstQuery 15 25, aln 15 28, ref 14 25
+chr1	15	26	chr1_15	3	16 // firstQuery 16 26, aln 16 29, ref 15 26
+chr1	16	27	chr1_16	3	17 // firstQuery 17 27, aln 17 30, ref 16 27
+chr1	18	28	chr1_17	2	18 // firstQuery 18 28, aln 20 31 (note that aln should be 20 not 18), ref 18 28
+chr1	19	29	chr1_19	2	21 // firstQuery 19 29, aln 21 32, ref 19 29
+chr1	20	30	chr1_20	0	22 // firstQuery 20 30, aln 23 33, ref 20 30
+chr1	21	31	chr1_21	0	24 // firstQuery 21 31, aln 24 34, ref 21 31
