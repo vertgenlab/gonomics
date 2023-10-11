@@ -36,7 +36,7 @@ func bedStats(s Settings) {
 // This can be used to compare any bedpe to any bed based off of overlap and name matching categories. Only the A foot of a bedpe will be checked if checkBothFeet is not set to true
 func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFrequency float64, matchesWithDistance []bed.Bed, nonMatches []bed.Bed) {
 	var matches, truthAsBeds, nonMatchBeds []bed.Bed
-	var matchCount, name int
+	var matchCount, name, overlaps int
 	var matchCountFreq float64
 	var truthIntervals, currNearest []interval.Interval
 	var trueBed, currNearestBed, matchedBed bed.Bed
@@ -76,6 +76,8 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 		currNearest = interval.Query(truthTree, test[currTestBed], "any")
 		if len(currNearest) == 0 { //we can have regions that don't have a contact in them, we will ignore those and not include them in our counts
 			continue
+		} else {
+			overlaps++
 		}
 		for j = range currNearest {
 			if matched {
@@ -111,7 +113,7 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 	}
 	//divided the number of regions with overlap and matching names by the number of regions in the true data set
 	matchCountFreq = float64(matchCount) / float64(len(mergedTruthBeds))
-	log.Printf("Matched: %v, Total: %v", matchCount, len(mergedTruthBeds))
+	log.Printf("Matched: %v, Total: %v, Number of regions in test that overlapped true: %v", matchCount, len(mergedTruthBeds), overlaps)
 	return matchCountFreq, matches, nonMatchBeds
 }
 
