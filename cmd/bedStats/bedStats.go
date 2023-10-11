@@ -101,7 +101,7 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 					matchedBed = bed.Bed{Chrom: test[currTestBed].Chrom,
 						ChromStart:        test[currTestBed].ChromStart,
 						ChromEnd:          test[currTestBed].ChromEnd,
-						Name:              test[currTestBed].Name,
+						Name:              test[currTestBed].Name + "," + names[name],
 						FieldsInitialized: 7,
 						Annotation:        append(matchedBed.Annotation, currNearestBed.Annotation[name])}
 					matches = append(matches, matchedBed)
