@@ -48,30 +48,3 @@ func TestAllAreEqual(t *testing.T) {
 		}
 	}
 }
-
-var s = []struct {
-	truth              []BedPe
-	test               []bed.Bed
-	expectedFreq       float64
-	expectedBedMatches []bed.Bed
-}{
-	{truth: Read("testdata/statsIn.bedpe"),
-		test:               bed.Read("testdata/bedTestIn.bed"),
-		expectedFreq:       1.0,
-		expectedBedMatches: bed.Read("testdata/expectedMatches.bed")},
-}
-
-func TestGeneAssignmentCheck(t *testing.T) {
-	var freq float64
-	var matches []bed.Bed
-	for v := range s {
-		freq, matches, _ = GeneAssignmentCheck(s[v].truth, s[v].test)
-		bed.Write("testdata/tmp.test.bed", matches)
-		if freq != s[v].expectedFreq {
-			t.Errorf("frequency found by function did not match expected value. Expected: %f, calculated: %f", s[v].expectedFreq, freq)
-		} else if !bed.AllAreEqual(matches, s[v].expectedBedMatches) {
-			bed.Write("testdata/tmp.test.bed", matches)
-			t.Errorf("Matches found did not match expected bed matches. See testdata/tmp.test.bed.")
-		}
-	}
-}

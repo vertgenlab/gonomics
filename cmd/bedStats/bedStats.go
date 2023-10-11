@@ -66,11 +66,10 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 	truthTree := interval.BuildTree(truthIntervals)
 
 	for currTestBed := range test {
-		//if the previous currNearest slice isn't empty but there wasn't a match, then add the previous test record to the nonMatching bed output
-		if len(currNearest) > 0 {
-			log.Print(matched)
-			log.Print("In nonMatch loop")
-			log.Print(test[currTestBed-1])
+		if currTestBed > 0 && bed.Equal(test[currTestBed-1], test[currTestBed]) {
+			continue
+		}
+		if currTestBed > 0 && len(currNearest) > 0 && !matched {
 			nonMatchBeds = append(nonMatchBeds, test[currTestBed-1])
 		}
 		matched = false
