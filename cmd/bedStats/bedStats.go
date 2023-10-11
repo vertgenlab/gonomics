@@ -68,6 +68,8 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 	for currTestBed := range test {
 		//if the previous currNearest slice isn't empty but there wasn't a match, then add the previous test record to the nonMatching bed output
 		if len(currNearest) > 0 && !matched {
+			log.Print("In nonMatch loop")
+			log.Print(test[currTestBed-1])
 			nonMatchBeds = append(nonMatchBeds, test[currTestBed-1])
 		}
 		matched = false
@@ -117,7 +119,7 @@ func usage() {
 	fmt.Print(
 		"Usage: \n" +
 			"bedStats true.bedpe test.bed matched.bed nonMatched.bed \n" +
-			"bedStats - takes a bedpe containing tru contacts from empirical data which assigns regions of the genome \n" +
+			"bedStats - takes a bedpe containing true contacts from empirical data which assigns regions of the genome \n" +
 			"to putative target genes and compares an output from assignGenomeSpace command to determine how \n" +
 			"accurate the nearest gene in 3d space calculation was. Writes out a frequency of correct assignments \n" +
 			"and outputs a bed containing the matching regions and regions that overlapped the true data set but didn't match.\n" +
