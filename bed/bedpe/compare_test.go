@@ -65,7 +65,7 @@ func TestGeneAssignmentCheck(t *testing.T) {
 	var freq float64
 	var matches []bed.Bed
 	for v := range s {
-		freq, matches = GeneAssignmentCheck(s[v].truth, s[v].test)
+		freq, matches, _ = GeneAssignmentCheck(s[v].truth, s[v].test)
 		bed.Write("testdata/tmp.test.bed", matches)
 		if freq != s[v].expectedFreq {
 			t.Errorf("frequency found by function did not match expected value. Expected: %f, calculated: %f", s[v].expectedFreq, freq)
