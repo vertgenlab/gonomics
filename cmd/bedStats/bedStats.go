@@ -67,7 +67,8 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 
 	for currTestBed := range test {
 		//if the previous currNearest slice isn't empty but there wasn't a match, then add the previous test record to the nonMatching bed output
-		if len(currNearest) > 0 { //&&!matched
+		if len(currNearest) > 0 {
+			log.Print(matched)
 			log.Print("In nonMatch loop")
 			log.Print(test[currTestBed-1])
 			nonMatchBeds = append(nonMatchBeds, test[currTestBed-1])
