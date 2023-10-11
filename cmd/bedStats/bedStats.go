@@ -115,12 +115,12 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 
 func usage() {
 	fmt.Print(
-		"bedStats - takes a bedpe containing tru contacts from empirical data which assigns regions of the genome \n" +
+		"Usage: \n" +
+			"bedStats true.bedpe test.bed matched.bed nonMatched.bed \n" +
+			"bedStats - takes a bedpe containing tru contacts from empirical data which assigns regions of the genome \n" +
 			"to putative target genes and compares an output from assignGenomeSpace command to determine how \n" +
 			"accurate the nearest gene in 3d space calculation was. Writes out a frequency of correct assignments \n" +
-			"and outputs a bed containing the matching regions.\n" +
-			"Usage:\n" +
-			"bedStats true.bedpe test.bed matched.bed\n" +
+			"and outputs a bed containing the matching regions and regions that overlapped the true data set but didn't match.\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
