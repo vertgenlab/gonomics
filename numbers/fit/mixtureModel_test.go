@@ -1,4 +1,4 @@
-package numbers
+package fit
 
 import (
 	"fmt"

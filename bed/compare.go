@@ -107,9 +107,7 @@ func OverlapLength(a Bed, b Bed) int {
 	if !Overlap(a, b) {
 		return 0
 	}
-	end := numbers.Min(a.ChromEnd, b.ChromEnd)
-	start := numbers.Max(a.ChromStart, b.ChromStart)
-	return end - start
+	return numbers.Min(a.ChromEnd, b.ChromEnd) - numbers.Max(a.ChromStart, b.ChromStart)
 }
 
 // Compare returns zero for equal beds and otherwise returns the ordering of the two Bed entries. Used for SortByCoord.
