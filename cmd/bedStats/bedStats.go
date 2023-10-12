@@ -65,6 +65,8 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 		truthIntervals = append(truthIntervals, mergedTruthBeds[t])
 	}
 
+	log.Print(len(truthIntervals))
+
 	truthTree := interval.BuildTree(truthIntervals)
 
 	for currTestBed := range test {
