@@ -2,8 +2,8 @@ package interval
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/numbers"
 	"sort"
 	"strings"
 )
@@ -30,6 +30,7 @@ func OverlapSize(a, b Interval) int {
 	} else {
 		return end - start
 	}
+}
 
 // IntervalSimilarity takes in two slices of interval and returns the proportion of elements in the first slice that overlap an element in the second slice, the proportion of elements in the second slice
 // that overlap an element in the first slice, and the average of those two metrics (a metric of how similar the two interval sets are). Interval sets must not be self-overlapping
