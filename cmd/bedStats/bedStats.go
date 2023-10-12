@@ -69,19 +69,14 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 
 	truthTree := interval.BuildTree(truthIntervals)
 
+	log.Print(len(test))
 	for currTestBed := range test {
-		if currTestBed > 0 && bed.Equal(test[currTestBed-1], test[currTestBed]) {
-			continue
-		}
-		if currTestBed > 0 && len(currNearest) > 0 && !matched {
-			nonMatchBeds = append(nonMatchBeds, test[currTestBed-1])
-		}
 		matched = false
 		currNearest = interval.Query(truthTree, test[currTestBed], "any")
 		if len(currNearest) == 0 { //we can have regions that don't have a contact in them, we will ignore those and not include them in our counts
 			continue
 		} else {
-			overlaps++
+			overlaps += len(currNearest)
 		}
 		for j = range currNearest {
 			if matched {
@@ -110,6 +105,7 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 						Annotation:        append(matchedBed.Annotation, currNearestBed.Annotation[name])}
 					matches = append(matches, matchedBed)
 				} else {
+					nonMatchBeds = append(nonMatchBeds, test[currTestBed])
 					continue
 				}
 			}
