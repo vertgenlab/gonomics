@@ -183,7 +183,7 @@ func GeneAssignmentCheckGuidePers(truth []bedpe.BedPe, test []bed.Bed) (regionMa
 						ChromEnd:          mergedTruthBeds[currTrue].ChromEnd,
 						Name:              mergedTruthBeds[currTrue].Name + "," + names[name],
 						FieldsInitialized: 7,
-						Annotation:        append(matchedBed.Annotation, currNearestBed.Annotation[name])}
+						Annotation:        append(matchedBed.Annotation, mergedTruthBeds[currTrue].Annotation[name])}
 					matches = append(matches, matchedBed)
 				}
 			}
