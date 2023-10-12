@@ -6,7 +6,7 @@ import (
 )
 
 // Float32Base encodes a DNA base as a probability vector using float32 precision.
-// gap probabilities are stored implicitly as 1 - (A + C + G + T).
+// gap probabilities can be stored implicitly as 1 - (A + C + G + T).
 type Float32Base struct {
 	A float32
 	C float32
@@ -16,7 +16,7 @@ type Float32Base struct {
 
 // Uint8Base encodes a DNA base as a probability vector using uint8 probability encoding.
 // A uint8 value x can be converted to a probability as follows: p = 1 / (2^(x/10)).
-// gap probabilities are stored implicitly as 1 - (A + C + G + T).
+// gap probabilities can be stored implicitly as 1 - (A + C + G + T).
 type Uint8Base struct {
 	A uint8
 	C uint8
