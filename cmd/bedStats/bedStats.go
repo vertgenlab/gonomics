@@ -40,7 +40,7 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 	var matchCountFreq float64
 	var truthIntervals, currNearest []interval.Interval
 	var trueBed, currNearestBed, matchedBed bed.Bed
-	var names []string
+	var names, chromList []string
 	var matched bool
 	var j int
 
@@ -60,8 +60,15 @@ func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFreque
 	mergedTruthBeds := bed.MergeBedsKeepNamesAndAnnotations(truthAsBeds)
 
 	for t := range mergedTruthBeds {
+		if t == 0 {
+			chromList = append(chromList, mergedTruthBeds[t].Chrom)
+		} else if t != 0 && mergedTruthBeds[t].Chrom != mergedTruthBeds[t-1].Chrom {
+			chromList = append(chromList, mergedTruthBeds[t].Chrom)
+		}
 		truthIntervals = append(truthIntervals, mergedTruthBeds[t])
 	}
+
+	log.Print(chromList)
 
 	truthTree := interval.BuildTree(truthIntervals)
 
