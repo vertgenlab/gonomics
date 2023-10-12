@@ -187,6 +187,9 @@ func GeneAssignmentCheckGuidePers(truth []bedpe.BedPe, test []bed.Bed) (regionMa
 					matches = append(matches, matchedBed)
 				}
 			}
+			if !matched {
+				nonMatchBeds = append(nonMatchBeds, mergedTruthBeds[currTrue])
+			}
 		}
 	}
 	//divided the number of regions with overlap and matching names by the number of regions in the true data set
