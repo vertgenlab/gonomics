@@ -181,7 +181,7 @@ func GeneAssignmentCheckGuidePers(truth []bedpe.BedPe, test []bed.Bed) (regionMa
 					matchedBed = bed.Bed{Chrom: mergedTruthBeds[currTrue].Chrom,
 						ChromStart:        mergedTruthBeds[currTrue].ChromStart,
 						ChromEnd:          mergedTruthBeds[currTrue].ChromEnd,
-						Name:              mergedTruthBeds[currTrue].Name + "," + names[name],
+						Name:              names[name] + "," + currNearestBed.Name,
 						FieldsInitialized: 7,
 						Annotation:        append(matchedBed.Annotation, mergedTruthBeds[currTrue].Annotation[name])}
 					matches = append(matches, matchedBed)
