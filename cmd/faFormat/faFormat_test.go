@@ -26,6 +26,7 @@ var FaFormatTests = []struct {
 	QuerySeqName            string
 	ChromName               string
 	ExpectedMultiFaNoGapBed string
+	Rename                  string
 }{
 	{InputFile: "testdata/faFormatTest.fa",
 		OutputFile:       "testdata/faFormatOutput.fa",
@@ -104,6 +105,20 @@ var FaFormatTests = []struct {
 		ChromName:               "chr1",
 		ExpectedMultiFaNoGapBed: "testdata/expected.multiFaNoGap.bed",
 	},
+	{InputFile: "testdata/faFormatTest.fa",
+		OutputFile:       "testdata/out.Rename.fa",
+		ExpectedFile:     "testdata/expected.Rename.fa",
+		LineLength:       50,
+		NameFile:         "",
+		TrimName:         false,
+		ToUpper:          false,
+		RevComp:          false,
+		NoGaps:           false,
+		NoGapBed:         "",
+		NoGapBedExpected: "",
+		MaskInvalid:      false,
+		Rename:           "NoGapTest:RenamedField",
+	},
 }
 
 func TestFaFormat(t *testing.T) {
@@ -123,6 +138,7 @@ func TestFaFormat(t *testing.T) {
 			MultiFaNoGapBed: v.MultiFaNoGapBed,
 			QuerySeqName:    v.QuerySeqName,
 			ChromName:       v.ChromName,
+			Rename:          v.Rename,
 		}
 		faFormat(s)
 		records := fasta.Read(v.OutputFile)
