@@ -24,29 +24,6 @@ type Uint8Base struct {
 	T uint8
 }
 
-type Uint32Base uint32
-
-// Pack takes an input base in Uint8Base format (where each base probability A, C, G, and T is stored in a uint8)
-// and converts it to a single uint32Base, where each consecutive 8 bits corresponds to the probability of one of the
-// four bases.
-func Pack(base Uint8Base) Uint32Base {
-	return (Uint32Base(base.A) << 24) |
-		(Uint32Base(base.C) << 16) |
-		(Uint32Base(base.G) << 8) |
-		Uint32Base(base.T)
-}
-
-// Unpack takes an input base in uint32Base format an unpacks it into a Uint8Base struct, where each base
-// probability is represented in a uint8.
-func Unpack(base Uint32Base) Uint8Base {
-	return Uint8Base{
-		uint8((base >> 24) & 0xFF),
-		uint8((base >> 16) & 0xFF),
-		uint8((base >> 8) & 0xFF),
-		uint8(base & 0xFF),
-	}
-}
-
 // Float32BaseToUint8Base takes an input Float32Base and converts it to a Uint8Base, where
 // each base probability is represented by an encoded uint8.
 func Float32BaseToUint8Base(base Float32Base) Uint8Base {
@@ -75,4 +52,16 @@ func Uint8ToFloat32Prob(u uint8) float32 {
 		return 0
 	}
 	return float32(1 / math.Pow(2, float64(u)/10.0))
+}
+
+// MakeUint8ToFloat32Map makes a map relating uint8 probabilities to the corresponding float32
+// representations
+func MakeUint8ToFloat32Map() map[uint8]float32 {
+	var answer = make(map[uint8]float32)
+	var u uint8
+	for u = 0; u < 255; u++ {
+		answer[u] = Uint8ToFloat32Prob(u)
+	}
+	answer[255] = Uint8ToFloat32Prob(255)
+	return answer
 }
