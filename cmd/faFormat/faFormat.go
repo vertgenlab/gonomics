@@ -73,9 +73,9 @@ func faFormat(s Settings) {
 	}
 
 	if s.Rename != "" {
-		words = strings.Split(s.Rename, ":")
+		words = strings.Split(s.Rename, ",")
 		if len(words) != 2 {
-			log.Fatalf("Error: expected two fields, colon delimited, in -rename. Found: %v.\n", s.Rename)
+			log.Fatalf("Error: expected two fields, comma delimited, in -rename. Found: %v.\n", s.Rename)
 		}
 	}
 
@@ -142,7 +142,7 @@ func main() {
 	var chromName *string = flag.String("chromName", "", "Specify the name of the chromosome in the multiFa for multiFaNoGapBed.")
 	var createIndex *bool = flag.Bool("index", false, "Create index file (outputs to output.fa.fai).")
 	var maskInvalid *bool = flag.Bool("maskInvalid", false, "N-mask extended IUPAC nucleotides (includes UWSMKRYBDHV).")
-	var rename *string = flag.String("rename", "", "Rename a name field using colon delimited argument (ex. 'old:new'). Only one name field can be changed at a time.")
+	var rename *string = flag.String("rename", "", "Rename a name field using comma delimited argument (ex. 'old,new'). Only one name field can be changed at a time.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)

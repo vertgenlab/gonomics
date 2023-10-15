@@ -117,7 +117,7 @@ var FaFormatTests = []struct {
 		NoGapBed:         "",
 		NoGapBedExpected: "",
 		MaskInvalid:      false,
-		Rename:           "NoGapTest:RenamedField",
+		Rename:           "NoGapTest,RenamedField",
 	},
 }
 
