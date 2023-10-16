@@ -31,91 +31,91 @@ func bedStats(s Settings) {
 	fmt.Println(freq)
 }
 
-// GeneAssignmentCheck returns information about whether gene assignments (based on coordinates and name fields) match
-// entered true data set and how many regions.
-// This can be used to compare any bedpe to any bed based off of overlap and name matching categories. Only the A foot of a bedpe will be checked if checkBothFeet is not set to true
-func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFrequency float64, matchesWithDistance []bed.Bed, nonMatches []bed.Bed) {
-	var matches, truthAsBeds, nonMatchBeds []bed.Bed
-	var matchCount, name, overlaps int
-	var matchCountFreq float64
-	var truthIntervals, currNearest []interval.Interval
-	var trueBed, currNearestBed, matchedBed bed.Bed
-	var names []string
-	var matched bool
-	var j int
-
-	bedpe.AnnotateFeetDist(truth)
-
-	for currTruth := range truth {
-		trueBed = bed.Bed{
-			Chrom:             truth[currTruth].A.Chrom,
-			ChromStart:        truth[currTruth].A.ChromStart,
-			ChromEnd:          truth[currTruth].A.ChromEnd,
-			Name:              truth[currTruth].A.Name,
-			Annotation:        truth[currTruth].A.Annotation,
-			FieldsInitialized: 7}
-		truthAsBeds = append(truthAsBeds, trueBed)
-	}
-
-	mergedTruthBeds := bed.MergeBedsKeepNamesAndAnnotations(truthAsBeds)
-
-	bed.Write("mergedBeds.GasperiniContacts.bed", mergedTruthBeds)
-
-	for t := range mergedTruthBeds {
-		truthIntervals = append(truthIntervals, mergedTruthBeds[t])
-	}
-
-	log.Print(len(truthIntervals))
-
-	truthTree := interval.BuildTree(truthIntervals)
-
-	log.Print(len(test))
-	for currTestBed := range test {
-		matched = false
-		currNearest = interval.Query(truthTree, test[currTestBed], "any")
-		if len(currNearest) == 0 { //we can have regions that don't have a contact in them, we will ignore those and not include them in our counts
-			continue
-		} else {
-			overlaps += len(currNearest)
-		}
-		for j = range currNearest {
-			if matched {
-				continue
-			}
-			currNearestBed = currNearest[j].(bed.Bed)
-			names = strings.Split(currNearestBed.Name, ",")
-			for name = range names {
-				if matched {
-					continue
-				}
-				matchedBed = bed.Bed{Chrom: "",
-					ChromStart:        0,
-					ChromEnd:          0,
-					Name:              "",
-					FieldsInitialized: 7,
-					Annotation:        []string{}}
-				if names[name] == test[currTestBed].Name {
-					matchCount++
-					matched = true
-					matchedBed = bed.Bed{Chrom: test[currTestBed].Chrom,
-						ChromStart:        test[currTestBed].ChromStart,
-						ChromEnd:          test[currTestBed].ChromEnd,
-						Name:              test[currTestBed].Name + "," + names[name],
-						FieldsInitialized: 7,
-						Annotation:        append(matchedBed.Annotation, currNearestBed.Annotation[name])}
-					matches = append(matches, matchedBed)
-				} else {
-					nonMatchBeds = append(nonMatchBeds, test[currTestBed])
-					continue
-				}
-			}
-		}
-	}
-	//divided the number of regions with overlap and matching names by the number of regions in the true data set
-	matchCountFreq = float64(matchCount) / float64(len(mergedTruthBeds))
-	log.Printf("Matched: %v, Total: %v, Number of regions in test that overlapped true: %v", matchCount, len(mergedTruthBeds), overlaps)
-	return matchCountFreq, matches, nonMatchBeds
-}
+//// GeneAssignmentCheck returns information about whether gene assignments (based on coordinates and name fields) match
+//// entered true data set and how many regions.
+//// This can be used to compare any bedpe to any bed based off of overlap and name matching categories. Only the A foot of a bedpe will be checked if checkBothFeet is not set to true
+//func GeneAssignmentCheck(truth []bedpe.BedPe, test []bed.Bed) (regionMatchFrequency float64, matchesWithDistance []bed.Bed, nonMatches []bed.Bed) {
+//	var matches, truthAsBeds, nonMatchBeds []bed.Bed
+//	var matchCount, name, overlaps int
+//	var matchCountFreq float64
+//	var truthIntervals, currNearest []interval.Interval
+//	var trueBed, currNearestBed, matchedBed bed.Bed
+//	var names []string
+//	var matched bool
+//	var j int
+//
+//	bedpe.AnnotateFeetDist(truth)
+//
+//	for currTruth := range truth {
+//		trueBed = bed.Bed{
+//			Chrom:             truth[currTruth].A.Chrom,
+//			ChromStart:        truth[currTruth].A.ChromStart,
+//			ChromEnd:          truth[currTruth].A.ChromEnd,
+//			Name:              truth[currTruth].A.Name,
+//			Annotation:        truth[currTruth].A.Annotation,
+//			FieldsInitialized: 7}
+//		truthAsBeds = append(truthAsBeds, trueBed)
+//	}
+//
+//	mergedTruthBeds := bed.MergeBedsKeepNamesAndAnnotations(truthAsBeds)
+//
+//	bed.Write("mergedBeds.GasperiniContacts.bed", mergedTruthBeds)
+//
+//	for t := range mergedTruthBeds {
+//		truthIntervals = append(truthIntervals, mergedTruthBeds[t])
+//	}
+//
+//	log.Print(len(truthIntervals))
+//
+//	truthTree := interval.BuildTree(truthIntervals)
+//
+//	log.Print(len(test))
+//	for currTestBed := range test {
+//		matched = false
+//		currNearest = interval.Query(truthTree, test[currTestBed], "any")
+//		if len(currNearest) == 0 { //we can have regions that don't have a contact in them, we will ignore those and not include them in our counts
+//			continue
+//		} else {
+//			overlaps += len(currNearest)
+//		}
+//		for j = range currNearest {
+//			if matched {
+//				continue
+//			}
+//			currNearestBed = currNearest[j].(bed.Bed)
+//			names = strings.Split(currNearestBed.Name, ",")
+//			for name = range names {
+//				if matched {
+//					continue
+//				}
+//				matchedBed = bed.Bed{Chrom: "",
+//					ChromStart:        0,
+//					ChromEnd:          0,
+//					Name:              "",
+//					FieldsInitialized: 7,
+//					Annotation:        []string{}}
+//				if names[name] == test[currTestBed].Name {
+//					matchCount++
+//					matched = true
+//					matchedBed = bed.Bed{Chrom: test[currTestBed].Chrom,
+//						ChromStart:        test[currTestBed].ChromStart,
+//						ChromEnd:          test[currTestBed].ChromEnd,
+//						Name:              test[currTestBed].Name + "," + names[name],
+//						FieldsInitialized: 7,
+//						Annotation:        append(matchedBed.Annotation, currNearestBed.Annotation[name])}
+//					matches = append(matches, matchedBed)
+//				} else {
+//					nonMatchBeds = append(nonMatchBeds, test[currTestBed])
+//					continue
+//				}
+//			}
+//		}
+//	}
+//	//divided the number of regions with overlap and matching names by the number of regions in the true data set
+//	matchCountFreq = float64(matchCount) / float64(len(mergedTruthBeds))
+//	log.Printf("Matched: %v, Total: %v, Number of regions in test that overlapped true: %v", matchCount, len(mergedTruthBeds), overlaps)
+//	return matchCountFreq, matches, nonMatchBeds
+//}
 
 // GeneAssignmentCheck returns information about whether gene assignments (based on coordinates and name fields) match
 // entered true data set and how many regions.
@@ -125,7 +125,7 @@ func GeneAssignmentCheckGuidePers(truth []bedpe.BedPe, test []bed.Bed) (regionMa
 	var matchCount, name, overlaps int
 	var matchCountFreq float64
 	var testIntervals, currNearest []interval.Interval
-	var trueBed, currNearestBed, matchedBed bed.Bed
+	var trueBed, currNearestBed, matchedBed, nonMatchBed bed.Bed
 	var names []string
 	var matched bool
 	var j int
@@ -183,7 +183,13 @@ func GeneAssignmentCheckGuidePers(truth []bedpe.BedPe, test []bed.Bed) (regionMa
 				}
 			}
 			if !matched {
-				nonMatchBeds = append(nonMatchBeds, mergedTruthBeds[currTrue])
+				nonMatchBed = bed.Bed{Chrom: mergedTruthBeds[currTrue].Chrom,
+					ChromStart:        mergedTruthBeds[currTrue].ChromStart,
+					ChromEnd:          mergedTruthBeds[currTrue].ChromEnd,
+					Name:              names[name] + "," + currNearestBed.Name,
+					FieldsInitialized: 7,
+					Annotation:        append(matchedBed.Annotation, mergedTruthBeds[currTrue].Annotation[name])}
+				nonMatchBeds = append(nonMatchBeds, nonMatchBed)
 			}
 		}
 	}

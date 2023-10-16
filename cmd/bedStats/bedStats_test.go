@@ -21,14 +21,14 @@ var s = []struct {
 		expectedNonMatches: bed.Read("testdata/expectedNonMatches.bed")},
 }
 
-func TestGeneAssignmentCheck(t *testing.T) {
+func TestGeneAssignmentCheckGuidePers(t *testing.T) {
 	var freq float64
 	var matches, nonMatches []bed.Bed
 	for v := range s {
-		freq, matches, nonMatches = GeneAssignmentCheck(s[v].truth, s[v].test)
+		freq, matches, nonMatches = GeneAssignmentCheckGuidePers(s[v].truth, s[v].test)
 		bed.Write("testdata/tmp.test.bed", matches)
 		if freq != s[v].expectedFreq {
-			//t.Errorf("frequency found by function did not match expected value. Expected: %f, calculated: %f", s[v].expectedFreq, freq)
+			t.Errorf("frequency found by function did not match expected value. Expected: %f, calculated: %f", s[v].expectedFreq, freq)
 		} else if !bed.AllAreEqual(matches, s[v].expectedBedMatches) {
 			bed.Write("testdata/tmp.test.bed", matches)
 			t.Errorf("Matches found did not match expected bed matches. See testdata/tmp.test.bed.")
