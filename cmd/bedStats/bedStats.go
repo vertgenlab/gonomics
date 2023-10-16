@@ -145,17 +145,12 @@ func GeneAssignmentCheckGuidePers(truth []bedpe.BedPe, test []bed.Bed) (regionMa
 
 	mergedTruthBeds := bed.MergeBedsKeepNamesAndAnnotations(truthAsBeds)
 
-	//bed.Write("mergedBeds.GasperiniContacts.bed", mergedTruthBeds)
-
 	for t := range test {
 		testIntervals = append(testIntervals, test[t])
 	}
 
-	log.Print(len(testIntervals))
-
 	testTree := interval.BuildTree(testIntervals)
 
-	log.Print(len(test))
 	for currTrue := range mergedTruthBeds {
 		matched = false
 		currNearest = interval.Query(testTree, mergedTruthBeds[currTrue], "any")
