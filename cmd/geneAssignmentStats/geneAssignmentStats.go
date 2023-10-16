@@ -1,5 +1,7 @@
 //Command Group: BED Tools
 
+// geneAssignmentStats compares a bedpe containing a gene symbol in the name field to a test set of output from
+// assignGenomeSpace command which assigns every base in the genome a closest gene either from proximity or from a 3d contact map.
 package main
 
 import (
@@ -19,7 +21,7 @@ type Settings struct {
 	OutNonMatched string
 }
 
-func bedStats(s Settings) {
+func geneAssignmentStats(s Settings) {
 	var freq float64
 	var matchedBeds, nonMatchedBeds []bed.Bed
 	trueContacts := bedpe.Read(s.InContacts)
@@ -202,11 +204,15 @@ func GeneAssignmentCheckGuidePers(truth []bedpe.BedPe, test []bed.Bed) (regionMa
 func usage() {
 	fmt.Print(
 		"Usage: \n" +
-			"bedStats true.bedpe test.bed matched.bed nonMatched.bed \n" +
-			"bedStats - takes a bedpe containing true contacts from empirical data which assigns regions of the genome \n" +
-			"to putative target genes and compares an output from assignGenomeSpace command to determine how \n" +
-			"accurate the nearest gene in 3d space calculation was. Writes out a frequency of correct assignments \n" +
-			"and outputs a bed containing the matching regions and regions that overlapped the true data set but didn't match.\n" +
+			"geneAssignmentStats true.bedpe test.bed matched.bed nonMatched.bed \n" +
+			"geneAssignmentStats - takes a bedpe containing true contacts from empirical data which assigns regions of " +
+			"the genome (guide coordinates kept as the first record in the bedpe) \n" +
+			"to putative target genes (coordinates kept as the second set of coordinates in the bedpe and the name of " +
+			"the bedpe file will correspond to the gene symbol) and compares an output from assignGenomeSpace command to determine how \n" +
+			"accurate the nearest gene assignment is. Writes out a frequency of correct assignments \n" +
+			"and outputs a bed containing the matching regions where the name field should have the matching gene symbols " +
+			"in comma separated format and a bed file of guide coordinates which have a name field of their gene " +
+			"assignment and fthe gene assignment that was incorrect in the input test bed file.\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -232,5 +238,5 @@ func main() {
 		OutMatched:    matchedBeds,
 		OutNonMatched: nonMatchedBeds,
 	}
-	bedStats(s)
+	geneAssignmentStats(s)
 }
