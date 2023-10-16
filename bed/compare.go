@@ -67,7 +67,8 @@ func MergeBedsKeepNamesAndAnnotations(bedFile []Bed) []Bed {
 	return bedFile
 }
 
-// MergeBedsIfNamesMatch will take a bed struct and return a merged struct such that any records which are of identical coordinates and name will be merged
+// MergeBedsIfNamesMatch will take a bed struct and return a merged struct such that any records which are of overlapping coordinates and names are identical will be merged.
+// Records with matching names must be adjacent
 func MergeBedsIfNamesMatch(bedFile []Bed) []Bed {
 	SortByCoord(bedFile)
 	var i, j int
