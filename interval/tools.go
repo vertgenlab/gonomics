@@ -3,6 +3,7 @@ package interval
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/numbers"
 	"sort"
 	"strings"
 )
@@ -10,6 +11,34 @@ import (
 // CoordsToString takes in a interval and returns a string in the format of chr:start-end
 func CoordsToString(i Interval) string {
 	return fmt.Sprintf("%s:%v-%v", i.GetChrom(), i.GetChromStart(), i.GetChromEnd())
+}
+
+// IntervalSize calculates the size of the interval
+func IntervalSize(i Interval) int {
+	return i.GetChromEnd() - i.GetChromStart()
+}
+
+// Overlap determines whether 2 intervals have overlap, assuming they are from the same genome
+func Overlap(a, b Interval) bool {
+	if a.GetChrom() != b.GetChrom() {
+		return false
+	}
+	end := numbers.Min(a.GetChromEnd(), b.GetChromEnd())
+	start := numbers.Max(a.GetChromStart(), b.GetChromStart())
+	if end <= start {
+		return false
+	} else {
+		return true
+	}
+}
+
+// OverlapSize calculates the size of the overlap between 2 intervals, assuming they are from the same genome
+func OverlapSize(a, b Interval) int {
+	if !Overlap(a, b) {
+		return 0
+	} else {
+		return numbers.Min(a.GetChromEnd(), b.GetChromEnd()) - numbers.Max(a.GetChromStart(), b.GetChromStart())
+	}
 }
 
 // IntervalSimilarity takes in two slices of interval and returns the proportion of elements in the first slice that overlap an element in the second slice, the proportion of elements in the second slice
