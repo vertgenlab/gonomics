@@ -36,6 +36,17 @@ func IsHomozygous(s Sample) bool {
 	return true
 }
 
+// IsNotReference returns true if there is at least one allele present in the individual/sample
+// that is not a reference allele.
+func IsNotReference(s Sample) bool {
+        for i := 0; i < len(s.Alleles); i++ {
+                if s.Alleles[i] != 0 {
+                        return true
+                }
+        }
+        return false
+}
+
 // IsBiallelic returns true if a vcf record has 1 alt variant, false otherwise.
 func IsBiallelic(v Vcf) bool {
 	return len(v.Alt) == 1

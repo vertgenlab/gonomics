@@ -235,6 +235,7 @@ type criteria struct {
 	minDaf                         float64
 	maxDaf                         float64
 	minDist                        int
+	sampleNotRef                   string
 }
 
 // testingFuncs are a set of functions that must all return true to escape filter.
@@ -300,6 +301,14 @@ func getTests(c criteria, header vcf.Header) testingFuncs {
 		answer = append(answer,
 			func(v vcf.Vcf) bool {
 				return popgen.VcfSampleDerivedAlleleFrequency(v) < c.maxDaf
+			})
+	}
+
+	if c.sampleNotRef != "" {
+		sampleIdx := header.Samples[c.sampleNotRef]
+		answer = append(answer,
+			func(v vcf.Vcf) bool {
+				return vcf.IsNotReference(v.Samples[sampleIdx])
 			})
 	}
 
@@ -421,6 +430,7 @@ func main() {
 	var minDaf *float64 = flag.Float64("minDaf", 0, "Set the minimum derived allele frequency for retained variants. Ancestral allele must be defined in INFO.")
 	var maxDaf *float64 = flag.Float64("maxDaf", 1, "Set the maximum derived allele frequency for retained variants. Ancestral allele must be defined in INFO.")
 	var minDist *int = flag.Int("minDistance", 0, "Remove variants that are within minDistance of another variant. File must be sorted by position.")
+	var sampleNotRef *string = flag.String("sampleNotRef", "", "Only pass vcf records where the provided sample name has at least one non-reference allele at the position.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -457,6 +467,7 @@ func main() {
 		minDaf:                         *minDaf,
 		maxDaf:                         *maxDaf,
 		minDist:                        *minDist,
+		sampleNotRef:                   *sampleNotRef,
 	}
 
 	var parseFormat, parseInfo bool
