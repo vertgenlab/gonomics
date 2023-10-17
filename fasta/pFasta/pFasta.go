@@ -1,0 +1,114 @@
+package pFasta
+
+import (
+	"bufio"
+	"encoding/binary"
+	"fmt"
+	"github.com/vertgenlab/gonomics/dna/pDna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/parse"
+	"github.com/x448/float16"
+	"log"
+	"strings"
+)
+
+// pFasta is the probabilistic analog of fasta, which represents sequences of
+// pDna bases rather than dna bases.
+type pFasta struct {
+	Name string
+	Seq  []pDna.Float32Base
+}
+
+// Write takes an input []pFasta and writes to an output binary pFa file.
+func Write(outFile string, records []pFasta) {
+	var err error
+	out := fileio.EasyCreate(outFile)
+
+	// first we write the header
+	_, err = fmt.Fprint(out, "#pFasta_format_1.0\n")
+	exception.PanicOnErr(err)
+	for i := range records {
+		_, err = fmt.Fprintf(out, "#%s\t%v\n", records[i].Name, len(records[i].Seq))
+		exception.PanicOnErr(err)
+	}
+	_, err = fmt.Fprintf(out, "##EndHeader##\n")
+	exception.PanicOnErr(err)
+
+	var currSeqIndex, currPos int
+	for currSeqIndex = range records {
+		for currPos = range records[currSeqIndex].Seq {
+			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].A)
+			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].C)
+			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].G)
+			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].T)
+		}
+	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+// writeBase is a helper function of Write, which write an input float32
+// base probability into an output file as binary.
+func writeBaseProbability(out *fileio.EasyWriter, b float32) {
+	err := binary.Write(out, binary.LittleEndian, float16.Fromfloat32(b).Bits())
+	exception.PanicOnErr(err)
+}
+
+// makeEmptyRecords is a helper function of Read. It parses the metadata header of
+// a binary pFa file and returns the skeleton of the []pFasta, where the names and sequences
+// have been initialized but all probabilities are 0.
+func makeEmptyRecords(reader *bufio.Reader) []pFasta {
+	var records = make([]pFasta, 0)
+	unparsedHeader, err := fileio.ReadHeader(reader)
+	exception.PanicOnErr(err)
+
+	if unparsedHeader[0] != "#pFasta_format_1.0" {
+		log.Fatalf("Error: unrecognized pFasta file format. Found: %v.\n", unparsedHeader[0])
+	}
+
+	if unparsedHeader[len(unparsedHeader)-1] != "##EndHeader##" {
+		log.Fatalf("Error: unrecognized end of header. Found: %v.\n", unparsedHeader[len(unparsedHeader)-1])
+	}
+
+	var words []string
+	for currHeaderLine := 1; currHeaderLine < len(unparsedHeader)-1; currHeaderLine++ {
+		words = strings.Split(unparsedHeader[currHeaderLine], "\t")
+		records = append(records, pFasta{
+			Name: strings.TrimPrefix(words[0], "#"),
+			Seq:  make([]pDna.Float32Base, parse.StringToInt(words[1]))})
+	}
+	return records
+}
+
+// Read parses a []pFasta from an input file handle in .pFa binary format.
+func Read(inFile string) []pFasta {
+	var err error
+	file := fileio.EasyOpen(inFile)
+	reader := bufio.NewReader(file)
+	records := makeEmptyRecords(reader)
+	var currBase = make([]byte, 2) //8 bytes, or 64 bit slice. Enough for one pDna base probability.
+	var currSeq, currPos int
+
+	for currSeq = range records {
+		for currPos = range records[currSeq].Seq {
+			_, err = reader.Read(currBase)
+			exception.PanicOnErr(err)
+			records[currSeq].Seq[currPos].A = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
+			_, err = reader.Read(currBase)
+			exception.PanicOnErr(err)
+			records[currSeq].Seq[currPos].C = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
+			_, err = reader.Read(currBase)
+			exception.PanicOnErr(err)
+			records[currSeq].Seq[currPos].G = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
+			_, err = reader.Read(currBase)
+			exception.PanicOnErr(err)
+			records[currSeq].Seq[currPos].T = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
+		}
+	}
+
+	err = file.Close()
+	exception.PanicOnErr(err)
+	return records
+}
