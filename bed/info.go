@@ -2,11 +2,14 @@ package bed
 
 import (
 	"fmt"
-  "github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"log"
 )
 
+// MultiFaUngappedRegions takes in a MultiFa format alignment and returns a bed file of all ungapped regions
+// for a user-specified seqName. The resulting sequence is in target coordinates, and the bed chrom field can
+// be specified by the argument 'chromName'.
 func MultiFaUngappedRegions(records []fasta.Fasta, chromName string, seqName string) []Bed {
 	var answer = make([]Bed, 0)
 	var seqNameIndex int = -1
@@ -14,12 +17,15 @@ func MultiFaUngappedRegions(records []fasta.Fasta, chromName string, seqName str
 	var startRefPos, endRefPos int = 0, 0
 	var lastRefPos, lastAlnPos = 0, 0
 	var currAlnPos int = 0
+	var seqNameFound bool = false
 
 	//first we find the index of seqName
 	for i := 0; i < len(records); i++ {
-		if records[i].Name == seqName {
+		if records[i].Name == seqName && !seqNameFound {
 			seqNameIndex = i
-			break
+			seqNameFound = true
+		} else if records[i].Name == seqName && seqNameFound {
+			log.Fatalf("Error: found the same record, %s, multiple times in input fasta.\n", seqName)
 		}
 	}
 
