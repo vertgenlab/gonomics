@@ -8,18 +8,18 @@ import (
 )
 
 type Settings struct { // Draft of input setting struct
-	Input           string // implemented
-	Output          string // implemented
-	SelectFile      string // implemented
-	Extend          int
-	NonOverlap      bool // implemented // not compatible with MergedOutput
-	Threads         int  // implemented
-	PercentOverlap  float64
-	BaseOverlap     int
-	Aggregate       bool   // implemented
-	Relationship    string // implemented
-	MergedOutput    bool   // implemented // not compatible with NonOverlap
-	SwapTargetQuery bool
+	Input      string // implemented
+	Output     string // implemented
+	SelectFile string // implemented
+	//Extend          int
+	NonOverlap bool // implemented // not compatible with MergedOutput
+	Threads    int  // implemented
+	//PercentOverlap  float64
+	//BaseOverlap     int
+	Aggregate    bool   // implemented
+	Relationship string // implemented
+	MergedOutput bool   // implemented // not compatible with NonOverlap
+	//SwapTargetQuery bool
 }
 
 type queryAnswer struct {
@@ -54,15 +54,15 @@ func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interv
 		// else if no merged output
 		if interval.QueryBool(tree, query, relationship, buf) {
 			answer = answerTrue
-			answerChan <- &queryAnswer{query, answer}
 		} else {
 			answer = nil
 		}
+		answerChan <- &queryAnswer{query, answer}
 	}
 	wg.Done()
 }
 
-func writeToFile(answerChan <-chan *queryAnswer, outfile io.Writer, mergedOutput bool, nonoverlap bool) {
+func writeToFile(answerChan <-chan *queryAnswer, outfile io.Writer, mergedOutput bool, nonOverlap bool) {
 	if mergedOutput {
 		for val := range answerChan {
 			if len(val.answer) != 0 {
@@ -72,7 +72,7 @@ func writeToFile(answerChan <-chan *queryAnswer, outfile io.Writer, mergedOutput
 				}
 			}
 		}
-	} else if nonoverlap {
+	} else if nonOverlap {
 		for val := range answerChan {
 			if len(val.answer) == 0 {
 				val.query.(fileWriter).WriteToFileHandle(outfile)
