@@ -1,7 +1,9 @@
 package gtf
 
 import (
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
@@ -58,4 +60,33 @@ func FilterVariantThreeUtr(v *vcf.Vcf, g map[string]*Gene, c map[string]*chromIn
 func FilterVariantFiveUtr(v *vcf.Vcf, g map[string]*Gene, c map[string]*chromInfo.ChromInfo) bool {
 	a := FiveUtrBoolArray(g, c)
 	return VariantArrayOverlap(v, a)
+}
+
+func FindPromoter(genes []string, upstream int, downstream int, gtf map[string]*Gene, size map[string]chromInfo.ChromInfo) []bed.Bed {
+	var answer []bed.Bed
+	var currGene, transcript int
+	var exists bool
+	var info *Gene
+	var name string
+	var trans *Transcript
+	var newBed = bed.Bed{Chrom: "", ChromStart: 0, ChromEnd: 0, FieldsInitialized: 4}
+
+	for currGene = range genes {
+		name = genes[currGene]
+
+		info, exists = gtf[name]
+		if exists {
+			for transcript = range info.Transcripts {
+				trans = info.Transcripts[transcript]
+				if trans.Strand {
+					newBed = bed.Bed{Chrom: trans.Chr, ChromStart: numbers.Max(trans.Start-upstream, 0), ChromEnd: numbers.Min(trans.Start+downstream, size[trans.Chr].Size), Name: info.GeneName, FieldsInitialized: 4}
+				} else if !trans.Strand {
+					newBed = bed.Bed{Chrom: trans.Chr, ChromStart: trans.Start + downstream, ChromEnd: trans.Start + upstream}
+				}
+				answer = append(answer, newBed)
+			}
+		}
+	}
+
+	return answer
 }
