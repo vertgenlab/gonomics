@@ -24,8 +24,10 @@ import (
 func usage() {
 	fmt.Print(
 		"mergesort - Executes an external merge sort of the input file based on desired sort criteria. \n" +
-			"\t The input file should have a proper file extension depending on the input file type.\n" +
+			"\tThe input file should have a proper file extension depending on the input file type.\n" +
 			"\tDefault sort criteria is byGenomicCoordinates. Chromosome -> StartPos -> EndPos\n" +
+			"\tExcept in the case of fastq files, where the file is sorted by read name.\n" +
+			"\tCurrent accepted file types: BED, VCF, SAM, AXT, FASTQ\n" +
 			"Usage:\n" +
 			" mergesort [options] input.filetype outputFile\n")
 	flag.PrintDefaults()
