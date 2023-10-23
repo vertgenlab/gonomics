@@ -73,15 +73,14 @@ func FindPromoter(genes []string, upstream int, downstream int, gtf map[string]*
 
 	for currGene = range genes {
 		name = genes[currGene]
-
 		info, exists = gtf[name]
 		if exists {
 			for transcript = range info.Transcripts {
 				trans = info.Transcripts[transcript]
 				if trans.Strand {
-					newBed = bed.Bed{Chrom: trans.Chr, ChromStart: numbers.Max(trans.Start-upstream, 0), ChromEnd: numbers.Min(trans.Start+downstream, size[trans.Chr].Size), Name: info.GeneName, FieldsInitialized: 4}
+					newBed = bed.Bed{Chrom: trans.Chr, ChromStart: numbers.Max(trans.Start-upstream, 0), ChromEnd: numbers.Min(trans.Start+downstream+1, size[trans.Chr].Size), Name: info.GeneName, FieldsInitialized: 4}
 				} else if !trans.Strand {
-					newBed = bed.Bed{Chrom: trans.Chr, ChromStart: trans.Start + downstream, ChromEnd: trans.Start + upstream}
+					newBed = bed.Bed{Chrom: trans.Chr, ChromStart: trans.Start + downstream, ChromEnd: trans.Start + upstream + 1}
 				}
 				answer = append(answer, newBed)
 			}
