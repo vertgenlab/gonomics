@@ -29,7 +29,7 @@ func usage() {
 		"getPromoter will take a list of unique genes of interest and return a bed file of the promoter region proceeding\n" +
 			"the position of the TSS for each isoform by the amount specified with upstream and the amount following the TSS as specified by downstream. This program is strand aware.\n" +
 			"Usage:\n" +
-			"getPromoter [options] uniqueGenes.txt geneInfo.gtf out.bed\n" +
+			"getPromoter [options] uniqueGenes.txt geneInfo.gtf out.bed chrom.sizes\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
