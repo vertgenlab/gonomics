@@ -78,7 +78,7 @@ func FindPromoter(genes []string, upstream int, downstream int, gtf map[string]*
 					if trans.Strand {
 						newBed = bed.Bed{Chrom: trans.Chr, ChromStart: numbers.Max(trans.Start-upstream, 0), ChromEnd: numbers.Min(trans.Start+downstream+1, size[trans.Chr].Size), Name: name, FieldsInitialized: 4}
 					} else if !trans.Strand {
-						newBed = bed.Bed{Chrom: trans.Chr, ChromStart: trans.Start + downstream, ChromEnd: trans.Start + upstream + 1, Name: name}
+						newBed = bed.Bed{Chrom: trans.Chr, ChromStart: numbers.Max(trans.Start-downstream, 0), ChromEnd: numbers.Min(trans.Start+upstream+1, size[trans.Chr].Size), Name: name, FieldsInitialized: 4}
 					}
 					answer = append(answer, newBed)
 				}
