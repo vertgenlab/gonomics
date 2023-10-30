@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 
@@ -11,17 +12,33 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
+type ScoreSettings struct {
+	ScoreType  string
+	InFileList string
+	OutFile    string
+}
+
+func scoreUsage() {
+	fmt.Print("samAssembler score - Validate assembly accuracy from five-way alignment including known divergent sequences.\n" +
+		"The user must specify a list of filenames, corresponding to each multiFa to be used in joint scoring (usually one file per chromosome).\n" +
+		"'scoreType' may be chosen from the following strings: baseMatrix, baseMatrixByRefBase\n" +
+		"Usage:\n" +
+		"samAssembler score scoreType inFileList outFile.txt\n" +
+		"Options:\n")
+	flag.PrintDefaults()
+}
+
 // samAssemblerScore provides tools for scoring diploid assembly results from samAssembler.
 // Currently, two modes are supported: baseMatrix, and baseMatrixByRefBase. The details of
 // these modes are described in their respective helper functions below.
-func samAssemblerScore(scoreType string, inFileList string, outFile string) {
-	switch scoreType {
+func samAssemblerScore(s ScoreSettings) {
+	switch s.ScoreType {
 	case "baseMatrix":
-		baseMatrixByRefBase(inFileList, outFile, false)
+		baseMatrixByRefBase(s.InFileList, s.OutFile, false)
 	case "baseMatrixByRefBase":
-		baseMatrixByRefBase(inFileList, outFile, true)
+		baseMatrixByRefBase(s.InFileList, s.OutFile, true)
 	default:
-		log.Fatalf("Error: Unrecognized score mode: %s.\n", scoreType)
+		log.Fatalf("Error: Unrecognized score mode: %s.\n", s.ScoreType)
 	}
 }
 
