@@ -129,8 +129,16 @@ func ReturnReverseComplement(bases []Base) []Base {
 			newBase = 1
 		case 3:
 			newBase = 0
-		case 4:
-			newBase = 4
+		case 5:
+			newBase = 8
+		case 6:
+			newBase = 7
+		case 7:
+			newBase = 6
+		case 8:
+			newBase = 5
+		default:
+			newBase = bases[i]
 		}
 		rc = append(rc, newBase)
 	}

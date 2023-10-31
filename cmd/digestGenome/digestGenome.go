@@ -90,20 +90,20 @@ func digestGenome(genome string, cutSite string, outFile string) {
 
 	fa := fasta.GoReadToChan(genome)
 	for i := range fa {
-		prevCut = 0
+		prevCut = 0 //set the first fragment start base to 0
 		numCut = 0
 		currChrom = i.Name
-		for base = range i.Seq {
-			testBases := i.Seq[base : base+len(re.cutBases)]
+		for base = range i.Seq { //loop over every base in the fasta file
+			testBases := i.Seq[base : base+len(re.cutBases)] //get the next base in the fasta file plus the number of bases in the recognition motif. I don't get an index out of range error at the end of the sequence--not sure why
 			if dna.CompareSeqsIgnoreCase(testBases, re.cutBases) == 0 || base+1 == len(i.Seq) {
 				//found a cut site or last fragment, write to bed
-				if base+1 == len(i.Seq) {
+				if base+1 == len(i.Seq) { // last fragment on chromosome
 					bedRegion = bed.Bed{Chrom: currChrom, ChromStart: prevCut, ChromEnd: len(i.Seq), Name: fmt.Sprintf("%s_%s_%d", cutSite, currChrom, numCut), FieldsInitialized: 4}
-				} else {
+				} else { //cut site
 					bedRegion = bed.Bed{Chrom: currChrom, ChromStart: prevCut, ChromEnd: base + re.cutPos, Name: fmt.Sprintf("%s_%s_%d", cutSite, currChrom, numCut), FieldsInitialized: 4}
 				}
 				bed.WriteToFileHandle(out, bedRegion)
-				prevCut = base + re.cutPos
+				prevCut = base + re.cutPos //set the start of the next bed region to the end of the current bed region
 				numCut++
 			}
 		}
@@ -116,12 +116,13 @@ func digestGenome(genome string, cutSite string, outFile string) {
 func usage() {
 	fmt.Print("digestGenome -- Create a bed file of restriction fragments from an input FASTA file and a restriction enzyme recognition sequence\n" +
 		"Input restriction enzyme recognition sequence must have the '^' to specify where the cut occurs. Example: CA^GT\n" +
-		"Several default enzymes commonly used in Hi-C library preps are provided as defaults, and their name can be provided instead of the sequence motif:\n" +
+		"Several enzymes commonly used in Hi-C library preps are provided as defaults, and their name can be provided instead of the sequence motif:\n" +
 		"MboI : ^GATC\n" +
 		"DpnII : ^GATC\n" +
 		"BglII : A^GATCT\n" +
-		"HindIII : A^AGCTT\n\n" +
-		"Currently, only palindromic recognition sites are supported, as the program will only search for the forward strand of the input FASTA.\n\n" +
+		"HindIII : A^AGCTT\n" +
+		"Example command with a default enzyme: digestGenome in.fa MboI out.bed\n" +
+		"Currently, only palindromic recognition sites are supported, as the program will only search the forward strand of the input FASTA.\n\n" +
 		"Usage:\n" +
 		"digestGenome in.fa motif/default out.bed\n")
 	flag.PrintDefaults()

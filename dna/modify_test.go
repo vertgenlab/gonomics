@@ -108,3 +108,12 @@ func TestRemoveGaps(t *testing.T) {
 		t.Errorf("RemoveGaps on %v gave %v when %v was expected", input, actual, expected)
 	}
 }
+
+func TestReturnReverseComplement(t *testing.T) {
+	input := []Base{A, Dot, LowerC, T, N, G, Nil}
+	expected := []Base{Nil, C, N, A, LowerG, Dot, T}
+	actual := ReturnReverseComplement(input)
+	if CompareSeqsIgnoreCase(expected, actual) != 0 {
+		t.Errorf("RemoveGaps on %v gave %v when %v was expected", input, actual, expected)
+	}
+}
