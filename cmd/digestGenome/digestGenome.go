@@ -113,7 +113,17 @@ func digestGenome(genome string, cutSite string, outFile string) {
 }
 
 func usage() {
-
+	fmt.Print("digestGenome -- Create a bed file of restriction fragments from an input FASTA file and a restriction enzyme recognition sequence\n" +
+		"Input restriction enzyme recognition sequence must have the '^' to specify where the cut occurs. Example: CA^GT\n" +
+		"Several default enzymes commonly used in Hi-C library preps are provided as defaults, and their name can be provided instead of the sequence motif:\n" +
+		"MboI : ^GATC\n" +
+		"DpnII : ^GATC\n" +
+		"BglII : A^GATCT\n" +
+		"HindIII : A^AGCTT\n\n" +
+		"Currently, only palindromic recognition sites are supported, as the program will only search for the forward strand of the input FASTA.\n\n" +
+		"Usage:\n" +
+		"digestGenome in.fa motif/default out.bed\n")
+	flag.PrintDefaults()
 }
 
 func main() {
