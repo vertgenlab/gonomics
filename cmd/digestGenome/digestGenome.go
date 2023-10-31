@@ -95,17 +95,18 @@ func digestGenome(genome string, cutSite string, outFile string) {
 		currChrom = i.Name
 		for base = range i.Seq {
 			testBases := i.Seq[base : base+len(re.cutBases)]
-			if dna.CompareSeqsIgnoreCase(testBases, re.cutBases) == 0 {
-				//found a cut site, write to bed
-				bedRegion = bed.Bed{Chrom: currChrom, ChromStart: prevCut, ChromEnd: base + re.cutPos, Name: fmt.Sprintf("%s_%s_%d", cutSite, currChrom, numCut), FieldsInitialized: 4}
+			if dna.CompareSeqsIgnoreCase(testBases, re.cutBases) == 0 || base+1 == len(i.Seq) {
+				//found a cut site or last fragment, write to bed
+				if base+1 == len(i.Seq) {
+					bedRegion = bed.Bed{Chrom: currChrom, ChromStart: prevCut, ChromEnd: len(i.Seq), Name: fmt.Sprintf("%s_%s_%d", cutSite, currChrom, numCut), FieldsInitialized: 4}
+				} else {
+					bedRegion = bed.Bed{Chrom: currChrom, ChromStart: prevCut, ChromEnd: base + re.cutPos, Name: fmt.Sprintf("%s_%s_%d", cutSite, currChrom, numCut), FieldsInitialized: 4}
+				}
 				bed.WriteToFileHandle(out, bedRegion)
 				prevCut = base + re.cutPos
 				numCut++
 			}
 		}
-		//write the last fragment
-		bedRegion = bed.Bed{Chrom: currChrom, ChromStart: prevCut, ChromEnd: len(i.Seq), Name: fmt.Sprintf("%s_%s_%d", cutSite, currChrom, numCut), FieldsInitialized: 4} //is len(i.seq) going to take too long/energy expensive. would love to do this without adding a chromSizes file
-		bed.WriteToFileHandle(out, bedRegion)
 	}
 
 	err := out.Close()
