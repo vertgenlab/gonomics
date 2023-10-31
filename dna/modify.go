@@ -114,6 +114,29 @@ func ReverseComplement(bases []Base) {
 	}
 }
 
+// ReturnReverseComplement returns a reverse complimented sequence of bases .
+// Used to switch strands and maintain 5' -> 3' orientation.
+func ReturnReverseComplement(bases []Base) []Base {
+	var newBase Base
+	var rc []Base
+	for i := len(bases) - 1; i >= 0; i-- {
+		switch bases[i] {
+		case 0:
+			newBase = 3
+		case 1:
+			newBase = 2
+		case 2:
+			newBase = 1
+		case 3:
+			newBase = 0
+		case 4:
+			newBase = 4
+		}
+		rc = append(rc, newBase)
+	}
+	return rc
+}
+
 // Complement all bases in a sequence of bases.
 func Complement(bases []Base) {
 	for i := range bases {
