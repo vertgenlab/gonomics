@@ -1,7 +1,6 @@
 package pFasta
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"testing"
 )
@@ -9,6 +8,7 @@ import (
 var WriteTests = []struct {
 	OutFile      string
 	Records      []pFasta
+	Precision    float32
 	ExpectedFile string
 }{
 	{OutFile: "testdata/out.test.pFa",
@@ -52,6 +52,7 @@ var WriteTests = []struct {
 				},
 			},
 		},
+		Precision:    1e-3, // float16 for writing is quite inaccurate, this fails at 1e-4
 		ExpectedFile: "testdata/expected.test.pFa",
 	},
 }
@@ -61,6 +62,8 @@ func TestWriteAndRead(t *testing.T) {
 	for _, v := range WriteTests {
 		Write(v.OutFile, v.Records)
 		records = Read(v.OutFile)
-		fmt.Println(records)
+		if !AllAreEqual(records, v.Records, v.Precision) {
+			t.Errorf("Error: in pFasta. Write and read test was not as expected.\n")
+		}
 	}
 }

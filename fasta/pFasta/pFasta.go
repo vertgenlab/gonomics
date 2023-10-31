@@ -26,13 +26,13 @@ func Write(outFile string, records []pFasta) {
 	out := fileio.EasyCreate(outFile)
 
 	// first we write the header
-	_, err = fmt.Fprint(out, "#pFasta_format_1.0\n")
+	_, err = fmt.Fprint(out, "pFasta_format_1.0\n")
 	exception.PanicOnErr(err)
 	for i := range records {
-		_, err = fmt.Fprintf(out, "#%s\t%v\n", records[i].Name, len(records[i].Seq))
+		_, err = fmt.Fprintf(out, "%s\t%v\n", records[i].Name, len(records[i].Seq))
 		exception.PanicOnErr(err)
 	}
-	_, err = fmt.Fprintf(out, "##EndHeader##\n")
+	_, err = fmt.Fprintf(out, "EndHeader\n")
 	exception.PanicOnErr(err)
 
 	var currSeqIndex, currPos int
@@ -61,14 +61,13 @@ func writeBaseProbability(out *fileio.EasyWriter, b float32) {
 // have been initialized but all probabilities are 0.
 func makeEmptyRecords(reader *bufio.Reader) []pFasta {
 	var records = make([]pFasta, 0)
-	unparsedHeader, err := fileio.ReadHeader(reader)
-	exception.PanicOnErr(err)
+	unparsedHeader := ReadPfaHeader(reader)
 
-	if unparsedHeader[0] != "#pFasta_format_1.0" {
+	if unparsedHeader[0] != "pFasta_format_1.0" {
 		log.Fatalf("Error: unrecognized pFasta file format. Found: %v.\n", unparsedHeader[0])
 	}
 
-	if unparsedHeader[len(unparsedHeader)-1] != "##EndHeader##" {
+	if unparsedHeader[len(unparsedHeader)-1] != "EndHeader" {
 		log.Fatalf("Error: unrecognized end of header. Found: %v.\n", unparsedHeader[len(unparsedHeader)-1])
 	}
 
@@ -76,10 +75,31 @@ func makeEmptyRecords(reader *bufio.Reader) []pFasta {
 	for currHeaderLine := 1; currHeaderLine < len(unparsedHeader)-1; currHeaderLine++ {
 		words = strings.Split(unparsedHeader[currHeaderLine], "\t")
 		records = append(records, pFasta{
-			Name: strings.TrimPrefix(words[0], "#"),
+			Name: words[0],
 			Seq:  make([]pDna.Float32Base, parse.StringToInt(words[1]))})
 	}
 	return records
+}
+
+// ReadPfaHeader parses the header of a pFasta format file from an input *bufio.Reader.
+func ReadPfaHeader(reader *bufio.Reader) []string {
+	var header []string
+	var line string
+	var err error
+
+	for { // this loop will end either at the end of the file (with panic), or when 'EndHeader' is reached.
+		line, err = reader.ReadString('\n')
+		exception.PanicOnErr(err)
+		line = strings.TrimSuffix(line, "\n")
+		line = strings.TrimSuffix(line, "\r")
+		if line == "EndHeader" {
+			header = append(header, line)
+			break
+		}
+		header = append(header, line)
+	}
+
+	return header
 }
 
 // Read parses a []pFasta from an input file handle in .pFa binary format.
