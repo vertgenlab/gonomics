@@ -8,6 +8,8 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
+	"log"
+	"os"
 )
 
 type PriorSettings struct {
@@ -20,13 +22,51 @@ type PriorSettings struct {
 	AsCounts            bool
 }
 
-func priorUsage() {
+func priorUsage(priorFlags *flag.FlagSet) {
 	fmt.Print("samAssembler prior - Construct an empirical conditional Dirichlet prior for output diploid" +
 		"genotypes based on maximum likelihood estimation of genotypes from aligned short reads.\n" +
 		"Usage: \n" +
 		"samAssembler [options] prior reads.sam/bam ref.fa output.txt\n" +
 		"Options:\n")
-	flag.PrintDefaults()
+	priorFlags.PrintDefaults()
+}
+
+func parsePriorArgs() {
+	var err error
+	var expectedNumArgs int = 3
+	priorFlags := flag.NewFlagSet("prior", flag.ExitOnError)
+
+	var epsilon *float64 = priorFlags.Float64("epsilon", 0.01, "Set the expected misclassification error rate.")
+	var likelihoodCacheSize *int = priorFlags.Int("likelihoodCacheSize", 100, "Set the maximum dimension of the likelihood caches. Should be slightly larger than highest expected pile depth.")
+	var pseudoCount *float64 = priorFlags.Float64("pseudoCount", 0.01, "Prime the empirical prior with pseudoCounts to avoid prior probabilities of 0.\n"+
+		"Increasing this value regularizes the prior against overfitting.\n"+
+		"The model will underfit, biased towards Jukes-Cantor, if this value is set too high.")
+	var asCounts *bool = priorFlags.Bool("asCounts", false, "Return output as counts, instead of probabilities. Useful for debugging, but count matrices cannot be used directly in 'build'.")
+
+	err = priorFlags.Parse(os.Args[2:])
+	exception.PanicOnErr(err)
+	priorFlags.Usage = func() { priorUsage(priorFlags) }
+
+	if len(priorFlags.Args()) != expectedNumArgs {
+		priorFlags.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n",
+			expectedNumArgs, len(priorFlags.Args()))
+	}
+
+	samFileName := priorFlags.Arg(0)
+	referenceFileName := priorFlags.Arg(1)
+	outFileName := priorFlags.Arg(2)
+
+	s := PriorSettings{
+		SamFileName:         samFileName,
+		ReferenceFile:       referenceFileName,
+		OutFile:             outFileName,
+		Epsilon:             *epsilon,
+		LikelihoodCacheSize: *likelihoodCacheSize,
+		PseudoCount:         *pseudoCount,
+		AsCounts:            *asCounts,
+	}
+	SamAssemblerPrior(s)
 }
 
 func SamAssemblerPrior(s PriorSettings) {

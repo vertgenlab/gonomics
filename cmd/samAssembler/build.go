@@ -4,18 +4,20 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"math/rand"
+	"os"
 )
 
-func buildUsage() {
+func buildUsage(buildFlags *flag.FlagSet) {
 	fmt.Print("samAssembler build - Reference-based diploid assembly from aligned short reads.\n" +
 		"Usage:\n" +
 		"samAssembler build individual.sam ref.fa outputA.fa outputB.fa\n" +
 		"Options:\n")
-	flag.PrintDefaults()
+	buildFlags.PrintDefaults()
 }
 
 // BuildSettings specifies all user options and arguments for the build subcommand.
@@ -84,6 +86,63 @@ func preCheck(s BuildSettings) {
 	if s.FlatPrior && s.EmpiricalPrior != "" {
 		log.Fatalf("Error: user requested flat prior but also provided an empirical prior. These options are mutually incompatible.\n")
 	}
+}
+
+func parseBuildArgs() {
+	var err error
+	var expectedNumArgs int = 4
+	buildFlags := flag.NewFlagSet("build", flag.ExitOnError)
+
+	var delta *float64 = buildFlags.Float64("delta", 0.01, "Set the expected divergence frequency.")
+	var gamma *float64 = buildFlags.Float64("gamma", 3, "Set the expected transition bias.")
+	var epsilon *float64 = buildFlags.Float64("epsilon", 0.01, "Set the expected misclassification error rate.")
+	var kappa *float64 = buildFlags.Float64("kappa", 0.1, "Set the expected proportion of divergent sites that are INDELs.")
+	var lambda *float64 = buildFlags.Float64("lambda", 0, "Set the expected rate of cytosine deamination.")
+	var multiFaDir *string = buildFlags.String("multiFaDir", "", "Output the reference and generated sequences as an aligned multiFa, each file by chrom.")
+	var qNameA *string = buildFlags.String("qNameA", "QueryA", "Set the qName for the first generated chromosome in the optional multiFa output.")
+	var qNameB *string = buildFlags.String("qNameB", "QueryB", "Set the qName for the second generated chromosome in the optional multiFa output.")
+	var likelihoodCacheSize *int = buildFlags.Int("likelihoodCacheSize", 100, "Set the maximum dimension of the likelihood caches. Should be slightly larger than highest expected pile depth.")
+	var setSeed *int64 = buildFlags.Int64("setSeed", -1, "Use a specific seed for the RNG.")
+	var verbose *int = buildFlags.Int("verbose", 0, "Set to 1 to enable additional debug prints.")
+	var flatPrior *bool = buildFlags.Bool("flatPrior", false, "Use a flat prior instead of the default informative prior distribution.")
+	var empiricalPrior *string = buildFlags.String("empiricalPrior", "", "Use an empirical prior instead, based on an input prior file. New empirical priors can be generated with the 'prior' subcommand.")
+
+	err = buildFlags.Parse(os.Args[2:])
+	exception.PanicOnErr(err)
+	buildFlags.Usage = func() { buildUsage(buildFlags) }
+
+	if len(buildFlags.Args()) != expectedNumArgs {
+		buildFlags.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n",
+			expectedNumArgs, len(buildFlags.Args()))
+	}
+
+	inFile := buildFlags.Arg(0)
+	refFile := buildFlags.Arg(1)
+	outFileA := buildFlags.Arg(2)
+	outFileB := buildFlags.Arg(3)
+
+	s := BuildSettings{
+		SamFileName:         inFile,
+		RefFile:             refFile,
+		OutFileA:            outFileA,
+		OutFileB:            outFileB,
+		MultiFaDir:          *multiFaDir,
+		qNameA:              *qNameA,
+		qNameB:              *qNameB,
+		Delta:               *delta,
+		Gamma:               *gamma,
+		Epsilon:             *epsilon,
+		Kappa:               *kappa,
+		Lambda:              *lambda,
+		LikelihoodCacheSize: *likelihoodCacheSize,
+		SetSeed:             *setSeed,
+		Verbose:             *verbose,
+		FlatPrior:           *flatPrior,
+		EmpiricalPrior:      *empiricalPrior,
+	}
+
+	samAssemblerBuild(s)
 }
 
 // samAssemblerBuild is the primary function of the samAssembler build cmd. It creates reference-guided pseudoassemblies
