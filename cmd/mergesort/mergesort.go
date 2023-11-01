@@ -6,6 +6,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"path"
 	"strings"
@@ -23,8 +24,10 @@ import (
 func usage() {
 	fmt.Print(
 		"mergesort - Executes an external merge sort of the input file based on desired sort criteria. \n" +
-			"\t The input file should have a proper file extension depending on the input file type.\n" +
+			"\tThe input file should have a proper file extension depending on the input file type.\n" +
 			"\tDefault sort criteria is byGenomicCoordinates. Chromosome -> StartPos -> EndPos\n" +
+			"\tExcept in the case of fastq files, where the file is sorted by read name.\n" +
+			"\tCurrent accepted file types: BED, VCF, SAM, AXT, FASTQ\n" +
 			"Usage:\n" +
 			" mergesort [options] input.filetype outputFile\n")
 	flag.PrintDefaults()
@@ -149,6 +152,30 @@ func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string
 	exception.PanicOnErr(err)
 }
 
+func fastqSort(inFile string, outFile string, numRecordsPerChunk int) {
+	//detect if PE mode
+	peIn := strings.Split(inFile, ",")
+	peOut := strings.Split(outFile, ",")
+
+	for file := range peIn {
+		var outChan <-chan fastq.Fastq
+
+		out := fileio.EasyCreate(peOut[file])
+		data := fastq.GoReadToChan(peIn[file])
+
+		outChan = sort.GoExternalMergeSort(data, numRecordsPerChunk, func(a, b fastq.Fastq) bool {
+			return a.Name < b.Name
+		})
+
+		for fq := range outChan {
+			fastq.WriteToFileHandle(out, fq)
+		}
+
+		err := out.Close()
+		exception.PanicOnErr(err)
+	}
+}
+
 // TODO remove giraf pointers and uncomment
 //func girafSort(infile, outfile string, numRecordsPerChunk int) {
 //	data := giraf.GoReadToChan(infile)
@@ -212,6 +239,8 @@ func mergeSort(filename string, outFile string, numRecordsPerChunk int, sortCrit
 		vcfSort(filename, outFile, numRecordsPerChunk)
 	case ".sam":
 		samSort(filename, outFile, numRecordsPerChunk, sortCriteria)
+	case ".fastq":
+		fastqSort(filename, outFile, numRecordsPerChunk)
 	case ".giraf":
 		// TODO enable after giraf pointers are removed
 		log.Fatalln("ERROR: giraf sorting in currently disabled")
@@ -226,13 +255,18 @@ func mergeSort(filename string, outFile string, numRecordsPerChunk int, sortCrit
 }
 
 func main() {
-	expectedNumArgs := 2
 	var numLinesPerChunk *int = flag.Int("tmpsize", 1000000, "The number of records to read into memory before writing to a tmp file.``")
 	var singleCellBx *bool = flag.Bool("singleCellBx", false, "Sort single-cell sam records by barcode.")
 	var sortCriteria string = "byGenomicCoordinates" // default the genomicCoordinates criteria.
+	var fastqPE *bool = flag.Bool("fastqPE", false, "Sort paired end fastq files. Each file will be sorted separately")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
+
+	var expectedNumArgs int = 2
+	if *fastqPE {
+		expectedNumArgs = 4
+	}
 
 	if *singleCellBx {
 		sortCriteria = "singleCellBx"
@@ -243,8 +277,14 @@ func main() {
 		log.Fatalf("ERROR: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
-	inFile := flag.Arg(0)
-	outFile := flag.Arg(1)
+	var inFile, outFile string
+	if *fastqPE {
+		inFile = fmt.Sprintf("%s,%s", flag.Arg(0), flag.Arg(1))
+		outFile = fmt.Sprintf("%s,%s", flag.Arg(2), flag.Arg(3))
+	} else {
+		inFile = flag.Arg(0)
+		outFile = flag.Arg(1)
+	}
 
 	mergeSort(inFile, outFile, *numLinesPerChunk, sortCriteria)
 }

@@ -37,8 +37,11 @@ func SeekBamRegionRecycle(br *BamReader, bai Bai, chrom string, start, end uint3
 	//record the smallest file offset of the alignments that overlap with the window. Given a region [rbeg, rend), we
 	//only need to visit a chunk whose end file offset is larger than the file offset of the 16kbp window containing
 	//rbeg.
-	//	With both binning and linear indices, we can retrieve alignments in most of regions with just one seek
+	//	With both binning and linear indices, we can retrieve alignments in most regions with just one seek
 	//call.
+	if int(start/16384) > len(ref.intervalOff) {
+		return nil // no alignments in or past region therefore intervalOffset may not be generated during indexing
+	}
 	linearIndexMinCOffset = ref.intervalOff[start/16384] >> 16
 
 	var curr *Sam
