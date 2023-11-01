@@ -32,9 +32,9 @@ func buildTree(terms map[string]*Obo, force bool) {
 	}
 }
 
-// findTreeRoots takes a map[string]*Obo and returns a slice of pointers to all root nodes.
+// FindTreeRoots takes a map[string]*Obo and returns a slice of pointers to all root nodes.
 // This function assumes BuildTree has already been called.
-func findTreeRoots(records map[string]*Obo) []*Obo {
+func FindTreeRoots(records map[string]*Obo) []*Obo {
 	var roots []*Obo
 	for i := range records {
 		if len(records[i].Parents) == 0 {
