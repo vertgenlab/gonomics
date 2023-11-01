@@ -49,13 +49,13 @@ var InfoTests = []struct {
 	InFile       string
 	OutFile      string
 	MatrixType   string
-	Pseudocounts float64
+	PseudoCounts float64
 	ExpectedFile string
 }{
 	{InFile: "testdata/jaspar.vertebrate.txt.gz",
 		OutFile:      "testdata/jaspar.vertebrate.info.txt",
 		MatrixType:   "Frequency",
-		Pseudocounts: 0.1,
+		PseudoCounts: 0.1,
 		ExpectedFile: "testdata/expected.info.txt",
 	},
 }
@@ -68,7 +68,7 @@ func TestPwmInfo(t *testing.T) {
 			InFile:       v.InFile,
 			OutFile:      v.OutFile,
 			MatrixType:   v.MatrixType,
-			Pseudocounts: v.Pseudocounts,
+			PseudoCounts: v.PseudoCounts,
 		}
 		pwmInfo(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
