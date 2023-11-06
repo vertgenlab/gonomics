@@ -114,9 +114,8 @@ func ReverseComplement(bases []Base) {
 	}
 }
 
-// ReturnReverseComplement returns a reverse complimented sequence of bases .
-// Used to switch strands and maintain 5' -> 3' orientation.
-func ReturnReverseComplement(bases []Base) []Base {
+// ReverseComplementAndCopy returns a reverse complimented sequence of bases. Used to switch strands and maintain 5' -> 3' orientation.
+func ReverseComplementAndCopy(bases []Base) []Base {
 	var newBase Base
 	var rc []Base
 	for i := len(bases) - 1; i >= 0; i-- {

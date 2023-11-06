@@ -1,4 +1,4 @@
-chrA	0	20	MboI_chrA_0
-chrA	20	200	MboI_chrA_1
-chrB	0	71	MboI_chrB_0
-chrB	71	200	MboI_chrB_1
+chrA	0	20	MboI_chrA_0	0	+
+chrA	20	200	MboI_chrA_1	0	+
+chrB	0	71	MboI_chrB_0	0	+
+chrB	71	200	MboI_chrB_1	0	+

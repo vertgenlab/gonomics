@@ -15,6 +15,7 @@ var digestGenomeTests = []struct {
 }{
 	{"testdata/in.fa", "testdata/out.MboI.bed", "testdata/expected.MboI.bed", "MboI"},
 	{"testdata/in.fa", "testdata/out.CGCG.bed", "testdata/expected.CGCG.bed", "C^GCG"},
+	{"testdata/in.fa", "testdata/out.AAGA.bed", "testdata/expected.AAGA.bed", "A^AGA"},
 }
 
 func TestDigestGenome(t *testing.T) {
