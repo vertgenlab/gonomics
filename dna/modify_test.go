@@ -109,7 +109,7 @@ func TestRemoveGaps(t *testing.T) {
 	}
 }
 
-func TestReturnReverseComplement(t *testing.T) {
+func TestReverseComplementAndCopy(t *testing.T) {
 	input := []Base{A, Dot, LowerC, T, N, G, Nil}
 	expected := []Base{Nil, C, N, A, LowerG, Dot, T}
 	actual := ReverseComplementAndCopy(input)
