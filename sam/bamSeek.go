@@ -39,7 +39,7 @@ func SeekBamRegionRecycle(br *BamReader, bai Bai, chrom string, start, end uint3
 	//rbeg.
 	//	With both binning and linear indices, we can retrieve alignments in most regions with just one seek
 	//call.
-	if int(start/16384) > len(ref.intervalOff) {
+	if int(start/16384) >= len(ref.intervalOff) {
 		return nil // no alignments in or past region therefore intervalOffset may not be generated during indexing
 	}
 	linearIndexMinCOffset = ref.intervalOff[start/16384] >> 16
