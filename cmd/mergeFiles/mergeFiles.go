@@ -25,6 +25,10 @@ func mergeFiles(sam1, sam2, outFile string) {
 		switch ans {
 		case 0:
 			sam.WriteToFileHandle(out, currF1)
+			currF1 = <-f1
+		case -1:
+			sam.WriteToFileHandle(out, i)
+			continue
 		case 1:
 			for ans == 1 {
 				currF1 = <-f1
@@ -32,12 +36,11 @@ func mergeFiles(sam1, sam2, outFile string) {
 				switch ans {
 				case 0:
 					sam.WriteToFileHandle(out, currF1)
+					currF1 = <-f1
 				case -1:
 					sam.WriteToFileHandle(out, i)
 				}
 			}
-		case -1:
-			sam.WriteToFileHandle(out, i)
 		}
 	}
 	err := out.Close()
