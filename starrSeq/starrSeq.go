@@ -158,7 +158,7 @@ func ReadSliceAnalysis(r ReadSliceAnalysisSettings) {
 	if !r.FuncSettings.NoOut {
 		out = fileio.EasyCreate(r.FuncSettings.OutFile)
 		if r.FuncSettings.ScAnalysis != "" {
-			SingleCellAnalysis(r.FuncSettings, r.ReadSlice, r.AllConstructs, r.AllConstructs, r.CellTypeMap, out)
+			SingleCellAnalysis(r.FuncSettings, r.ReadSlice, r.AllConstructs, r.AllCellTypes, r.CellTypeMap, out)
 		} else if r.FuncSettings.DetermineBins != "" {
 			r.FuncSettings.BinCells = DetermineIdealBins(r.FuncSettings, r.ReadSlice)
 			fmt.Printf("Using %d bins\n", r.FuncSettings.BinCells)

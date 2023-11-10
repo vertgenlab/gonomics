@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/sam"
+	"sort"
 	"strings"
 )
 
@@ -14,20 +15,30 @@ func Alt(s ScStarrSeqSettings) {
 	var overlap []interval.Interval
 	var starrSeqRead Read
 	var starrSeqReadSlice []Read
-	var allConstructs, allCellTypes, umiBxSlice []string
+	var allConstructs, umiBxSlice, allCellTypes []string
 	var cluster, cbcUpdate string
 	var found bool
 	var multipleGems bool = false
 	var gemNumber int = 1
+	var ck []ClusterKey
 
 	cellTypeMap := make(map[string]string)
+	allCellTypesMap := make(map[string]int)
 
-	if s.ScAnalysis != "" {
-		ck := ReadClusterKey(s.ScAnalysis)
+	if s.ScAnalysis != "" || s.CountMatrixCellTypes != "" {
+		if s.ScAnalysis != "" {
+			ck = ReadClusterKey(s.ScAnalysis)
+		} else {
+			ck = ReadClusterKey(s.CountMatrixCellTypes)
+		}
 		for _, i := range ck {
-			allCellTypes = append(allConstructs, i.Cluster)
+			allCellTypesMap[i.Cluster] = 0
 			cellTypeMap[i.Bx] = i.Cluster
 		}
+		for i := range allCellTypesMap {
+			allCellTypes = append(allCellTypes, i)
+		}
+		sort.Strings(allCellTypes)
 	}
 
 	bedEntries := bed.Read(s.AltMapping)

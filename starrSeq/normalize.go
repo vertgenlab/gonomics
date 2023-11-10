@@ -70,6 +70,7 @@ func GetNcAvg(matrix []scStarrSeqMatrix, ncSlice []string, ncVals [][]float64) [
 	for i := range ncVals {
 		ncAvg = append(ncAvg, numbers.AverageFloat64(ncVals[i]))
 	}
+	fmt.Println(ncAvg)
 	return ncAvg
 }
 
@@ -114,7 +115,7 @@ func NormScToNegativeCtrls(matrix []scStarrSeqMatrix, ncNorm string, numCellType
 		if j > 0 && currCluster != prevCluster {
 			clusterIdx++
 		}
-		i.counts = i.counts / ncAvg[clusterIdx]
+		matrix[j].counts = i.counts / ncAvg[clusterIdx]
 		prevCluster = currCluster
 	}
 	return matrix

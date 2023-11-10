@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/starrSeq"
 	"log"
+	"sort"
 	"strings"
 )
 
@@ -24,6 +25,7 @@ func parseCellrangerBam(s starrSeq.ScStarrSeqSettings) {
 	var read starrSeq.Read
 	var readSlice []starrSeq.Read
 	var outSam *fileio.EasyWriter
+	var ck []starrSeq.ClusterKey
 
 	//detect multiple bam files
 	files := strings.Split(s.InFile, ",")
@@ -35,19 +37,24 @@ func parseCellrangerBam(s starrSeq.ScStarrSeqSettings) {
 				"If multiple GEM wells haven't be processed in the same way in Seurat and in the scStarrSeqAnalysis programs, cell lookup for -cellTypeAnalysis will be impaired.")
 		}
 	}
+
 	cellTypeMap := make(map[string]string)
-	if s.ScAnalysis != "" {
-		ck := starrSeq.ReadClusterKey(s.ScAnalysis)
+	allCellTypesMap := make(map[string]int)
+
+	if s.ScAnalysis != "" || s.CountMatrixCellTypes != "" {
+		if s.ScAnalysis != "" {
+			ck = starrSeq.ReadClusterKey(s.ScAnalysis)
+		} else {
+			ck = starrSeq.ReadClusterKey(s.CountMatrixCellTypes)
+		}
 		for _, i := range ck {
 			cellTypeMap[i.Bx] = i.Cluster
-			allCellTypes = append(allCellTypes, i.Cluster)
+			allCellTypesMap[i.Cluster] = 0
 		}
-	} else if s.CountMatrixCellTypes != "" {
-		ck := starrSeq.ReadClusterKey(s.CountMatrixCellTypes)
-		for _, i := range ck {
-			cellTypeMap[i.Bx] = i.Cluster
-			allCellTypes = append(allCellTypes, i.Cluster)
+		for i := range allCellTypesMap {
+			allCellTypes = append(allCellTypes, i)
 		}
+		sort.Strings(allCellTypes)
 	}
 
 	var tree = make([]interval.Interval, 0)
