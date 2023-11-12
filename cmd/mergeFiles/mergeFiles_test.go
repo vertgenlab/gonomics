@@ -8,8 +8,8 @@ import (
 )
 
 func TestMergeFiles(t *testing.T) {
-	in1 := "testdata/file1.sam"
-	in2 := "testdata/file2.sam"
+	in1 := "testdata/file1.mergesort.sam"
+	in2 := "testdata/file2.mergesort.sam"
 	exp := "testdata/exp.sam"
 	out := "testdata/out.sam"
 
