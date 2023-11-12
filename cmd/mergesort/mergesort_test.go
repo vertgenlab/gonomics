@@ -29,6 +29,7 @@ var MergeSortTests = []struct {
 	{"testdata/test.axt", "", "testdata/out.axt", "", "testdata/expected.axt", "", "tmp", 1000000, "byGenomicCoordinates", false},
 	{"testdata/test_R1.fastq", "", "testdata/out_R1.fastq", "", "testdata/expected_R1.fastq", "", "tmp", 1000000, "byGenomicCoordinates", false},
 	{"testdata/test_R1.fastq", "testdata/test_R2.fastq", "testdata/out_R1.fastq", "testdata/out_R2.fastq", "testdata/expected_R1.fastq", "testdata/expected_R2.fastq", "tmp", 1000000, "byGenomicCoordinates", true},
+	{"testdata/small.readName.sam", "", "testdata/out.readName.sam", "", "testdata/expected.readName.sam", "", "tmp", 1000000, "readName", false},
 
 	// TODO enable giraf sorting after pointers are removed
 	//{"testdata/test.giraf", "testdata/out.giraf", "testdata/expected.giraf", "tmp", 1000000, "byGenomicCoordinates"},
@@ -43,7 +44,7 @@ func TestMergeSort(t *testing.T) {
 		}
 
 		mergeSort(v.InFile, v.OutFile, v.NumLinesPerChunk, v.SortCriteria)
-		
+
 		if v.fastqPE {
 			tmpIn := strings.Split(v.InFile, ",")
 			v.InFile = tmpIn[0]
