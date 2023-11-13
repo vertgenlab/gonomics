@@ -90,17 +90,17 @@ func digestGenome(genome string, cutSite string, outFile string) {
 		prevCut = 0 //set the first fragment start base to 0
 		numCut = 0
 		currChrom = i.Name
-		for base = range i.Seq { //loop over every base in the fasta file
+		for base = 0; base <= len(i.Seq)-len(re.cutBases); base++ { //loop over every base in the fasta file
 			testBases := i.Seq[base : base+len(re.cutBases)] //get the next base in the fasta file plus the number of bases in the recognition motif. I don't get an index out of range error at the end of the sequence--not sure why
 			if re.pal == false {
 				if dna.CompareSeqsIgnoreCase(testBases, re.cutBasesRC) == 0 {
 					revMatch = true
 				}
 			}
-			if dna.CompareSeqsIgnoreCase(testBases, re.cutBases) == 0 || base+1 == len(i.Seq) || revMatch == true {
+			if dna.CompareSeqsIgnoreCase(testBases, re.cutBases) == 0 || base+1 == len(i.Seq)-len(re.cutBases) || revMatch == true {
 				//found a cut site or last fragment, write to bed
 				switch {
-				case base+1 == len(i.Seq):
+				case base+1 == len(i.Seq)-len(re.cutBases):
 					bedRegion = bed.Bed{Chrom: currChrom, ChromStart: prevCut, ChromEnd: len(i.Seq), Name: fmt.Sprintf("%s_%s_%d", cutSite, currChrom, numCut), Strand: '+', FieldsInitialized: 6}
 				case revMatch == true:
 					bedRegion = bed.Bed{Chrom: currChrom, ChromStart: prevCut, ChromEnd: base + (len(re.cutBases) - re.cutPos), Name: fmt.Sprintf("%s_%s_%d", cutSite, currChrom, numCut), Strand: '-', FieldsInitialized: 6}
