@@ -126,6 +126,10 @@ func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string
 			jSingle := sam.ToSingleCellAlignment(b)
 			return dna.BasesToString(iSingle.Bx) < dna.BasesToString(jSingle.Bx)
 		})
+	} else if sortCriteria == "readName" {
+		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, func(a, b sam.Sam) bool {
+			return a.QName < b.QName
+		})
 	} else {
 		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, func(a, b sam.Sam) bool {
 			switch {
@@ -259,6 +263,7 @@ func main() {
 	var singleCellBx *bool = flag.Bool("singleCellBx", false, "Sort single-cell sam records by barcode.")
 	var sortCriteria string = "byGenomicCoordinates" // default the genomicCoordinates criteria.
 	var fastqPE *bool = flag.Bool("fastqPE", false, "Sort paired end fastq files. Each file will be sorted separately")
+	var readName *bool = flag.Bool("readName", false, "Sort sam records by read name.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -270,6 +275,9 @@ func main() {
 
 	if *singleCellBx {
 		sortCriteria = "singleCellBx"
+	}
+	if *readName {
+		sortCriteria = "readName"
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
