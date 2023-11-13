@@ -117,22 +117,6 @@ func vcfSort(infile, outfile string, numRecordsPerChunk int) {
 	exception.PanicOnErr(err)
 }
 
-func samSortSpecial(inFile, outFile string, numRecordsPerChunk int) {
-	var o <-chan sam.Sam
-	//var fieldsA, fieldsB []string
-	reads, head := sam.GoReadToChan(inFile)
-	out := fileio.EasyCreate(outFile)
-	sam.WriteHeaderToFileHandle(out, head)
-	o = sort.GoExternalMergeSort(reads, numRecordsPerChunk, func(a, b sam.Sam) bool {
-		return a.QName < b.QName
-	})
-	for i := range o {
-		sam.WriteToFileHandle(out, i)
-	}
-	err := out.Close()
-	exception.PanicOnErr(err)
-}
-
 func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string) {
 	data, header := sam.GoReadToChan(infile)
 	var out <-chan sam.Sam
