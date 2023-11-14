@@ -10,6 +10,7 @@ import (
 
 func mergeFiles(sam1, sam2, outFile string) {
 	var currF1 sam.Sam
+	var full bool
 	var ans int
 
 	out := fileio.EasyCreate(outFile)
@@ -31,8 +32,11 @@ func mergeFiles(sam1, sam2, outFile string) {
 			continue
 		case 1:
 			for ans == 1 {
-				currF1 = <-f1
+				currF1, full = <-f1
 				ans = strings.Compare(i.QName, currF1.QName)
+				if !full {
+					ans = -1
+				}
 				switch ans {
 				case 0:
 					sam.WriteToFileHandle(out, currF1)
