@@ -2,6 +2,7 @@
 package convert
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedGraph"
 	"github.com/vertgenlab/gonomics/chromInfo"
@@ -44,6 +45,24 @@ func SamToBed(s sam.Sam) bed.Bed {
 		return bed.Bed{}
 	} else {
 		return bed.Bed{Chrom: s.RName, ChromStart: int(s.Pos - 1), ChromEnd: int(s.Pos-1) + cigar.ReferenceLength(s.Cigar), Name: s.QName, FieldsInitialized: 4}
+	}
+}
+
+func SamPairedEndToBed(r1, r2 sam.Sam) (bed.Bed, error) {
+	//TODO: add check for alignment orientation?
+	switch {
+	case r1.Cigar[0].Op == '*' && r2.Cigar[0].Op == '*':
+		return bed.Bed{}, nil
+	case r1.Cigar[0].Op == '*':
+		return bed.Bed{Chrom: r2.RName, ChromStart: int(r2.Pos - 1), ChromEnd: int(r2.Pos-1) + cigar.ReferenceLength(r2.Cigar), Name: r2.QName, FieldsInitialized: 4}, nil
+	case r2.Cigar[0].Op == '*':
+		return bed.Bed{Chrom: r1.RName, ChromStart: int(r1.Pos - 1), ChromEnd: int(r1.Pos-1) + cigar.ReferenceLength(r1.Cigar), Name: r1.QName, FieldsInitialized: 4}, nil
+	default:
+		if r1.RName != r2.RName {
+			err := fmt.Errorf("sam read end pairs map to different chromosomes. No bed will be returned")
+			return bed.Bed{}, err
+		}
+		return bed.Bed{Chrom: r1.RName, ChromStart: int(r1.Pos - 1), ChromEnd: int(r2.Pos-1) + cigar.ReferenceLength(r2.Cigar), Name: r1.QName, FieldsInitialized: 4}, nil
 	}
 }
 
