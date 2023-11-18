@@ -1,12 +1,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/motif"
 	"log"
+	"os"
 )
 
 type InfoSettings struct {
@@ -14,6 +16,44 @@ type InfoSettings struct {
 	OutFile      string
 	MatrixType   string
 	Pseudocounts float64
+}
+
+func infoUsage(infoFlags *flag.FlagSet) {
+	fmt.Printf("pwmTools info - a tool for reporting tabular statistics on PWM files.\n" +
+		"Usage:\n" +
+		"pwmTools info in.pwm out.txt\n" +
+		"options:\n")
+	infoFlags.PrintDefaults()
+}
+
+func parseInfoArgs() {
+	var expectedNumArgs int = 2
+	var err error
+
+	infoFlags := flag.NewFlagSet("info", flag.ExitOnError)
+	var matrixType *string = infoFlags.String("matrixType", "Weight", "Specify the type of position matrix. May be one of: Frequency, Probability, or Weight.")
+	var pfmPseudocounts *float64 = infoFlags.Float64("pfmPseudocounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM.")
+	err = infoFlags.Parse(os.Args[2:])
+	exception.PanicOnErr(err)
+	infoFlags.Usage = func() { infoUsage(infoFlags) }
+
+	if len(infoFlags.Args()) != expectedNumArgs {
+		infoFlags.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n",
+			expectedNumArgs, len(infoFlags.Args()))
+	}
+
+	inFile := infoFlags.Arg(0)
+	outFile := infoFlags.Arg(1)
+
+	s := InfoSettings{
+		InFile:       inFile,
+		OutFile:      outFile,
+		MatrixType:   *matrixType,
+		Pseudocounts: *pfmPseudocounts,
+	}
+
+	pwmInfo(s)
 }
 
 func pwmInfo(s InfoSettings) {
