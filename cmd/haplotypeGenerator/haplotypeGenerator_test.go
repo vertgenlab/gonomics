@@ -9,25 +9,43 @@ import (
 )
 
 var haplotypeGeneratorTests = []struct {
-	inputFaFile   string
-	inputVcfFile  string
-	inputBedFile  string
-	outdir        string
-	outputFiles   []string
-	expectedFiles []string
+	InputFaFile   string
+	InputVcfFile  string
+	InputBedFile  string
+	OutDir        string
+	LineLength    int
+	Verbose       int
+	OutputFiles   []string
+	ExpectedFiles []string
 }{
-	{"testdata/test.fa", "testdata/test.vcf", "testdata/test.bed", "testdata/outdir", []string{"testdata/outdir/CHR1.10.20.fa", "testdata/outdir/CHR1.35.45.fa"}, []string{"testdata/outdir/expected.CHR1.10.20.fa", "testdata/outdir/expected.CHR1.35.45.fa"}},
+	{InputFaFile: "testdata/test.fa",
+		InputVcfFile:  "testdata/test.vcf",
+		InputBedFile:  "testdata/test.bed",
+		OutDir:        "testdata/outdir",
+		LineLength:    50,
+		Verbose:       0,
+		OutputFiles:   []string{"testdata/outdir/CHR1.10.20.fa", "testdata/outdir/CHR1.35.45.fa"},
+		ExpectedFiles: []string{"testdata/outdir/expected.CHR1.10.20.fa", "testdata/outdir/expected.CHR1.35.45.fa"}},
 }
 
 func TestHaplotypeGenerator(t *testing.T) {
 	var err error
+	var s Settings
 	for _, v := range haplotypeGeneratorTests {
-		haplotypeGenerator(v.inputFaFile, v.inputVcfFile, v.inputBedFile, v.outdir)
-		for i := range v.outputFiles {
-			if !fileio.AreEqual(v.outputFiles[i], v.expectedFiles[i]) {
+		s = Settings{
+			ReferenceGenomeFile: v.InputFaFile,
+			VcfFile:             v.InputVcfFile,
+			RegionBedFile:       v.InputBedFile,
+			OutDir:              v.OutDir,
+			LineLength:          v.LineLength,
+			Verbose:             v.Verbose,
+		}
+		haplotypeGenerator(s)
+		for i := range v.OutputFiles {
+			if !fileio.AreEqual(v.OutputFiles[i], v.ExpectedFiles[i]) {
 				t.Errorf("Error in haplotypeGenerator, output was not as expected.")
 			} else {
-				err = os.Remove(v.outputFiles[i])
+				err = os.Remove(v.OutputFiles[i])
 				exception.PanicOnErr(err)
 			}
 		}
