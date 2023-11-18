@@ -10,11 +10,12 @@ func usage() {
 	fmt.Printf(
 		"pwmTools - a collection of tools for manipulating position matrices.\n" +
 			"Usage:\n" +
-			"pwmTools filter in.pwm out.pwm\n" +
-			"OR\n" +
-			"pwmTools info in.pwm out.txt\n" +
-			"options:\n")
-	flag.PrintDefaults()
+			"\tpwmTools filter in.pwm out.pwm\n" +
+			"\tOR\n" +
+			"\tpwmTools format in.pwm out.pwm\n" +
+			"\tOR\n" +
+			"\tpwmTools info in.pwm out.txt\n" +
+			"Enter a subcommand to view options.\n")
 }
 
 func main() {
@@ -30,6 +31,8 @@ func main() {
 	switch flag.Arg(0) {
 	case "filter":
 		parseFilterArgs()
+	case "format":
+		parseFormatArgs()
 	case "info":
 		parseInfoArgs()
 	default:

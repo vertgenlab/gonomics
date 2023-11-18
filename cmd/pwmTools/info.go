@@ -32,7 +32,7 @@ func parseInfoArgs() {
 
 	infoFlags := flag.NewFlagSet("info", flag.ExitOnError)
 	var matrixType *string = infoFlags.String("matrixType", "Weight", "Specify the type of position matrix. May be one of: Frequency, Probability, or Weight.")
-	var pfmPseudocounts *float64 = infoFlags.Float64("pfmPseudocounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM.")
+	var pfmPseudocounts *float64 = infoFlags.Float64("pfmPseudocounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM or PPM.")
 	err = infoFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	infoFlags.Usage = func() { infoUsage(infoFlags) }

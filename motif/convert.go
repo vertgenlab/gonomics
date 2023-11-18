@@ -67,6 +67,31 @@ func PpmSliceToPwmSlice(input []PositionMatrix) []PositionMatrix {
 	return answer
 }
 
+// PwmToPpm creates a position probability matrix from an input position weight matrix.
+func PwmToPpm(input PositionMatrix) PositionMatrix {
+	if input.Type != Weight {
+		log.Fatalf("Input PositionMatrix must be of type 'Weight' to be converted to a PPM.")
+	}
+	var row, column int
+	var answer = CopyPositionMatrix(input)
+	answer.Type = Probability
+	for column = 0; column < len(input.Mat[0]); column++ {
+		for row = 0; row < 4; row++ {
+			answer.Mat[row][column] = math.Pow(2, input.Mat[row][column]) / 4.0
+		}
+	}
+
+	return answer
+}
+
+func PwmSliceToPpmSlice(input []PositionMatrix) []PositionMatrix {
+	var answer = make([]PositionMatrix, len(input))
+	for i := range input {
+		answer[i] = PwmToPpm(input[i])
+	}
+	return answer
+}
+
 // ConsensusSequence takes in a PositionMatrix and returns the consensus motif sequence as a fasta.
 // works for PFM, PPM, and PWM, as for all three, the consensus base is represented by the
 // max column.
