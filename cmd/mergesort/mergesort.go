@@ -264,7 +264,7 @@ func main() {
 	var sortCriteria string = "byGenomicCoordinates" // default the genomicCoordinates criteria.
 	var fastqPE *bool = flag.Bool("fastqPE", false, "Sort paired end fastq files. Each file will be sorted separately")
 	var readName *bool = flag.Bool("readName", false, "Sort sam records by read name.")
-	var tmpDir *string = flag.String("tmpDir", "", "Specify a directory for tmp files")
+	var tmpDir *string = flag.String("tmpDir", "", "Specify an existing directory for tmp files")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
