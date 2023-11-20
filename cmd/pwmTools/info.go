@@ -16,6 +16,7 @@ type InfoSettings struct {
 	OutFile      string
 	MatrixType   string
 	Pseudocounts float64
+	Threshold    float64
 }
 
 func infoUsage(infoFlags *flag.FlagSet) {
@@ -33,6 +34,7 @@ func parseInfoArgs() {
 	infoFlags := flag.NewFlagSet("info", flag.ExitOnError)
 	var matrixType *string = infoFlags.String("matrixType", "Weight", "Specify the type of position matrix. May be one of: Frequency, Probability, or Weight.")
 	var pfmPseudocounts *float64 = infoFlags.Float64("pfmPseudocounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM or PPM.")
+	var threshold *float64 = infoFlags.Float64("threshold", 0.8, "Set the threshold value for motif matches. Used for calculating cache size.")
 	err = infoFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	infoFlags.Usage = func() { infoUsage(infoFlags) }
@@ -51,6 +53,7 @@ func parseInfoArgs() {
 		OutFile:      outFile,
 		MatrixType:   *matrixType,
 		Pseudocounts: *pfmPseudocounts,
+		Threshold:    *threshold,
 	}
 
 	pwmInfo(s)
@@ -62,6 +65,12 @@ func pwmInfo(s InfoSettings) {
 	var consensusScore float64
 	var couldScoreConsensusSequence bool
 	var records []motif.PositionMatrix
+	var currCache map[uint64]float64
+
+	if s.Threshold > 1 || s.Threshold < 0 {
+		log.Fatalf("Error: Threshold must be a value between 0 and 1. Found: %v.\n", s.Threshold)
+	}
+
 	switch s.MatrixType {
 	case "Frequency":
 		records = motif.ReadJaspar(s.InFile, "Frequency")
@@ -78,7 +87,7 @@ func pwmInfo(s InfoSettings) {
 
 	out := fileio.EasyCreate(s.OutFile)
 
-	_, err = fmt.Fprintf(out, "TF\tMotifName\tLength\tConsensusScore\n")
+	_, err = fmt.Fprintf(out, "TF\tMotifName\tLength\tConsensusScore\tCacheLength\n")
 	exception.PanicOnErr(err)
 
 	for i := range records {
@@ -87,7 +96,8 @@ func pwmInfo(s InfoSettings) {
 		if !couldScoreConsensusSequence {
 			log.Fatalf("Error: could not score consensus sequence for motif: %v.\n", records[i].Id)
 		}
-		_, err = fmt.Fprintf(out, "%s\t%s\t%v\t%e\n", records[i].Name, records[i].Id, len(records[i].Mat[0]), consensusScore)
+		currCache = motif.BuildKmerHash(records[i], s.Threshold)
+		_, err = fmt.Fprintf(out, "%s\t%s\t%v\t%e\t%v\n", records[i].Name, records[i].Id, len(records[i].Mat[0]), consensusScore, len(currCache))
 		exception.PanicOnErr(err)
 	}
 

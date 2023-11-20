@@ -65,11 +65,11 @@ func MatchComp(s MatchCompSettings) {
 
 		altEndsConsidered := make(map[int]bool, 0)
 
-		kmerHash = buildKmerHash(motifs[i], s.PropMatch)
+		kmerHash = BuildKmerHash(motifs[i], s.PropMatch)
 		scanRefSequenceComp(s.Records, kmerHash, motifs[i], s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Positive, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered, s.ResidualFilter)
 
 		revCompMotif = ReverseComplement(motifs[i])
-		revKmerHash = buildKmerHash(revCompMotif, s.PropMatch)
+		revKmerHash = BuildKmerHash(revCompMotif, s.PropMatch)
 		scanRefSequenceComp(s.Records, revKmerHash, revCompMotif, s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Negative, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered, s.ResidualFilter)
 
 		//now we scan the alt sequences for any motifs lost in ref

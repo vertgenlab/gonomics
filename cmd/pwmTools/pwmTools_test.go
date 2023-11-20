@@ -102,12 +102,14 @@ var InfoTests = []struct {
 	OutFile      string
 	MatrixType   string
 	Pseudocounts float64
+	Threshold    float64
 	ExpectedFile string
 }{
 	{InFile: "testdata/jaspar.vertebrate.txt.gz",
 		OutFile:      "testdata/jaspar.vertebrate.info.txt",
 		MatrixType:   "Frequency",
 		Pseudocounts: 0.1,
+		Threshold:    0.8,
 		ExpectedFile: "testdata/expected.info.txt",
 	},
 }
@@ -120,6 +122,7 @@ func TestPwmInfo(t *testing.T) {
 			InFile:       v.InFile,
 			OutFile:      v.OutFile,
 			MatrixType:   v.MatrixType,
+			Threshold:    v.Threshold,
 			Pseudocounts: v.Pseudocounts,
 		}
 		pwmInfo(s)
