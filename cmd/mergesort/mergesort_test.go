@@ -43,7 +43,7 @@ func TestMergeSort(t *testing.T) {
 			v.OutFile = fmt.Sprintf("%s,%s", v.OutFile, v.OutFileR2)
 		}
 
-		mergeSort(v.InFile, v.OutFile, v.NumLinesPerChunk, v.SortCriteria)
+		mergeSort(v.InFile, v.OutFile, v.NumLinesPerChunk, v.SortCriteria, "")
 
 		if v.fastqPE {
 			tmpIn := strings.Split(v.InFile, ",")
