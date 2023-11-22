@@ -121,7 +121,6 @@ func vcfSort(infile, outfile string, numRecordsPerChunk int, tmpDir string) {
 
 func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string, tmpDir string) {
 	var err error
-	var files []string
 	data, header := sam.GoReadToChan(infile)
 	var out <-chan sam.Sam
 	if sortCriteria == "singleCellBx" {
@@ -158,15 +157,6 @@ func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string
 
 	err = o.Close()
 	exception.PanicOnErr(err)
-	if tmpDir != "" {
-		files, err = filepath.Glob(fmt.Sprintf("%s/sort_chunk_*", tmpDir))
-		exception.PanicOnErr(err)
-		for _, f := range files {
-			err = os.Remove(f)
-			exception.PanicOnErr(err)
-		}
-
-	}
 }
 
 func fastqSort(inFile string, outFile string, numRecordsPerChunk int, tmpDir string) {
@@ -267,6 +257,14 @@ func mergeSort(filename string, outFile string, numRecordsPerChunk int, sortCrit
 			log.Fatalln("ERROR: Input file must have proper file extension")
 		} else {
 			log.Fatalln("ERROR: Merge sort methods have not been implemented for file type:", filetype)
+		}
+	}
+	if tmpDir != "" {
+		files, err := filepath.Glob(fmt.Sprintf("%s/sort_chunk_*", tmpDir))
+		exception.PanicOnErr(err)
+		for _, f := range files {
+			err = os.Remove(f)
+			exception.PanicOnErr(err)
 		}
 	}
 }
