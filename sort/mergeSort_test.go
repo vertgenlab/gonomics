@@ -21,7 +21,7 @@ func TestMergeSort(t *testing.T) {
 	}
 	close(data)
 
-	out := GoExternalMergeSort[vcf.Vcf](data, 5, func(a, b vcf.Vcf) bool {
+	out := GoExternalMergeSort[vcf.Vcf](data, 5, "", func(a, b vcf.Vcf) bool {
 		return a.Pos < b.Pos
 	})
 

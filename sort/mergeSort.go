@@ -44,19 +44,19 @@ func (hb *heapBuf) Pop() any {
 // GoExternalMergeSort inputs generic data records from a channel and a function to compare multiple data records
 // and outputs a channel of sorted data records. This function sorts externally via merge sort and therefore is
 // appropriate for very large amounts of data.
-func GoExternalMergeSort[E any](data <-chan E, recordsPerTmpFile int, less func(a, b E) bool) <-chan E {
+func GoExternalMergeSort[E any](data <-chan E, recordsPerTmpFile int, tmpDir string, less func(a, b E) bool) <-chan E {
 	out := make(chan E, 1000)
-	go mergeSort(data, less, out, recordsPerTmpFile)
+	go mergeSort(data, less, out, recordsPerTmpFile, tmpDir)
 	return out
 }
 
-func mergeSort[E any](data <-chan E, less func(a, b E) bool, out chan<- E, recordsPerTmpFile int) {
+func mergeSort[E any](data <-chan E, less func(a, b E) bool, out chan<- E, recordsPerTmpFile int, tmpDir string) {
 	var err error
 
 	// write records from data channel into multiple temporary files (chunks)
 	// that are each independently sorted using the input less function
 	var tmpFiles []*os.File
-	tmpFiles = chunkData(data, recordsPerTmpFile, less)
+	tmpFiles = chunkData(data, recordsPerTmpFile, less, tmpDir)
 
 	// a bit of hacking to make types match so that we can use a generic method
 	lessFunc = func(a, b any) bool {
@@ -116,7 +116,7 @@ func mergeSort[E any](data <-chan E, less func(a, b E) bool, out chan<- E, recor
 // chunkData writes records from data to temporary files each containing recordsPerChunk number
 // of records with each file independently sorted. The return is a slice of closed files that can
 // used to retrieve the name for reopening.
-func chunkData[E any](data <-chan E, recordsPerChunk int, less func(a, b E) bool) []*os.File {
+func chunkData[E any](data <-chan E, recordsPerChunk int, less func(a, b E) bool, tmpDir string) []*os.File {
 	currChunk := make([]E, 0, recordsPerChunk)
 	var tmpFiles []*os.File
 
@@ -126,7 +126,7 @@ func chunkData[E any](data <-chan E, recordsPerChunk int, less func(a, b E) bool
 			sort.Slice(currChunk, func(i, j int) bool {
 				return less(currChunk[i], currChunk[j])
 			})
-			tmpFiles = append(tmpFiles, writeTmpFile(currChunk))
+			tmpFiles = append(tmpFiles, writeTmpFile(currChunk, tmpDir))
 			currChunk = currChunk[:0]
 		}
 	}
@@ -135,7 +135,7 @@ func chunkData[E any](data <-chan E, recordsPerChunk int, less func(a, b E) bool
 		sort.Slice(currChunk, func(i, j int) bool {
 			return less(currChunk[i], currChunk[j])
 		})
-		tmpFiles = append(tmpFiles, writeTmpFile(currChunk))
+		tmpFiles = append(tmpFiles, writeTmpFile(currChunk, tmpDir))
 		currChunk = currChunk[:0]
 	}
 
@@ -145,8 +145,8 @@ func chunkData[E any](data <-chan E, recordsPerChunk int, less func(a, b E) bool
 // writeTmpFile writes arbitrary type E to a file using the gob package for
 // generating self-described binary that can be parsed into a struct by the
 // gob decoder.
-func writeTmpFile[E any](chunk []E) *os.File {
-	file, err := os.CreateTemp("", "sort_chunk_")
+func writeTmpFile[E any](chunk []E, tmpDir string) *os.File {
+	file, err := os.CreateTemp(tmpDir, "sort_chunk_")
 	defer file.Close()
 	exception.PanicOnErr(err)
 
