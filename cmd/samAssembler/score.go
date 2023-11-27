@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -11,17 +13,58 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
+type ScoreSettings struct {
+	ScoreType  string
+	InFileList string
+	OutFile    string
+}
+
+func scoreUsage(scoreFlags *flag.FlagSet) {
+	fmt.Print("samAssembler score - Validate assembly accuracy from five-way alignment including known divergent sequences.\n" +
+		"The user must specify a list of filenames, corresponding to each multiFa to be used in joint scoring (usually one file per chromosome).\n" +
+		"'scoreType' may be chosen from the following strings: baseMatrix, baseMatrixByRefBase\n" +
+		"Usage:\n" +
+		"samAssembler score scoreType inFileList outFile.txt\n" +
+		"Options:\n")
+	scoreFlags.PrintDefaults()
+}
+
+func parseScoreArgs() {
+	var err error
+	var expectedNumArgs int = 3
+	scoreFlags := flag.NewFlagSet("score", flag.ExitOnError)
+
+	err = scoreFlags.Parse(os.Args[2:])
+	exception.PanicOnErr(err)
+	scoreFlags.Usage = func() { scoreUsage(scoreFlags) }
+
+	if len(scoreFlags.Args()) != expectedNumArgs {
+		scoreFlags.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n",
+			expectedNumArgs, len(scoreFlags.Args()))
+	}
+	scoreType := scoreFlags.Arg(0)
+	inFileList := scoreFlags.Arg(1)
+	outFile := scoreFlags.Arg(2)
+	s := ScoreSettings{
+		ScoreType:  scoreType,
+		InFileList: inFileList,
+		OutFile:    outFile,
+	}
+	samAssemblerScore(s)
+}
+
 // samAssemblerScore provides tools for scoring diploid assembly results from samAssembler.
 // Currently, two modes are supported: baseMatrix, and baseMatrixByRefBase. The details of
 // these modes are described in their respective helper functions below.
-func samAssemblerScore(scoreType string, inFileList string, outFile string) {
-	switch scoreType {
+func samAssemblerScore(s ScoreSettings) {
+	switch s.ScoreType {
 	case "baseMatrix":
-		baseMatrixByRefBase(inFileList, outFile, false)
+		baseMatrixByRefBase(s.InFileList, s.OutFile, false)
 	case "baseMatrixByRefBase":
-		baseMatrixByRefBase(inFileList, outFile, true)
+		baseMatrixByRefBase(s.InFileList, s.OutFile, true)
 	default:
-		log.Fatalf("Error: Unrecognized score mode: %s.\n", scoreType)
+		log.Fatalf("Error: Unrecognized score mode: %s.\n", s.ScoreType)
 	}
 }
 
