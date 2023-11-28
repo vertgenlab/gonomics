@@ -34,6 +34,7 @@ type Settings struct {
 	FdrAnnotation            bool
 	RawPValueAnnotationField int
 	LogTransformPValue       bool
+	Reorder                  bool
 }
 
 // FdrConverter contains a RawPValue and Rank, which are used to calculate an AdjPValue
@@ -60,6 +61,7 @@ func bedFormat(s Settings) {
 	var tmp *fileio.EasyWriter
 	var sizes map[string]chromInfo.ChromInfo
 	var mapEntry FdrConverter
+	var tmpCS int
 	ch := bed.GoReadToChan(s.InFile)
 
 	fdrMap := make(map[float64]FdrConverter)
@@ -85,6 +87,13 @@ func bedFormat(s Settings) {
 	}
 
 	for v := range ch {
+		if s.Reorder {
+			if v.ChromStart > v.ChromEnd {
+				tmpCS = v.ChromStart
+				v.ChromStart = v.ChromEnd
+				v.ChromEnd = tmpCS
+			}
+		}
 		if s.ToMidpoint {
 			v = bed.ToMidpoint(v)
 		}
@@ -219,6 +228,7 @@ func main() {
 	var FdrAnnotation *bool = flag.Bool("fdrAnnotation", false, "Used when an annotation field stores a raw P value."+
 		"Appends an FDR-adjusted P values to the first free annotation column.")
 	var rawPValueAnnotationField *int = flag.Int("rawPValueAnnotationField", 0, "Specify the annotation field where raw P values are stored for fdrAnnotation.")
+	var orderFields *bool = flag.Bool("orderFields", false, "Reformat bed entries that have ChromEnd before ChromStart so that ChromStart is in the second field.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -247,6 +257,7 @@ func main() {
 		ToTss:                    *ToTss,
 		FdrAnnotation:            *FdrAnnotation,
 		RawPValueAnnotationField: *rawPValueAnnotationField,
+		Reorder:                  *orderFields,
 	}
 
 	bedFormat(s)

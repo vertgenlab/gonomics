@@ -23,6 +23,7 @@ var BedFormatTests = []struct {
 	ToTss                    bool
 	FdrAnnotation            bool
 	RawPValueAnnotationField int
+	Reorder                  bool
 }{
 	{InFile: "testdata/test.bed", //this test is for scaleNameFloat
 		OutFile:                  "testdata/test.outFloat.bed",
@@ -38,6 +39,7 @@ var BedFormatTests = []struct {
 		ToTss:                    false,
 		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
+		Reorder:                  false,
 	},
 	{InFile: "testdata/test.bed", //this test is for UCSCToEnsembl
 		OutFile:                  "testdata/test.outEnsembl.bed",
@@ -53,6 +55,7 @@ var BedFormatTests = []struct {
 		ToTss:                    false,
 		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
+		Reorder:                  false,
 	},
 	{InFile: "testdata/test.Ensembl.bed", //this test is for UCSCToEnsembl
 		OutFile:                  "testdata/test.outUCSC.bed",
@@ -68,6 +71,7 @@ var BedFormatTests = []struct {
 		ToTss:                    false,
 		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
+		Reorder:                  false,
 	},
 	{InFile: "testdata/pad.bed",
 		OutFile:                  "testdata/out.pad.bed",
@@ -83,6 +87,7 @@ var BedFormatTests = []struct {
 		ToTss:                    false,
 		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
+		Reorder:                  false,
 	},
 	{InFile: "testdata/test.bed",
 		OutFile:                  "testdata/test.midpoint.bed",
@@ -98,6 +103,7 @@ var BedFormatTests = []struct {
 		ToTss:                    false,
 		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
+		Reorder:                  false,
 	},
 	{InFile: "testdata/test.strand.bed",
 		OutFile:                  "testdata/test.tss.bed",
@@ -113,6 +119,7 @@ var BedFormatTests = []struct {
 		ToTss:                    true,
 		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
+		Reorder:                  false,
 	},
 	{InFile: "testdata/test.strand.bed",
 		OutFile:                  "testdata/test.upstream.bed",
@@ -128,6 +135,7 @@ var BedFormatTests = []struct {
 		ToTss:                    false,
 		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
+		Reorder:                  false,
 	},
 	{InFile: "testdata/test.strand.bed",
 		OutFile:                  "testdata/test.downstream.bed",
@@ -143,6 +151,7 @@ var BedFormatTests = []struct {
 		ToTss:                    false,
 		FdrAnnotation:            false,
 		RawPValueAnnotationField: 0,
+		Reorder:                  false,
 	},
 	{InFile: "testdata/test.fdrAnnotation.bed",
 		OutFile:                  "testdata/out.fdrAnnotation.bed",
@@ -158,6 +167,23 @@ var BedFormatTests = []struct {
 		ToTss:                    false,
 		FdrAnnotation:            true,
 		RawPValueAnnotationField: 1,
+		Reorder:                  false,
+	},
+	{InFile: "testdata/reorder.bed",
+		OutFile:                  "testdata/out.reorder.bed",
+		ExpectedFile:             "testdata/expected.reorder.bed",
+		UCSCToEnsembl:            false,
+		EnsemblToUCSC:            false,
+		ScaleNameFloat:           1,
+		PadLength:                0,
+		UpstreamPadLength:        0,
+		DownstreamPadLength:      0,
+		ChromSizeFile:            "",
+		ToMidpoint:               false,
+		ToTss:                    false,
+		FdrAnnotation:            false,
+		RawPValueAnnotationField: 1,
+		Reorder:                  true,
 	},
 }
 
@@ -179,6 +205,7 @@ func TestBedFormat(t *testing.T) {
 			ToTss:                    v.ToTss,
 			FdrAnnotation:            v.FdrAnnotation,
 			RawPValueAnnotationField: v.RawPValueAnnotationField,
+			Reorder:                  v.Reorder,
 		}
 		bedFormat(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
