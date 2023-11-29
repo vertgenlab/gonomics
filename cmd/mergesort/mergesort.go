@@ -244,7 +244,7 @@ func mergeSort(filename string, outFile string, numRecordsPerChunk int, sortCrit
 		bedSort(filename, outFile, numRecordsPerChunk, tmpDir)
 	case ".vcf":
 		vcfSort(filename, outFile, numRecordsPerChunk, tmpDir)
-	case ".sam":
+	case ".sam", ".bam":
 		samSort(filename, outFile, numRecordsPerChunk, sortCriteria, tmpDir)
 	case ".fastq":
 		fastqSort(filename, outFile, numRecordsPerChunk, tmpDir)
