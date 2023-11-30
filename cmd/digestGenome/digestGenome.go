@@ -43,6 +43,7 @@ func digestGenome(genome string, cutSite string, outFile string) {
 	var cutString []string
 	var base, prevCut, numCut int
 	var bedRegion bed.Bed
+	var testBases []dna.Base
 	var re restrictionEnzyme
 
 	out := fileio.EasyCreate(outFile)
@@ -91,7 +92,7 @@ func digestGenome(genome string, cutSite string, outFile string) {
 		numCut = 0
 		currChrom = i.Name
 		for base = 0; base <= len(i.Seq)-len(re.cutBases); base++ { //loop over every base in the fasta file
-			testBases := i.Seq[base : base+len(re.cutBases)] //get the next base in the fasta file plus the number of bases in the recognition motif. I don't get an index out of range error at the end of the sequence--not sure why
+			testBases = i.Seq[base : base+len(re.cutBases)] //get the next base in the fasta file plus the number of bases in the recognition motif. I don't get an index out of range error at the end of the sequence--not sure why
 			if re.pal == false {
 				if dna.CompareSeqsIgnoreCase(testBases, re.cutBasesRC) == 0 {
 					revMatch = true
