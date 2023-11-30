@@ -163,6 +163,8 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	refIdx := int32(le.Uint32(r.next(4)))
 	if refIdx != -1 {
 		s.RName = r.refs[refIdx].Name
+	} else {
+		s.RName = "*"
 	}
 	s.Pos = le.Uint32(r.next(4)) + 1 // sam is 1 based
 	lenReadName := int(r.next(1)[0])
