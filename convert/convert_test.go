@@ -1,6 +1,8 @@
 package convert
 
 import (
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/sam"
 	"os"
 	"strings"
 	"testing"
@@ -26,6 +28,32 @@ var var6 vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 14, Id: ".", Ref: "C", Alt: strings
 var expected []vcf.Vcf = []vcf.Vcf{var1, var2, var3, var4, var5}
 var expectedSubOnly []vcf.Vcf = []vcf.Vcf{var1, var4, var5}
 var expectedRetainN []vcf.Vcf = []vcf.Vcf{var1, var2, var3, var4, var5, var6}
+
+func TestSamToBedWithDeletions(t *testing.T) {
+	var outBeds []bed.Bed
+	var j bed.Bed
+	var err error
+	inSam, _ := sam.Read("testdata/test1.sam")
+	out := fileio.EasyCreate("testdata/out.samToBedDel.bed")
+	for _, i := range inSam {
+		outBeds = SamToBedWithDeletions(i)
+		for _, j = range outBeds {
+			bed.WriteToFileHandle(out, j)
+		}
+	}
+	err = out.Close()
+	exception.PanicOnErr(err)
+	if !fileio.AreEqual("testdata/out.samToBedDel.bed", "testdata/exp.samToBedDel.bed") {
+		t.Errorf("ERROR in SamToBedWithDeletions: expected != actual.")
+	} else {
+		err = os.Remove("testdata/out.samToBedDel.bed")
+		exception.PanicOnErr(err)
+	}
+}
+
+func TestSamToBed(t *testing.T) {
+
+}
 
 func TestPairwiseFaToVcf(t *testing.T) { //this test is for the default settings.
 	var err error

@@ -56,7 +56,7 @@ func SamToBedWithDeletions(s sam.Sam) []bed.Bed {
 	} else {
 		currPos = s.Pos - 1
 		startPos = currPos
-		for _, v := range s.Cigar {
+		for i, v := range s.Cigar {
 			if v.Op == 'D' {
 				outBeds = append(outBeds, bed.Bed{Chrom: s.RName, ChromStart: int(startPos), ChromEnd: int(currPos), Name: s.QName, FieldsInitialized: 4})
 				startPos = currPos + uint32(v.RunLength)
@@ -65,8 +65,10 @@ func SamToBedWithDeletions(s sam.Sam) []bed.Bed {
 			} else if cigar.ConsumesReference(v.Op) {
 				currPos += uint32(v.RunLength)
 			}
+			if len(s.Cigar)-1 == i {
+				outBeds = append(outBeds, bed.Bed{Chrom: s.RName, ChromStart: int(startPos), ChromEnd: int(currPos), Name: s.QName, FieldsInitialized: 4})
+			}
 		}
-		outBeds = append(outBeds, bed.Bed{Chrom: s.RName, ChromStart: int(startPos), ChromEnd: int(currPos), Name: s.QName, FieldsInitialized: 4})
 	}
 	return outBeds
 }
