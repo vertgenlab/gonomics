@@ -2,7 +2,6 @@
 package convert
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedGraph"
 	"github.com/vertgenlab/gonomics/chromInfo"
@@ -64,10 +63,7 @@ func SamToBedWithDeletions(s sam.Sam) []bed.Bed {
 				currPos = startPos
 				continue
 			} else if cigar.ConsumesReference(v.Op) {
-
-				fmt.Println(v.RunLength)
 				currPos += uint32(v.RunLength)
-				fmt.Println(currPos)
 			}
 		}
 		outBeds = append(outBeds, bed.Bed{Chrom: s.RName, ChromStart: int(startPos), ChromEnd: int(currPos), Name: s.QName, FieldsInitialized: 4})
