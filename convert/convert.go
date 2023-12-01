@@ -47,6 +47,7 @@ func SamToBed(s sam.Sam) bed.Bed {
 	}
 }
 
+// SamToBedWithDeletions extracts the position from a Sam entry and returns it in a slice of bed. If there are deletions in the cigar, it will return multiple bed entries corresponding to each separate alignment segment.
 func SamToBedWithDeletions(s sam.Sam) []bed.Bed {
 	var outBeds []bed.Bed
 	var startPos uint32
