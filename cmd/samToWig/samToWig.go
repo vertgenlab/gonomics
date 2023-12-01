@@ -15,14 +15,14 @@ import (
 	"github.com/vertgenlab/gonomics/wig"
 )
 
-func samToWig(samFileName string, reference string, outfile string, fragLength int) {
+func samToWig(samFileName string, reference string, outfile string, fragLength int, deletions bool) {
 	log.Printf("fragLength: %d\n", fragLength)
 
 	ref := chromInfo.ReadToMap(reference)
 
 	inChan, _ := sam.GoReadToChan(samFileName)
 
-	var outBed []bed.Bed
+	var outBed, currBeds []bed.Bed
 
 	var outWig []wig.Wig
 	var currentBed bed.Bed
@@ -32,6 +32,13 @@ func samToWig(samFileName string, reference string, outfile string, fragLength i
 			currentBed = convert.SamToBedFrag(i, fragLength, ref)
 			if currentBed.Chrom != "" {
 				outBed = append(outBed, currentBed)
+			}
+		} else if deletions {
+			currBeds = convert.SamToBedWithDeletions(i)
+			for j := range currBeds {
+				if currBeds[j].Chrom != "" {
+					outBed = append(outBed, currBeds[j])
+				}
 			}
 		} else {
 			currentBed = convert.SamToBed(i)
@@ -59,6 +66,8 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 3
 	var fragLength *int = flag.Int("fragLength", -1, "Specifies the fragment length for ChIP-Seq, must be greater than or equal to read length")
+	var deletions *bool = flag.Bool("deletions", false, "Won't fill in wig values over deletions. Sam records that have deletions will contribute 0 to the deletion locations."+
+		"Not compatible with fragLength")
 
 	flag.Usage = usage
 
@@ -70,9 +79,13 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
+	if *fragLength != -1 && *deletions {
+		log.Fatalln("ERROR: -fragLength is not compatible with -deletions")
+	}
+
 	inFile := flag.Arg(0)
 	reference := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	samToWig(inFile, reference, outFile, *fragLength)
+	samToWig(inFile, reference, outFile, *fragLength, *deletions)
 }

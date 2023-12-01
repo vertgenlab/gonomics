@@ -2,6 +2,7 @@
 package convert
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedGraph"
 	"github.com/vertgenlab/gonomics/chromInfo"
@@ -45,6 +46,33 @@ func SamToBed(s sam.Sam) bed.Bed {
 	} else {
 		return bed.Bed{Chrom: s.RName, ChromStart: int(s.Pos - 1), ChromEnd: int(s.Pos-1) + cigar.ReferenceLength(s.Cigar), Name: s.QName, FieldsInitialized: 4}
 	}
+}
+
+func SamToBedWithDeletions(s sam.Sam) []bed.Bed {
+	var outBeds []bed.Bed
+	var startPos uint32
+	var currPos uint32
+	if s.Cigar[0].Op == '*' {
+		return []bed.Bed{}
+	} else {
+		currPos = s.Pos - 1
+		startPos = currPos
+		for _, v := range s.Cigar {
+			if v.Op == 'D' {
+				outBeds = append(outBeds, bed.Bed{Chrom: s.RName, ChromStart: int(startPos), ChromEnd: int(currPos), Name: s.QName, FieldsInitialized: 4})
+				startPos = currPos + uint32(v.RunLength)
+				currPos = startPos
+				continue
+			} else if cigar.ConsumesReference(v.Op) {
+
+				fmt.Println(v.RunLength)
+				currPos += uint32(v.RunLength)
+				fmt.Println(currPos)
+			}
+		}
+		outBeds = append(outBeds, bed.Bed{Chrom: s.RName, ChromStart: int(startPos), ChromEnd: int(currPos), Name: s.QName, FieldsInitialized: 4})
+	}
+	return outBeds
 }
 
 // SamToBedFrag converts a Sam entry into a bed based on the fragment length from which the aligned read was derived.
