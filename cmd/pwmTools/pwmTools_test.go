@@ -134,3 +134,38 @@ func TestPwmInfo(t *testing.T) {
 		}
 	}
 }
+
+var PwmShuffleTests = []struct {
+	InFile       string
+	OutFile      string
+	NumShuffle   int
+	SetSeed      int64
+	ExpectedFile string
+}{
+	{InFile: "testdata/firstSix.jaspar.pwm.txt",
+		OutFile:      "testdata/test.firstSix.shuffle.pwm.txt",
+		NumShuffle:   10,
+		SetSeed:      13,
+		ExpectedFile: "testdata/expected.firstSix.shuffle.pwm.txt",
+	},
+}
+
+func TestPwmShuffle(t *testing.T) {
+	var err error
+	var s ShuffleSettings
+	for _, v := range PwmShuffleTests {
+		s = ShuffleSettings{
+			InFile:     v.InFile,
+			OutFile:    v.OutFile,
+			NumShuffle: v.NumShuffle,
+			SetSeed:    v.SetSeed,
+		}
+		pwmShuffle(s)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Error: pwmShuffle outFile is not as expected.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}

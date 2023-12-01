@@ -15,6 +15,8 @@ func usage() {
 			"\tpwmTools format in.pwm out.pwm\n" +
 			"\tOR\n" +
 			"\tpwmTools info in.pwm out.txt\n" +
+			"\tOR\n" +
+			"\tpwmTools shuffle in.pwm out.pwm\n" +
 			"Enter a subcommand to view options.\n")
 }
 
@@ -35,6 +37,8 @@ func main() {
 		parseFormatArgs()
 	case "info":
 		parseInfoArgs()
+	case "shuffle":
+		parseShuffleArgs()
 	default:
 		flag.Usage()
 		log.Fatalf("Error: unrecognized subcommand: %v.\n", flag.Arg(0))
