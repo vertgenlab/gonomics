@@ -58,7 +58,7 @@ func usage() {
 		"samToWig - Converts sam or bam to wig\n" +
 			"Usage:\n" +
 			" samToWig input.sam reference.chrom.sizes output.wig\n" +
-			" Currently fills in Wig values over deletions.\n" +
+			" By defualt, Wig values will be filled in over deletions. Deletion information can be retained with -deletions .\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
