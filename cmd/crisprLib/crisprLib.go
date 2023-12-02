@@ -17,7 +17,6 @@ func crisprLib(inFile, outFile string, guidesPerOligo int) {
 	var data bool = true
 	var currGuide fasta.Fasta
 	var currOligo []fasta.Fasta = []fasta.Fasta{{Name: ""}}
-	var name []string
 
 	upstream := dna.StringToBases("GGTCGAGCCGGAACTCGTCTCACACCG")
 	downstream := dna.StringToBases("GTTTgGAGACGTCTGGGTGCGCATCC")
@@ -27,6 +26,7 @@ func crisprLib(inFile, outFile string, guidesPerOligo int) {
 	out := fileio.EasyCreate(outFile)
 
 	for data {
+		var name []string
 		currOligo[0] = fasta.Fasta{Name: "", Seq: upstream}
 		for i := 0; i < guidesPerOligo; i++ {
 			currGuide, data = <-fa
