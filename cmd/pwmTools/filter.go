@@ -41,7 +41,7 @@ func parseFilterArgs() {
 	if len(filterFlags.Args()) != expectedNumArgs {
 		filterFlags.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
-			expectedNumArgs, len(flag.Args()))
+			expectedNumArgs, len(filterFlags.Args()))
 	}
 
 	inFile := filterFlags.Arg(0)

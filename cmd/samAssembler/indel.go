@@ -13,7 +13,7 @@ import (
 // the answer structs, ans and mlt.
 // The cacheStruct contains cached values for the prior and likelihood functions, and refPos is required to update the
 // appropriate positions in mlt.
-func diploidInsertion(ans AnswerStruct, mlt MultiFaStruct, cacheStruct CacheStruct, p sam.Pile, refPos int, s Settings) (AnswerStruct, MultiFaStruct, CacheStruct, int) {
+func diploidInsertion(ans AnswerStruct, mlt MultiFaStruct, cacheStruct CacheStruct, p sam.Pile, refPos int, s BuildSettings) (AnswerStruct, MultiFaStruct, CacheStruct, int) {
 	var currRand = rand.Float64()
 	var i int
 	var currInsertion sam.DiploidInsertion
@@ -105,7 +105,7 @@ func diploidInsertion(ans AnswerStruct, mlt MultiFaStruct, cacheStruct CacheStru
 // If we have changed from diploid to haploid for the next pile, we communicate this with the return "currPloidy"
 // The cacheStruct contains cached values for the prior and likelihood functions, and refPos is required to update the
 // appropriate positions in mlt.
-func diploidDeletion(mlt MultiFaStruct, cacheStruct CacheStruct, p sam.Pile, refMap map[string][]dna.Base, refPos int, currChrom string, s Settings) (MultiFaStruct, CacheStruct, int, bool, int, int, int) {
+func diploidDeletion(mlt MultiFaStruct, cacheStruct CacheStruct, p sam.Pile, refMap map[string][]dna.Base, refPos int, currChrom string, s BuildSettings) (MultiFaStruct, CacheStruct, int, bool, int, int, int) {
 	var currDeletion = sam.DiploidDeletionCallFromPile(p, cacheStruct.DiploidIndelPriorCache, cacheStruct.HomozygousIndelCache, cacheStruct.HeterozygousIndelCache, s.Epsilon)
 	var i, currPloidy, haploidBases, positionsToSkip int
 	var currRand float64

@@ -1,55 +1,106 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/bed"
 )
 
-func TestSequelOverlap(t *testing.T) {
-	options := &Settings{
-		Input:           "testdata/test.vcf",
-		Output:          "/dev/stdout",
-		SelectFile:      "testdata/test.bed",
-		Extend:          0,
-		NonOverlap:      false,
-		Threads:         1,
-		PercentOverlap:  0,
-		BaseOverlap:     0,
-		Aggregate:       false,
-		Relationship:    "any",
-		MergedOutput:    true,
-		SwapTargetQuery: false,
-	}
+var IntervalOverlapTests = []struct {
+	InFile       string
+	OutFile      string
+	SelectFile   string
+	NonOverlap   bool
+	Threads      int
+	Aggregate    bool
+	Relationship string
+	MergedOutput bool
+	ExpectedFile string
+}{
+	{InFile: "testdata/test.bed",
+		OutFile:      "testdata/out.bed",
+		SelectFile:   "testdata/test.vcf",
+		NonOverlap:   false,
+		Threads:      1,
+		Aggregate:    false,
+		Relationship: "any",
+		MergedOutput: false,
+		ExpectedFile: "testdata/expected.bed",
+	},
+	{InFile: "testdata/test.bed",
+		OutFile:      "testdata/out.mergedOutput.bed",
+		SelectFile:   "testdata/test.vcf",
+		NonOverlap:   false,
+		Threads:      1,
+		Aggregate:    false,
+		Relationship: "any",
+		MergedOutput: true,
+		ExpectedFile: "testdata/expected.mergedOutput.bed",
+	},
+	{InFile: "testdata/test.bed",
+		OutFile:      "testdata/out.nonOverlap.bed",
+		SelectFile:   "testdata/test.vcf",
+		NonOverlap:   true,
+		Threads:      1,
+		Aggregate:    false,
+		Relationship: "any",
+		MergedOutput: false,
+		ExpectedFile: "testdata/expected.nonOverlap.bed",
+	},
+}
 
-	answer := sequelOverlap(options)
+func TestIntervalOverlap(t *testing.T) {
+	var s *Settings
+	var err error
+	var out *fileio.EasyWriter
+	var answer chan *queryAnswer
+	for _, v := range IntervalOverlapTests {
+		s = &Settings{
+			Input:        v.InFile,
+			Output:       v.OutFile,
+			SelectFile:   v.SelectFile,
+			NonOverlap:   v.NonOverlap,
+			Threads:      v.Threads,
+			Aggregate:    v.Aggregate,
+			Relationship: v.Relationship,
+			MergedOutput: v.MergedOutput,
+		}
+		answer = intervalOverlap(s)
+		out = fileio.EasyCreate(v.OutFile)
+		writeToFile(answer, out, v.MergedOutput, v.NonOverlap)
+		err = out.Close()
+		exception.PanicOnErr(err)
 
-	for val := range answer {
-		b := val.answer[0].(*bed.Bed)
-		if b.Chrom != "chr1" || b.ChromStart != 100 || b.ChromEnd != 200 {
-			t.Errorf("ERROR: Problem with intervalOverlap cmd")
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Error: intervalOverlap test output is not as expeected.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
 		}
 	}
 }
 
 func BenchmarkAssertion(b *testing.B) {
 	options := &Settings{
-		Input:           "testdata/test.vcf",
-		Output:          "/dev/stdout",
-		SelectFile:      "testdata/test.bed",
-		Extend:          0,
-		NonOverlap:      false,
-		Threads:         1,
-		PercentOverlap:  0,
-		BaseOverlap:     0,
-		Aggregate:       false,
-		Relationship:    "any",
-		MergedOutput:    false,
-		SwapTargetQuery: false,
+		Input:      "testdata/test.vcf",
+		Output:     "/dev/stdout",
+		SelectFile: "testdata/test.bed",
+		//Extend:          0,
+		NonOverlap: false,
+		Threads:    1,
+		//PercentOverlap:  0,
+		//BaseOverlap:     0,
+		Aggregate:    false,
+		Relationship: "any",
+		MergedOutput: false,
+		//SwapTargetQuery: false,
 	}
 	for i := 0; i < b.N; i++ {
-		answer := sequelOverlap(options)
+		answer := intervalOverlap(options)
 		writeToFile(answer, ioutil.Discard, options.MergedOutput, options.NonOverlap)
 	}
 }
