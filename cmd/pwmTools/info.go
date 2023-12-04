@@ -38,7 +38,7 @@ func parseInfoArgs() {
 	err = infoFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	infoFlags.Usage = func() { infoUsage(infoFlags) }
-  
+
 	if len(infoFlags.Args()) != expectedNumArgs {
 		infoFlags.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
@@ -74,7 +74,7 @@ func pwmInfo(s InfoSettings) {
 	switch s.MatrixType {
 	case "Frequency":
 		records = motif.ReadJaspar(s.InFile, "Frequency")
-		records = motif.PfmSliceToPpmSlice(records, s.PseudoCounts)
+		records = motif.PfmSliceToPpmSlice(records, s.Pseudocounts)
 		records = motif.PpmSliceToPwmSlice(records)
 	case "Probability":
 		records = motif.ReadJaspar(s.InFile, "Probability")
