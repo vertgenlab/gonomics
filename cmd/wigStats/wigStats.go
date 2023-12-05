@@ -1,5 +1,4 @@
 // Command Group: "WIG Tools"
-//TODO make wigStats compatible with negative wig values
 
 // Provide coverage histogram for WIG format visualization files
 package main
@@ -16,28 +15,38 @@ import (
 	"github.com/vertgenlab/gonomics/wig"
 )
 
-func wigStats(inFile string, noGapFile string, outFile string, missingDataValue float64) {
-	var records []bed.Bed = bed.Read(noGapFile)
-	var w []wig.Wig = wig.Read(inFile)
-	var wigValues []float64
+type Settings struct {
+	InFile           string
+	ChromSizes       string
+	NoGapFile        string
+	OutFile          string
+	MissingDataValue float64
+}
+
+func wigStats(s Settings) {
+	var records []bed.Bed = bed.Read(s.NoGapFile)
+	var w = wig.ReadWholeGenome(s.InFile, s.ChromSizes, s.MissingDataValue)
+	var foundInMap bool
 	var statValues, tmpValues []int
 	var err error
 	var i, j int
 	statValues = make([]int, 1000)
 	for i = range records {
-		wigValues = wig.ChromToSlice(w, records[i].Chrom)
+		if _, foundInMap = w[records[i].Chrom]; !foundInMap {
+			log.Fatalf("Error: chrom in bed entry: %s, not found in reference genome.\n", records[i].Chrom)
+		}
 		for j = records[i].ChromStart; j < records[i].ChromEnd; j++ {
-			if wigValues[j] == missingDataValue {
+			if w[records[i].Chrom].Values[j] == s.MissingDataValue {
 				continue
 			}
-			if int(wigValues[j]) >= len(statValues) {
-				tmpValues = make([]int, int(wigValues[j])-len(statValues)+1)
+			if int(w[records[i].Chrom].Values[j]) >= len(statValues) {
+				tmpValues = make([]int, int(w[records[i].Chrom].Values[j])-len(statValues)+1)
 				statValues = append(statValues, tmpValues...) // concatenate two slices together
 			}
-			statValues[int(wigValues[j])]++
+			statValues[int(w[records[i].Chrom].Values[j])]++
 		}
 	}
-	out := fileio.EasyCreate(outFile)
+	out := fileio.EasyCreate(s.OutFile)
 	_, err = fmt.Fprintf(out, "coverage\tcount\n")
 	exception.PanicOnErr(err)
 	for i = range statValues {
@@ -55,13 +64,13 @@ func usage() {
 			"Float values will be truncated to integers\n" +
 			"Wigs must be fixed step of step size 1.\n" +
 			"Usage:\n" +
-			"wigStats in.wig noGap.bed output.tsv\n" +
+			"wigStats in.wig chrom.sizes noGap.bed output.tsv\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs int = 3
+	var expectedNumArgs int = 4
 	var missingDataValue *float64 = flag.Float64("missingDataValue", math.Inf(-1), "defines the value for missing data in the WIG file")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -74,8 +83,17 @@ func main() {
 	}
 
 	inFile := flag.Arg(0)
-	noGapFile := flag.Arg(1)
-	outFile := flag.Arg(2)
+	chromSizes := flag.Arg(1)
+	noGapFile := flag.Arg(2)
+	outFile := flag.Arg(3)
 
-	wigStats(inFile, noGapFile, outFile, *missingDataValue)
+	s := Settings{
+		InFile:           inFile,
+		ChromSizes:       chromSizes,
+		NoGapFile:        noGapFile,
+		OutFile:          outFile,
+		MissingDataValue: *missingDataValue,
+	}
+
+	wigStats(s)
 }

@@ -12,6 +12,7 @@ import (
 var WigMathTests = []struct {
 	InFile                 string
 	OutFile                string
+	ChromSizes             string
 	BedMask                string
 	MinValue               float64
 	MaxValue               float64
