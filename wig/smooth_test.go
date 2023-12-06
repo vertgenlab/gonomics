@@ -28,9 +28,9 @@ func TestSmoothMap(t *testing.T) {
 	var err error
 	var records map[string]Wig
 	for _, v := range SmoothTests {
-		records = ReadWholeGenome(v.InFile, v.ChromSizes, v.Missing)
+		records = Read(v.InFile, v.ChromSizes, v.Missing)
 		records = SmoothMap(records, v.WindowSize, v.Missing)
-		WriteMap(v.OutFile, records)
+		Write(v.OutFile, records)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in SmoothSlice. Output not as expected.")
 		} else {

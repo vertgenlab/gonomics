@@ -25,7 +25,7 @@ type Settings struct {
 
 func wigStats(s Settings) {
 	var records []bed.Bed = bed.Read(s.NoGapFile)
-	var w = wig.ReadWholeGenome(s.InFile, s.ChromSizes, s.MissingDataValue)
+	var w = wig.Read(s.InFile, s.ChromSizes, s.MissingDataValue)
 	var foundInMap bool
 	var statValues, tmpValues []int
 	var err error

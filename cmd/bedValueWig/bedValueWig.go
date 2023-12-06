@@ -23,7 +23,7 @@ func bedValueWig(s Settings) {
 
 	recordChan := bed.GoReadToChan(s.Infile)
 	out := fileio.EasyCreate(s.OutFile)
-	var wigData = wig.ReadWholeGenome(s.WigFile, s.SizesFile, s.NoDataValue)
+	var wigData = wig.Read(s.WigFile, s.SizesFile, s.NoDataValue)
 	var currValue, chromValueMultiplyByStep float64
 	var foundInMap bool
 	var currKey string

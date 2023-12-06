@@ -16,7 +16,7 @@ import (
 func bedGraphToWig(inFile string, chromFile string, outFile string, missing float64) {
 	ref := chromInfo.ReadToMap(chromFile)
 	outWig := convert.BedGraphToWig(inFile, ref, missing)
-	wig.WriteMap(outFile, outWig)
+	wig.Write(outFile, outWig)
 }
 
 func usage() {

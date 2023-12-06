@@ -21,7 +21,7 @@ type Settings struct {
 
 func wigFilter(s Settings) {
 	var pass bool
-	records := wig.ReadWholeGenome(s.InFile, s.ChromSizes, s.DefaultValue)
+	records := wig.Read(s.InFile, s.ChromSizes, s.DefaultValue)
 	var answer = make(map[string]wig.Wig)
 
 	for currKey := range records {
@@ -33,7 +33,7 @@ func wigFilter(s Settings) {
 			answer[currKey] = records[currKey]
 		}
 	}
-	wig.WriteMap(s.OutFile, answer)
+	wig.Write(s.OutFile, answer)
 }
 
 func usage() {

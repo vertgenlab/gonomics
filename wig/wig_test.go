@@ -26,10 +26,10 @@ func TestReadWholeGenome(t *testing.T) {
 	var err error
 	var wigs map[string]Wig
 	for _, v := range ReadWholeGenomeTests {
-		wigs = ReadWholeGenome(v.InFile, v.ChromSizeFile, v.DefaultValue)
-		WriteMap(v.OutFile, wigs)
+		wigs = Read(v.InFile, v.ChromSizeFile, v.DefaultValue)
+		Write(v.OutFile, wigs)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-			t.Errorf("Error: wig package WriteMap and ReadWholeGenome. Output not as expected.")
+			t.Errorf("Error: wig package Write and Read. Output not as expected.")
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)

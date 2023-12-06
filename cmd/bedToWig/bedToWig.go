@@ -34,7 +34,7 @@ func bedToWig(s Settings) {
 	} else {
 		log.Fatalf("Unrecognized method. Expected 'Reads', 'Name', 'Score', or 'Annotation'. Found: %s.", s.Method)
 	}
-	wig.WriteMap(s.OutFile, outWig)
+	wig.Write(s.OutFile, outWig)
 }
 
 func usage() {
