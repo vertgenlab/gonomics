@@ -30,11 +30,11 @@ func Smooth(w Wig, windowSize int, missing float64) Wig {
 	return answer
 }
 
-// SmoothSlice performs moving average smoothing on an input slice of Wig structs using a user-specified windowSize and a value that represents missing data in the Wig.
-func SmoothSlice(w []Wig, windowSize int, missing float64) []Wig {
-	var answer = make([]Wig, len(w))
-	for i := range w {
-		answer[i] = Smooth(w[i], windowSize, missing)
+// SmoothMap performs moving average smoothing on an input map of Wig structs using a user-specified windowSize and a value that represents missing data in the Wig.
+func SmoothMap(w map[string]Wig, windowSize int, missing float64) map[string]Wig {
+	var answer = make(map[string]Wig)
+	for currKey := range w {
+		answer[currKey] = Smooth(w[currKey], windowSize, missing)
 	}
 	return answer
 }

@@ -5,18 +5,24 @@ import (
 	"log"
 )
 
+// TrimSlice trims each element in a slice of bed entries by an input left and right amount.
+func TrimSlice(b []Bed, trimLeft int, trimRight int) {
+	for i := range b {
+		b[i] = Trim(b[i], trimLeft, trimRight)
+	}
+}
+
 // Trim shortens bed entries on the left and right side by an input-specified number of bases. These values must not exceed the length of the bed entry and must be non-negative.
-func Trim(b []Bed, trimLeft int, trimRight int) {
+func Trim(b Bed, trimLeft int, trimRight int) Bed {
 	if trimLeft < 0 || trimRight < 0 {
 		log.Fatalf("Error in bed/Trim. Must trim bed values by a value greater or equal to zero.")
 	}
-	for i := range b {
-		b[i].ChromStart = b[i].ChromStart + trimLeft
-		b[i].ChromEnd = b[i].ChromEnd - trimRight
-		if b[i].ChromStart >= b[i].ChromEnd {
-			log.Fatalf("Error in Trim. Attempted to remove too much from bed entry. Please select a lower trim value or exclude the bed entry as position %v\t%v.\n", b[i].Chrom, b[i].ChromStart)
-		}
+	b.ChromStart = b.ChromStart + trimLeft
+	b.ChromEnd = b.ChromEnd - trimRight
+	if b.ChromStart >= b.ChromEnd {
+		log.Fatalf("Error in Trim. Attempted to remove too much from bed entry. Please select a lower trim value or exclude the bed entry as position %v\t%v.\n", b.Chrom, b.ChromStart)
 	}
+	return b
 }
 
 // ToMidpoint edits an input bed struct so that its coordinates correspond to its midpoint.

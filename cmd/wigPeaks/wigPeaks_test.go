@@ -10,27 +10,51 @@ import (
 
 // use struct to specify testdata.
 var wigPeaksTests = []struct {
-	inWig       string
-	outBed      string
-	expectedBed string
-	threshold   float64
-	findMinima  bool
+	InWig        string
+	ChromSizes   string
+	OutBed       string
+	ExpectedBed  string
+	Threshold    float64
+	FindMinima   bool
+	DefaultValue float64
 }{
-	//{"testdata/in_wig_1.wig", "testdata/out_bed_tmp.bed", "testdata/out_bed_1.bed", 20, false},
-	//{"testdata/in_wig_2.wig", "testdata/out_bed_tmp.bed", "testdata/out_bed_2.bed", 50, false},
-	{"testdata/in_wig_1.wig", "testdata/tmp.Minima.bed", "testdata/expected.minima.bed", 50, true},
+	{InWig: "testdata/in_wig_1.wig",
+		ChromSizes:   "testdata/genome.chrom.sizes",
+		OutBed:       "testdata/tmp.bed",
+		ExpectedBed:  "testdata/out_bed_1.bed",
+		Threshold:    20,
+		FindMinima:   false,
+		DefaultValue: 0,
+	},
+	{InWig: "testdata/in_wig_1.wig",
+		ChromSizes:   "testdata/genome.chrom.sizes",
+		OutBed:       "testdata/tmp.Minima.bed",
+		ExpectedBed:  "testdata/expected.minima.bed",
+		Threshold:    50,
+		FindMinima:   true,
+		DefaultValue: 100,
+	},
 }
 
 func TestWigPeaks(t *testing.T) {
 	var err error
+	var s Settings
 	for _, v := range wigPeaksTests {
-		wigPeaks(v.inWig, v.outBed, v.threshold, v.findMinima)
-		records := bed.Read(v.outBed)
-		expected := bed.Read(v.expectedBed)
+		s = Settings{
+			InWig:        v.InWig,
+			ChromSizes:   v.ChromSizes,
+			OutBed:       v.OutBed,
+			Threshold:    v.Threshold,
+			FindMinima:   v.FindMinima,
+			DefaultValue: v.DefaultValue,
+		}
+		wigPeaks(s)
+		records := bed.Read(v.OutBed)
+		expected := bed.Read(v.ExpectedBed)
 		if !bed.AllAreEqual(records, expected) {
 			t.Errorf("Error in wigPeaks, created bed and test bed are not equal.")
 		} else {
-			err = os.Remove(v.outBed)
+			err = os.Remove(v.OutBed)
 			exception.PanicOnErr(err)
 		}
 	}

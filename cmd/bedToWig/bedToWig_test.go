@@ -86,8 +86,18 @@ var bedToWigTests = []struct {
 
 func TestBedToWig(t *testing.T) {
 	var err error
+	var s Settings
 	for _, v := range bedToWigTests {
-		bedToWig(v.Method, v.InFile, v.RefFile, v.OutFile, v.Missing, v.UseRange, v.AnnotationField)
+		s = Settings{
+			Method:          v.Method,
+			InFile:          v.InFile,
+			RefFile:         v.RefFile,
+			OutFile:         v.OutFile,
+			Missing:         v.Missing,
+			UseRange:        v.UseRange,
+			AnnotationField: v.AnnotationField,
+		}
+		bedToWig(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: output of bedToWig was not as expected.")
 		} else {
