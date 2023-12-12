@@ -16,6 +16,7 @@ type InfoSettings struct {
 	OutFile      string
 	MatrixType   string
 	PseudoCounts float64
+	GcContent    float64
 }
 
 func infoUsage(infoFlags *flag.FlagSet) {
@@ -30,9 +31,9 @@ func parseInfoArgs() {
 	var err error
 	var expectedNumArgs int = 2
 	infoFlags := flag.NewFlagSet("info", flag.ExitOnError)
-
 	var matrixType *string = infoFlags.String("matrixType", "Weight", "Specify the type of position matrix. May be one of: Frequency, Probability, or Weight.")
 	var pfmPseudoCounts *float64 = infoFlags.Float64("pfmPseudoCounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM.")
+	var gcContent *float64 = flag.Float64("gcContent", 0.5, "Set the expected GC content of the target sequence.")
 	err = infoFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	infoFlags.Usage = func() { infoUsage(infoFlags) }
@@ -50,6 +51,7 @@ func parseInfoArgs() {
 		OutFile:      outFile,
 		MatrixType:   *matrixType,
 		PseudoCounts: *pfmPseudoCounts,
+		GcContent:    *gcContent,
 	}
 
 	pwmInfo(s)
@@ -65,10 +67,10 @@ func pwmInfo(s InfoSettings) {
 	case "Frequency":
 		records = motif.ReadJaspar(s.InFile, "Frequency")
 		records = motif.PfmSliceToPpmSlice(records, s.PseudoCounts)
-		records = motif.PpmSliceToPwmSlice(records)
+		records = motif.PpmSliceToPwmSlice(records, s.GcContent)
 	case "Probability":
 		records = motif.ReadJaspar(s.InFile, "Probability")
-		records = motif.PpmSliceToPwmSlice(records)
+		records = motif.PpmSliceToPwmSlice(records, s.GcContent)
 	case "Weight":
 		records = motif.ReadJaspar(s.InFile, "Weight")
 	default:

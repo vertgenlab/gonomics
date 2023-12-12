@@ -25,6 +25,7 @@ type MatchCompSettings struct {
 	OutputAsProportion bool
 	EnforceStrandMatch bool
 	ResidualFilter     float64
+	GcContent          float64
 }
 
 func MatchComp(s MatchCompSettings) {
@@ -40,10 +41,10 @@ func MatchComp(s MatchCompSettings) {
 	case "Frequency":
 		motifs = ReadJaspar(s.MotifFile, "Frequency")
 		motifs = PfmSliceToPpmSlice(motifs, s.Pseudocounts)
-		motifs = PpmSliceToPwmSlice(motifs)
+		motifs = PpmSliceToPwmSlice(motifs, s.GcContent)
 	case "Probability":
 		motifs = ReadJaspar(s.MotifFile, "Probability")
-		motifs = PpmSliceToPwmSlice(motifs)
+		motifs = PpmSliceToPwmSlice(motifs, s.GcContent)
 	case "Weight":
 		motifs = ReadJaspar(s.MotifFile, "Weight")
 	default:
