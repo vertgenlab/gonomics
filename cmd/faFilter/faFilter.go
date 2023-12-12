@@ -70,7 +70,7 @@ func main() {
 	var end *int = flag.Int("end", -1, "Retains the sequence before this position.")
 	var name *string = flag.String("name", "", "Specifies the fasta record name.")
 	var notName *string = flag.String("notName", "", "Returns all fasta records except for this input.")
-	var nameContains *string = flag.String("nameContains", "", "Returns all fasta records whose name contains this input.")
+	var nameContains *string = flag.String("nameContains", "", "Returns all fasta records whose name contains this input. String matching is case-sensitive.")
 	var minSize *int = flag.Int("minSize", 0, "Retains all fasta records with a sequence of at least that size")
 
 	flag.Usage = usage
