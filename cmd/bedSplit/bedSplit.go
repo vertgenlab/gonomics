@@ -8,6 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
+	"strings"
 )
 
 type Settings struct {
@@ -30,6 +31,7 @@ func bedSplit(s Settings) {
 	case "byName":
 		var seenNames = make(map[string]*fileio.EasyWriter, 0)
 		for v := range records {
+			v.Name = strings.Replace(v.Name, "/", "_", -1)
 			if _, foundInMap = seenNames[v.Name]; !foundInMap {
 				if s.GzipOut {
 					seenNames[v.Name] = fileio.EasyCreate(fmt.Sprintf("%s/%s.bed.gz", s.OutDir, v.Name))
