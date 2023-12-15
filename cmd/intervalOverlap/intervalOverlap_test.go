@@ -63,7 +63,7 @@ var IntervalOverlapTests = []struct {
 		Aggregate:        false,
 		Relationship:     "any",
 		MergedOutput:     false,
-		ThresholdOverlap: 0.33,
+		ThresholdOverlap: 0.50,
 		ExpectedFile:     "testdata/expected.threshold.bed",
 	},
 	{InFile: "testdata/test.bed",
@@ -74,7 +74,7 @@ var IntervalOverlapTests = []struct {
 		Aggregate:        false,
 		Relationship:     "any",
 		MergedOutput:     true,
-		ThresholdOverlap: 0.33,
+		ThresholdOverlap: 0.50,
 		ExpectedFile:     "testdata/expected.thresholdMerged.bed",
 	},
 }
