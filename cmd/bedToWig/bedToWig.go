@@ -31,9 +31,9 @@ func bedToWig(method string, inFile string, refFile string, outFile string, miss
 
 func usage() {
 	fmt.Print(
-		"bedScoreToWig - Converts bed score to wig\n" +
+		"bedToWig - Converts bed score to wig\n" +
 			"Usage:\n" +
-			"bedScoreToWig method input.bed reference.chrom.sizes output.wig\n" +
+			"bedToWig method input.bed reference.chrom.sizes output.wig\n" +
 			"Method must be one of the following:\n" +
 			"Score: Use the bed score column to set the wig value at the bed entry midpoint.\n" +
 			"Reads: Use the bed region count to set the wig values across the entire range of the bed entry.\n" +
