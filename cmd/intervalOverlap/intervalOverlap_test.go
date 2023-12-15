@@ -66,6 +66,17 @@ var IntervalOverlapTests = []struct {
 		ThresholdOverlap: 0.50,
 		ExpectedFile:     "testdata/expected.threshold.bed",
 	},
+	//{InFile: "testdata/test.bed",
+	//	OutFile:          "testdata/out.thresholdMerged.bed",
+	//	SelectFile:       "testdata/test2.bed",
+	//	NonOverlap:       false,
+	//	Threads:          1,
+	//	Aggregate:        false,
+	//	Relationship:     "any",
+	//	MergedOutput:     true,
+	//	ThresholdOverlap: 0.50,
+	//	ExpectedFile:     "testdata/expected.thresholdMerged.bed",
+	//},
 }
 
 func TestIntervalOverlap(t *testing.T) {
@@ -87,7 +98,7 @@ func TestIntervalOverlap(t *testing.T) {
 		}
 		answer = intervalOverlap(s)
 		out = fileio.EasyCreate(v.OutFile)
-		writeToFile(answer, out, v.MergedOutput, v.NonOverlap)
+		writeToFile(answer, out, v.MergedOutput, v.NonOverlap, v.ThresholdOverlap)
 		err = out.Close()
 		exception.PanicOnErr(err)
 
@@ -117,7 +128,7 @@ func BenchmarkAssertion(b *testing.B) {
 	}
 	for i := 0; i < b.N; i++ {
 		answer := intervalOverlap(options)
-		writeToFile(answer, ioutil.Discard, options.MergedOutput, options.NonOverlap)
+		writeToFile(answer, ioutil.Discard, options.MergedOutput, options.NonOverlap, options.ThresholdOverlap)
 	}
 }
 

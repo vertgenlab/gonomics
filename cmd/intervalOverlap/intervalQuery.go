@@ -39,17 +39,18 @@ func buildTree(intervals []interval.Interval, aggregate bool) map[string]*interv
 
 func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interval.Interval, answerChan chan<- *queryAnswer, relationship string, wg *sync.WaitGroup, mergedOutput bool, thresholdOverlap float64) {
 	var answer []interval.Interval
+	var ovSize, intSize float64
 	answerTrue := make([]interval.Interval, 1)
 	buf := make([]interval.Interval, 1000)
 	numSeen := 0
 	var a int
 	for query := range queryChan {
 		numSeen++
-		if mergedOutput {
+		if mergedOutput && thresholdOverlap == 0 {
 			answer = interval.Query(tree, query, relationship)
 			answerChan <- &queryAnswer{query, answer}
 			continue
-		} else {
+		} else if !mergedOutput && thresholdOverlap == 0 {
 			if interval.QueryBool(tree, query, relationship, buf) {
 				answer = answerTrue
 			} else {
@@ -60,8 +61,10 @@ func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interv
 		if thresholdOverlap > 0 {
 			answer = interval.Query(tree, query, relationship)
 			if answer != nil {
-				for a = range answer {
-					if float64(interval.OverlapSize(answer[a], query)/interval.IntervalSize(query)) >= thresholdOverlap {
+				for a = 0; a < len(answer); a++ {
+					ovSize = float64(interval.OverlapSize(answer[a], query))
+					intSize = float64(interval.IntervalSize(query))
+					if ovSize/intSize >= thresholdOverlap {
 						answer = answerTrue
 					}
 				}
@@ -72,8 +75,8 @@ func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interv
 	wg.Done()
 }
 
-func writeToFile(answerChan <-chan *queryAnswer, outfile io.Writer, mergedOutput bool, nonOverlap bool) {
-	if mergedOutput {
+func writeToFile(answerChan <-chan *queryAnswer, outfile io.Writer, mergedOutput bool, nonOverlap bool, thresholdOverlap float64) {
+	if mergedOutput && thresholdOverlap == 0 {
 		for val := range answerChan {
 			if len(val.answer) != 0 {
 				val.query.(fileWriter).WriteToFileHandle(outfile)
@@ -86,6 +89,15 @@ func writeToFile(answerChan <-chan *queryAnswer, outfile io.Writer, mergedOutput
 		for val := range answerChan {
 			if len(val.answer) == 0 {
 				val.query.(fileWriter).WriteToFileHandle(outfile)
+			}
+		}
+	} else if mergedOutput && thresholdOverlap > 0 {
+		for val := range answerChan {
+			if len(val.answer) != 0 {
+				val.query.(fileWriter).WriteToFileHandle(outfile)
+				for _, curr := range val.answer {
+					curr.(fileWriter).WriteToFileHandle(outfile)
+				}
 			}
 		}
 	} else {

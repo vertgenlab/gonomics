@@ -132,7 +132,7 @@ func main() {
 
 	answerChan := intervalOverlap(options)
 	output := fileio.EasyCreate(options.Output)
-	writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap)
+	writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap, options.ThresholdOverlap)
 	err = output.Close()
 	exception.PanicOnErr(err)
 
