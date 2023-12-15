@@ -12,9 +12,9 @@ type Settings struct { // Draft of input setting struct
 	Output     string // implemented
 	SelectFile string // implemented
 	//Extend          int
-	NonOverlap bool // implemented // not compatible with MergedOutput
-	Threads    int  // implemented
-	//PercentOverlap  float64
+	NonOverlap       bool    // implemented // not compatible with MergedOutput
+	Threads          int     // implemented
+	ThresholdOverlap float64 //not compatible with NonOverlap
 	//BaseOverlap     int
 	Aggregate    bool   // implemented
 	Relationship string // implemented
@@ -38,25 +38,40 @@ func buildTree(intervals []interval.Interval, aggregate bool) map[string]*interv
 	return interval.BuildTree(intervals)
 }
 
-func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interval.Interval, answerChan chan<- *queryAnswer, relationship string, wg *sync.WaitGroup, mergedOutput bool) {
+func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interval.Interval, answerChan chan<- *queryAnswer, relationship string, wg *sync.WaitGroup, mergedOutput bool, thresholdOverlap float64) {
 	var answer []interval.Interval
 	answerTrue := make([]interval.Interval, 1)
 	buf := make([]interval.Interval, 1000)
 	numSeen := 0
+	var a int
 	for query := range queryChan {
 		numSeen++
 		if mergedOutput {
 			answer = interval.Query(tree, query, relationship)
 			answerChan <- &queryAnswer{query, answer}
 			continue
+		} else {
+			if interval.QueryBool(tree, query, relationship, buf) {
+				answer = answerTrue
+			} else {
+				answer = nil
+			}
 		}
 
-		// else if no merged output
-		if interval.QueryBool(tree, query, relationship, buf) {
-			answer = answerTrue
-		} else {
-			answer = nil
+		if thresholdOverlap > 0 {
+			answer = interval.Query(tree, query, relationship)
+			for a = range answer {
+				if float64(interval.OverlapSize(answer[a], query)/interval.IntervalSize(answer[a])) >= thresholdOverlap {
+					if mergedOutput {
+						answerChan <- &queryAnswer{query, answer}
+						continue
+					} else {
+						answer = answerTrue
+					}
+				}
+			}
 		}
+
 		answerChan <- &queryAnswer{query, answer}
 	}
 	wg.Done()
