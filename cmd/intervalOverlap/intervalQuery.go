@@ -1,10 +1,9 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/interval"
 	"io"
 	"sync"
-
-	"github.com/vertgenlab/gonomics/interval"
 )
 
 type Settings struct { // Draft of input setting struct
