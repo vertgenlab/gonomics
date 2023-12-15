@@ -66,17 +66,6 @@ var IntervalOverlapTests = []struct {
 		ThresholdOverlap: 0.50,
 		ExpectedFile:     "testdata/expected.threshold.bed",
 	},
-	{InFile: "testdata/test.bed",
-		OutFile:          "testdata/out.thresholdMerged.bed",
-		SelectFile:       "testdata/test2.bed",
-		NonOverlap:       false,
-		Threads:          1,
-		Aggregate:        false,
-		Relationship:     "any",
-		MergedOutput:     true,
-		ThresholdOverlap: 0.50,
-		ExpectedFile:     "testdata/expected.thresholdMerged.bed",
-	},
 }
 
 func TestIntervalOverlap(t *testing.T) {
@@ -103,7 +92,7 @@ func TestIntervalOverlap(t *testing.T) {
 		exception.PanicOnErr(err)
 
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-			t.Errorf("Error: intervalOverlap test output is not as expeected.")
+			t.Errorf("Error: intervalOverlap test output is not as expected. Outfile: %s.", v.OutFile)
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)

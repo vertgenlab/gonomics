@@ -13,7 +13,7 @@ type Settings struct { // Draft of input setting struct
 	//Extend          int
 	NonOverlap       bool    // implemented // not compatible with MergedOutput
 	Threads          int     // implemented
-	ThresholdOverlap float64 //not compatible with NonOverlap
+	ThresholdOverlap float64 //not compatible with NonOverlap or MergedOutput
 	//BaseOverlap     int
 	Aggregate    bool   // implemented
 	Relationship string // implemented
@@ -59,18 +59,14 @@ func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interv
 
 		if thresholdOverlap > 0 {
 			answer = interval.Query(tree, query, relationship)
-			for a = range answer {
-				if float64(interval.OverlapSize(answer[a], query)/interval.IntervalSize(answer[a])) >= thresholdOverlap {
-					if mergedOutput {
-						answerChan <- &queryAnswer{query, answer}
-						continue
-					} else {
+			if answer != nil {
+				for a = range answer {
+					if float64(interval.OverlapSize(answer[a], query)/interval.IntervalSize(query)) >= thresholdOverlap {
 						answer = answerTrue
 					}
 				}
 			}
 		}
-
 		answerChan <- &queryAnswer{query, answer}
 	}
 	wg.Done()
