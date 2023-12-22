@@ -16,7 +16,6 @@ func dotToNewick(inFile string, outFile string, verbose bool) {
 }
 
 func usage() {
-	g
 	fmt.Print(
 		"dotToNewick - Generates a newick tree file from an input dot format tree.\n" +
 			"Usage:\n" +
