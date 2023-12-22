@@ -51,7 +51,7 @@ var NonCodingTests = []struct {
 		UnitBranchLength:       0.5,
 		NewickOut:              "testdata/test.NewickOut.PreMade.nh",
 		ExpectedNewick:         "testdata/expected.NewickOut.PreMade.nh",
-		ExpectedFile:           "testdata/expected.NonCoding.PreMade.fa",
+		ExpectedFile:           "testdata/expected.NonCoding.preMade.fa",
 	},
 }
 
