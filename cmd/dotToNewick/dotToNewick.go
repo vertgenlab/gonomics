@@ -6,18 +6,17 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/tree"
 	"log"
 )
 
 func dotToNewick(inFile string, outFile string, verbose bool) {
 	t := tree.ParseDot(inFile, verbose)
-	err := tree.WriteNewick(outFile, t)
-	exception.PanicOnErr(err)
+	tree.WriteNewick(outFile, t)
 }
 
 func usage() {
+	g
 	fmt.Print(
 		"dotToNewick - Generates a newick tree file from an input dot format tree.\n" +
 			"Usage:\n" +
