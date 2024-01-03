@@ -6,27 +6,35 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/wig"
+	"log"
 )
 
-func bedToWig(method string, inFile string, refFile string, outFile string, missing float64, useRange bool, annotationField int) {
-	ref := chromInfo.ReadToMap(refFile)
-	var outWig []wig.Wig
-	if method == "Reads" {
-		rec := bed.Read(inFile)
+type Settings struct {
+	Method          string
+	InFile          string
+	RefFile         string
+	OutFile         string
+	Missing         float64
+	UseRange        bool
+	AnnotationField int
+}
+
+func bedToWig(s Settings) {
+	ref := chromInfo.ReadToMap(s.RefFile)
+	var outWig = wig.MakeSkeleton(ref, s.Missing)
+	if s.Method == "Reads" {
+		rec := bed.Read(s.InFile)
 		outWig = convert.BedReadsToWig(rec, ref)
-	} else if method == "Name" || method == "Score" || method == "Annotation" {
-		outWig = convert.BedValuesToWig(inFile, ref, missing, method, useRange, annotationField)
+	} else if s.Method == "Name" || s.Method == "Score" || s.Method == "Annotation" {
+		outWig = convert.BedValuesToWig(s.InFile, ref, s.Missing, s.Method, s.UseRange, s.AnnotationField)
 	} else {
-		log.Fatalf("Unrecognized method. Expected 'Reads', 'Name', 'Score', or 'Annotation'. Found: %s.", method)
+		log.Fatalf("Unrecognized method. Expected 'Reads', 'Name', 'Score', or 'Annotation'. Found: %s.", s.Method)
 	}
-	wig.SortByCoord(outWig)
-	wig.Write(outFile, outWig)
+	wig.Write(s.OutFile, outWig)
 }
 
 func usage() {
@@ -35,10 +43,10 @@ func usage() {
 			"Usage:\n" +
 			"bedToWig method input.bed reference.chrom.sizes output.wig\n" +
 			"Method must be one of the following:\n" +
-			"Score: Use the bed score column to set the wig value at the bed entry midpoint.\n" +
-			"Reads: Use the bed region count to set the wig values across the entire range of the bed entry.\n" +
-			"Name: Use the bed name column to set the wig value at the bed entry midpoint.\n" +
-			"Annotation: Use an annotation column to set wig values at the bed entry midpoint. Default first annotation column, but can be controlled by the option 'annotationField'.\n" +
+			"\tScore: Use the bed score column to set the wig value at the bed entry midpoint.\n" +
+			"\tReads: Use the bed region count to set the wig values across the entire range of the bed entry.\n" +
+			"\tName: Use the bed name column to set the wig value at the bed entry midpoint.\n" +
+			"\tAnnotation: Use an annotation column to set wig values at the bed entry midpoint. Default first annotation column, but can be controlled by the option 'annotationField'.\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -64,5 +72,15 @@ func main() {
 	reference := flag.Arg(2)
 	outFile := flag.Arg(3)
 
-	bedToWig(method, inFile, reference, outFile, *missing, *useRange, *annotationField)
+	s := Settings{
+		Method:          method,
+		InFile:          inFile,
+		RefFile:         reference,
+		OutFile:         outFile,
+		Missing:         *missing,
+		UseRange:        *useRange,
+		AnnotationField: *annotationField,
+	}
+
+	bedToWig(s)
 }

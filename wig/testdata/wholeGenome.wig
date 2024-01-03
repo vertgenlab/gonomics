@@ -1,0 +1,20 @@
+fixedStep chrom=chrA start=1 step=1
+2
+3
+3
+3
+4
+2
+4
+fixedStep chrom=chrA start=30 step=1
+10
+11
+12
+11
+10
+fixedStep chrom=chrB start=4 step=1
+5
+6
+4
+8
+6
