@@ -103,7 +103,7 @@ func TestFindTreeRoots(t *testing.T) {
 	var records map[string]*Obo
 	for _, v := range FindTreeRootsTests {
 		records, _ = Read(v.InFile, true)
-		roots = findTreeRoots(records)
+		roots = FindTreeRoots(records)
 		if len(roots) != len(v.ExpectedRoots) {
 			t.Errorf("Error: number of roots found: %v, did not match expected: %v.\n", len(roots), len(v.ExpectedRoots))
 		}

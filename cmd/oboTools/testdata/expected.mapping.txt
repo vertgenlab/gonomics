@@ -1,0 +1,48 @@
+GO:0000003	reproduction
+GO:0000006	high-affinity zinc transmembrane transporter activity
+GO:0000012	single strand break repair
+GO:0000015	phosphopyruvate hydratase complex
+GO:0000019	regulation of mitotic recombination
+GO:0000023	maltose metabolic process
+GO:0000027	ribosomal large subunit assembly
+GO:0000031	mannosylphosphate transferase activity
+GO:0000044	obsolete ascorbate stabilization
+GO:0000047	obsolete Rieske iron-sulfur protein
+GO:0000048	peptidyltransferase activity
+GO:0000022	mitotic spindle elongation
+GO:0000039	obsolete plasma membrane long-chain fatty acid transporter
+GO:0000053	argininosuccinate metabolic process
+GO:0000056	ribosomal small subunit export from nucleus
+GO:0000001	mitochondrion inheritance
+GO:0000010	trans-hexaprenyltranstransferase activity
+GO:0000030	mannosyltransferase activity
+GO:0000033	alpha-1,3-mannosyltransferase activity
+GO:0000035	acyl binding
+GO:0000041	transition metal ion transport
+GO:0000055	ribosomal large subunit export from nucleus
+GO:0000009	alpha-1,6-mannosyltransferase activity
+GO:0000011	vacuole inheritance
+GO:0000028	ribosomal small subunit assembly
+GO:0000050	urea cycle
+GO:0000051	obsolete urea cycle intermediate metabolic process
+GO:0000008	obsolete thioredoxin
+GO:0000020	obsolete negative regulation of recombination within rDNA repeats
+GO:0000025	maltose catabolic process
+GO:0000036	acyl carrier activity
+GO:0000005	obsolete ribosomal chaperone activity
+GO:0000007	low-affinity zinc ion transmembrane transporter activity
+GO:0000014	single-stranded DNA endodeoxyribonuclease activity
+GO:0000017	alpha-glucoside transport
+GO:0000038	very long-chain fatty acid metabolic process
+GO:0000049	tRNA binding
+GO:0000052	citrulline metabolic process
+GO:0000002	mitochondrial genome maintenance
+GO:0000045	autophagosome assembly
+GO:0000054	ribosomal subunit export from nucleus
+GO:0000016	lactase activity
+GO:0000018	regulation of DNA recombination
+GO:0000024	maltose biosynthetic process
+GO:0000026	alpha-1,2-mannosyltransferase activity
+GO:0000032	cell wall mannoprotein biosynthetic process
+GO:0000034	adenine deaminase activity
+GO:0000059	obsolete protein import into nucleus, docking

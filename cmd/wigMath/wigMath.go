@@ -14,6 +14,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"sort"
 )
 
 type Settings struct {
@@ -45,7 +46,7 @@ func wigMath(s Settings) {
 	var foundInMap bool
 	var currPos int
 	var currKey string
-	records := wig.ReadWholeGenome(s.InFile, s.ChromSizes, s.Missing)
+	records := wig.Read(s.InFile, s.ChromSizes, s.Missing)
 	multipleOptionCheck(s)
 	if s.ScalarMultiply != 1 {
 		for currKey = range records {
@@ -55,7 +56,7 @@ func wigMath(s Settings) {
 				}
 			}
 		}
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	} else if s.ScalarDivide != 1 {
 		if s.ScalarDivide == 0 {
 			log.Fatalf("You cannot divide wig values by zero, please input another value. I'm not mad but I'm a bit disappointed.")
@@ -67,9 +68,9 @@ func wigMath(s Settings) {
 				}
 			}
 		}
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	} else if s.ElementWiseAdd != "" {
-		second = wig.ReadWholeGenome(s.ElementWiseAdd, s.ChromSizes, s.Missing)
+		second = wig.Read(s.ElementWiseAdd, s.ChromSizes, s.Missing)
 		for currKey = range records {
 			if _, foundInMap = second[currKey]; !foundInMap {
 				log.Fatalf("Error: Chrom in first wig file: %v, not found in the second wig file.\n", currKey)
@@ -82,9 +83,9 @@ func wigMath(s Settings) {
 				}
 			}
 		}
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	} else if s.ElementWiseMax != "" {
-		second = wig.ReadWholeGenome(s.ElementWiseMax, s.ChromSizes, s.Missing)
+		second = wig.Read(s.ElementWiseMax, s.ChromSizes, s.Missing)
 		for currKey = range records {
 			if _, foundInMap = second[currKey]; !foundInMap {
 				log.Fatalf("Error: Chrom in first wig file: %v, not found in the second wig file.\n", currKey)
@@ -97,9 +98,9 @@ func wigMath(s Settings) {
 				}
 			}
 		}
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	} else if s.ElementWiseSubtract != "" {
-		second = wig.ReadWholeGenome(s.ElementWiseSubtract, s.ChromSizes, s.Missing)
+		second = wig.Read(s.ElementWiseSubtract, s.ChromSizes, s.Missing)
 		for currKey = range records {
 			if _, foundInMap = second[currKey]; !foundInMap {
 				log.Fatalf("Error: Chrom in first wig file: %v, not found in the second wig file.\n", currKey)
@@ -112,12 +113,12 @@ func wigMath(s Settings) {
 				}
 			}
 		}
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	} else if s.MovingAverageSmoothing > 1 {
 		records = wig.SmoothMap(records, s.MovingAverageSmoothing, s.Missing)
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	} else if s.AbsoluteError != "" {
-		second = wig.ReadWholeGenome(s.AbsoluteError, s.ChromSizes, s.Missing)
+		second = wig.Read(s.AbsoluteError, s.ChromSizes, s.Missing)
 		for currKey = range records {
 			if _, foundInMap = second[currKey]; !foundInMap {
 				log.Fatalf("Error: Chrom in first wig file: %v, not found in the second wig file.\n", currKey)
@@ -130,9 +131,9 @@ func wigMath(s Settings) {
 				}
 			}
 		}
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	} else if s.AbsolutePercentError != "" {
-		second = wig.ReadWholeGenome(s.AbsolutePercentError, s.ChromSizes, s.Missing)
+		second = wig.Read(s.AbsolutePercentError, s.ChromSizes, s.Missing)
 		for currKey = range records {
 			for currPos = range records[currKey].Values {
 				if _, foundInMap = second[currKey]; !foundInMap {
@@ -147,9 +148,9 @@ func wigMath(s Settings) {
 				}
 			}
 		}
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	} else if s.Pearson != "" {
-		second = wig.ReadWholeGenome(s.Pearson, s.ChromSizes, s.Missing)
+		second = wig.Read(s.Pearson, s.ChromSizes, s.Missing)
 		answer := wig.Pearson(records, second, s.Missing, s.SamplingFrequency)
 		out := fileio.EasyCreate(s.OutFile)
 		_, err = fmt.Fprintf(out, "PCC:\t%f\n", answer)
@@ -163,7 +164,7 @@ func wigMath(s Settings) {
 				}
 			}
 		}
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	} else if s.MaxValue < math.MaxFloat64 {
 		for currKey = range records {
 			for currPos = range records[currKey].Values {
@@ -172,12 +173,20 @@ func wigMath(s Settings) {
 				}
 			}
 		}
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	} else if s.MissingBed {
 		var inMissingRegion = false
 		out := fileio.EasyCreate(s.OutFile)
 		var currentBed = bed.Bed{Chrom: "dummyPlaceHolder", ChromStart: -1, ChromEnd: -1, FieldsInitialized: 3}
+
+		//to make this program deterministic, we read the keys to a slice, sort the slice, and then iterate through the map in sorted key order
+		keys := make([]string, 0)
 		for currKey = range records {
+			keys = append(keys, currKey)
+		}
+		sort.Strings(keys)
+
+		for _, currKey = range keys {
 			for currPos = range records[currKey].Values {
 				if records[currKey].Values[currPos] == s.Missing {
 					if records[currKey].Chrom != currentBed.Chrom && currentBed.Chrom != "dummyPlaceHolder" { //case where previous chrom ended in missing,
@@ -209,10 +218,13 @@ func wigMath(s Settings) {
 		bedRegions := bed.Read(s.BedMask)
 		for currBed = range bedRegions {
 			for currPos = bedRegions[currBed].ChromStart; currPos < bedRegions[currBed].ChromEnd; currPos++ {
+				if currPos >= len(records[bedRegions[currBed].Chrom].Values) {
+					log.Fatalf("Error: current position (%v) exceeds length of chromosome %s.\n", currPos, bedRegions[currBed].Chrom)
+				}
 				records[bedRegions[currBed].Chrom].Values[currPos] = s.Missing
 			}
 		}
-		wig.WriteMap(s.OutFile, records)
+		wig.Write(s.OutFile, records)
 	}
 }
 

@@ -34,14 +34,14 @@ func bedToWig(s Settings) {
 	} else {
 		log.Fatalf("Unrecognized method. Expected 'Reads', 'Name', 'Score', or 'Annotation'. Found: %s.", s.Method)
 	}
-	wig.WriteMap(s.OutFile, outWig)
+	wig.Write(s.OutFile, outWig)
 }
 
 func usage() {
 	fmt.Print(
-		"bedScoreToWig - Converts bed score to wig\n" +
+		"bedToWig - Converts bed score to wig\n" +
 			"Usage:\n" +
-			"bedScoreToWig method input.bed reference.chrom.sizes output.wig\n" +
+			"bedToWig method input.bed reference.chrom.sizes output.wig\n" +
 			"Method must be one of the following:\n" +
 			"\tScore: Use the bed score column to set the wig value at the bed entry midpoint.\n" +
 			"\tReads: Use the bed region count to set the wig values across the entire range of the bed entry.\n" +

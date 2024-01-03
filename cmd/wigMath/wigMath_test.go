@@ -32,6 +32,7 @@ var WigMathTests = []struct {
 }{
 	{
 		InFile:                 "testdata/in.wig",
+		ChromSizes:             "testdata/genome.chrom.sizes",
 		OutFile:                "testdata/tmp.add.wig",
 		ExpectedFile:           "testdata/expected.add.wig",
 		BedMask:                "",
@@ -52,6 +53,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.wig",
+		ChromSizes:             "testdata/genome.chrom.sizes",
 		OutFile:                "testdata/tmp.wig",
 		ExpectedFile:           "testdata/expected.subtract.wig",
 		BedMask:                "",
@@ -72,6 +74,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/unsmooth.wig",
+		ChromSizes:             "testdata/smooth.chrom.sizes",
 		OutFile:                "testdata/tmp.smooth.wig",
 		ExpectedFile:           "testdata/expected.smooth.wig",
 		BedMask:                "",
@@ -92,6 +95,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.wig",
+		ChromSizes:             "testdata/genome.chrom.sizes",
 		OutFile:                "testdata/tmp.absError.wig",
 		ExpectedFile:           "testdata/expected.absError.wig",
 		BedMask:                "",
@@ -112,6 +116,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.wig",
+		ChromSizes:             "testdata/genome.chrom.sizes",
 		OutFile:                "testdata/tmp.absPercentError.wig",
 		ExpectedFile:           "testdata/expected.absPercentError.wig",
 		BedMask:                "",
@@ -132,6 +137,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.wig",
+		ChromSizes:             "testdata/genome.chrom.sizes",
 		OutFile:                "testdata/tmp.Pearson.txt",
 		ExpectedFile:           "testdata/expected.Pearson.txt",
 		BedMask:                "",
@@ -152,6 +158,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.wig",
+		ChromSizes:             "testdata/genome.chrom.sizes",
 		OutFile:                "testdata/tmp.Mult55.wig",
 		ExpectedFile:           "testdata/expected.mult55.wig",
 		BedMask:                "",
@@ -172,6 +179,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.wig",
+		ChromSizes:             "testdata/genome.chrom.sizes",
 		OutFile:                "testdata/tmp.divide4.wig",
 		ExpectedFile:           "testdata/expected.divide4.wig",
 		BedMask:                "",
@@ -192,6 +200,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.wig",
+		ChromSizes:             "testdata/genome.chrom.sizes",
 		OutFile:                "testdata/tmp.min25.wig",
 		ExpectedFile:           "testdata/expected.min25.wig",
 		BedMask:                "",
@@ -212,6 +221,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.wig",
+		ChromSizes:             "testdata/genome.chrom.sizes",
 		OutFile:                "testdata/tmp.max300.wig",
 		ExpectedFile:           "testdata/expected.max300.wig",
 		BedMask:                "",
@@ -232,6 +242,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.missing.wig",
+		ChromSizes:             "testdata/missing.chrom.sizes",
 		OutFile:                "testdata/tmp.missing.bed",
 		ExpectedFile:           "testdata/expected.missing.bed",
 		BedMask:                "",
@@ -252,6 +263,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.missing.wig",
+		ChromSizes:             "testdata/missing.chrom.sizes",
 		OutFile:                "testdata/tmp.masked.wig",
 		ExpectedFile:           "testdata/expected.masked.wig",
 		BedMask:                "testdata/mask.bed",
@@ -272,6 +284,7 @@ var WigMathTests = []struct {
 	},
 	{
 		InFile:                 "testdata/in.max.wig",
+		ChromSizes:             "testdata/max.chrom.sizes",
 		OutFile:                "testdata/tmp.max.wig",
 		ExpectedFile:           "testdata/expected.max.wig",
 		BedMask:                "",
@@ -298,6 +311,7 @@ func TestWigMath(t *testing.T) {
 	for _, v := range WigMathTests {
 		s = Settings{
 			InFile:                 v.InFile,
+			ChromSizes:             v.ChromSizes,
 			OutFile:                v.OutFile,
 			BedMask:                v.BedMask,
 			MinValue:               v.MinValue,
