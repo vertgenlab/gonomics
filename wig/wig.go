@@ -104,13 +104,13 @@ func GoReadToChan(filename string) <-chan Wig {
 	return data
 }
 
-// WriteMap writes an input map[string]Wig to an output filename. Entries in the map
+// Write writes an input map[string]Wig to an output filename. Entries in the map
 // will be written in alphanumeric order of the map keys.
-func WriteMap(filename string, records map[string]Wig) {
+func Write(filename string, records map[string]Wig) {
 	var err error
 	keys := make([]string, 0)
 	out := fileio.EasyCreate(filename)
-	for currKey, _ := range records {
+	for currKey := range records {
 		keys = append(keys, currKey)
 	}
 	//sorting by keys to write in deterministic order
@@ -122,7 +122,7 @@ func WriteMap(filename string, records map[string]Wig) {
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle is an helper function for Write that writes the Wig data structure to an io.Writer
+// WriteToFileHandle is a helper function for Write that writes the Wig data structure to an io.Writer
 func WriteToFileHandle(file io.Writer, rec Wig) {
 	var err error
 	if rec.StepType == "fixedStep" {
@@ -154,12 +154,12 @@ func WriteToFileHandle(file io.Writer, rec Wig) {
 	}
 }
 
-// ReadWholeGenome creates a whole genome wig map, where each key is a chromosome name and the value is the corresponding
+// Read creates a whole genome wig map, where each key is a chromosome name and the value is the corresponding
 // wig struct. The wig struct values slice is the size of the whole chromosome, as specified by an input chromSizeFile.
 // Positions in the genome where there is no wig coverage are set to a user-specified defaultValue.
 // This function is robust against different step sizes between entries and multiple wig entries per chromosome, but
 // is currently limited to 'fixedStep' beds.
-func ReadWholeGenome(filename string, chromSizeFile string, defaultValue float64) map[string]Wig {
+func Read(filename string, chromSizeFile string, defaultValue float64) map[string]Wig {
 	var currValue, currPos, currOffset int
 	var foundInMap bool
 	sizes := chromInfo.ReadToMap(chromSizeFile)
@@ -171,11 +171,16 @@ func ReadWholeGenome(filename string, chromSizeFile string, defaultValue float64
 		}
 		currPos = currWig.Start - 1 // from 1-based to zero-based
 		for currValue = range currWig.Values {
-			if currPos > len(answer[currWig.Chrom].Values) {
+			if currPos >= len(answer[currWig.Chrom].Values) {
 				log.Fatalf("Error: position of values in the input wig exceed the chrom length specified in the chrom sizes file. Offending entry on Chr: %v at start: %v\n", currWig.Chrom, currWig.Start)
 			}
 			for currOffset = 0; currOffset < currWig.Step; currOffset++ {
-				//TODO: Check if value is not defaultValue first and fatal
+				if currPos >= len(answer[currWig.Chrom].Values) {
+					log.Fatalf("Error: position of values in the input wig exceed the chrom length specified in the chrom sizes file. Offending entry on Chr: %v at start: %v\n", currWig.Chrom, currWig.Start)
+				}
+				if answer[currWig.Chrom].Values[currPos] != defaultValue {
+					log.Fatalf("Error: multiple entries in the input wig map to the same genomic position.")
+				}
 				answer[currWig.Chrom].Values[currPos] = currWig.Values[currValue]
 				currPos++
 			}

@@ -52,7 +52,7 @@ func samToWig(s Settings) {
 			}
 		}
 	}
-	wig.WriteMap(s.OutFileName, answer)
+	wig.Write(s.OutFileName, answer)
 }
 
 func usage() {

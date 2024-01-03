@@ -25,7 +25,7 @@ type Settings struct {
 }
 
 func wigPeaks(s Settings) { //threshold is float64 because WigValue Value aka v2.Value is float64.
-	records := wig.ReadWholeGenome(s.InWig, s.ChromSizes, s.DefaultValue) //type is []Wig, aka slice of Wig structs
+	records := wig.Read(s.InWig, s.ChromSizes, s.DefaultValue) //type is []Wig, aka slice of Wig structs
 	var inPeak bool = false
 	var err error
 	var current bed.Bed                //to store the current peak as a bed entry
