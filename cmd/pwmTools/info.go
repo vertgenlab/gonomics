@@ -11,6 +11,7 @@ import (
 	"os"
 )
 
+// InfoSettings defines the usage settings for the pwmTools info subcommand.
 type InfoSettings struct {
 	InFile       string
 	OutFile      string
@@ -19,6 +20,7 @@ type InfoSettings struct {
 	Threshold    float64
 }
 
+// infoUsage defines the usage statement for the pwmTools info subcommand.
 func infoUsage(infoFlags *flag.FlagSet) {
 	fmt.Printf("pwmTools info - a tool for reporting tabular statistics on PWM files.\n" +
 		"Usage:\n" +
@@ -27,6 +29,7 @@ func infoUsage(infoFlags *flag.FlagSet) {
 	infoFlags.PrintDefaults()
 }
 
+// parseInfoArgs is the main function of the pwmTools info subcommand. It parses options and initializes the pwmInfo function.
 func parseInfoArgs() {
 	var expectedNumArgs int = 2
 	var err error
@@ -34,7 +37,7 @@ func parseInfoArgs() {
 	infoFlags := flag.NewFlagSet("info", flag.ExitOnError)
 	var matrixType *string = infoFlags.String("matrixType", "Weight", "Specify the type of position matrix. May be one of: Frequency, Probability, or Weight.")
 	var pfmPseudocounts *float64 = infoFlags.Float64("pfmPseudocounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM or PPM.")
-	var threshold *float64 = infoFlags.Float64("threshold", 0.8, "Set the threshold value for motif matches. Used for calculating cache size.")
+	var threshold *float64 = infoFlags.Float64("threshold", 0.8, "Set the threshold value for motif matches. Motifs with scores above this value will be considered a match. Used for calculating cache size.")
 	err = infoFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	infoFlags.Usage = func() { infoUsage(infoFlags) }
@@ -59,6 +62,11 @@ func parseInfoArgs() {
 	pwmInfo(s)
 }
 
+// pwmInfo parses an input PositionMatrix file, produces summary statistics on each input matrix, and writes
+// this information to an output tabular file.
+// Output fields are TF (the motif identifier), MotifName (the human-readable motif name), Length (the length of
+// the position matrix), Consensus Score (the position site scoring matrix value for the motif consensus sequence),
+// and the CacheLength (the number of k-mers above a user-specified motif score).
 func pwmInfo(s InfoSettings) {
 	var err error
 	var consensusSequence fasta.Fasta

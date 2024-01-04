@@ -11,6 +11,7 @@ import (
 	"os"
 )
 
+// ShuffleSettings defines the usage options for the pwmTools shuffle subcommand.
 type ShuffleSettings struct {
 	InFile     string
 	OutFile    string
@@ -18,13 +19,17 @@ type ShuffleSettings struct {
 	SetSeed    int64
 }
 
+// shuffleUsage defines the usage statement for the pwmTools shuffle subcommand.
 func shuffleUsage(shuffleFlags *flag.FlagSet) {
 	fmt.Printf("pwmTools shuffle - a tool for producing shuffled control motifs from input motifs.\n" +
+		"Input motifs are shuffled column-wise, preserving the base composition but randomizing motif order.\n" +
+		"Useful for producing control motifs for excess conservation analysis.\n" +
 		"pwmTools shuffle in.pwm out.pwm\n" +
 		"options:\n")
 	shuffleFlags.PrintDefaults()
 }
 
+// this is equivalent to the main function for the shuffle subcommand.
 func parseShuffleArgs() {
 	var expectedNumArgs int = 2
 	var err error
@@ -54,6 +59,8 @@ func parseShuffleArgs() {
 	pwmShuffle(s)
 }
 
+// pwmShuffle is the primary function for this subcommand. It first parses an input file of PositionMatrices.
+// For each input motif, a number of shuffled motifs are generated (default 10) and then written to an output file.
 func pwmShuffle(s ShuffleSettings) {
 	var originalMotifName string
 	var currIter int
@@ -74,8 +81,8 @@ func pwmShuffle(s ShuffleSettings) {
 	exception.PanicOnErr(err)
 }
 
+// shufflePwmColumns randomizes the order of columns in an input PositionMatrix in place using the Fisher-Yates algorithm.
 func shufflePwmColumns(pwm motif.PositionMatrix) {
-	//shuffle via Fisher-Yates
 	var currRand, currRow int
 	for currCol := range pwm.Mat[0] {
 		currRand = rand.Intn(currCol + 1)

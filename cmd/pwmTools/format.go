@@ -9,6 +9,7 @@ import (
 	"os"
 )
 
+// FormatSettings defines the usage settings for the pwmTools format subcommand.
 type FormatSettings struct {
 	InFile      string
 	OutFile     string
@@ -17,6 +18,7 @@ type FormatSettings struct {
 	PseudoCount float64
 }
 
+// formatUsage defines the usage statement for the pwmTools format subcommand.
 func formatUsage(formatFlags *flag.FlagSet) {
 	fmt.Printf("pwmTools format - a tool for reformatting PFM/PPM/PWM files and for converting between these formats.\n" +
 		"Usage:\n" +
@@ -25,6 +27,7 @@ func formatUsage(formatFlags *flag.FlagSet) {
 	formatFlags.PrintDefaults()
 }
 
+// parseFormatArgs is the main function of the pwmTools format subcommand. It parses options and runs the pwmFormat function.
 func parseFormatArgs() {
 	var expectedNumArgs int = 2
 	var err error
@@ -56,6 +59,8 @@ func parseFormatArgs() {
 	pwmFormat(s)
 }
 
+// pwmFormat parses an input Position Matrix file and formats the file according to user-defined settings.
+// Currently, this supports converting between PFM, PPM, and PWM motif representations.
 func pwmFormat(s FormatSettings) {
 	var records = motif.ReadJaspar(s.InFile, s.InType)
 	switch s.InType {
