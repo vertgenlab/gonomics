@@ -21,6 +21,11 @@ type FormatSettings struct {
 // formatUsage defines the usage statement for the pwmTools format subcommand.
 func formatUsage(formatFlags *flag.FlagSet) {
 	fmt.Printf("pwmTools format - a tool for reformatting PFM/PPM/PWM files and for converting between these formats.\n" +
+		"A note on file formats:\n" +
+		"\tPFM (Position Frequency Matrix) encodes integer counts in matrix entries, typically corresponding to read counts from motif discovery sequencing experiments.\n" +
+		"\tPPM (Position Probability Matrix) encodes position-wise probabilities in matrix entries. Columns should therefore sum to 1. These may be empirical probabilities observed in a PFM or smoothed with pseudocounts.\n" +
+		"\tPWM (Position Weight Matrix) encodes the position-wise log odds of a base as matrix elements.\n" +
+		"PFMs can be converted to PPMs and PWMs, PWMs may be converted to PPMs, though PPMs cannot be converted back to PFMs.\n" +
 		"Usage:\n" +
 		"pwmTools format in.pfm/ppm/pwm out.pfm/ppm/pwm\n" +
 		"options:\n")

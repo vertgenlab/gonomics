@@ -34,7 +34,7 @@ func parseShuffleArgs() {
 	var expectedNumArgs int = 2
 	var err error
 	shuffleFlags := flag.NewFlagSet("shuffle", flag.ExitOnError)
-	var numShuffle *int = shuffleFlags.Int("numShuffle", 10, "Specify the number of desired shuffle motifs per input motif.")
+	var numShuffle *int = shuffleFlags.Int("numShuffle", 10, "Specify the number of desired shuffled motifs per input motif.")
 	var setSeed *int64 = shuffleFlags.Int64("setSeed", 1, "Specify the seed for the random number generator.")
 	err = shuffleFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
