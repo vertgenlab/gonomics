@@ -51,6 +51,7 @@ var FormatTests = []struct {
 	InType       string
 	OutType      string
 	PseudoCount  float64
+	GcContent    float64
 	ExpectedFile string
 }{
 	{InFile: "testdata/jaspar.vertebrate.txt.gz",
@@ -58,6 +59,7 @@ var FormatTests = []struct {
 		InType:       "Frequency",
 		OutType:      "Probability",
 		PseudoCount:  0,
+		GcContent:    0.5,
 		ExpectedFile: "testdata/expected.jaspar.ppm.txt",
 	},
 	{InFile: "testdata/jaspar.vertebrate.txt.gz",
@@ -65,6 +67,7 @@ var FormatTests = []struct {
 		InType:       "Frequency",
 		OutType:      "Probability",
 		PseudoCount:  40,
+		GcContent:    0.5,
 		ExpectedFile: "testdata/expected.highPseudo.jaspar.ppm.txt",
 	},
 	{InFile: "testdata/jaspar.vertebrate.txt.gz",
@@ -72,6 +75,7 @@ var FormatTests = []struct {
 		InType:       "Frequency",
 		OutType:      "Weight",
 		PseudoCount:  0.2,
+		GcContent:    0.5,
 		ExpectedFile: "testdata/expected.jaspar.pwm.txt",
 	},
 }
@@ -86,6 +90,7 @@ func TestPwmFormat(t *testing.T) {
 			InType:      v.InType,
 			OutType:     v.OutType,
 			PseudoCount: v.PseudoCount,
+			GcContent:   v.GcContent,
 		}
 		pwmFormat(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

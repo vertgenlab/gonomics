@@ -14,6 +14,7 @@
 ##CmdName:bedOverlapByWindow
 ##CmdName:bedShear
 ##CmdName:bedSimilarity
+##CmdName:bedSplit
 ##CmdName:bedToAminoAcid
 ##CmdName:bedToFasta
 ##CmdName:bedToWig
@@ -280,6 +281,7 @@
      [32mDEPRECATED[0m                    [36mThis directory contains deprecated commands, preserved for backwards compatability.[0m
      [32mbedShear[0m                      [36mSplit bed entries into smaller fragment bed entries.[0m
      [32mbedSimilarity[0m                 [36m- Takes in 2 bed files or a list of bed files and gives similarity statistics based on number of overlapsfor the input bed files.[0m
+     [32mbedSplit[0m                      [36m[0m
      [32mdigestGenome[0m                  [36m- Create a bed file of restriction fragments from an input FASTA file and a restriction enzyme recognition sequence[0m
      [32mgeneAssignmentStats[0m           [36msage:[0m
      [32moboTools[0m                      [36ma collection of tools for manipulating files in the Open Biomedical Ontologies (OBO) file format.[0m

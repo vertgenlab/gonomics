@@ -38,8 +38,7 @@ func parseInfoArgs() {
 	var pfmPseudoCounts *float64 = infoFlags.Float64("pfmPseudoCounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM.")
 	var gcContent *float64 = flag.Float64("gcContent", 0.5, "Set the expected GC content of the target sequence.")
 	var threshold *float64 = infoFlags.Float64("threshold", 0.8, "Set the threshold value for motif matches. Motifs with scores above this value will be considered a match. Used for calculating cache size.")
-  var err error
-	infoFlags := flag.NewFlagSet("info", flag.ExitOnError)
+	var err error
 	err = infoFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	infoFlags.Usage = func() { infoUsage(infoFlags) }
