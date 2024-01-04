@@ -43,9 +43,9 @@ var PpmTests = []struct {
 	OutputFile   string
 	ExpectedFile string
 }{
-	{"testdata/expected.Ppm.txt",
-		"testdata/tmp.Pwm.txt",
-		"testdata/expected.Pwm.txt"},
+	{PpmFile: "testdata/expected.Ppm.txt",
+		OutputFile:   "testdata/tmp.Pwm.txt",
+		ExpectedFile: "testdata/expected.Pwm.txt"},
 }
 
 func TestPpmSliceToPwmSlice(t *testing.T) {
@@ -58,6 +58,34 @@ func TestPpmSliceToPwmSlice(t *testing.T) {
 		WriteJaspar(v.OutputFile, answer)
 		if !fileio.AreEqual(v.OutputFile, v.ExpectedFile) {
 			t.Errorf("Error in PpmSliceToPwmSlice. Output was not as expected.")
+		} else {
+			err = os.Remove(v.OutputFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
+
+var PwmToPpmTests = []struct {
+	PwmFile      string
+	OutputFile   string
+	ExpectedFile string
+}{
+	{PwmFile: "testdata/expected.Pwm.txt",
+		OutputFile:   "testdata/tmp.PwmToPpm.txt",
+		ExpectedFile: "testdata/expected.PwmToPpm.txt",
+	},
+}
+
+func TestPwmSliceToPpmSlice(t *testing.T) {
+	var records []PositionMatrix
+	var answer []PositionMatrix
+	var err error
+	for _, v := range PwmToPpmTests {
+		records = ReadJaspar(v.PwmFile, "Weight")
+		answer = PwmSliceToPpmSlice(records)
+		WriteJaspar(v.OutputFile, answer)
+		if !fileio.AreEqual(v.OutputFile, v.ExpectedFile) {
+			t.Errorf("ERror in PwmSliceToPpmSlice. Output was not as expected.")
 		} else {
 			err = os.Remove(v.OutputFile)
 			exception.PanicOnErr(err)
