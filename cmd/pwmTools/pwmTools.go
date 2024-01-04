@@ -1,3 +1,6 @@
+// Command Group: "Motif Tools"
+
+// A collection of tools for manipulating position matrices
 package main
 
 import (
