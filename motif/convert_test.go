@@ -72,6 +72,34 @@ func TestPpmSliceToPwmSlice(t *testing.T) {
 	}
 }
 
+var PwmToPpmTests = []struct {
+	PwmFile      string
+	OutputFile   string
+	ExpectedFile string
+}{
+	{PwmFile: "testdata/expected.Pwm.txt",
+		OutputFile:   "testdata/tmp.PwmToPpm.txt",
+		ExpectedFile: "testdata/expected.PwmToPpm.txt",
+	},
+}
+
+func TestPwmSliceToPpmSlice(t *testing.T) {
+	var records []PositionMatrix
+	var answer []PositionMatrix
+	var err error
+	for _, v := range PwmToPpmTests {
+		records = ReadJaspar(v.PwmFile, "Weight")
+		answer = PwmSliceToPpmSlice(records)
+		WriteJaspar(v.OutputFile, answer)
+		if !fileio.AreEqual(v.OutputFile, v.ExpectedFile) {
+			t.Errorf("ERror in PwmSliceToPpmSlice. Output was not as expected.")
+		} else {
+			err = os.Remove(v.OutputFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
+
 var ConsensusSequencesTests = []struct {
 	InFile       string
 	OutFile      string
