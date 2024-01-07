@@ -29,7 +29,7 @@ func main() {
 	case "filter":
 		//parseFilterArgs()
 	case "toBed":
-		//parseToBedArgs()
+		parseToBedArgs()
 	default:
 		flag.Usage()
 		log.Fatalf("Error: unrecognized subcommand: %v.\n", flag.Arg(0))
