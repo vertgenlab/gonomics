@@ -16,7 +16,8 @@ type InfoSettings struct {
 	InFile       string
 	OutFile      string
 	MatrixType   string
-	Pseudocounts float64
+	PseudoCounts float64
+	GcContent    float64
 	Threshold    float64
 }
 
@@ -32,12 +33,12 @@ func infoUsage(infoFlags *flag.FlagSet) {
 // parseInfoArgs is the main function of the pwmTools info subcommand. It parses options and initializes the pwmInfo function.
 func parseInfoArgs() {
 	var expectedNumArgs int = 2
-	var err error
-
 	infoFlags := flag.NewFlagSet("info", flag.ExitOnError)
 	var matrixType *string = infoFlags.String("matrixType", "Weight", "Specify the type of position matrix. May be one of: Frequency, Probability, or Weight.")
-	var pfmPseudocounts *float64 = infoFlags.Float64("pfmPseudocounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM or PPM.")
+	var pfmPseudoCounts *float64 = infoFlags.Float64("pfmPseudoCounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM.")
+	var gcContent *float64 = flag.Float64("gcContent", 0.5, "Set the expected GC content of the target sequence.")
 	var threshold *float64 = infoFlags.Float64("threshold", 0.8, "Set the threshold value for motif matches. Motifs with scores above this value will be considered a match. Used for calculating cache size.")
+	var err error
 	err = infoFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	infoFlags.Usage = func() { infoUsage(infoFlags) }
@@ -55,7 +56,8 @@ func parseInfoArgs() {
 		InFile:       inFile,
 		OutFile:      outFile,
 		MatrixType:   *matrixType,
-		Pseudocounts: *pfmPseudocounts,
+		PseudoCounts: *pfmPseudoCounts,
+		GcContent:    *gcContent,
 		Threshold:    *threshold,
 	}
 
@@ -82,11 +84,11 @@ func pwmInfo(s InfoSettings) {
 	switch s.MatrixType {
 	case "Frequency":
 		records = motif.ReadJaspar(s.InFile, "Frequency")
-		records = motif.PfmSliceToPpmSlice(records, s.Pseudocounts)
-		records = motif.PpmSliceToPwmSlice(records)
+		records = motif.PfmSliceToPpmSlice(records, s.PseudoCounts)
+		records = motif.PpmSliceToPwmSlice(records, s.GcContent)
 	case "Probability":
 		records = motif.ReadJaspar(s.InFile, "Probability")
-		records = motif.PpmSliceToPwmSlice(records)
+		records = motif.PpmSliceToPwmSlice(records, s.GcContent)
 	case "Weight":
 		records = motif.ReadJaspar(s.InFile, "Weight")
 	default:
