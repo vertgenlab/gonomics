@@ -11,7 +11,7 @@ import (
 
 func usage() {
 	fmt.Print(
-		"simulateEvol - a suite of tools molecular evolution simulation.\n" +
+		"simulateEvol - a suite of tools for molecular evolution simulation.\n" +
 			"Select a subcommand to view options.\n" +
 			"Usage:\n" +
 			"\tsimulateEvol genic tree.newick in.fasta out.fasta\n" +

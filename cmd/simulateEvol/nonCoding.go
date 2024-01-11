@@ -14,6 +14,7 @@ import (
 	"os"
 )
 
+// NonCodingSettings defines usage settings for the simulateEvol nonCoding subcommand.
 type NonCodingSettings struct {
 	TreeFile               string
 	FastaFile              string
@@ -29,6 +30,7 @@ type NonCodingSettings struct {
 	NewickOut              string
 }
 
+// NonCodingUsage defines the usage statement for the simulateEvol nonCoding subcommand.
 func NonCodingUsage(nonCodingFlags *flag.FlagSet) {
 	fmt.Print(
 		"simulateEvol nonCoding - a tool to simulate molecular evolution in noncoding regions.\n" +
@@ -42,6 +44,7 @@ func NonCodingUsage(nonCodingFlags *flag.FlagSet) {
 	nonCodingFlags.PrintDefaults()
 }
 
+// parseNonCodingArgs is the main function of the simulateEvol nonCoding subcommand. It parses options and launches the NonCoding function.
 func parseNonCodingArgs() {
 	var expectedNumArgs int = 1
 	var err error
