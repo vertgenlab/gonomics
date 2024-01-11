@@ -8,24 +8,68 @@ import (
 )
 
 var SamToWigTests = []struct {
-	inFile           string
-	reference        string
-	outFile_expected string
-	fragLength       int
+	InFile       string
+	Reference    string
+	OutFile      string
+	ExpectedFile string
+	FragLength   int
+	DefaultValue float64
+	Deletions    bool
 }{
-	{"testdata/test1.sam", "testdata/test.chrom.sizes", "testdata/test1.wig", -1},
-	{"testdata/test2.sam", "testdata/test.chrom.sizes", "testdata/test2.wig", 30},
-	{"testdata/test1.bam", "testdata/test.chrom.sizes", "testdata/test1.wig", -1},
-	{"testdata/test2.bam", "testdata/test.chrom.sizes", "testdata/test2.wig", 30},
+	{InFile: "testdata/test1.sam",
+		Reference:    "testdata/test.chrom.sizes",
+		OutFile:      "testdata/tmp.test1.wig",
+		ExpectedFile: "testdata/test1.wig",
+		FragLength:   -1,
+		DefaultValue: 0,
+		Deletions:    false},
+	{InFile: "testdata/test2.sam",
+		Reference:    "testdata/test.chrom.sizes",
+		OutFile:      "testdata/tmp.test2.wig",
+		ExpectedFile: "testdata/test2.wig",
+		FragLength:   30,
+		DefaultValue: 0,
+		Deletions:    false},
+	{InFile: "testdata/test1.bam",
+		Reference:    "testdata/test.chrom.sizes",
+		OutFile:      "testdata/tmp.bam.wig",
+		ExpectedFile: "testdata/test1.wig",
+		FragLength:   -1,
+		DefaultValue: 0,
+		Deletions:    false},
+	{InFile: "testdata/test2.bam",
+		Reference:    "testdata/test.chrom.sizes",
+		OutFile:      "testdata/tmp.bamFrag.wig",
+		ExpectedFile: "testdata/test2.wig",
+		FragLength:   30,
+		DefaultValue: 0,
+		Deletions:    false},
+	{InFile: "testdata/test1.sam",
+		Reference:    "testdata/test.chrom.sizes",
+		OutFile:      "testdata/tmp.withDel.wig",
+		ExpectedFile: "testdata/test1.withDel.wig",
+		FragLength:   -1,
+		DefaultValue: 0,
+		Deletions:    true},
 }
 
 func TestSamToWig(t *testing.T) {
+	var s Settings
 	for _, v := range SamToWigTests {
-		samToWig(v.inFile, v.reference, "outFile_tmp.wig", v.fragLength)
-		if !fileio.AreEqual("outFile_tmp.wig", v.outFile_expected) {
-			t.Errorf("Error in samToWig")
+		s = Settings{
+			SamFileName:        v.InFile,
+			ChromSizesFileName: v.Reference,
+			OutFileName:        v.OutFile,
+			FragLength:         v.FragLength,
+			DefaultValue:       v.DefaultValue,
+			Deletions:          v.Deletions,
 		}
-		err := os.Remove("outFile_tmp.wig")
-		exception.PanicOnErr(err)
+		samToWig(s)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Error in samToWig")
+		} else {
+			err := os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
 	}
 }

@@ -51,6 +51,7 @@ func main() {
 	var enforceStrandMatch *bool = flag.Bool("enforceStrand", false, "If species A has the motif CCC, and the orthologous species B has sequence GGG, this is considered a match by default (as the motif is still there, just in revComp.\n"+
 		"This option enforces strand matching.")
 	var residualFilter *float64 = flag.Float64("residualFilter", 0, "The difference in motif scores between the two sequences must be at least this value to be retained in the output.")
+	var gcContent *float64 = flag.Float64("gcContent", 0.5, "Set the expected GC content of the target sequence.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -78,6 +79,7 @@ func main() {
 		OutputAsProportion: *outputAsProportion,
 		EnforceStrandMatch: *enforceStrandMatch,
 		ResidualFilter:     *residualFilter,
+		GcContent:          *gcContent,
 	}
 
 	tfMatchComp(s, inFile)

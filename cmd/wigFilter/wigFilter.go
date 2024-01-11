@@ -12,23 +12,25 @@ import (
 )
 
 type Settings struct {
-	InFile  string
-	OutFile string
-	Chrom   string
+	InFile       string
+	ChromSizes   string
+	OutFile      string
+	Chrom        string
+	DefaultValue float64
 }
 
 func wigFilter(s Settings) {
 	var pass bool
-	records := wig.Read(s.InFile)
-	var answer []wig.Wig = make([]wig.Wig, 0)
+	records := wig.Read(s.InFile, s.ChromSizes, s.DefaultValue)
+	var answer = make(map[string]wig.Wig)
 
-	for i := range records {
+	for currKey := range records {
 		pass = true
-		if s.Chrom != "" && records[i].Chrom != s.Chrom {
+		if s.Chrom != "" && records[currKey].Chrom != s.Chrom {
 			pass = false
 		}
 		if pass {
-			answer = append(answer, records[i])
+			answer[currKey] = records[currKey]
 		}
 	}
 	wig.Write(s.OutFile, answer)
@@ -38,14 +40,15 @@ func usage() {
 	fmt.Print(
 		"wigFilter - Returns a filtered wig based on option parameters.\n" +
 			"Usage:\n" +
-			"wigFilter input.wig output.wig\n" +
+			"wigFilter input.wig chrom.sizes output.wig\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs int = 2
+	var expectedNumArgs int = 3
 	var chrom *string = flag.String("chrom", "", "Retains wig entries with chromosome name matching this value.")
+	var defaultValue *float64 = flag.Float64("defaultValue", 0, "Specifies the value in the wig for missing data.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -57,11 +60,14 @@ func main() {
 	}
 
 	inFile := flag.Arg(0)
-	outFile := flag.Arg(1)
-	var s Settings = Settings{
-		InFile:  inFile,
-		OutFile: outFile,
-		Chrom:   *chrom,
+	chromSizes := flag.Arg(1)
+	outFile := flag.Arg(2)
+	var s = Settings{
+		InFile:       inFile,
+		ChromSizes:   chromSizes,
+		OutFile:      outFile,
+		Chrom:        *chrom,
+		DefaultValue: *defaultValue,
 	}
 
 	wigFilter(s)

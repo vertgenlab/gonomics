@@ -15,6 +15,7 @@ var tfMatchTests = []struct {
 	PropMatch          float64
 	Pseudocounts       float64
 	OutputAsProportion bool
+	GcContent          float64
 	ExpectedFile       string
 }{
 	{InFile: "testdata/chr1.upper.firstMb.fa",
@@ -24,6 +25,7 @@ var tfMatchTests = []struct {
 		PropMatch:          0.8,
 		Pseudocounts:       0.1,
 		OutputAsProportion: false,
+		GcContent:          0.5,
 		ExpectedFile:       "testdata/expected.tfMatch.bed"},
 }
 
@@ -38,6 +40,7 @@ func TestTfMatch(t *testing.T) {
 			MatrixFileType:     v.MatrixFileType,
 			PropMatch:          v.PropMatch,
 			Pseudocounts:       v.Pseudocounts,
+			GcContent:          v.GcContent,
 			OutputAsProportion: v.OutputAsProportion,
 		}
 		tfMatch(s)

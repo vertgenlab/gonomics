@@ -1,3 +1,6 @@
+// Package matrix provides tools for operations on matrices. This package relies heavily on
+// the gonum mat package, which implements high performance linear algebra operations.
+
 package matrix
 
 import (

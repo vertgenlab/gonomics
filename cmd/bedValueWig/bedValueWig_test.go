@@ -10,41 +10,81 @@ import (
 )
 
 var bedMaxWigTests = []struct {
-	inputBed        string
-	inputWig        string
-	inputChromSizes string
-	outputFile      string
-	expectedFile    string
-	minFlag         bool
-	averageFlag     bool
-	normFlag        bool
-	noDataValue     float64
+	InputBed        string
+	InputWig        string
+	InputChromSizes string
+	OutputFile      string
+	ExpectedFile    string
+	MinFlag         bool
+	AverageFlag     bool
+	NormFlag        bool
+	NoDataValue     float64
 }{
-	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testBMWOutput.bed", "testdata/testBMWExpected.bed", false, false, false, math.MaxFloat64},
-	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testBMWOutputNorm.bed", "testdata/testBMWExpectedNormFlagStep1.bed", false, false, true, math.MaxFloat64},
-	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testMinOutput.bed", "testdata/testMinExpected.bed", true, false, false, math.MaxFloat64},
-	{"testdata/testBed.bed", "testdata/startOneStepOne.wig", "testdata/fake.chrom.sizes", "testdata/testAverageOutput.bed", "testdata/testAverageExpected.bed", false, true, false, math.MaxFloat64},
-	{"testdata/testBed.bed", "testdata/testNoValue.wig", "testdata/fake.chrom.sizes", "testdata/testNoData.bed", "testdata/testNoDataExpected.bed", false, false, false, -10},
+	{InputBed: "testdata/testBed.bed",
+		InputWig:        "testdata/startOneStepOne.wig",
+		InputChromSizes: "testdata/fake.chrom.sizes",
+		OutputFile:      "testdata/testBMWOutput.bed",
+		ExpectedFile:    "testdata/testBMWExpected.bed",
+		MinFlag:         false,
+		AverageFlag:     false,
+		NormFlag:        false,
+		NoDataValue:     math.MaxFloat64},
+	{InputBed: "testdata/testBed.bed",
+		InputWig:        "testdata/startOneStepOne.wig",
+		InputChromSizes: "testdata/fake.chrom.sizes",
+		OutputFile:      "testdata/testBMWOutputNorm.bed",
+		ExpectedFile:    "testdata/testBMWExpectedNormFlagStep1.bed",
+		MinFlag:         false,
+		AverageFlag:     false,
+		NormFlag:        true,
+		NoDataValue:     math.MaxFloat64},
+	{InputBed: "testdata/testBed.bed",
+		InputWig:        "testdata/startOneStepOne.wig",
+		InputChromSizes: "testdata/fake.chrom.sizes",
+		OutputFile:      "testdata/testMinOutput.bed",
+		ExpectedFile:    "testdata/testMinExpected.bed",
+		MinFlag:         true,
+		AverageFlag:     false,
+		NormFlag:        false,
+		NoDataValue:     math.MaxFloat64},
+	{InputBed: "testdata/testBed.bed",
+		InputWig:        "testdata/startOneStepOne.wig",
+		InputChromSizes: "testdata/fake.chrom.sizes",
+		OutputFile:      "testdata/testAverageOutput.bed",
+		ExpectedFile:    "testdata/testAverageExpected.bed",
+		MinFlag:         false,
+		AverageFlag:     true,
+		NormFlag:        false,
+		NoDataValue:     math.MaxFloat64},
+	{InputBed: "testdata/testBed.bed",
+		InputWig:        "testdata/testNoValue.wig",
+		InputChromSizes: "testdata/fake.chrom.sizes",
+		OutputFile:      "testdata/testNoData.bed",
+		ExpectedFile:    "testdata/testNoDataExpected.bed",
+		MinFlag:         false,
+		AverageFlag:     false,
+		NormFlag:        false,
+		NoDataValue:     -10},
 }
 
 func TestBedValueWig(t *testing.T) {
 	var err error
 	for _, v := range bedMaxWigTests {
 		s := Settings{
-			Infile:      v.inputBed,
-			WigFile:     v.inputWig,
-			SizesFile:   v.inputChromSizes,
-			OutFile:     v.outputFile,
-			MinFlag:     v.minFlag,
-			AverageFlag: v.averageFlag,
-			NormFlag:    v.normFlag,
-			NoDataValue: v.noDataValue,
+			Infile:      v.InputBed,
+			WigFile:     v.InputWig,
+			SizesFile:   v.InputChromSizes,
+			OutFile:     v.OutputFile,
+			MinFlag:     v.MinFlag,
+			AverageFlag: v.AverageFlag,
+			NormFlag:    v.NormFlag,
+			NoDataValue: v.NoDataValue,
 		}
 		bedValueWig(s)
-		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
+		if !fileio.AreEqual(v.OutputFile, v.ExpectedFile) {
 			t.Errorf("Error in bedMaxWig, the output beds is not as expected")
 		} else {
-			err = os.Remove(v.outputFile)
+			err = os.Remove(v.OutputFile)
 			exception.PanicOnErr(err)
 		}
 	}
