@@ -16,6 +16,7 @@ type FormatSettings struct {
 	InType      string
 	OutType     string
 	PseudoCount float64
+	GcContent   float64
 }
 
 // formatUsage defines the usage statement for the pwmTools format subcommand.
@@ -40,6 +41,7 @@ func parseFormatArgs() {
 	var inType *string = formatFlags.String("inType", "Weight", "Specify the type of the input matrix file. Can be 'Frequency', 'Probability', or 'Weight'.")
 	var outType *string = formatFlags.String("outType", "Frequency", "Specify the type of the output matrix file. Can be 'Frequency', 'Probability', or 'Weight'.")
 	var pseudoCount *float64 = formatFlags.Float64("pfmPseudocounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM or PPM.")
+	var gcContent *float64 = formatFlags.Float64("gcContent", 0.5, "Set the expected GC content of the target sequence.")
 	err = formatFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	formatFlags.Usage = func() { formatUsage(formatFlags) }
@@ -59,6 +61,7 @@ func parseFormatArgs() {
 		InType:      *inType,
 		OutType:     *outType,
 		PseudoCount: *pseudoCount,
+		GcContent:   *gcContent,
 	}
 
 	pwmFormat(s)
@@ -67,6 +70,10 @@ func parseFormatArgs() {
 // pwmFormat parses an input Position Matrix file and formats the file according to user-defined settings.
 // Currently, this supports converting between PFM, PPM, and PWM motif representations.
 func pwmFormat(s FormatSettings) {
+	if s.GcContent < 0 || s.GcContent > 1 {
+		log.Fatalf("Error: gcContent must be a value between 0 and 1.\n")
+	}
+
 	var records = motif.ReadJaspar(s.InFile, s.InType)
 	switch s.InType {
 	case "Frequency":
@@ -77,7 +84,7 @@ func pwmFormat(s FormatSettings) {
 			records = motif.PfmSliceToPpmSlice(records, s.PseudoCount)
 		case "Weight":
 			records = motif.PfmSliceToPpmSlice(records, s.PseudoCount)
-			records = motif.PpmSliceToPwmSlice(records)
+			records = motif.PpmSliceToPwmSlice(records, s.GcContent)
 		default:
 			log.Fatalf("Error: unrecognized output motif file format. Options are 'Frequency', 'Probability', and 'Weight'. Found: %v.\n", s.OutType)
 		}
@@ -88,7 +95,7 @@ func pwmFormat(s FormatSettings) {
 		case "Probability":
 			//nothing to do here, but also no need to fatal
 		case "Weight":
-			records = motif.PpmSliceToPwmSlice(records)
+			records = motif.PpmSliceToPwmSlice(records, s.GcContent)
 		default:
 			log.Fatalf("Error: Unrecognized output matrix type. Options are 'Frequency', 'Probability', or 'Weight'. Found: %v.\n", s.OutType)
 		}

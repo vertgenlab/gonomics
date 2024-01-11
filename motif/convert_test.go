@@ -42,10 +42,17 @@ var PpmTests = []struct {
 	PpmFile      string
 	OutputFile   string
 	ExpectedFile string
+	GcContent    float64
 }{
 	{PpmFile: "testdata/expected.Ppm.txt",
 		OutputFile:   "testdata/tmp.Pwm.txt",
-		ExpectedFile: "testdata/expected.Pwm.txt"},
+		ExpectedFile: "testdata/expected.Pwm.txt",
+		GcContent:    0.5},
+	{PpmFile: "testdata/expected.Ppm.txt",
+		OutputFile:   "testdata/humGc.Pwm.txt",
+		ExpectedFile: "testdata/expected.humGc.Pwm.txt",
+		GcContent:    0.41,
+	},
 }
 
 func TestPpmSliceToPwmSlice(t *testing.T) {
@@ -54,7 +61,7 @@ func TestPpmSliceToPwmSlice(t *testing.T) {
 	var answer []PositionMatrix
 	for _, v := range PpmTests {
 		records = ReadJaspar(v.PpmFile, "Probability")
-		answer = PpmSliceToPwmSlice(records)
+		answer = PpmSliceToPwmSlice(records, v.GcContent)
 		WriteJaspar(v.OutputFile, answer)
 		if !fileio.AreEqual(v.OutputFile, v.ExpectedFile) {
 			t.Errorf("Error in PpmSliceToPwmSlice. Output was not as expected.")

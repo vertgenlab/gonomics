@@ -51,6 +51,7 @@ var FormatTests = []struct {
 	InType       string
 	OutType      string
 	PseudoCount  float64
+	GcContent    float64
 	ExpectedFile string
 }{
 	{InFile: "testdata/jaspar.vertebrate.txt.gz",
@@ -58,6 +59,7 @@ var FormatTests = []struct {
 		InType:       "Frequency",
 		OutType:      "Probability",
 		PseudoCount:  0,
+		GcContent:    0.5,
 		ExpectedFile: "testdata/expected.jaspar.ppm.txt",
 	},
 	{InFile: "testdata/jaspar.vertebrate.txt.gz",
@@ -65,6 +67,7 @@ var FormatTests = []struct {
 		InType:       "Frequency",
 		OutType:      "Probability",
 		PseudoCount:  40,
+		GcContent:    0.5,
 		ExpectedFile: "testdata/expected.highPseudo.jaspar.ppm.txt",
 	},
 	{InFile: "testdata/jaspar.vertebrate.txt.gz",
@@ -72,6 +75,7 @@ var FormatTests = []struct {
 		InType:       "Frequency",
 		OutType:      "Weight",
 		PseudoCount:  0.2,
+		GcContent:    0.5,
 		ExpectedFile: "testdata/expected.jaspar.pwm.txt",
 	},
 }
@@ -86,6 +90,7 @@ func TestPwmFormat(t *testing.T) {
 			InType:      v.InType,
 			OutType:     v.OutType,
 			PseudoCount: v.PseudoCount,
+			GcContent:   v.GcContent,
 		}
 		pwmFormat(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
@@ -101,14 +106,16 @@ var InfoTests = []struct {
 	InFile       string
 	OutFile      string
 	MatrixType   string
-	Pseudocounts float64
+	PseudoCounts float64
+	GcContent    float64
 	Threshold    float64
 	ExpectedFile string
 }{
 	{InFile: "testdata/jaspar.vertebrate.txt.gz",
 		OutFile:      "testdata/jaspar.vertebrate.info.txt",
 		MatrixType:   "Frequency",
-		Pseudocounts: 0.1,
+		PseudoCounts: 0.1,
+		GcContent:    0.5,
 		Threshold:    0.8,
 		ExpectedFile: "testdata/expected.info.txt",
 	},
@@ -122,8 +129,9 @@ func TestPwmInfo(t *testing.T) {
 			InFile:       v.InFile,
 			OutFile:      v.OutFile,
 			MatrixType:   v.MatrixType,
+			PseudoCounts: v.PseudoCounts,
+			GcContent:    v.GcContent,
 			Threshold:    v.Threshold,
-			Pseudocounts: v.Pseudocounts,
 		}
 		pwmInfo(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

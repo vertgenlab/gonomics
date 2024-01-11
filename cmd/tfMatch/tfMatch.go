@@ -16,6 +16,7 @@ type Settings struct {
 	PropMatch          float64
 	Pseudocounts       float64
 	OutputAsProportion bool
+	GcContent          float64
 }
 
 func tfMatch(s Settings) {
@@ -26,10 +27,10 @@ func tfMatch(s Settings) {
 	case "Frequency":
 		motifs = motif.ReadJaspar(s.MatrixFile, "Frequency")
 		motifs = motif.PfmSliceToPpmSlice(motifs, s.Pseudocounts)
-		motifs = motif.PpmSliceToPwmSlice(motifs)
+		motifs = motif.PpmSliceToPwmSlice(motifs, s.GcContent)
 	case "Probability":
 		motifs = motif.ReadJaspar(s.MatrixFile, "Probability")
-		motifs = motif.PpmSliceToPwmSlice(motifs)
+		motifs = motif.PpmSliceToPwmSlice(motifs, s.GcContent)
 	case "Weight":
 		motifs = motif.ReadJaspar(s.MatrixFile, "Weight")
 	default:
@@ -57,6 +58,7 @@ func main() {
 	var matrixFileType *string = flag.String("matrixFileType", "Frequency", "Specify the type of position matrix file. Can be 'Frequency', 'Probability', or 'Weight'.")
 	var pfmPseudocounts *float64 = flag.Float64("pfmPseudocounts", 0.1, "If a Position Frequency Matrix is provided, this pseudocount value will be applied when converting to a PWM.")
 	var outputAsProportion *bool = flag.Bool("outputAsProportion", false, "Display the output motif scores as proportions of the consensus score. Motif difference score will thus be a change in consensus proportion.")
+	var gcContent *float64 = flag.Float64("gcContent", 0.5, "Set the expected GC content of the target sequence.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -79,6 +81,7 @@ func main() {
 		PropMatch:          *propMatch,
 		Pseudocounts:       *pfmPseudocounts,
 		OutputAsProportion: *outputAsProportion,
+		GcContent:          *gcContent,
 	}
 
 	tfMatch(s)
