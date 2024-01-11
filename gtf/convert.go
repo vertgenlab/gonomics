@@ -27,7 +27,7 @@ func GenesToTssBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo, merge b
 	return answer
 }
 
-// GenesToCanonicalTrancriptsTssBed turns an input map of [geneId]*Gene structs, finds the canonical
+// GenesToCanonicalTranscriptsTssBed turns an input map of [geneId]*Gene structs, finds the canonical
 // transcript (defined as the longest coding sequence), and turns the TSS of this trancript into a Bed
 // struct.
 func GenesToCanonicalTranscriptsTssBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo) []bed.Bed {
@@ -45,7 +45,7 @@ func GeneToCanonicalTssBed(g Gene, c map[string]chromInfo.ChromInfo) bed.Bed {
 }
 
 // GenesToCanonicalBeds converts all genes in a map[string]*Gene to a []bed.Bed, where each bed
-// represeents the promoter region of the canonical transcript, defined by user-specified upstream
+// represents the promoter region of the canonical transcript, defined by user-specified upstream
 // and downstream distances from the TSS.
 func GenesToCanonicalBeds(g map[string]*Gene, c map[string]chromInfo.ChromInfo, upstream int, downstream int) []bed.Bed {
 	var answer []bed.Bed
