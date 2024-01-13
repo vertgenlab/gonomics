@@ -123,7 +123,7 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 				pairwise,
 				reference+"."+species,
 				tName,
-				qName+"."+tName+".axt") + " --scores=" + matrix + " --action:target=multiple" + " --format=axt " + par
+				qName+"."+tName+".axt") + " --scores=" + matrix + " --action:target=multiple" + " --allocate:traceback=400M" + " --format=axt " + par
 			theseLines = append(theseLines, currLine)
 		}
 	}

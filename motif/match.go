@@ -77,10 +77,10 @@ func RapidMatch(motifs []PositionMatrix, records []fasta.Fasta, propMatch float6
 		if !couldScoreConsensus {
 			log.Fatalf("Error in buildKmerHash. Could not score consensus sequence.")
 		}
-		kmerHash = buildKmerHash(motifs[i], propMatch)
+		kmerHash = BuildKmerHash(motifs[i], propMatch)
 		scanGenome(records, kmerHash, consensusScore, motifs[i].Name, motifLen, out, bed.Positive, outputAsProportion)
 		revCompMotif = ReverseComplement(motifs[i])
-		kmerHash = buildKmerHash(revCompMotif, propMatch)
+		kmerHash = BuildKmerHash(revCompMotif, propMatch)
 		scanGenome(records, kmerHash, consensusScore, motifs[i].Name, motifLen, out, bed.Negative, outputAsProportion)
 	}
 
@@ -249,9 +249,9 @@ func rankTensorToString(m [][]rankTensorElement) string {
 	return answer
 }
 
-// buildKmerHash produces a hash mapping 2bit encoded kmer sequences to their corresponding motif score for a PositionMatrix.
+// BuildKmerHash produces a hash mapping 2bit encoded kmer sequences to their corresponding motif score for a PositionMatrix.
 // Only kmers with a motif score above an input thresholdProportion are stored in the output map.
-func buildKmerHash(p PositionMatrix, thresholdProportion float64) map[uint64]float64 {
+func BuildKmerHash(p PositionMatrix, thresholdProportion float64) map[uint64]float64 {
 	var answer = make(map[uint64]float64)
 	var currSeq = ConsensusSequence(p, false)
 	consensusValue, _, couldScoreConsensus := ScoreWindow(p, currSeq.Seq, 0)

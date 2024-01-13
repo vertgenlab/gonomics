@@ -1,12 +1,14 @@
 package sam
 
 import (
-	"log"
-	"math"
-
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
+	"github.com/vertgenlab/gonomics/numbers/parse"
+	"log"
+	"math"
+	"strings"
 )
 
 type DiploidBase byte
@@ -263,6 +265,75 @@ func MakeDiploidBasePriorCache(delta float64, gamma float64) [][]float64 {
 		{tvSquared, twoOneMinusDeltaTv, twoTvSquared, twoTvTr, oneMinusDeltaSquared, twoOneMinusDeltaTv, twoOneMinusDeltaTr, tvSquared, twoTvTr, trSquared},
 		{trSquared, twoTvTr, twoOneMinusDeltaTr, twoTvTr, tvSquared, twoOneMinusDeltaTv, twoTvSquared, oneMinusDeltaSquared, twoOneMinusDeltaTv, tvSquared},
 		{tvSquared, twoTvTr, twoTvSquared, twoOneMinusDeltaTv, trSquared, twoTvTr, twoOneMinusDeltaTr, twoTvSquared, twoOneMinusDeltaTv, oneMinusDeltaSquared}}
+}
+
+func MakeDiploidBaseEmpiricalPriorCache(inFile string) [][]float64 {
+	lines := fileio.Read(inFile)
+	if len(lines) != 5 {
+		log.Fatalf("Error: expected five lines in empirical prior file. Found: %v.\n", len(lines))
+	}
+	wordsA := strings.Split(lines[1], "\t")
+	if len(wordsA) != 11 {
+		log.Fatalf("Error: expected 11 fields in empirical prior file, row 2. Found: %v.\n", len(wordsA))
+	}
+	wordsC := strings.Split(lines[2], "\t")
+	if len(wordsC) != 11 {
+		log.Fatalf("Error: expected 11 fields in empirical prior file, row 3. Found: %v.\n", len(wordsC))
+	}
+	wordsG := strings.Split(lines[3], "\t")
+	if len(wordsG) != 11 {
+		log.Fatalf("Error: expected 11 fields in empirical prior file, row 4. Found: %v.\n", len(wordsG))
+	}
+	wordsT := strings.Split(lines[4], "\t")
+	if len(wordsT) != 11 {
+		log.Fatalf("Error: expected 11 fields in empirical prior file, row 5. Found: %v.\n", len(wordsT))
+	}
+	return [][]float64{
+		{parse.StringToFloat64(wordsA[1]),
+			parse.StringToFloat64(wordsA[2]),
+			parse.StringToFloat64(wordsA[3]),
+			parse.StringToFloat64(wordsA[4]),
+			parse.StringToFloat64(wordsA[5]),
+			parse.StringToFloat64(wordsA[6]),
+			parse.StringToFloat64(wordsA[7]),
+			parse.StringToFloat64(wordsA[8]),
+			parse.StringToFloat64(wordsA[9]),
+			parse.StringToFloat64(wordsA[10]),
+		},
+		{parse.StringToFloat64(wordsC[1]),
+			parse.StringToFloat64(wordsC[2]),
+			parse.StringToFloat64(wordsC[3]),
+			parse.StringToFloat64(wordsC[4]),
+			parse.StringToFloat64(wordsC[5]),
+			parse.StringToFloat64(wordsC[6]),
+			parse.StringToFloat64(wordsC[7]),
+			parse.StringToFloat64(wordsC[8]),
+			parse.StringToFloat64(wordsC[9]),
+			parse.StringToFloat64(wordsC[10]),
+		},
+		{parse.StringToFloat64(wordsG[1]),
+			parse.StringToFloat64(wordsG[2]),
+			parse.StringToFloat64(wordsG[3]),
+			parse.StringToFloat64(wordsG[4]),
+			parse.StringToFloat64(wordsG[5]),
+			parse.StringToFloat64(wordsG[6]),
+			parse.StringToFloat64(wordsG[7]),
+			parse.StringToFloat64(wordsG[8]),
+			parse.StringToFloat64(wordsG[9]),
+			parse.StringToFloat64(wordsG[10]),
+		},
+		{parse.StringToFloat64(wordsT[1]),
+			parse.StringToFloat64(wordsT[2]),
+			parse.StringToFloat64(wordsT[3]),
+			parse.StringToFloat64(wordsT[4]),
+			parse.StringToFloat64(wordsT[5]),
+			parse.StringToFloat64(wordsT[6]),
+			parse.StringToFloat64(wordsT[7]),
+			parse.StringToFloat64(wordsT[8]),
+			parse.StringToFloat64(wordsT[9]),
+			parse.StringToFloat64(wordsT[10]),
+		},
+	}
 }
 
 // MakeDiploidBaseFlatPriorCache returns an uninformative prior distribution for genotypes.

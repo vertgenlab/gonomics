@@ -86,6 +86,16 @@ func bedFilter(s Settings) {
 				pass = false
 			}
 		}
+		if s.NameEquals != "" {
+			if curr.Name != s.NameEquals {
+				pass = false
+			}
+		}
+		if s.NameNotEquals != "" {
+			if curr.Name == s.NameNotEquals {
+				pass = false
+			}
+		}
 		if pass && s.SubSet < 1.0 {
 			r = rand.Float64()
 			if r > s.SubSet {
@@ -123,6 +133,8 @@ type Settings struct {
 	MaxEnd                int
 	MinNameFloat          float64
 	MaxNameFloat          float64
+	NameEquals            string
+	NameNotEquals         string
 	MinAnnotationFloat    float64
 	MaxAnnotationFloat    float64
 	AnnotationFilterField int
@@ -143,6 +155,8 @@ func main() {
 	var maxEnd *int = flag.Int("maxEnd", numbers.MaxInt, "Specifies the maximum ending position of the region.")
 	var minNameFloat *float64 = flag.Float64("minNameFloat", -1*math.MaxFloat64, "Specifies the minimum floating point number value for bed entries where floating point numbers are stored in the name field.")
 	var maxNameFloat *float64 = flag.Float64("maxNameFloat", math.MaxFloat64, "Specifies the maximum floating point number value for bed entries where floating point numbers are stored in the name field.")
+	var nameEquals *string = flag.String("nameEquals", "", "Returns all bed entries with a name field that matches the input.")
+	var nameNotEquals *string = flag.String("nameNotEquals", "", "Returns all bed entries with a name field that doesn't match the input.")
 	var minAnnotationFloat *float64 = flag.Float64("minAnnotationFloat", -1*math.MaxFloat64, "Specifies the minimum floating point number value for bed entries where floating point numbers are stored in the an annotation field. Annotation field for filtering can be specified with -annotationFilterField.")
 	var maxAnnotationFloat *float64 = flag.Float64("maxAnnotationFloat", math.MaxFloat64, "Specifies the maximum floating point number value for bed entries where floating point numbers are stored in the an annotation field. Annotation field for filtering can be specified with -annotationFilterField.")
 	var annotationFilterField *int = flag.Int("annotationFilterField", 0, "Specify which annotation field (0-based) will be used for filtering with min/maxAnnotationFloat.")
@@ -173,6 +187,8 @@ func main() {
 		MaxEnd:                *maxEnd,
 		MinNameFloat:          *minNameFloat,
 		MaxNameFloat:          *maxNameFloat,
+		NameEquals:            *nameEquals,
+		NameNotEquals:         *nameNotEquals,
 		MinAnnotationFloat:    *minAnnotationFloat,
 		MaxAnnotationFloat:    *maxAnnotationFloat,
 		AnnotationFilterField: *annotationFilterField,

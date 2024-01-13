@@ -1,4 +1,4 @@
-##SourceDir:/Users/danielsnellings/go/src/github.com/vertgenlab/gonomics/cmd/
+##SourceDir:/Users/dickinsonia/go/src/github.com/vertgenlab/gonomics/cmd/
 ##CmdName:DEPRECATED
 ##CmdName:alleleSplit
 ##CmdName:assemblyStats
@@ -13,6 +13,8 @@
 ##CmdName:bedMinimumDistanceName
 ##CmdName:bedOverlapByWindow
 ##CmdName:bedShear
+##CmdName:bedSimilarity
+##CmdName:bedSplit
 ##CmdName:bedToAminoAcid
 ##CmdName:bedToFasta
 ##CmdName:bedToWig
@@ -23,6 +25,7 @@
 ##CmdName:callVariants
 ##CmdName:catMultiFa
 ##CmdName:cigarToBed
+##CmdName:digestGenome
 ##CmdName:divergenceSpectrum
 ##CmdName:dotToNewick
 ##CmdName:drawNewickTree
@@ -41,7 +44,10 @@
 ##CmdName:filterGenotypes
 ##CmdName:findAndReplace
 ##CmdName:formatIdeogram
+##CmdName:gafFilter
+##CmdName:geneAssignmentStats
 ##CmdName:geneIdToName
+##CmdName:getPromoter
 ##CmdName:girafCompress
 ##CmdName:girafSimulate
 ##CmdName:girafSort
@@ -71,11 +77,13 @@
 ##CmdName:multiFaReduce
 ##CmdName:multiFaToChain
 ##CmdName:multiFaToVcf
+##CmdName:oboTools
 ##CmdName:overlapEnrichments
 ##CmdName:pileup
 ##CmdName:plotFunctions
 ##CmdName:prcompFormat
 ##CmdName:proximityBlockVcf
+##CmdName:pwmTools
 ##CmdName:quickOrthologs
 ##CmdName:randSeq
 ##CmdName:reconstructSeq
@@ -100,6 +108,8 @@
 ##CmdName:sortGraph
 ##CmdName:statCalc
 ##CmdName:strawToBedpe
+##CmdName:tfMatch
+##CmdName:tfMatchComp
 ##CmdName:vcfAfs
 ##CmdName:vcfAncestorAnnotation
 ##CmdName:vcfEffectPrediction
@@ -140,11 +150,11 @@
      [32mmafToMultiFa[0m                  [36mconvert a maf alignment into a multiple fasta alignment[0m
      [32mmultiFaToChain[0m                [36mConvert a pairwise multiFa format alignment to a chain file. First species is the target by default.[0m
      [32mmultiFaToVcf[0m                  [36mGenerates a VCF file from an input pairwise multiFa alignment with the first entry as the reference.Note that deletions in the first position of an alignment will not appear in the output Vcf.[0m
-     [32msamAssembler[0m                  [36mReference-based diploid assembly of aligned short reads.Can be used in two modes: 'build' generates diploid assemblies.'score' validates assembly accuracy with a five way alignment including the known divergent sequencesIn 'score', the user specifies a list of filenames, corresponding to each multiFa to score together (usually one file per chromosome).For score, type may be chosen from the following: baseMatrix, baseMatrixByRefBase[0m
+     [32msamAssembler[0m                  [36mReference-based diploid assembly of aligned short reads.[0m
      [32msamConsensus[0m                  [36mGenerates a fasta file from a sam over a reference sequence.[0m
      [32msamToBed[0m                      [36mConverts sam to bed[0m
      [32msamToWig[0m                      [36mConverts sam or bam to wig[0m
-     [32mstrawToBedpe[0m                  [36mconvert the output of the aidenlab's straw command to a bedpe format.[0m
+     [32mstrawToBedpe[0m                  [36mConvert HiC contact maps in straw format to significant bedpe contact peak calls.[0m
                                             
 [31mData Simulation[0m                        
      [32mgirafSimulate[0m                 [36mReturns a file of giraf alignments for a input genome graph.[0m
@@ -182,6 +192,9 @@
      [32mfastqFilter[0m                   [36mReturns a filtered fastq based on option parameters.[0m
      [32mfastqFormat[0m                   [36mOptions alter fastq file formatting.[0m
                                             
+[31mGTF Tools[0m                              
+     [32mgetPromoter[0m                   [36mgetPromoter will take a list of unique genes of interest and return a bed file of the promoter region proceeding[0m
+                                            
 [31mGeneral Tools[0m                          
      [32maxTools[0m                       [36mutilities for axt alignments[0m
      [32mfindAndReplace[0m                [36mfinds values in a file and replaces them, processes the input as a string.[0m
@@ -189,7 +202,7 @@
      [32mgreat3d[0m                       [36mPerform functional enrichment analysis by associating genomic regions[0m
      [32mintervalContacts[0m              [36mReturns all regions that contact input genomic regions. Contacts are specified by an input bedpe file.[0m
      [32mintervalOverlap[0m               [36mA tool to find non/overlapping genomic regions[0m
-     [32mintervalSubsetMatrix[0m          [36mProduces a binary matrix for accessibility breadth analysis.[0m
+     [32mintervalSubsetMatrix[0m          [36mProduces a matrix for accessibility breadth analysis.[0m
      [32mlastZWriter[0m                   [36mastZWriter was designed to write out lastZ pairwise inputs by contig where multiple references are being used. This function writes a text file where each line is an input for a lastZ pairwise alignment. It requires that each genome be broken with the 'byname' option of 'faSplit' in kentutils and named in the convention 'assemblyName.byChrom'. Within the parent directory of the byChrom directories, lastZWriter will build a directory tree for the outputs of lastZ. At the same level of the byChrom files it will create a set of directories with the naming convention reference.aligned within which will be directories for each contig of the reference genome. For each species being aligned to that reference lastZWriter will specify that lastZ should create an axt output file 'pairwiseDir/ref.species/referenceContig/aligningSpeciesByChromName.referenceByChromName.axt' that refers to the two fasta files used in the alignment. LastZWriter also requires a list of all species in the alignment, as well as a separate text file with a list of reference species. Matrices are hardcoded absolute paths by default in this version. In the default function matrices are assigned based on the distance between the reference and aligning species from each other as calculated by the PHAST all_dists function.However, the user has the option to specify a bool (option m) as false and provide a path in which they would like the needed matrices to be hardcoded. As an alternative to the all_dists function, or if there isn't an available tree of the necessary species, this function can also take a file to replace the specified allDists file. The first two columns of which would need to be every possible combination of their alignment (find an example in gonomics/lastZWriter/testdata directory). This function can be used directly within the terminal, but would be easiest to work with in a shell wrapper where inputs can be referred to in variables.[0m
      [32mliftCoordinates[0m               [36mLifts a compatible file format between assembly coordinates.[0m
      [32mquickOrthologs[0m                [36mFind corresponding orthologous transcription startsites.[0m
@@ -202,6 +215,12 @@
 [31mLinear Alignment Tools[0m                 
      [32mglobalAlignment[0m               [36mAlign 2 .fasta files, each with only 1 sequence[0m
      [32mglobalAlignmentAnchor[0m         [36moperates on 2 species, takes alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)[0m
+                                            
+[31mMotif Tools[0m                            
+     [32mpwmTools[0m                      [36ma collection of tools for manipulating position matrices.[0m
+                                            
+[31mOntology Tools[0m                         
+     [32mgafFilter[0m                     [36mgafFilter[0m
                                             
 [31mSAM Tools[0m                              
      [32mpileup[0m                        [36mCount bases from sequencing data[0m
@@ -261,3 +280,10 @@
 [31mUncategorized[0m                          
      [32mDEPRECATED[0m                    [36mThis directory contains deprecated commands, preserved for backwards compatability.[0m
      [32mbedShear[0m                      [36mSplit bed entries into smaller fragment bed entries.[0m
+     [32mbedSimilarity[0m                 [36m- Takes in 2 bed files or a list of bed files and gives similarity statistics based on number of overlapsfor the input bed files.[0m
+     [32mbedSplit[0m                      [36m[0m
+     [32mdigestGenome[0m                  [36m- Create a bed file of restriction fragments from an input FASTA file and a restriction enzyme recognition sequence[0m
+     [32mgeneAssignmentStats[0m           [36msage:[0m
+     [32moboTools[0m                      [36ma collection of tools for manipulating files in the Open Biomedical Ontologies (OBO) file format.[0m
+     [32mtfMatch[0m                       [36mGenome-wide scanning of TFBS occurrences.Input DNA sequences must be upper case.[0m
+     [32mtfMatchComp[0m                   [36mCompare the motif profiles between two input aligned genomic sequences.Output lines are as follows:[0m

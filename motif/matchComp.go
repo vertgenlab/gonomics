@@ -25,6 +25,7 @@ type MatchCompSettings struct {
 	OutputAsProportion bool
 	EnforceStrandMatch bool
 	ResidualFilter     float64
+	GcContent          float64
 }
 
 func MatchComp(s MatchCompSettings) {
@@ -40,10 +41,10 @@ func MatchComp(s MatchCompSettings) {
 	case "Frequency":
 		motifs = ReadJaspar(s.MotifFile, "Frequency")
 		motifs = PfmSliceToPpmSlice(motifs, s.Pseudocounts)
-		motifs = PpmSliceToPwmSlice(motifs)
+		motifs = PpmSliceToPwmSlice(motifs, s.GcContent)
 	case "Probability":
 		motifs = ReadJaspar(s.MotifFile, "Probability")
-		motifs = PpmSliceToPwmSlice(motifs)
+		motifs = PpmSliceToPwmSlice(motifs, s.GcContent)
 	case "Weight":
 		motifs = ReadJaspar(s.MotifFile, "Weight")
 	default:
@@ -65,11 +66,11 @@ func MatchComp(s MatchCompSettings) {
 
 		altEndsConsidered := make(map[int]bool, 0)
 
-		kmerHash = buildKmerHash(motifs[i], s.PropMatch)
+		kmerHash = BuildKmerHash(motifs[i], s.PropMatch)
 		scanRefSequenceComp(s.Records, kmerHash, motifs[i], s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Positive, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered, s.ResidualFilter)
 
 		revCompMotif = ReverseComplement(motifs[i])
-		revKmerHash = buildKmerHash(revCompMotif, s.PropMatch)
+		revKmerHash = BuildKmerHash(revCompMotif, s.PropMatch)
 		scanRefSequenceComp(s.Records, revKmerHash, revCompMotif, s.ChromName, out, s.ResidualWindowSize, consensusScore, bed.Negative, s.RefStart, s.EnforceStrandMatch, s.OutputAsProportion, altEndsConsidered, s.ResidualFilter)
 
 		//now we scan the alt sequences for any motifs lost in ref

@@ -6,8 +6,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/fastq"
 	"log"
+	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/vertgenlab/gonomics/axt"
@@ -23,16 +26,18 @@ import (
 func usage() {
 	fmt.Print(
 		"mergesort - Executes an external merge sort of the input file based on desired sort criteria. \n" +
-			"\t The input file should have a proper file extension depending on the input file type.\n" +
+			"\tThe input file should have a proper file extension depending on the input file type.\n" +
 			"\tDefault sort criteria is byGenomicCoordinates. Chromosome -> StartPos -> EndPos\n" +
+			"\tExcept in the case of fastq files, where the file is sorted by read name.\n" +
+			"\tCurrent accepted file types: BED, VCF, SAM, AXT, FASTQ\n" +
 			"Usage:\n" +
 			" mergesort [options] input.filetype outputFile\n")
 	flag.PrintDefaults()
 }
 
-func axtSort(infile, outfile string, numRecordsPerChunk int) {
+func axtSort(infile, outfile string, numRecordsPerChunk int, tmpDir string) {
 	data, header := axt.GoReadToChan(infile)
-	out := sort.GoExternalMergeSort(data, numRecordsPerChunk, func(a, b axt.Axt) bool {
+	out := sort.GoExternalMergeSort(data, numRecordsPerChunk, tmpDir, func(a, b axt.Axt) bool {
 		switch {
 		case a.RName < b.RName:
 			return true
@@ -62,9 +67,9 @@ func axtSort(infile, outfile string, numRecordsPerChunk int) {
 	exception.PanicOnErr(err)
 }
 
-func bedSort(infile, outfile string, numRecordsPerChunk int) {
+func bedSort(infile, outfile string, numRecordsPerChunk int, tmpDir string) {
 	data := bed.GoReadToChan(infile)
-	out := sort.GoExternalMergeSort(data, numRecordsPerChunk, func(a, b bed.Bed) bool {
+	out := sort.GoExternalMergeSort(data, numRecordsPerChunk, tmpDir, func(a, b bed.Bed) bool {
 		switch {
 		case a.Chrom < b.Chrom:
 			return true
@@ -88,9 +93,9 @@ func bedSort(infile, outfile string, numRecordsPerChunk int) {
 	exception.PanicOnErr(err)
 }
 
-func vcfSort(infile, outfile string, numRecordsPerChunk int) {
+func vcfSort(infile, outfile string, numRecordsPerChunk int, tmpDir string) {
 	data, header := vcf.GoReadToChan(infile)
-	out := sort.GoExternalMergeSort(data, numRecordsPerChunk, func(a, b vcf.Vcf) bool {
+	out := sort.GoExternalMergeSort(data, numRecordsPerChunk, tmpDir, func(a, b vcf.Vcf) bool {
 		switch {
 		case a.Chr < b.Chr:
 			return true
@@ -114,17 +119,22 @@ func vcfSort(infile, outfile string, numRecordsPerChunk int) {
 	exception.PanicOnErr(err)
 }
 
-func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string) {
+func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string, tmpDir string) {
+	var err error
 	data, header := sam.GoReadToChan(infile)
 	var out <-chan sam.Sam
 	if sortCriteria == "singleCellBx" {
-		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, func(a, b sam.Sam) bool {
+		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, tmpDir, func(a, b sam.Sam) bool {
 			iSingle := sam.ToSingleCellAlignment(a)
 			jSingle := sam.ToSingleCellAlignment(b)
 			return dna.BasesToString(iSingle.Bx) < dna.BasesToString(jSingle.Bx)
 		})
+	} else if sortCriteria == "readName" {
+		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, tmpDir, func(a, b sam.Sam) bool {
+			return a.QName < b.QName
+		})
 	} else {
-		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, func(a, b sam.Sam) bool {
+		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, tmpDir, func(a, b sam.Sam) bool {
 			switch {
 			case a.RName < b.RName:
 				return true
@@ -138,15 +148,39 @@ func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string
 
 	o := fileio.EasyCreate(outfile)
 	if len(header.Text) != 0 {
-		_, err := fmt.Fprintln(o, strings.Join(header.Text, "\n"))
+		_, err = fmt.Fprintln(o, strings.Join(header.Text, "\n"))
 		exception.PanicOnErr(err)
 	}
 	for r := range out {
 		sam.WriteToFileHandle(o, r)
 	}
 
-	err := o.Close()
+	err = o.Close()
 	exception.PanicOnErr(err)
+}
+
+func fastqSort(inFile string, outFile string, numRecordsPerChunk int, tmpDir string) {
+	//detect if PE mode
+	peIn := strings.Split(inFile, ",")
+	peOut := strings.Split(outFile, ",")
+
+	for file := range peIn {
+		var outChan <-chan fastq.Fastq
+
+		out := fileio.EasyCreate(peOut[file])
+		data := fastq.GoReadToChan(peIn[file])
+
+		outChan = sort.GoExternalMergeSort(data, numRecordsPerChunk, tmpDir, func(a, b fastq.Fastq) bool {
+			return a.Name < b.Name
+		})
+
+		for fq := range outChan {
+			fastq.WriteToFileHandle(out, fq)
+		}
+
+		err := out.Close()
+		exception.PanicOnErr(err)
+	}
 }
 
 // TODO remove giraf pointers and uncomment
@@ -194,7 +228,7 @@ func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string
 //	exception.PanicOnErr(err)
 //}
 
-func mergeSort(filename string, outFile string, numRecordsPerChunk int, sortCriteria string) {
+func mergeSort(filename string, outFile string, numRecordsPerChunk int, sortCriteria string, tmpDir string) {
 	// How the file is read is dependent on the file extension
 	filetype := path.Ext(filename)
 
@@ -205,13 +239,15 @@ func mergeSort(filename string, outFile string, numRecordsPerChunk int, sortCrit
 
 	switch filetype {
 	case ".axt":
-		axtSort(filename, outFile, numRecordsPerChunk)
+		axtSort(filename, outFile, numRecordsPerChunk, tmpDir)
 	case ".bed":
-		bedSort(filename, outFile, numRecordsPerChunk)
+		bedSort(filename, outFile, numRecordsPerChunk, tmpDir)
 	case ".vcf":
-		vcfSort(filename, outFile, numRecordsPerChunk)
-	case ".sam":
-		samSort(filename, outFile, numRecordsPerChunk, sortCriteria)
+		vcfSort(filename, outFile, numRecordsPerChunk, tmpDir)
+	case ".sam", ".bam":
+		samSort(filename, outFile, numRecordsPerChunk, sortCriteria, tmpDir)
+	case ".fastq":
+		fastqSort(filename, outFile, numRecordsPerChunk, tmpDir)
 	case ".giraf":
 		// TODO enable after giraf pointers are removed
 		log.Fatalln("ERROR: giraf sorting in currently disabled")
@@ -223,19 +259,38 @@ func mergeSort(filename string, outFile string, numRecordsPerChunk int, sortCrit
 			log.Fatalln("ERROR: Merge sort methods have not been implemented for file type:", filetype)
 		}
 	}
+	if tmpDir != "" {
+		files, err := filepath.Glob(fmt.Sprintf("%s/sort_chunk_*", tmpDir))
+		exception.PanicOnErr(err)
+		for _, f := range files {
+			err = os.Remove(f)
+			exception.PanicOnErr(err)
+		}
+	}
 }
 
 func main() {
-	expectedNumArgs := 2
 	var numLinesPerChunk *int = flag.Int("tmpsize", 1000000, "The number of records to read into memory before writing to a tmp file.``")
 	var singleCellBx *bool = flag.Bool("singleCellBx", false, "Sort single-cell sam records by barcode.")
 	var sortCriteria string = "byGenomicCoordinates" // default the genomicCoordinates criteria.
+	var fastqPE *bool = flag.Bool("fastqPE", false, "Sort paired end fastq files. Each file will be sorted separately")
+	var readName *bool = flag.Bool("readName", false, "Sort sam records by read name.")
+	var tmpDir *string = flag.String("tmpDir", "", "Specify an existing directory for tmp files")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
+	var expectedNumArgs int = 2
+	if *fastqPE {
+		expectedNumArgs = 4
+	}
+
 	if *singleCellBx {
 		sortCriteria = "singleCellBx"
+	}
+	if *readName {
+		sortCriteria = "readName"
 	}
 
 	if len(flag.Args()) != expectedNumArgs {
@@ -243,8 +298,14 @@ func main() {
 		log.Fatalf("ERROR: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
-	inFile := flag.Arg(0)
-	outFile := flag.Arg(1)
+	var inFile, outFile string
+	if *fastqPE {
+		inFile = fmt.Sprintf("%s,%s", flag.Arg(0), flag.Arg(1))
+		outFile = fmt.Sprintf("%s,%s", flag.Arg(2), flag.Arg(3))
+	} else {
+		inFile = flag.Arg(0)
+		outFile = flag.Arg(1)
+	}
 
-	mergeSort(inFile, outFile, *numLinesPerChunk, sortCriteria)
+	mergeSort(inFile, outFile, *numLinesPerChunk, sortCriteria, *tmpDir)
 }

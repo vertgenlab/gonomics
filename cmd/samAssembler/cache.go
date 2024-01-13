@@ -17,11 +17,13 @@ type CacheStruct struct {
 }
 
 // cacheSetup returns a CacheStruct of initialized samAssembler caches based on the user Settings struct.
-func cacheSetup(s Settings) CacheStruct {
+func cacheSetup(s BuildSettings) CacheStruct {
 	var i int
 	var diploidBasePriorCache [][]float64
 	if s.FlatPrior {
 		diploidBasePriorCache = sam.MakeDiploidBaseFlatPriorCache()
+	} else if s.EmpiricalPrior != "" {
+		diploidBasePriorCache = sam.MakeDiploidBaseEmpiricalPriorCache(s.EmpiricalPrior)
 	} else {
 		diploidBasePriorCache = sam.MakeDiploidBasePriorCache(s.Delta, s.Gamma)
 	}

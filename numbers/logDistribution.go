@@ -18,7 +18,6 @@ func BinomialDistLog(n int, k int, p float64) float64 {
 func BinomialExpressionLog(n int, k int, p float64) float64 {
 	s := logspace.Pow(math.Log(p), float64(k))
 	f := logspace.Pow(math.Log(1.0-p), float64(n-k))
-	//DEBUG:log.Printf("n: %d. k: %d. p: %f. s: %e. f: %e.\n",n, k, p, s, f)
 	return logspace.Multiply(s, f)
 }
 

@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
@@ -15,21 +16,26 @@ import (
 )
 
 type Settings struct {
-	InFile      string
-	OutFile     string
-	LineLength  int
-	NamesFile   string
-	TrimName    bool
-	ToUpper     bool
-	RevComp     bool
-	NoGaps      bool
-	NoGapBed    string
-	Index       bool
-	MaskInvalid bool
+	InFile          string
+	OutFile         string
+	LineLength      int
+	NamesFile       string
+	TrimName        bool
+	ToUpper         bool
+	RevComp         bool
+	NoGaps          bool
+	NoGapBed        string
+	Index           bool
+	MaskInvalid     bool
+	MultiFaNoGapBed string
+	QuerySeqName    string
+	ChromName       string
+	Rename          string
 }
 
 func faFormat(s Settings) {
 	var records []fasta.Fasta
+	var words []string
 	if s.MaskInvalid {
 		records = fasta.ReadForced(s.InFile)
 	} else {
@@ -44,6 +50,17 @@ func faFormat(s Settings) {
 		bed.Write(s.NoGapBed, beds)
 	}
 
+	if s.MultiFaNoGapBed != "" {
+		if s.QuerySeqName == "" {
+			log.Fatalf("Error: to use multiFaNoGapBed, must specify querySeqName.\n")
+		}
+		if s.ChromName == "" {
+			log.Fatalf("Error: to use multiFaNoGapBed, must specify chromName.\n")
+		}
+		beds := bed.MultiFaUngappedRegions(records, s.ChromName, s.QuerySeqName)
+		bed.Write(s.MultiFaNoGapBed, beds)
+	}
+
 	if s.NoGaps {
 		fasta.RemoveGaps(records)
 	}
@@ -54,6 +71,14 @@ func faFormat(s Settings) {
 			namesMap[names[i]] = 1
 		}
 	}
+
+	if s.Rename != "" {
+		words = strings.Split(s.Rename, ",")
+		if len(words) != 2 {
+			log.Fatalf("Error: expected two fields, comma delimited, in -rename. Found: %v.\n", s.Rename)
+		}
+	}
+
 	for i := range records {
 		if s.NamesFile != "" {
 			if _, exist = namesMap[records[i].Name]; !exist {
@@ -69,6 +94,11 @@ func faFormat(s Settings) {
 		if s.RevComp {
 			fasta.ReverseComplement(records[i])
 			records[i].Name = records[i].Name + "_RevComp"
+		}
+		if s.Rename != "" {
+			if records[i].Name == words[0] {
+				records[i].Name = words[1]
+			}
 		}
 	}
 
@@ -105,8 +135,14 @@ func main() {
 	var revComp *bool = flag.Bool("revComp", false, "Return the reverse complement for each sequence.")
 	var noGaps *bool = flag.Bool("noGaps", false, "Remove gaps from all input sequences.")
 	var noGapBed *string = flag.String("noGapBed", "", "Find genomic coordinates containing regions outside gaps and write to a user-specified bed filename.")
+	var multiFaNoGapBed *string = flag.String("multiFaNoGapBed", "", "Find genomic coordinates containing regions \n"+
+		"outside gaps and write to a user-specified bed filename. Ungapped regions are reported for an aligned query sequence whose name must be specified by\n"+
+		"the option querySeqName. User must also specify a chromName.")
+	var querySeqName *string = flag.String("querySeqName", "", "Specify the name of the sequence in the multiFa from which to generate a noGap file with multiFaNoGapBed.")
+	var chromName *string = flag.String("chromName", "", "Specify the name of the chromosome in the multiFa for multiFaNoGapBed.")
 	var createIndex *bool = flag.Bool("index", false, "Create index file (outputs to output.fa.fai).")
 	var maskInvalid *bool = flag.Bool("maskInvalid", false, "N-mask extended IUPAC nucleotides (includes UWSMKRYBDHV).")
+	var rename *string = flag.String("rename", "", "Rename a name field using comma delimited argument (ex. 'old,new'). Only one name field can be changed at a time.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -121,17 +157,21 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		InFile:      inFile,
-		OutFile:     outFile,
-		LineLength:  *lineLength,
-		NamesFile:   *fastaNamesFile,
-		TrimName:    *trimName,
-		RevComp:     *revComp,
-		ToUpper:     *toUpper,
-		NoGaps:      *noGaps,
-		NoGapBed:    *noGapBed,
-		Index:       *createIndex,
-		MaskInvalid: *maskInvalid,
+		InFile:          inFile,
+		OutFile:         outFile,
+		LineLength:      *lineLength,
+		NamesFile:       *fastaNamesFile,
+		TrimName:        *trimName,
+		RevComp:         *revComp,
+		ToUpper:         *toUpper,
+		NoGaps:          *noGaps,
+		NoGapBed:        *noGapBed,
+		Index:           *createIndex,
+		MaskInvalid:     *maskInvalid,
+		MultiFaNoGapBed: *multiFaNoGapBed,
+		QuerySeqName:    *querySeqName,
+		ChromName:       *chromName,
+		Rename:          *rename,
 	}
 
 	faFormat(s)

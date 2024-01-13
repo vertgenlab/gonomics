@@ -10,11 +10,13 @@ import (
 
 var WigFilterTests = []struct {
 	InFile       string
+	ChromSizes   string
 	OutFile      string
 	ExpectedFile string
 	Chrom        string
 }{
 	{InFile: "testdata/in.wig",
+		ChromSizes:   "testdata/test.chrom.sizes",
 		OutFile:      "testdata/tmp.wig",
 		ExpectedFile: "testdata/expected.wig",
 		Chrom:        "chr3"},
@@ -25,9 +27,10 @@ func TestWigFilter(t *testing.T) {
 	var s Settings
 	for _, v := range WigFilterTests {
 		s = Settings{
-			InFile:  v.InFile,
-			OutFile: v.OutFile,
-			Chrom:   v.Chrom,
+			InFile:     v.InFile,
+			ChromSizes: v.ChromSizes,
+			OutFile:    v.OutFile,
+			Chrom:      v.Chrom,
 		}
 		wigFilter(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

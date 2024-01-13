@@ -116,7 +116,7 @@ func findTranscript(query string, transcripts []*Transcript) *Transcript {
 	return nil
 }
 
-// findExon finds the exon witha given ID in a Transcript.
+// findExon finds the exon with a given ID in a Transcript.
 func findExon(query string, transcript *Transcript) *Exon {
 	for i := range transcript.Exons {
 		if transcript.Exons[i].ExonID == query {

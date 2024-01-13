@@ -44,6 +44,52 @@ func MergeBeds(bedFile []Bed) []Bed {
 	return bedFile
 }
 
+// MergeBedsKeepNamesAndAnnotations will merge beds if overlapping and keep an index in the form of a comma separated list
+// of the name fields of merged beds, and add the annotation fields together into a single field ([]string)
+func MergeBedsKeepNamesAndAnnotations(bedFile []Bed) []Bed {
+	SortByCoord(bedFile)
+	var i, j int
+	for i = 0; i < len(bedFile)-1; {
+		if !Overlap(bedFile[i], bedFile[i+1]) {
+			i++
+		} else {
+			bedFile[i].ChromStart = numbers.Min(bedFile[i].ChromStart, bedFile[i+1].ChromStart)
+			bedFile[i].ChromEnd = numbers.Max(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd)
+			bedFile[i].Score = bedFile[i].Score + bedFile[i+1].Score
+			bedFile[i].Name = bedFile[i].Name + "," + bedFile[i+1].Name
+			bedFile[i].Annotation = append(bedFile[i].Annotation, bedFile[i].Annotation[0])
+			for j = i + 1; j < len(bedFile)-1; j++ {
+				bedFile[j] = bedFile[j+1]
+			}
+			bedFile = bedFile[:len(bedFile)-1]
+		}
+	}
+	return bedFile
+}
+
+// MergeBedsIfNamesMatch will take a bed struct and return a merged struct such that any records which are of overlapping coordinates and names are identical will be merged.
+// Records with matching names must be adjacent
+func MergeBedsIfNamesMatch(bedFile []Bed) []Bed {
+	SortByCoord(bedFile)
+	var i, j int
+	for i = 0; i < len(bedFile)-1; {
+		if !Overlap(bedFile[i], bedFile[i+1]) {
+			i++
+		} else if bedFile[i].Name == bedFile[i+1].Name {
+			bedFile[i].ChromStart = numbers.Min(bedFile[i].ChromStart, bedFile[i+1].ChromStart)
+			bedFile[i].ChromEnd = numbers.Max(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd)
+			bedFile[i].Score = bedFile[i].Score + bedFile[i+1].Score
+			bedFile[i].Name = bedFile[i].Name
+			bedFile[i].Annotation = append(bedFile[i].Annotation, bedFile[i].Annotation[0])
+			for j = i + 1; j < len(bedFile)-1; j++ {
+				bedFile[j] = bedFile[j+1]
+			}
+			bedFile = bedFile[:len(bedFile)-1]
+		}
+	}
+	return bedFile
+}
+
 // Adjacent returns true if two input Bed entries are adjacent (one immediately follows the other).
 func Adjacent(alpha Bed, beta Bed) bool {
 	if alpha.Chrom != beta.Chrom {
@@ -107,9 +153,7 @@ func OverlapLength(a Bed, b Bed) int {
 	if !Overlap(a, b) {
 		return 0
 	}
-	end := numbers.Min(a.ChromEnd, b.ChromEnd)
-	start := numbers.Max(a.ChromStart, b.ChromStart)
-	return end - start
+	return numbers.Min(a.ChromEnd, b.ChromEnd) - numbers.Max(a.ChromStart, b.ChromStart)
 }
 
 // Compare returns zero for equal beds and otherwise returns the ordering of the two Bed entries. Used for SortByCoord.

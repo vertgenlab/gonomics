@@ -5,10 +5,17 @@ import (
 	"math"
 )
 
-// Translation of an implementation of the Regularized Incomplete Beta function Copyright (c) 2016, 2017 Lewis Van Winkle, zlib license. https://codeplea.com/incomplete-beta-function-c
-func incompleteBetaHelper(a float64, b float64, x float64) float64 {
+// NegativeBinomialCdf returns the CDF of the negative binomial distribution for an input score x for a distribution
+// defined by parameters R and P.
+func NegativeBinomialCdf(x float64, R float64, P float64) float64 {
+	return RegularizedIncompleteBeta(R, x+1, P)
+}
+
+// RegularizedIncompleteBeta computes the Regularized Incomplete Beta Function for parameters A and B at query point X.
+// Translation of an implementation at Copyright (c) 2016, 2017 Lewis Van Winkle, zlib license. https://codeplea.com/incomplete-beta-function-c
+func RegularizedIncompleteBeta(a float64, b float64, x float64) float64 {
 	if x > (a+1.0)/(a+b+2.0) {
-		return (1.0 - incompleteBetaHelper(b, a, 1.0-x))
+		return 1.0 - RegularizedIncompleteBeta(b, a, 1.0-x)
 	}
 	logBeta := math.Log(BetaFunc(a, b))
 	front := math.Exp(math.Log(x)*a+math.Log(1.0-x)*b-logBeta) / a
