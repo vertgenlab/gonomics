@@ -1,9 +1,11 @@
-package mHiC
+package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -24,13 +26,35 @@ import (
 //output files:
 // validPairs --
 
-type S3settings struct {
+type pair struct {
+	qname   string
+	pe      peInterval
+	rf1     interval.Interval
+	rf2     interval.Interval
+	it      string
+	bin1    string
+	bin2    string
+	set     s3settings
+	rfTree  map[string]*interval.IntervalNode
+	s1      bed.Strand
+	s2      bed.Strand
+	cisDist int
+}
+
+type peInterval struct {
+	R1 interval.Interval
+	R2 interval.Interval
+}
+
+type s3settings struct {
 	restFragBed      string
 	peBam            string
 	outDir           string //default is "."
-	cutDistanceLow   int    // minimum distance between total read-pair distance and assigned genome cut-site (recommended 50)
+	cutDistanceLow   int    // minimum distance between total read-pair distance and assigned genome cut-site (recommended read length * 2)
 	cutDistanceUpper int    // max distance between total read-pair distance and assigned genome cut site (Recommended 500)
 	resolution       int    // Size of fixed window or number of RE fragments per bin. Default is 10kb
+	validPairsFile   *fileio.EasyWriter
+	uniMultiFile     *fileio.EasyWriter
 }
 
 func getPrefix(f string) string {
@@ -77,18 +101,22 @@ func remove1stChar(s string) (strand bed.Strand, pos int) {
 	return strand, pos
 }
 
-func xaStringToBed(s string) bed.Bed {
-	var bd bed.Bed
+func xaStringToSam(s string) sam.Sam {
+	var sm sam.Sam
 	fields := strings.Split(s, ",")
-	bd.Chrom = fields[0]
-	bd.Strand, bd.ChromStart = remove1stChar(fields[1])
-	bd.ChromEnd = bd.ChromStart + cigar.ReferenceLength(cigar.FromString(fields[2]))
-	bd.FieldsInitialized = 6
-	return bd
+	sm.RName = fields[0]
+	sm.Pos = parse.StringToUint32(fields[1][1:])
+	sm.Cigar = cigar.FromString(fields[2])
+	if fields[1][0] == '-' {
+		sm.Flag = 0x10
+	} else if fields[1][0] == '+' {
+		sm.Flag = 0
+	}
+	return sm
 }
 
 func getXA(a sam.Sam) []interval.Interval {
-	var bd bed.Bed
+	var sm sam.Sam
 	var outIntervals []interval.Interval
 	out, found, _ := sam.QueryTag(a, "XA")
 	if !found {
@@ -96,8 +124,8 @@ func getXA(a sam.Sam) []interval.Interval {
 	}
 	w := removeTrailingCharAndSplit(out.(string), ";")
 	for _, i := range w {
-		bd = xaStringToBed(i)
-		outIntervals = append(outIntervals, bd)
+		sm = xaStringToSam(i)
+		outIntervals = append(outIntervals, sm)
 	}
 	return outIntervals
 }
@@ -123,7 +151,7 @@ func orderPairsByPos(a, b interval.Interval) (x, y interval.Interval) {
 	}
 }
 
-func isSC(a, b interval.Interval) bool {
+/*func isSC(a, b interval.Interval) bool {
 	x, y := orderPairsByPos(a, b)
 	if x.(bed.Bed).Strand == '-' && y.(bed.Bed).Strand == '+' {
 		return true
@@ -138,6 +166,7 @@ func isDE(a, b interval.Interval) bool {
 	}
 	return false
 }
+*/
 
 func isRL(frag1, frag2 interval.Interval) bool {
 	x, y := orderPairsByPos(frag1, frag2)
@@ -147,24 +176,19 @@ func isRL(frag1, frag2 interval.Interval) bool {
 	return false
 }
 
-func getInteractionType(aln1, aln2, frag1, frag2 interval.Interval) string {
-	var it string
-	if frag1 == frag2 { //SC or DE
-		if isSC(aln1, aln2) {
-			it = "SC"
-		} else if isDE(aln1, aln2) {
-			it = "DE"
-		}
-	} else if isRL(frag1, frag2) {
-		it = "RL"
+func getInteractionType(pr *pair) {
+	pr.it = "DUMP"
+	if interval.AreEqual(pr.rf1, pr.rf2) { //SC or DE
+		pr.it = "DUMP"
+	} else if isRL(pr.rf1, pr.rf2) {
+		pr.it = "RL"
 	} else {
-		it = "VI"
+		pr.it = "VI"
 	}
-	return it
 }
 
 func middleOfInterval(i interval.Interval) interval.Interval {
-	mid := i.GetChromStart() + i.GetChromEnd()/2
+	mid := (i.GetChromStart() + i.GetChromEnd()) / 2
 	bd := bed.Bed{Chrom: i.GetChrom(), ChromStart: mid, ChromEnd: mid + 1, FieldsInitialized: 3}
 	return bd
 }
@@ -174,38 +198,135 @@ func getOverlappingReFrag(tree map[string]*interval.IntervalNode, q interval.Int
 	return interval.Query(tree, mid, "any")
 }
 
-func getCisDist(a, b interval.Interval) int {
-	if a.GetChrom() != b.GetChrom() {
-		return numbers.MaxInt
+func getCisDist(pr *pair) {
+	if pr.pe.R1.GetChrom() != pr.pe.R2.GetChrom() {
+		pr.cisDist = numbers.MaxInt
+	} else {
+		pr.cisDist = numbers.AbsInt(pr.pe.R1.GetChromStart() - pr.pe.R2.GetChromStart())
 	}
-	return numbers.AbsInt(a.GetChromStart() - b.GetChromStart())
 }
 
-func getFragDist(aln1, aln2, frag1, frag2 interval.Interval) int {
-	v1 := numbers.Min(numbers.AbsInt(frag1.GetChromEnd()-aln1.GetChromStart()), numbers.AbsInt(aln1.GetChromStart()-frag1.GetChromStart()))
-	v2 := numbers.Min(numbers.AbsInt(frag2.GetChromEnd()-aln2.GetChromStart()), numbers.AbsInt(aln2.GetChromStart()-frag2.GetChromStart()))
+func getFragDist(pr pair) int {
+	v1 := numbers.Min(numbers.AbsInt(pr.rf1.GetChromEnd()-pr.pe.R1.GetChromStart()), numbers.AbsInt(pr.pe.R1.GetChromStart()-pr.rf1.GetChromStart()))
+	v2 := numbers.Min(numbers.AbsInt(pr.rf2.GetChromEnd()-pr.pe.R2.GetChromStart()), numbers.AbsInt(pr.pe.R2.GetChromStart()-pr.rf2.GetChromStart()))
 	return v1 + v2
 }
 
-func S3(s S3settings) {
+func multiMapping(p sam.SamPE) bool {
+	_, found1, _ := sam.QueryTag(p.R1, "XA")
+	_, found2, _ := sam.QueryTag(p.R2, "XA")
+	if found1 || found2 {
+		return true
+	}
+	return false
+}
+
+func determineInteractionType(pr *pair) {
+	r1Frag := getOverlappingReFrag(pr.rfTree, pr.pe.R1)
+	r2Frag := getOverlappingReFrag(pr.rfTree, pr.pe.R2)
+	if len(r1Frag) != 1 || len(r2Frag) != 1 {
+		pr.it = "DUMP"
+	} else {
+		pr.rf1 = r1Frag[0]
+		pr.rf2 = r2Frag[0]
+		getInteractionType(pr)
+		if pr.it == "VI" {
+			filterInteractionType(pr)
+		}
+	}
+}
+
+func filterInteractionType(pr *pair) {
+	fragDist := getFragDist(*pr)
+	getCisDist(pr)
+	if fragDist <= pr.set.cutDistanceLow || fragDist >= pr.set.cutDistanceUpper || pr.cisDist <= 2*pr.set.resolution {
+		pr.it = "DUMP"
+	} else {
+		pr.bin1 = fmt.Sprintf("%s_%d", pr.pe.R1.GetChrom(), pr.pe.R1.GetChromStart()/pr.set.resolution)
+		pr.bin2 = fmt.Sprintf("%s_%d", pr.pe.R2.GetChrom(), pr.pe.R2.GetChromStart()/pr.set.resolution)
+		if pr.bin1 == pr.bin2 {
+			pr.it = "DUMP"
+		}
+	}
+}
+
+func parseMultiMappingFrags(pe sam.SamPE, pr pair) []pair {
+	var prSlice []pair
+	r1 := []interval.Interval{pe.R1}
+	r2 := []interval.Interval{pe.R2}
+	_, found1, _ := sam.QueryTag(pe.R1, "XA")
+	_, found2, _ := sam.QueryTag(pe.R2, "XA")
+	if found1 {
+		r1 = append(r1, getXA(pe.R1)...)
+	}
+	if found2 {
+		r2 = append(r2, getXA(pe.R2)...)
+	}
+	for i := range r1 {
+		pr.pe.R1 = r1[i]
+		if sam.IsPosStrand(r1[i].(sam.Sam)) {
+			pr.s1 = '+'
+		} else {
+			pr.s1 = '-'
+		}
+		for j := range r2 {
+			pr.pe.R2 = r2[j]
+			if sam.IsPosStrand(r2[j].(sam.Sam)) {
+				pr.s2 = '+'
+			} else {
+				pr.s2 = '-'
+			}
+			determineInteractionType(&pr)
+			if pr.it == "VI" {
+				prSlice = append(prSlice, pr)
+			}
+		}
+	}
+	return prSlice
+}
+
+func writeInteraction(pr pair, uniMulti string) {
+	var str string
+	if pr.cisDist == numbers.MaxInt {
+		str = fmt.Sprintf("%s\t%s\t%d\t%c\t%s\t%s\t%s\t%d\t%c\t%s\t%s\t%s\t%s", pr.qname, pr.pe.R1.GetChrom(), pr.pe.R1.GetChromStart(), pr.s1, pr.rf1.(bed.Bed).Name, pr.bin1, pr.pe.R2.GetChrom(), pr.pe.R2.GetChromStart(),
+			pr.s2, pr.rf2.(bed.Bed).Name, pr.bin2, "interChrom", uniMulti)
+	} else {
+		str = fmt.Sprintf("%s\t%s\t%d\t%c\t%s\t%s\t%s\t%d\t%c\t%s\t%s\t%d\t%s", pr.qname, pr.pe.R1.GetChrom(), pr.pe.R1.GetChromStart(), pr.s1, pr.rf1.(bed.Bed).Name, pr.bin1, pr.pe.R2.GetChrom(), pr.pe.R2.GetChromStart(),
+			pr.s2, pr.rf2.(bed.Bed).Name, pr.bin2, pr.cisDist, uniMulti)
+	}
+	fileio.WriteToFileHandle(pr.set.validPairsFile, str)
+}
+
+func assignStrandToPair(pe sam.SamPE, pr *pair) {
+	if sam.IsPosStrand(pe.R1) {
+		pr.s1 = '+'
+	} else {
+		pr.s1 = '-'
+	}
+	if sam.IsPosStrand(pe.R2) {
+		pr.s2 = '+'
+	} else {
+		pr.s2 = '-'
+	}
+}
+
+func characterizePairs(s s3settings) {
+	var pr pair
+	var validPrs []pair
 	var a, b sam.Sam
 	var pe sam.SamPE
-	var alnPos1, alnPos2, sa1, sa2, frag1, frag2 []interval.Interval
 	var full bool = true
 	var match bool = true
-	var i, aln1, aln2, fragDist, cisDist, mid1, mid2 int
-	var it string
-	var vi []string
+	var pass bool
+	var c int
 
-	p := getPrefix(s.peBam)                                               // get the filename minus the last extension
-	vp := fileio.EasyCreate(fmt.Sprintf("%s/%s.validPairs", s.outDir, p)) //create valid pairs file
-	um := fileio.EasyCreate(fmt.Sprintf("%s/%s.umiMulti", s.outDir, p))   //create uni-multi file (I don't know what this file is)
 	reTree := createReTree(s.restFragBed)
 
 	inChan, _ := sam.GoReadToChan(s.peBam)
 
 	// sam file MUST be sorted by read-name
 	for full {
+		pr = pair{set: s, rfTree: reTree}
 		if !match {
 			b = <-inChan
 		} else {
@@ -218,49 +339,68 @@ func S3(s S3settings) {
 			continue
 		}
 		match = true
-		if a.RName == "" && b.RName == "" { //what is the best way to check for unmapped?
+		if !full {
 			continue
 		}
-		pe = sam.SamToPeSamCheckFlag(a, b)
-		alnPos1 = append(alnPos1, pe.R1)
-		sa1 = getXA(pe.R1)
-		for i = range sa1 {
-			alnPos1 = append(alnPos1, sa1[i])
+		if a.Cigar[0].Op == '*' && b.Cigar[0].Op == '*' { //what is the best way to check for unmapped?
+			continue
 		}
-		alnPos2 = append(alnPos2, pe.R2)
-		sa2 = getXA(pe.R2)
-		for i = range sa2 {
-			alnPos2 = append(alnPos2, sa2[i])
+		pe, pass = sam.SamToPeSamCheckFlag(a, b)
+		if !pass {
+			fmt.Println(a)
+			fmt.Println(b)
+			c++
+			break
 		}
-		for aln1 = range alnPos1 {
-			frag1 = getOverlappingReFrag(reTree, alnPos1[aln1])
-			if len(frag1) != 1 {
-				continue
+		pr.qname = a.QName
+		if !multiMapping(pe) {
+			pr.pe.R1 = pe.R1
+			pr.pe.R2 = pe.R2
+			assignStrandToPair(pe, &pr)
+			determineInteractionType(&pr)
+			if pr.it == "VI" {
+				writeInteraction(pr, "UNI")
+				fileio.WriteToFileHandle(s.uniMultiFile, fmt.Sprintf("%s\t%d", pr.qname, 1))
 			}
-			for aln2 = range alnPos2 {
-				frag2 = getOverlappingReFrag(reTree, alnPos2[aln2])
-				if len(frag2) != 1 {
-					continue
+		} else {
+			validPrs = parseMultiMappingFrags(pe, pr)
+			switch {
+			case len(validPrs) == 1:
+				writeInteraction(validPrs[0], "UNI")
+				fileio.WriteToFileHandle(s.uniMultiFile, fmt.Sprintf("%s\t%d", pr.qname, 1))
+			case len(validPrs) > 1:
+				for vp := range validPrs {
+					writeInteraction(validPrs[vp], "MULTI")
 				}
-				it = getInteractionType(alnPos1[aln1], alnPos2[aln2], frag1[0], frag2[0])
-				if it == "VI" {
-					fragDist = getFragDist(alnPos1[aln1], alnPos2[aln2], frag1[0], frag2[0])
-					cisDist = getCisDist(alnPos1[aln1], alnPos2[aln2])
-					if fragDist <= s.cutDistanceLow || fragDist >= s.cutDistanceUpper || cisDist <= 2*s.resolution {
-						it = "DUMP"
-					} else {
-						mid1 = 1 //placeholder
-						mid2 = 2
-						if alnPos1[aln1].GetChrom() == alnPos2[aln2].GetChrom() && mid1 == mid2 {
-							it = "DUMP"
-						} else {
-							vi = append(vi, fmt.Sprintf("%s\t%d\t%s\t%s\t%d\t%s\t%d\t%s\t%s\t%d\t%d",
-								alnPos1[aln1].GetChrom(), alnPos1[aln1].GetChromStart()))
-							//not going to explicitly format by position order, see if it matters later
-						}
-					}
-				}
+				fileio.WriteToFileHandle(s.uniMultiFile, fmt.Sprintf("%s\t%d", pr.qname, len(validPrs)))
+			default:
+				continue
 			}
 		}
 	}
+	fmt.Println("reads that couldn't be paired: ", c)
+	err := s.uniMultiFile.Close()
+	exception.PanicOnErr(err)
+	err = s.validPairsFile.Close()
+	exception.PanicOnErr(err)
+}
+
+func main() {
+
+	flag.Parse()
+
+	p := getPrefix(flag.Arg(0))
+
+	s := s3settings{
+		resolution:       10000,
+		restFragBed:      flag.Arg(1),
+		peBam:            flag.Arg(0),
+		outDir:           "testdata/output/",
+		cutDistanceLow:   50,
+		cutDistanceUpper: 500,
+		validPairsFile:   fileio.EasyCreate(fmt.Sprintf("testdata/output/%s.validPairs", p)),
+		uniMultiFile:     fileio.EasyCreate(fmt.Sprintf("testdata/output/%s.uniMulti", p)),
+	}
+
+	characterizePairs(s)
 }
