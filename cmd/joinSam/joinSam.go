@@ -63,7 +63,7 @@ func joinSam(in1, in2, out, sumFile string) {
 			}
 			i, j = updateSam(i, j)
 			sam.WriteToBamFileHandle(bw, i, 0)
-			sam.WriteToBamFileHandle(bw, i, 0)
+			sam.WriteToBamFileHandle(bw, j, 0)
 			multi++
 		} else {
 			singleton++

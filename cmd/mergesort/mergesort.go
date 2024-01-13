@@ -122,19 +122,29 @@ func vcfSort(infile, outfile string, numRecordsPerChunk int, tmpDir string) {
 func samSort(infile, outfile string, numRecordsPerChunk int, sortCriteria string, tmpDir string) {
 	var err error
 	data, header := sam.GoReadToChan(infile)
+	processed := make(chan sam.Sam, 1000)
+	go func() {
+		for r := range data {
+			err = sam.ParseExtra(&r)
+			exception.PanicOnErr(err)
+			processed <- r
+		}
+		close(processed)
+	}()
+
 	var out <-chan sam.Sam
 	if sortCriteria == "singleCellBx" {
-		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, tmpDir, func(a, b sam.Sam) bool {
+		out = sort.GoExternalMergeSort(processed, numRecordsPerChunk, tmpDir, func(a, b sam.Sam) bool {
 			iSingle := sam.ToSingleCellAlignment(a)
 			jSingle := sam.ToSingleCellAlignment(b)
 			return dna.BasesToString(iSingle.Bx) < dna.BasesToString(jSingle.Bx)
 		})
 	} else if sortCriteria == "readName" {
-		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, tmpDir, func(a, b sam.Sam) bool {
+		out = sort.GoExternalMergeSort(processed, numRecordsPerChunk, tmpDir, func(a, b sam.Sam) bool {
 			return a.QName < b.QName
 		})
 	} else {
-		out = sort.GoExternalMergeSort(data, numRecordsPerChunk, tmpDir, func(a, b sam.Sam) bool {
+		out = sort.GoExternalMergeSort(processed, numRecordsPerChunk, tmpDir, func(a, b sam.Sam) bool {
 			switch {
 			case a.RName < b.RName:
 				return true
