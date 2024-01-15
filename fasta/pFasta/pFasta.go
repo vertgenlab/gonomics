@@ -13,15 +13,15 @@ import (
 	"strings"
 )
 
-// pFasta is the probabilistic analog of fasta, which represents sequences of
+// PFasta is the probabilistic analog of fasta, which represents sequences of
 // pDna bases rather than dna bases.
-type pFasta struct {
+type PFasta struct {
 	Name string
 	Seq  []pDna.Float32Base
 }
 
 // Write takes an input []pFasta and writes to an output binary pFa file.
-func Write(outFile string, records []pFasta) {
+func Write(outFile string, records []PFasta) {
 	var err error
 	out := fileio.EasyCreate(outFile)
 
@@ -57,10 +57,10 @@ func writeBaseProbability(out *fileio.EasyWriter, b float32) {
 }
 
 // makeEmptyRecords is a helper function of Read. It parses the metadata header of
-// a binary pFa file and returns the skeleton of the []pFasta, where the names and sequences
+// a binary pFa file and returns the skeleton of the []PFasta, where the names and sequences
 // have been initialized but all probabilities are 0.
-func makeEmptyRecords(reader *bufio.Reader) []pFasta {
-	var records = make([]pFasta, 0)
+func makeEmptyRecords(reader *bufio.Reader) []PFasta {
+	var records = make([]PFasta, 0)
 	unparsedHeader := ReadPfaHeader(reader)
 
 	if unparsedHeader[0] != "pFasta_format_1.0" {
@@ -74,7 +74,7 @@ func makeEmptyRecords(reader *bufio.Reader) []pFasta {
 	var words []string
 	for currHeaderLine := 1; currHeaderLine < len(unparsedHeader)-1; currHeaderLine++ {
 		words = strings.Split(unparsedHeader[currHeaderLine], "\t")
-		records = append(records, pFasta{
+		records = append(records, PFasta{
 			Name: words[0],
 			Seq:  make([]pDna.Float32Base, parse.StringToInt(words[1]))})
 	}
@@ -102,8 +102,8 @@ func ReadPfaHeader(reader *bufio.Reader) []string {
 	return header
 }
 
-// Read parses a []pFasta from an input file handle in .pFa binary format.
-func Read(inFile string) []pFasta {
+// Read parses a []PFasta from an input file handle in .pFa binary format.
+func Read(inFile string) []PFasta {
 	var err error
 	file := fileio.EasyOpen(inFile)
 	reader := bufio.NewReader(file)
