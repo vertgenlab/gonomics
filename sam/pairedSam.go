@@ -4,6 +4,8 @@ import (
 	"strings"
 )
 
+// SamPE is struct that contains 2 paired end Sam entries as well as a slice of Sam that represents all supplementary
+// alignments for the read-pair
 type SamPE struct {
 	A   Sam
 	B   Sam
@@ -29,6 +31,7 @@ func GoReadSamPeToChan(filename string) (<-chan SamPE, Header) {
 	return peChan, <-header
 }
 
+// combineEnds is a helper function for GoReadSamPeToChan that takes a channel of sam and parses it into a SamPE channel
 func combineEnds(peChan chan<- SamPE, data <-chan Sam) {
 	var full bool = true
 	var tmpSlice []Sam
@@ -52,6 +55,7 @@ func combineEnds(peChan chan<- SamPE, data <-chan Sam) {
 	close(peChan)
 }
 
+// parseReads is a helper function for GoReadSamPeToChan that parses a slice of Sam that all have the same read name into a SamPE struct
 func parseReads(tmpSlice []Sam) SamPE {
 	var pe SamPE
 	if len(tmpSlice) == 2 {
