@@ -28,13 +28,22 @@ func GoReadSamPeToChan(filename string) (<-chan SamPE, Header) {
 
 func combineEnds(peChan chan<- SamPE, data <-chan Sam) {
 	var full bool = true
+	var done bool
 	var a, b Sam
 
 	for full {
+		done = false
 		a, full = <-data
 		b, full = <-data
-		if full && a.QName == b.QName {
-			peChan <- SamPE{a, b}
+		for !done {
+			switch {
+			case full, a.QName == b.QName:
+				peChan <- SamPE{a, b}
+				done = true
+			case a.QName != b.QName:
+				a = b
+				b, full = <-data
+			}
 		}
 	}
 	close(peChan)
