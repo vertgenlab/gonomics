@@ -27,7 +27,7 @@ func main() {
 
 	switch flag.Arg(0) {
 	case "filter":
-		//parseFilterArgs()
+		parseFilterArgs()
 	case "toBed":
 		parseToBedArgs()
 	default:
