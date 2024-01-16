@@ -1,6 +1,9 @@
 package sam
 
 import (
+	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"io"
 	"strings"
 )
 
@@ -31,7 +34,7 @@ func GoReadSamPeToChan(filename string) (<-chan SamPE, Header) {
 	return peChan, <-header
 }
 
-// combineEnds is a helper function for GoReadSamPeToChan that takes a channel of sam and parses it into a SamPE channel
+// combineEnds is a helper function for GoReadSamPeToChan that takes a channel of type Sam and parses it into a SamPE channel
 func combineEnds(peChan chan<- SamPE, data <-chan Sam) {
 	var full bool = true
 	var tmpSlice []Sam
@@ -87,6 +90,21 @@ func OrderSamPair(p SamPE) (SamPE, bool) {
 		return SamPE{A: p.B, B: p.A, Sup: p.Sup}, true
 	}
 	return p, false
+}
+
+// WriteSamPeToFileHandle writes a both reads and any supplementary alignments from a SamPE struct to a fileio EasyWriter
+// TODO: Add bam writing functionality
+func WriteSamPeToFileHandle(file io.Writer, pe SamPE) {
+	_, err := fmt.Fprintln(file, ToString(pe.A))
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintln(file, ToString(pe.B))
+	exception.PanicOnErr(err)
+	if len(pe.Sup) != 0 {
+		for i := range pe.Sup {
+			_, err = fmt.Fprintln(file, ToString(pe.Sup[i]))
+			exception.PanicOnErr(err)
+		}
+	}
 }
 
 /*		done = false
