@@ -11,7 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-// Extract returns a new pFa that is a subsequence of the input pFa, defined by a 
+// Extract returns a new pFa that is a subsequence of the input pFa, defined by a
 // start (inclusive) and end (exclusive) position, like in bed; makes memory copy
 func Extract(input PFasta, start int, end int) PFasta {
 	if start >= end {
@@ -19,7 +19,7 @@ func Extract(input PFasta, start int, end int) PFasta {
 	} else if start < 0 || end > len(input.Seq) {
 		log.Fatalf("Error: positions out of range\n")
 	}
-	
+
 	var answer = PFasta{Name: input.Name, Seq: make([]pDna.Float32Base, end-start)}
 
 	for inputIdx := start; inputIdx < end; inputIdx++ {
@@ -31,7 +31,7 @@ func Extract(input PFasta, start int, end int) PFasta {
 
 // ExtractBed returns a new pFa that is a subsequence of the input pFa
 // defined by the bed region
-func ExtractBed(input []PFasta, region bed.Bed) PFasta{
+func ExtractBed(input []PFasta, region bed.Bed) PFasta {
 	regionInInput := false
 	regionIdx := 0
 	for inputIdx, inputpFa := range input {
@@ -44,8 +44,8 @@ func ExtractBed(input []PFasta, region bed.Bed) PFasta{
 
 	if !regionInInput {
 		log.Fatalf("Error: region not in input\n")
-	} 
-	
+	}
+
 	return Extract(input[regionIdx], region.ChromStart, region.ChromEnd)
 	// else if len(input[regionIdx].Seq) < region.ChromEnd-region.ChromStart {
 	// 	log.Fatalf("Error: region out of range\n")
@@ -69,9 +69,9 @@ func Sample(input PFasta) fasta.Fasta {
 		currRand = rand.Float32()
 		if currRand < input.Seq[inputIdx].A {
 			answer.Seq[inputIdx] = dna.A
-		} else if currRand < (input.Seq[inputIdx].C+input.Seq[inputIdx].A) {
+		} else if currRand < (input.Seq[inputIdx].C + input.Seq[inputIdx].A) {
 			answer.Seq[inputIdx] = dna.C
-		} else if currRand < (input.Seq[inputIdx].G+input.Seq[inputIdx].C+input.Seq[inputIdx].A) {
+		} else if currRand < (input.Seq[inputIdx].G + input.Seq[inputIdx].C + input.Seq[inputIdx].A) {
 			answer.Seq[inputIdx] = dna.G
 		} else {
 			answer.Seq[inputIdx] = dna.T
