@@ -1,12 +1,9 @@
 package pFasta
 
 import (
-	"time"
 	"log"
 
 	"golang.org/x/exp/rand"
-
-	"gonum.org/v1/gonum/stat/sampleuv"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
@@ -60,26 +57,22 @@ func ExtractBed(input []PFasta, region bed.Bed) PFasta{
 	return answer
 }
 
-
 // Sample returns a new Fasta sampled from the given pFasta probability distribution
-// is there a more efficient way to do this...
 func Sample(input PFasta) fasta.Fasta {
 	var answer = fasta.Fasta{Name: input.Name, Seq: make([]dna.Base, len(input.Seq))}
-	bases := []string{"A", "C", "G", "T"}
 
-	// input.Seq shoud be type []pDna.Float32Base
-	for inputIdx, baseDistrib := range input.Seq {
-		weight := make([]float64, 0)
-		weight[0] = float64(baseDistrib.A)
-		weight[0] = float64(baseDistrib.C)
-		weight[0] = float64(baseDistrib.G)
-		weight[0] = float64(baseDistrib.T)
-
-		w := sampleuv.NewWeighted(
-			weight,
-			rand.New(rand.NewSource(uint64(time.Now().UnixNano()))))
-		sampleIdx, _ := w.Take()
-		answer.Seq[inputIdx] = dna.StringToBase(bases[sampleIdx])
+	var currRand float32 // rand number between 0-1
+	for inputIdx := range input.Seq {
+		currRand = rand.Float32()
+		if currRand < input.Seq[inputIdx].A {
+			answer.Seq[inputIdx] = dna.A
+		} else if currRand < (input.Seq[inputIdx].C+input.Seq[inputIdx].A) {
+			answer.Seq[inputIdx] = dna.C
+		} else if currRand < (input.Seq[inputIdx].G+input.Seq[inputIdx].C+input.Seq[inputIdx].A) {
+			answer.Seq[inputIdx] = dna.G
+		} else {
+			answer.Seq[inputIdx] = dna.T
+		}
 	}
 
 	return answer
