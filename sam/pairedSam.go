@@ -10,9 +10,10 @@ import (
 // SamPE is struct that contains 2 paired end Sam entries as well as a slice of Sam that represents all supplementary
 // alignments for the read-pair
 type SamPE struct {
-	A   Sam
-	B   Sam
-	Sup []Sam
+	A    Sam
+	B    Sam
+	SupA []Sam
+	SupB []Sam
 }
 
 // GoReadSamPeToChan takes a read-name sorted sam file and returns a chanel of SamPE and a Header
@@ -29,13 +30,13 @@ func GoReadSamPeToChan(filename string) (<-chan SamPE, Header) {
 		go readSamToChan(filename, data, header)
 	}
 
-	go combineEnds(peChan, data)
+	go combineEnds(data, peChan)
 
 	return peChan, <-header
 }
 
 // combineEnds is a helper function for GoReadSamPeToChan that takes a channel of type Sam and parses it into a SamPE channel
-func combineEnds(peChan chan<- SamPE, data <-chan Sam) {
+func combineEnds(data <-chan Sam, peChan chan<- SamPE) {
 	var full bool = true
 	var tmpSlice []Sam
 	var tmp Sam
@@ -68,13 +69,17 @@ func parseReads(tmpSlice []Sam) SamPE {
 	}
 	for i := range tmpSlice {
 		if tmpSlice[i].Flag&2048 == 2048 {
-			pe.Sup = append(pe.Sup, tmpSlice[i])
+			if tmpSlice[i].Flag&64 == 64 {
+				pe.SupA = append(pe.SupA, tmpSlice[i])
+			} else if tmpSlice[i].Flag&128 == 128 {
+				pe.SupB = append(pe.SupB, tmpSlice[i])
+			}
 		} else if pe.A.QName == "" {
 			pe.A = tmpSlice[i]
 		} else if pe.B.QName == "" {
 			pe.B = tmpSlice[i]
 		} else {
-			pe.Sup = append(pe.Sup, tmpSlice[i])
+			pe.SupA = append(pe.SupA, tmpSlice[i])
 		}
 	}
 	pe, _ = OrderSamPair(pe)
@@ -82,12 +87,12 @@ func parseReads(tmpSlice []Sam) SamPE {
 }
 
 // OrderSamPair returns R1, R2 in order based on Sam Flags and a bool if the pair had the proper flags. If the pair doesn't have the proper flags,
-// the pair will be returned in the same order with false
+// the pair will be returned in the same order with false. Sup Slices will not be reordered.
 func OrderSamPair(p SamPE) (SamPE, bool) {
 	if p.A.Flag&64 == 64 && p.B.Flag&128 == 128 {
 		return p, true
 	} else if p.A.Flag&128 == 128 && p.B.Flag&64 == 64 {
-		return SamPE{A: p.B, B: p.A, Sup: p.Sup}, true
+		return SamPE{A: p.B, B: p.A, SupA: p.SupA, SupB: p.SupB}, true
 	}
 	return p, false
 }
@@ -99,9 +104,15 @@ func WriteSamPeToFileHandle(file io.Writer, pe SamPE) {
 	exception.PanicOnErr(err)
 	_, err = fmt.Fprintln(file, ToString(pe.B))
 	exception.PanicOnErr(err)
-	if len(pe.Sup) != 0 {
-		for i := range pe.Sup {
-			_, err = fmt.Fprintln(file, ToString(pe.Sup[i]))
+	if len(pe.SupA) != 0 {
+		for i := range pe.SupA {
+			_, err = fmt.Fprintln(file, ToString(pe.SupA[i]))
+			exception.PanicOnErr(err)
+		}
+	}
+	if len(pe.SupB) != 0 {
+		for i := range pe.SupB {
+			_, err = fmt.Fprintln(file, ToString(pe.SupB[i]))
 			exception.PanicOnErr(err)
 		}
 	}
