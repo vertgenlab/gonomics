@@ -44,17 +44,20 @@ func ExtractBed(input []PFasta, region bed.Bed) PFasta{
 
 	if !regionInInput {
 		log.Fatalf("Error: region not in input\n")
-	} else if len(input[regionIdx].Seq) < region.ChromEnd-region.ChromStart {
-		log.Fatalf("Error: region out of range\n")
-	}
+	} 
+	
+	return Extract(input[regionIdx], region.ChromStart, region.ChromEnd)
+	// else if len(input[regionIdx].Seq) < region.ChromEnd-region.ChromStart {
+	// 	log.Fatalf("Error: region out of range\n")
+	// }
 
-	var answer = PFasta{Name: input[regionIdx].Name, Seq: make([]pDna.Float32Base, region.ChromEnd-region.ChromStart)}
+	// var answer = PFasta{Name: input[regionIdx].Name, Seq: make([]pDna.Float32Base, region.ChromEnd-region.ChromStart)}
 
-	for inputIdx := region.ChromStart; inputIdx < region.ChromEnd; inputIdx++ {
-		answer.Seq[inputIdx-region.ChromStart] = input[regionIdx].Seq[inputIdx]
-	}
+	// for inputIdx := region.ChromStart; inputIdx < region.ChromEnd; inputIdx++ {
+	// 	answer.Seq[inputIdx-region.ChromStart] = input[regionIdx].Seq[inputIdx]
+	// }
 
-	return answer
+	// return answer
 }
 
 // Sample returns a new Fasta sampled from the given pFasta probability distribution
