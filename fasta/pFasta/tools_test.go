@@ -12,12 +12,14 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-// ExtractTestsOne tests a valid input to Extract
-var ExtractTestsSuccess = []struct {
-	Input    PFasta
-	Start    int
-	End      int
-	Expected PFasta
+// ExtractTests tests a valid input to Extract
+var ExtractTests = []struct {
+	Input      PFasta
+	Start      int
+	End        int
+	OutputName string
+	Expected   PFasta
+	Precision  float32
 }{
 	{Input: PFasta{Name: "chr1",
 		Seq: []pDna.Float32Base{
@@ -53,9 +55,10 @@ var ExtractTestsSuccess = []struct {
 			},
 		},
 	},
-		Start: 1,
-		End:   3,
-		Expected: PFasta{Name: "chr1",
+		Start:      1,
+		End:        3,
+		OutputName: "testChr1",
+		Expected: PFasta{Name: "testChr1",
 			Seq: []pDna.Float32Base{
 				pDna.Float32Base{
 					A: 0.1,
@@ -71,13 +74,17 @@ var ExtractTestsSuccess = []struct {
 				},
 			},
 		},
+		Precision: 1e-3,
 	},
 }
 
-var ExtractBedTestsSuccess = []struct {
-	Input    []PFasta
-	Region   bed.Bed
-	Expected PFasta
+// ExtractBedTests tests a valid input to ExtractBed
+var ExtractBedTests = []struct {
+	Input      []PFasta
+	Region     bed.Bed
+	OutputName string
+	Expected   PFasta
+	Precision  float32
 }{
 	{Input: []PFasta{PFasta{Name: "chr3",
 		Seq: []pDna.Float32Base{
@@ -186,7 +193,8 @@ var ExtractBedTestsSuccess = []struct {
 			ChromStart: 3,
 			ChromEnd:   5,
 		},
-		Expected: PFasta{Name: "chr1",
+		OutputName: "testChr1",
+		Expected: PFasta{Name: "testChr1",
 			Seq: []pDna.Float32Base{
 				pDna.Float32Base{
 					A: 0.6,
@@ -202,6 +210,7 @@ var ExtractBedTestsSuccess = []struct {
 				},
 			},
 		},
+		Precision: 1e-3,
 	},
 }
 
@@ -282,19 +291,20 @@ var SampleTests = []struct {
 }
 
 func TestExtract(t *testing.T) {
-	for _, testCase := range ExtractTestsSuccess {
-		res := []PFasta{Extract(testCase.Input, testCase.Start, testCase.End)}
-		expect := []PFasta{testCase.Expected}
-		if !AllAreEqual(res, expect, 1e-3) {
+	for _, testCase := range ExtractTests {
+		res := Extract(testCase.Input, testCase.Start, testCase.End, testCase.OutputName)
+		fmt.Print(res)
+		if !IsEqual(res, testCase.Expected, testCase.Precision) {
 			t.Errorf("Error: in pFasta. Extract valid input test was not as expected.")
 		}
 	}
 }
 
 func TestExtractBed(t *testing.T) {
-	for _, testCase := range ExtractBedTestsSuccess {
-		res := ExtractBed(testCase.Input, testCase.Region)
-		if !IsEqual(res, testCase.Expected, 1e-3) {
+	for _, testCase := range ExtractBedTests {
+		res := ExtractBed(testCase.Input, testCase.Region, testCase.OutputName)
+		fmt.Print(res)
+		if !IsEqual(res, testCase.Expected, testCase.Precision) {
 			t.Errorf("Error: in pFasta. ExtractBed valid input test not as expected.\n")
 		}
 	}
