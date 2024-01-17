@@ -29,7 +29,7 @@ func filterUsage(filterFlags *flag.FlagSet) {
 	filterFlags.PrintDefaults()
 }
 
-// parseFilterArgs is the main fucntion for the pwmTools filter subcommand. It parses options and to run the function pwmFilter.
+// parseFilterArgs is the main function for the pwmTools filter subcommand. It parses options and to run the function pwmFilter.
 func parseFilterArgs() {
 	var expectedNumArgs int = 2
 	var err error

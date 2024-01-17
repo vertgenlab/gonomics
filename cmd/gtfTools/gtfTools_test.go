@@ -51,3 +51,34 @@ func TestToBed(t *testing.T) {
 		}
 	}
 }
+
+var FilterTests = []struct {
+	InFile       string
+	OutFile      string
+	ExpectedFile string
+	GeneNameList string
+}{
+	{InFile: "../../gtf/testdata/test.gtf",
+		OutFile:      "testdata/tmp.filter.gtf",
+		ExpectedFile: "testdata/expected.filter.gtf",
+		GeneNameList: "testdata/geneList.txt"},
+}
+
+func TestFilter(t *testing.T) {
+	var s FilterSettings
+	var err error
+	for _, v := range FilterTests {
+		s = FilterSettings{
+			InFile:       v.InFile,
+			OutFile:      v.OutFile,
+			GeneNameList: v.GeneNameList,
+		}
+		gtfFilter(s)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Error: gtfTools filter - outfile was not as expected.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
