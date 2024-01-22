@@ -1,3 +1,5 @@
+github.com/cnkei/gospline v0.0.0-20191204052713-d67fac29a294 h1:zIFcK9T9qytnmXuKt5Z7jG66C8c8FJjy8rtxOmVVm0o=
+github.com/cnkei/gospline v0.0.0-20191204052713-d67fac29a294/go.mod h1:DXXGDL64/wxXgBSgmGMEL0vYC0tdvpgNhkJrvavhqDM=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=

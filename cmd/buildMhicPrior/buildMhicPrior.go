@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/cnkei/gospline"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/mHiC"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"sort"
@@ -18,6 +20,7 @@ type settings struct {
 	nBins      int
 	resolution int
 	outDir     string
+	bias       []mHiC.Bias
 }
 
 type contacts struct {
@@ -108,28 +111,36 @@ func buildMhicPrior(s settings) {
 		return dists[i].distance < dists[j].distance
 	})
 	bins := parseIntoBins(dists, total, s.nBins)
-	genomeWidePossible, genomeWideBins := populateBinData(s, bins)
+	populateBinData(s, bins)
+	//genomeWideBins, maxPossDist, possIntraInRange, possInterAllCount, interChromProb, baselineIntraChromProb := populateBinData(s, bins)
+	x, y := calculateProbabilities(s, bins, total)
 	writeBins(s, bins)
+	splineFit(x, y)
 }
 
-func populateBinData(s settings, bins []bin) int {
-	var nBin, c, possPairs, currBin, genomeWideTotal, genomeWideBins int
+func populateBinData(s settings, bins []bin) (int, int, int, int, float64, float64) {
+	var nBin, c, possPairs, currBin, genomeWideIntraTotal, genomeWideBins, possInterAllCount, possIntraInRange, maxPossDist int
+	var possIntraAllCount float64
 	chrSizes := chromInfo.ReadToSlice(s.chromSizes)
+
 	for i := range chrSizes {
 		c = 0
 		currBin = 0
 		nBin = chrSizes[i].Size/s.resolution + 1
 		genomeWideBins += nBin
 		for j := 0; j < chrSizes[i].Size+s.resolution; j += s.resolution { // j is interaction distance
+			maxPossDist = numbers.Max(maxPossDist, j)
 			possPairs = nBin - c
 			c++
-			if j < 2*s.resolution {
+			if j < s.resolution {
 				continue
 			}
+			possIntraInRange += possPairs
+			//fmt.Println(possIntraInRange)
 			if j <= bins[currBin].interactionDistances[len(bins[currBin].interactionDistances)-1] {
 				bins[currBin].allDistancesSum += (float64(j) / scaleValue) * float64(possPairs)
 				bins[currBin].possiblePairs += possPairs
-				genomeWideTotal += possPairs
+				genomeWideIntraTotal += possPairs
 			}
 			if j >= bins[currBin].interactionDistances[len(bins[currBin].interactionDistances)-1] {
 				currBin++
@@ -138,8 +149,13 @@ func populateBinData(s settings, bins []bin) int {
 				}
 			}
 		}
+		possInterAllCount += nBin * (genomeWideBins - nBin)
+		possIntraAllCount += float64(nBin*(nBin+1)) / 2
 	}
-	return genomeWideTotal, genomeWideBins
+	interChromProb := 1 / float64(possInterAllCount)
+	baselineIntraChromProb := 1 / possIntraAllCount
+
+	return genomeWideBins, maxPossDist, possIntraInRange, possInterAllCount, interChromProb, baselineIntraChromProb
 }
 
 func writeBins(s settings, bins []bin) {
@@ -175,6 +191,28 @@ func parseIntoBins(dists []sizeDist, totalInteractions, nBins int) []bin {
 	return bins
 }
 
+func calculateProbabilities(s settings, bins []bin, total int) (avgDistance, avgContacts []float64) {
+	var avgC, avgD float64
+	o := fileio.EasyCreate(fmt.Sprintf("%s/averageContactsByDist.txt", s.outDir))
+	fileio.WriteToFileHandle(o, "averageDistance\taverageContacts")
+	for i := range bins {
+		avgC = (float64(bins[i].nObservedContacts) / float64(bins[i].possiblePairs)) / float64(total)
+		avgD = (bins[i].allDistancesSum / float64(bins[i].possiblePairs)) * 1e6
+		avgContacts = append(avgContacts, avgC)
+		avgDistance = append(avgDistance, avgD)
+		fileio.WriteToFileHandle(o, fmt.Sprintf("%f\t%f", avgD, avgC))
+	}
+	err := o.Close()
+	exception.PanicOnErr(err)
+	return avgDistance, avgContacts
+}
+
+func splineFit(x, y []float64) {
+	s := gospline.NewCubicSpline(x, y)
+	fmt.Println(s)
+	s.Range(20000, _, 10000)
+}
+
 func main() {
 	s := settings{
 		inFile:     "/Users/sethweaver/Downloads/gonomicsMHIC/testdata/output/uniContacts.txt",
@@ -182,6 +220,7 @@ func main() {
 		nBins:      100,
 		resolution: 10000,
 		outDir:     "/Users/sethweaver/Downloads/gonomicsMHIC/testdata/output",
+		bias:       mHiC.ReadBias("/Users/sethweaver/Downloads/gonomicsMHIC/testdata/output/biasFile.txt"),
 	}
 	buildMhicPrior(s)
 }
