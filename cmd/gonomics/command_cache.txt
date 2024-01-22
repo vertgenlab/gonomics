@@ -14,6 +14,7 @@
 ##CmdName:bedOverlapByWindow
 ##CmdName:bedShear
 ##CmdName:bedSimilarity
+##CmdName:bedSplit
 ##CmdName:bedToAminoAcid
 ##CmdName:bedToFasta
 ##CmdName:bedToWig
@@ -215,6 +216,9 @@
      [32mglobalAlignment[0m               [36mAlign 2 .fasta files, each with only 1 sequence[0m
      [32mglobalAlignmentAnchor[0m         [36moperates on 2 species, takes alignment maf, filters for trusted matches (s lines generated from the same chromosome in both species), and aligns the gap sequences between the trusted matches (affineGap, DefaultScoreMatrix)[0m
                                             
+[31mMotif Tools[0m                            
+     [32mpwmTools[0m                      [36ma collection of tools for manipulating position matrices.[0m
+                                            
 [31mOntology Tools[0m                         
      [32mgafFilter[0m                     [36mgafFilter[0m
                                             
@@ -277,9 +281,9 @@
      [32mDEPRECATED[0m                    [36mThis directory contains deprecated commands, preserved for backwards compatability.[0m
      [32mbedShear[0m                      [36mSplit bed entries into smaller fragment bed entries.[0m
      [32mbedSimilarity[0m                 [36m- Takes in 2 bed files or a list of bed files and gives similarity statistics based on number of overlapsfor the input bed files.[0m
+     [32mbedSplit[0m                      [36m[0m
      [32mdigestGenome[0m                  [36m- Create a bed file of restriction fragments from an input FASTA file and a restriction enzyme recognition sequence[0m
      [32mgeneAssignmentStats[0m           [36msage:[0m
      [32moboTools[0m                      [36ma collection of tools for manipulating files in the Open Biomedical Ontologies (OBO) file format.[0m
-     [32mpwmTools[0m                      [36ma collection of tools for manipulating position matrices.[0m
      [32mtfMatch[0m                       [36mGenome-wide scanning of TFBS occurrences.Input DNA sequences must be upper case.[0m
      [32mtfMatchComp[0m                   [36mCompare the motif profiles between two input aligned genomic sequences.Output lines are as follows:[0m

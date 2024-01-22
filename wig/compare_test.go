@@ -6,22 +6,22 @@ import (
 )
 
 var PearsonTests = []struct {
-	alpha             []Wig
-	beta              []Wig
+	alpha             map[string]Wig
+	beta              map[string]Wig
 	missing           float64
 	samplingFrequency float64
 	expected          float64
 }{
 	{
-		alpha: []Wig{
-			{
+		alpha: map[string]Wig{
+			"chr1": {
 				StepType: "fixedStep",
 				Chrom:    "chr1",
 				Start:    1,
 				Step:     1,
 				Values:   []float64{10, 5, 3, 5, 10},
 			},
-			{
+			"chr2": {
 				StepType: "fixedStep",
 				Chrom:    "chr2",
 				Start:    1,
@@ -29,15 +29,15 @@ var PearsonTests = []struct {
 				Values:   []float64{2, -10, 4, 5, 6, 5, 4, 3, 7, 7, 9},
 			},
 		},
-		beta: []Wig{
-			{
+		beta: map[string]Wig{
+			"chr2": {
 				StepType: "fixedStep",
 				Chrom:    "chr2",
 				Start:    1,
 				Step:     1,
 				Values:   []float64{2, -10, 7, 5, 6, 5, 4, 3, 7, 7, 9},
 			},
-			{
+			"chr1": {
 				StepType: "fixedStep",
 				Chrom:    "chr1",
 				Start:    1,

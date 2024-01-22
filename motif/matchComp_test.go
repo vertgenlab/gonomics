@@ -21,6 +21,7 @@ var MatchCompTests = []struct {
 	Pseudocounts       float64
 	ExpectedFile       string
 	EnforceStrandMatch bool
+	GcContent          float64
 }{
 	{MotifFile: "testdata/myMotifFile.txt",
 		MotifType:          "Frequency",
@@ -34,6 +35,7 @@ var MatchCompTests = []struct {
 		Pseudocounts:       0.1,
 		ExpectedFile:       "testdata/expected.myAln.bed",
 		EnforceStrandMatch: false,
+		GcContent:          0.5,
 	},
 	{MotifFile: "testdata/myMotifFile.txt",
 		MotifType:          "Frequency",
@@ -47,6 +49,7 @@ var MatchCompTests = []struct {
 		Pseudocounts:       5,
 		ExpectedFile:       "testdata/expected.myAln.highPseudo.bed",
 		EnforceStrandMatch: false,
+		GcContent:          0.5,
 	},
 	{MotifFile: "testdata/myMotifFile.txt",
 		MotifType:          "Frequency",
@@ -60,6 +63,7 @@ var MatchCompTests = []struct {
 		Pseudocounts:       0.1,
 		ExpectedFile:       "testdata/expected.myAln.enforceStrand.bed",
 		EnforceStrandMatch: true,
+		GcContent:          0.5,
 	},
 	{MotifFile: "testdata/myMotifFile.txt",
 		MotifType:          "Frequency",
@@ -73,6 +77,7 @@ var MatchCompTests = []struct {
 		Pseudocounts:       0.1,
 		ExpectedFile:       "testdata/expected.myAln.highPropMatch.bed",
 		EnforceStrandMatch: false,
+		GcContent:          0.5,
 	},
 	{MotifFile: "testdata/myMotifFile.txt",
 		MotifType:          "Frequency",
@@ -86,6 +91,7 @@ var MatchCompTests = []struct {
 		Pseudocounts:       0.1,
 		ExpectedFile:       "testdata/expected.myAln.wideResidual.bed",
 		EnforceStrandMatch: false,
+		GcContent:          0.5,
 	},
 }
 
@@ -108,6 +114,7 @@ func TestMatchComp(t *testing.T) {
 			ResidualWindowSize: v.ResidualWindowSize,
 			OutputAsProportion: v.OutputAsProportion,
 			EnforceStrandMatch: v.EnforceStrandMatch,
+			GcContent:          v.GcContent,
 		}
 		MatchComp(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

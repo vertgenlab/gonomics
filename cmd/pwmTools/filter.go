@@ -11,6 +11,7 @@ import (
 	"os"
 )
 
+// FilterSettings defines the usage settings for the pwmTools filter subcommand.
 type FilterSettings struct {
 	InFile     string
 	OutFile    string
@@ -19,6 +20,7 @@ type FilterSettings struct {
 	MaxLength  int
 }
 
+// filterUsage defines the usage statement for the pwmTools filter subcommand.
 func filterUsage(filterFlags *flag.FlagSet) {
 	fmt.Printf("pwmTools filter - a tool for filtering PWM records.\n" +
 		"Usage:\n" +
@@ -27,9 +29,10 @@ func filterUsage(filterFlags *flag.FlagSet) {
 	filterFlags.PrintDefaults()
 }
 
+// parseFilterArgs is the main function for the pwmTools filter subcommand. It parses options and to run the function pwmFilter.
 func parseFilterArgs() {
-	var err error
 	var expectedNumArgs int = 2
+	var err error
 	filterFlags := flag.NewFlagSet("filter", flag.ExitOnError)
 	var minLength *int = filterFlags.Int("minLength", 0, "Specify the minimum length of PWMs to be retained in the output.")
 	var maxLength *int = filterFlags.Int("maxLength", numbers.MaxInt, "Specify the maximum length of PWMs to be retained in the output.")
@@ -58,6 +61,7 @@ func parseFilterArgs() {
 	pwmFilter(s)
 }
 
+// pwmFilter parses an input PositionMatrix file and retains entries in an output file that pass filter criteria.
 func pwmFilter(s FilterSettings) {
 	var err error
 	var pass bool

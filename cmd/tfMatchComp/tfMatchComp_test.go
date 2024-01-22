@@ -20,6 +20,7 @@ var TfMatchCompTests = []struct {
 	ExpectedFile       string
 	OutputAsProportion bool
 	ResidualFilter     float64
+	GcContent          float64
 }{
 	{InFile: "testdata/STR012.fa",
 		MatrixFile:         "testdata/jaspar.vertebrate.txt",
@@ -32,6 +33,7 @@ var TfMatchCompTests = []struct {
 		ExpectedFile:       "testdata/expected.tfMatchComp.bed",
 		OutputAsProportion: true,
 		ResidualFilter:     0.1,
+		GcContent:          0.5,
 	},
 }
 
@@ -49,6 +51,7 @@ func TestTfMatchComp(t *testing.T) {
 			RefStart:           v.RefStart,
 			OutputAsProportion: v.OutputAsProportion,
 			ResidualFilter:     v.ResidualFilter,
+			GcContent:          v.GcContent,
 		}
 		tfMatchComp(s, v.InFile)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
