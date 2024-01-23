@@ -16,7 +16,7 @@ func makeMap() map[string]string {
 	mp["4_Tx"] = "122,229,130"
 	mp["5_TxWk"] = "122,229,130"
 	mp["6_EnhG"] = "0,165,207"
-	mp["7_Enh"] = "0,78,100"
+	mp["7_Enh"] = "33,145,251"
 	mp["8_ZNF/Rpts"] = "255,49,46"
 	mp["9_Het"] = "81,80,82"
 	mp["10_TssBiv"] = "255,200,87"
