@@ -115,7 +115,7 @@ func buildMhicPrior(s settings) {
 	//genomeWideBins, maxPossDist, possIntraInRange, possInterAllCount, interChromProb, baselineIntraChromProb := populateBinData(s, bins)
 	x, y := calculateProbabilities(s, bins, total)
 	writeBins(s, bins)
-	splineFit(x, y)
+	splineFit(x, y, s, mp)
 }
 
 func populateBinData(s settings, bins []bin) (int, int, int, int, float64, float64) {
@@ -207,10 +207,11 @@ func calculateProbabilities(s settings, bins []bin, total int) (avgDistance, avg
 	return avgDistance, avgContacts
 }
 
-func splineFit(x, y []float64) {
-	s := gospline.NewCubicSpline(x, y)
-	fmt.Println(s)
-	s.Range(20000, _, 10000)
+func splineFit(x, y []float64, s settings) {
+	fmt.Println(x[len(x)-1])
+	sp := gospline.NewCubicSpline(x, y)
+	vals := sp.Range(float64(2*s.resolution), x[len(x)-1], float64(s.resolution))
+	fmt.Println(vals)
 }
 
 func main() {
