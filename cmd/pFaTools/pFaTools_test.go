@@ -5,7 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"golang.org/x/exp/rand"
 	"os"
 	"testing"
 )
@@ -119,8 +118,8 @@ func TestSample(t *testing.T) {
 			InFile:     testCase.InFile,
 			OutDir:     testCase.OutDir,
 			NumSamples: testCase.NumSamples,
+			SetSeed:    testCase.SetSeed,
 		}
-		rand.Seed(testCase.SetSeed)
 		pFaSample(s)
 		for currSample := 0; currSample < s.NumSamples; currSample++ {
 			var outName = fmt.Sprintf("%s/sample_%v.fa", s.OutDir, currSample)

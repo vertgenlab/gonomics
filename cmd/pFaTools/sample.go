@@ -16,6 +16,7 @@ type SampleSettings struct {
 	InFile     string
 	OutDir     string
 	NumSamples int
+	SetSeed    uint64
 }
 
 // sampleUsage defines the usage statement for the pFaTools sample subcommand.
@@ -36,6 +37,7 @@ func parseSampleArgs() {
 	var err error
 	sampleFlags := flag.NewFlagSet("sample", flag.ExitOnError)
 	var numSamples *int = sampleFlags.Int("numSamples", 1, "Specify the number of samples desired.")
+	var setSeed *uint64 = sampleFlags.Uint64("setseed", 0, "Specify the seed of the random number generator.")
 	err = sampleFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	sampleFlags.Usage = func() { sampleUsage(sampleFlags) }
@@ -53,6 +55,7 @@ func parseSampleArgs() {
 		InFile:     inFile,
 		OutDir:     outDir,
 		NumSamples: *numSamples,
+		SetSeed:    *setSeed,
 	}
 
 	pFaSample(s)
@@ -63,7 +66,7 @@ func pFaSample(s SampleSettings) {
 	var err error
 	for currSample := 0; currSample < s.NumSamples; currSample++ {
 		var outName = fmt.Sprintf("%s/sample_%v.fa", s.OutDir, currSample)
-		records := pFasta.Sample(pFasta.Read(s.InFile)[0])
+		records := pFasta.Sample(pFasta.Read(s.InFile)[0], s.SetSeed)
 		out := fileio.EasyCreate(outName)
 		fasta.WriteFasta(out, records, 50)
 
