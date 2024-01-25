@@ -1,10 +1,7 @@
 package pFasta
 
 import (
-	"fmt"
 	"testing"
-
-	"golang.org/x/exp/rand"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
@@ -189,10 +186,7 @@ var ExtractBedTests = []struct {
 			},
 		},
 	},
-		Region: bed.Bed{Chrom: "chr1",
-			ChromStart: 3,
-			ChromEnd:   5,
-		},
+		Region:     bed.Bed{Chrom: "chr1", ChromStart: 3, ChromEnd: 5, FieldsInitialized: 3},
 		OutputName: "testChr1",
 		Expected: PFasta{Name: "testChr1",
 			Seq: []pDna.Float32Base{
@@ -292,33 +286,57 @@ var SampleTests = []struct {
 
 func TestExtract(t *testing.T) {
 	for _, testCase := range ExtractTests {
+		InFile := "testdata_tools/test_extract_input.pfa"
+		recordsIn := []PFasta{testCase.Input}
+		Write(InFile, recordsIn)
+
 		res := Extract(testCase.Input, testCase.Start, testCase.End, testCase.OutputName)
-		fmt.Print(res)
+
 		if !IsEqual(res, testCase.Expected, testCase.Precision) {
 			t.Errorf("Error: in pFasta. Extract valid input test was not as expected.")
 		}
+
+		OutFile := "testdata_tools/test_extract_expected.pfa"
+		records := []PFasta{res}
+		Write(OutFile, records)
 	}
 }
 
 func TestExtractBed(t *testing.T) {
 	for _, testCase := range ExtractBedTests {
+		InFile := "testdata_tools/test_extract_bed_input.pfa"
+		Write(InFile, testCase.Input)
+		InRegion := "testdata_tools/test_extract_bed_input_region.bed"
+
+		bedInput := []bed.Bed{testCase.Region}
+		bed.Write(InRegion, bedInput)
+
 		res := ExtractBed(testCase.Input, testCase.Region, testCase.OutputName)
-		fmt.Print(res)
+
 		if !IsEqual(res, testCase.Expected, testCase.Precision) {
 			t.Errorf("Error: in pFasta. ExtractBed valid input test not as expected.\n")
 		}
+
+		OutFile := "testdata_tools/test_extract_bed_expected.pfa"
+		records := []PFasta{res}
+		Write(OutFile, records)
 	}
 }
 
 func TestSample(t *testing.T) {
 	for _, testCase := range SampleTests {
-		rand.Seed(testCase.SetSeed)
+		InFile := "testdata_tools/test_sample_input.pfa"
+		inputTest := []PFasta{testCase.Input}
+		Write(InFile, inputTest)
 
-		observed := Sample(testCase.Input)
+		observed := Sample(testCase.Input, testCase.SetSeed)
 		if !fasta.IsEqual(observed, testCase.Expected) {
-			fmt.Println(dna.BasesToString(observed.Seq))
+
 			t.Errorf("Error: in pFasta. Sample valid input test not as expected.\n")
 		}
 
+		OutFile := "testdata_tools/test_sample_expected.fa"
+		res := []fasta.Fasta{observed}
+		fasta.Write(OutFile, res)
 	}
 }

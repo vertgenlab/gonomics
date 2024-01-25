@@ -20,7 +20,14 @@ func Extract(input PFasta, start int, end int, outputName string) PFasta {
 		log.Fatalf("Error: positions out of range\n")
 	}
 
-	var answer = PFasta{Name: outputName, Seq: make([]pDna.Float32Base, end-start)}
+	var outName string
+	if len(outputName) > 0 {
+		outName = outputName
+	} else {
+		outName = input.Name
+	}
+
+	var answer = PFasta{Name: outName, Seq: make([]pDna.Float32Base, end-start)}
 
 	for inputIdx := start; inputIdx < end; inputIdx++ {
 		answer.Seq[inputIdx-start] = input.Seq[inputIdx]
@@ -50,10 +57,10 @@ func ExtractBed(input []PFasta, region bed.Bed, outputName string) PFasta {
 }
 
 // Sample returns a new Fasta sampled from the given pFasta probability distribution
-func Sample(input PFasta) fasta.Fasta {
+func Sample(input PFasta, setSeed uint64) fasta.Fasta {
 	var answer = fasta.Fasta{Name: input.Name, Seq: make([]dna.Base, len(input.Seq))}
-
-	var currRand float32 // rand number between 0-1
+	rand.Seed(setSeed)
+	var currRand float32
 	for inputIdx := range input.Seq {
 		currRand = rand.Float32()
 		if currRand < input.Seq[inputIdx].A {
