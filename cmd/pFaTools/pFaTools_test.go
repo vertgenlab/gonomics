@@ -100,7 +100,7 @@ var sampleTests = []struct {
 	OutDir       string
 	NumSamples   int
 	ExpectedFile string
-	SetSeed      uint64
+	SetSeed      int64
 }{
 	{InFile: "testdata/test_sample_input.pfa",
 		OutDir:       "testdata",
