@@ -240,10 +240,14 @@ func ancientDamage(currFrag []dna.Base, ancientAlias numbers.BinomialAlias, geom
 				// nothing to do
 			case dna.C:
 				currFrag[currRandPos] = dna.T
-				deaminationDistributionSlice[distanceToEnd]++
+				if distanceToEnd < len(deaminationDistributionSlice) {
+					deaminationDistributionSlice[distanceToEnd]++
+				}
 			case dna.G:
 				currFrag[currRandPos] = dna.A
-				deaminationDistributionSlice[distanceToEnd]++
+				if distanceToEnd < len(deaminationDistributionSlice) {
+					deaminationDistributionSlice[distanceToEnd]++
+				}
 			case dna.T:
 				// nothing to do
 			default:

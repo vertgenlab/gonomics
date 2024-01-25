@@ -63,14 +63,18 @@ func ReconstructSeq(s Settings) {
 		treeFastas = append(treeFastas, *branches[k].Fasta)
 	}
 
-	if s.KeepAllSeq {
+	if s.KeepAllSeq { // in the keepAllSeq option
 		records := fasta.Read(s.FastaInput) // fasta.Read already makes sure that sequence names are unique
 		treeFastasMap := fasta.ToMap(treeFastas)
 		var found bool
 		for i := range records {
 			_, found = treeFastasMap[records[i].Name]
 			if !found {
-				treeFastas = append(treeFastas, records[i]) // in the keepAllSeq option, append non-tree fastas to the treeFastas variable to be written to the outFile
+				if i == 0 { // if reference fasta is not in tree, then make it the first fasta, before the treeFastas
+					treeFastas = append([]fasta.Fasta{records[i]}, treeFastas...) // this can be achieved by making records[i] a slice, and appending "treeFastas..."
+				} else {
+					treeFastas = append(treeFastas, records[i]) // if non-reference fasta is not in tree, then append it after the treeFastas
+				}
 			}
 		}
 	}
