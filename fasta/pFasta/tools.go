@@ -3,12 +3,11 @@ package pFasta
 import (
 	"log"
 
-	"golang.org/x/exp/rand"
-
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"math/rand"
 )
 
 // Extract returns a new pFa that is a subsequence of the input pFa, defined by a
@@ -57,9 +56,8 @@ func ExtractBed(input []PFasta, region bed.Bed, outputName string) PFasta {
 }
 
 // Sample returns a new Fasta sampled from the given pFasta probability distribution
-func Sample(input PFasta, setSeed uint64) fasta.Fasta {
+func Sample(input PFasta) fasta.Fasta {
 	var answer = fasta.Fasta{Name: input.Name, Seq: make([]dna.Base, len(input.Seq))}
-	rand.Seed(setSeed)
 	var currRand float32
 	for inputIdx := range input.Seq {
 		currRand = rand.Float32()

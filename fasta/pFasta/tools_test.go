@@ -1,12 +1,13 @@
 package pFasta
 
 import (
-	"testing"
-
+	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"math/rand"
+	"testing"
 )
 
 // ExtractTests tests a valid input to Extract
@@ -210,7 +211,7 @@ var ExtractBedTests = []struct {
 
 var SampleTests = []struct {
 	Input    PFasta
-	SetSeed  uint64
+	SetSeed  int64
 	Expected fasta.Fasta
 }{
 	{Input: PFasta{Name: "chr1",
@@ -280,7 +281,7 @@ var SampleTests = []struct {
 	},
 		SetSeed: 7,
 		Expected: fasta.Fasta{Name: "chr1",
-			Seq: dna.StringToBases("GGAACTCTGG")},
+			Seq: dna.StringToBases("TCATGACCAG")},
 	},
 }
 
@@ -304,9 +305,9 @@ func TestExtract(t *testing.T) {
 
 func TestExtractBed(t *testing.T) {
 	for _, testCase := range ExtractBedTests {
-		InFile := "testdata_tools/test_extract_bed_input.pfa"
+		InFile := "testdata_tools/test_extractbed_input.pfa"
 		Write(InFile, testCase.Input)
-		InRegion := "testdata_tools/test_extract_bed_input_region.bed"
+		InRegion := "testdata_tools/test_extractbed_input_region.bed"
 
 		bedInput := []bed.Bed{testCase.Region}
 		bed.Write(InRegion, bedInput)
@@ -317,7 +318,7 @@ func TestExtractBed(t *testing.T) {
 			t.Errorf("Error: in pFasta. ExtractBed valid input test not as expected.\n")
 		}
 
-		OutFile := "testdata_tools/test_extract_bed_expected.pfa"
+		OutFile := "testdata_tools/test_extractbed_expected.pfa"
 		records := []PFasta{res}
 		Write(OutFile, records)
 	}
@@ -328,10 +329,10 @@ func TestSample(t *testing.T) {
 		InFile := "testdata_tools/test_sample_input.pfa"
 		inputTest := []PFasta{testCase.Input}
 		Write(InFile, inputTest)
-
-		observed := Sample(testCase.Input, testCase.SetSeed)
+		rand.Seed(testCase.SetSeed)
+		observed := Sample(testCase.Input)
+		fmt.Printf(dna.BasesToString(observed.Seq))
 		if !fasta.IsEqual(observed, testCase.Expected) {
-
 			t.Errorf("Error: in pFasta. Sample valid input test not as expected.\n")
 		}
 
