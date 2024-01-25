@@ -1,6 +1,6 @@
-// Command Group:
+// Command Group: "FASTA and Multi-FASTA Tools"
 
-// A collection of tools for manipulating pFasta files.
+// A collection of tools for manipulating pFasta files
 package main
 
 import (

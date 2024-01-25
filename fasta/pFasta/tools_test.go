@@ -1,7 +1,6 @@
 package pFasta
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
@@ -331,13 +330,8 @@ func TestSample(t *testing.T) {
 		Write(InFile, inputTest)
 		rand.Seed(testCase.SetSeed)
 		observed := Sample(testCase.Input)
-		fmt.Printf(dna.BasesToString(observed.Seq))
 		if !fasta.IsEqual(observed, testCase.Expected) {
 			t.Errorf("Error: in pFasta. Sample valid input test not as expected.\n")
 		}
-
-		OutFile := "testdata_tools/test_sample_expected.fa"
-		res := []fasta.Fasta{observed}
-		fasta.Write(OutFile, res)
 	}
 }

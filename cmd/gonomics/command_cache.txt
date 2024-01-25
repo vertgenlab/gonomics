@@ -79,6 +79,7 @@
 ##CmdName:multiFaToVcf
 ##CmdName:oboTools
 ##CmdName:overlapEnrichments
+##CmdName:pFaTools
 ##CmdName:pileup
 ##CmdName:plotFunctions
 ##CmdName:prcompFormat
@@ -187,6 +188,7 @@
      [32mmultFaVisualizer[0m              [36mProvides human-readable multiple alignment from a given multiFa.[0m
      [32mmultiFaExtract[0m                [36mPull sub-sequence from multiple Fasta alignment for each entry. Uses reference indices, treating the first sequence as the reference.[0m
      [32mmultiFaReduce[0m                 [36mmfaReduce removes all columns in a multi fasta alignment that are not variable[0m
+     [32mpFaTools[0m                      [36m[0m
                                             
 [31mFASTQ Tools[0m                            
      [32mfastqFilter[0m                   [36mReturns a filtered fastq based on option parameters.[0m
@@ -234,7 +236,7 @@
      [32mfaFindFast[0m                    [36mReturns number of mutations that separate two sequences for a given window size[0m
      [32mreconstructSeq[0m                [36mreconstructSeq performs ancestral sequence reconstruction based on an input multiFa alignment and Newick tree.This program returns a fasta file containing sequences for all nodes of the tree, including the input sequences (leaves),and the inferred ancestral nodes.[0m
      [32msimRecon[0m                      [36mSimulate evolution along a tree and perform ancestral reconstruction[0m
-     [32msimulateEvol[0m                  [36msimulateEvol simulates sequence evolution on an input fasta.[0m
+     [32msimulateEvol[0m                  [36ma suite of tools molecular evolution simulation.[0m
                                             
 [31mSorting[0m                                
      [32mgirafSort[0m                     [36mExternal sort of giraf records based on topological ordering of nodes in input graph.[0m
