@@ -337,12 +337,124 @@ var ExtractBedTests = []struct {
 }
 
 var SampleTests = []struct {
-	Input    PFasta
+	Input    []PFasta
+	Chrom    string
 	SetSeed  int64
 	Expected fasta.Fasta
 }{
-	{Input: PFasta{Name: "chr1",
+	{Input: []PFasta{PFasta{Name: "chr2",
+				Seq: []pDna.Float32Base{
+					pDna.Float32Base{
+						A: 0.2,
+						C: 0.3,
+						G: 0.4,
+						T: 0.1,
+					},
+					pDna.Float32Base{
+						A: 0.25,
+						C: 0.25,
+						G: 0.25,
+						T: 0.25,
+					},
+					pDna.Float32Base{
+						A: 0.2,
+						C: 0.3,
+						G: 0.3,
+						T: 0.2,
+					},
+					pDna.Float32Base{
+						A: 0.1,
+						C: 0.2,
+						G: 0.3,
+						T: 0.4,
+					},
+					pDna.Float32Base{
+						A: 0.6,
+						C: 0.2,
+						G: 0.1,
+						T: 0.1,
+					},
+				},
+			},
+		PFasta{Name: "chr1",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.3,
+					T: 0.2,
+				},
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.2,
+					G: 0.3,
+					T: 0.4,
+				},
+				pDna.Float32Base{
+					A: 0.25,
+					C: 0.25,
+					G: 0.25,
+					T: 0.25,
+				},
+				pDna.Float32Base{
+					A: 0.6,
+					C: 0.2,
+					G: 0.1,
+					T: 0.1,
+				},
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.4,
+					T: 0.1,
+				},
+
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.4,
+					G: 0.1,
+					T: 0.3,
+				},
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.2,
+					G: 0.2,
+					T: 0.4,
+				},
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.3,
+					G: 0.3,
+					T: 0.3,
+				},
+				pDna.Float32Base{
+					A: 0.5,
+					C: 0.4,
+					G: 0.1,
+					T: 0,
+				},
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.1,
+					G: 0.7,
+					T: 0.1,
+					},
+				},
+			},
+		PFasta{Name: "chr3",
 		Seq: []pDna.Float32Base{
+			pDna.Float32Base{
+				A: 0.2,
+				C: 0.3,
+				G: 0.4,
+				T: 0.1,
+			},
+			pDna.Float32Base{
+				A: 0.25,
+				C: 0.25,
+				G: 0.25,
+				T: 0.25,
+			},
 			pDna.Float32Base{
 				A: 0.2,
 				C: 0.3,
@@ -356,56 +468,15 @@ var SampleTests = []struct {
 				T: 0.4,
 			},
 			pDna.Float32Base{
-				A: 0.25,
-				C: 0.25,
-				G: 0.25,
-				T: 0.25,
-			},
-			pDna.Float32Base{
 				A: 0.6,
 				C: 0.2,
 				G: 0.1,
 				T: 0.1,
-			},
-			pDna.Float32Base{
-				A: 0.2,
-				C: 0.3,
-				G: 0.4,
-				T: 0.1,
-			},
-
-			pDna.Float32Base{
-				A: 0.2,
-				C: 0.4,
-				G: 0.1,
-				T: 0.3,
-			},
-			pDna.Float32Base{
-				A: 0.2,
-				C: 0.2,
-				G: 0.2,
-				T: 0.4,
-			},
-			pDna.Float32Base{
-				A: 0.1,
-				C: 0.3,
-				G: 0.3,
-				T: 0.3,
-			},
-			pDna.Float32Base{
-				A: 0.5,
-				C: 0.4,
-				G: 0.1,
-				T: 0,
-			},
-			pDna.Float32Base{
-				A: 0.1,
-				C: 0.1,
-				G: 0.7,
-				T: 0.1,
+				},
 			},
 		},
 	},
+		Chrom: "chr1",
 		SetSeed: 7,
 		Expected: fasta.Fasta{Name: "chr1",
 			Seq: dna.StringToBases("TCATGACCAG")},
@@ -453,10 +524,10 @@ func TestExtractBed(t *testing.T) {
 func TestSample(t *testing.T) {
 	for _, testCase := range SampleTests {
 		InFile := "testdata_tools/test_sample_input.pfa"
-		inputTest := []PFasta{testCase.Input}
-		Write(InFile, inputTest)
+		Write(InFile, testCase.Input)
+
 		rand.Seed(testCase.SetSeed)
-		observed := Sample(testCase.Input)
+		observed := Sample(testCase.Input, testCase.Chrom)
 		if !fasta.IsEqual(observed, testCase.Expected) {
 			t.Errorf("Error: in pFasta. Sample valid input test not as expected.\n")
 		}

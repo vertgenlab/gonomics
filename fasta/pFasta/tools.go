@@ -10,33 +10,35 @@ import (
 	"math/rand"
 )
 
+// checks if input pFasta has a sequence with chrom as name and returns its index
+func checkIfChromInPfasta(input []PFasta, chrom string) int {
+	chromInInput := false
+	var answer int
+	
+	for inputIdx, inputpFa := range input {
+		if inputpFa.Name == chrom {
+			chromInInput = true
+			answer = inputIdx
+		}
+	}
+
+	if !chromInInput {
+		log.Fatalf("Error: input sequence name does not match requested chrom.")
+	}
+	
+	return answer
+}
+
 // Extract returns a new pFa that is a subsequence of the input pFa, defined by a
 // start (inclusive) and end (exclusive) position, like in bed; makes memory copy
 func Extract(input []PFasta, start int, end int, outputName string, chrom string) PFasta {
 
-	//else if input.Name != chrom {
-	//	log.Fatalf("Error: input sequence name does not match requested chrom.")
-	//}
-
-	regionInInput := false
-	regionIdx := 0
-
-	for inputIdx, inputpFa := range input {
-		if inputpFa.Name == chrom {
-			regionInInput = true
-			regionIdx = inputIdx
-			break
-		}
-	}
+	chromIdx := checkIfChromInPfasta(input, chrom)
 
 	if start >= end {
 		log.Fatalf("Error: start must be less than end\n")
-	} else if start < 0 || end > len(input[regionIdx].Seq) {
+	} else if start < 0 || end > len(input[chromIdx].Seq) {
 		log.Fatalf("Error: positions out of range\n")
-	}
-
-	if !regionInInput {
-		log.Fatalf("Error: region not in input\n")
 	}
 
 	var outName string
@@ -49,7 +51,7 @@ func Extract(input []PFasta, start int, end int, outputName string, chrom string
 	var answer = PFasta{Name: outName, Seq: make([]pDna.Float32Base, end-start)}
 
 	for inputIdx := start; inputIdx < end; inputIdx++ {
-		answer.Seq[inputIdx-start] = input[regionIdx].Seq[inputIdx]
+		answer.Seq[inputIdx-start] = input[chromIdx].Seq[inputIdx]
 	}
 
 	return answer
@@ -62,18 +64,18 @@ func ExtractBed(input []PFasta, region bed.Bed, outputName string) PFasta {
 }
 
 // Sample returns a new Fasta sampled from the given pFasta probability distribution
+func Sample(input []PFasta, chrom string) fasta.Fasta {
+	chromIdx := checkIfChromInPfasta(input, chrom)
 
-// //// ASK THIS QUESTION TOMORROW: do we want to be able to specify which sequence in the input we want a sample of?
-func Sample(input PFasta) fasta.Fasta {
-	var answer = fasta.Fasta{Name: input.Name, Seq: make([]dna.Base, len(input.Seq))}
+	var answer = fasta.Fasta{Name: input[chromIdx].Name, Seq: make([]dna.Base, len(input[chromIdx].Seq))}
 	var currRand float32
-	for inputIdx := range input.Seq {
+	for inputIdx := range input[chromIdx].Seq {
 		currRand = rand.Float32()
-		if currRand < input.Seq[inputIdx].A {
+		if currRand < input[chromIdx].Seq[inputIdx].A {
 			answer.Seq[inputIdx] = dna.A
-		} else if currRand < (input.Seq[inputIdx].C + input.Seq[inputIdx].A) {
+		} else if currRand < (input[chromIdx].Seq[inputIdx].C + input[chromIdx].Seq[inputIdx].A) {
 			answer.Seq[inputIdx] = dna.C
-		} else if currRand < (input.Seq[inputIdx].G + input.Seq[inputIdx].C + input.Seq[inputIdx].A) {
+		} else if currRand < (input[chromIdx].Seq[inputIdx].G + input[chromIdx].Seq[inputIdx].C + input[chromIdx].Seq[inputIdx].A) {
 			answer.Seq[inputIdx] = dna.G
 		} else {
 			answer.Seq[inputIdx] = dna.T

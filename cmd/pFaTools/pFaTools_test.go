@@ -95,12 +95,14 @@ func TestExtractBed(t *testing.T) {
 
 var sampleTests = []struct {
 	InFile       string
+	Chrom		 string
 	OutDir       string
 	NumSamples   int
 	ExpectedFile string
 	SetSeed      int64
 }{
 	{InFile: "testdata/test_sample_input.pfa",
+		Chrom: 		  "chr1",
 		OutDir:       "testdata",
 		NumSamples:   1,
 		ExpectedFile: "testdata/test_sample_expected.fa",
@@ -114,6 +116,7 @@ func TestSample(t *testing.T) {
 	for _, testCase := range sampleTests {
 		s = SampleSettings{
 			InFile:     testCase.InFile,
+			Chrom:		testCase.Chrom,
 			OutDir:     testCase.OutDir,
 			NumSamples: testCase.NumSamples,
 			SetSeed:    testCase.SetSeed,
