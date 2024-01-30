@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"os"
 	"strconv"
@@ -250,12 +251,10 @@ func ToString(node *Tree) string {
 
 // WriteNewick takes a filename and a pointer to the root of a tree.  It
 // writes the tree to the file in newick format.
-func WriteNewick(filename string, node *Tree) error {
-	file, err := os.Create(filename)
-	defer file.Close()
-	if err != nil {
-		return err
-	}
-	fmt.Fprintf(file, "%s\n", ToString(node))
-	return nil
+func WriteNewick(filename string, node *Tree) {
+	out, err := os.Create(filename)
+	_, err = fmt.Fprintf(out, "%s\n", ToString(node))
+	exception.PanicOnErr(err)
+	err = out.Close()
+	exception.PanicOnErr(err)
 }

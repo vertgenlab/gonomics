@@ -11,6 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
+	"math"
 )
 
 type Settings struct {
@@ -18,19 +19,19 @@ type Settings struct {
 	InFile          string
 	RefFile         string
 	OutFile         string
-	Missing         float64
+	DefaultValue    float64
 	UseRange        bool
 	AnnotationField int
 }
 
 func bedToWig(s Settings) {
 	ref := chromInfo.ReadToMap(s.RefFile)
-	var outWig = wig.MakeSkeleton(ref, s.Missing)
+	var outWig = wig.MakeSkeleton(ref, s.DefaultValue)
 	if s.Method == "Reads" {
 		rec := bed.Read(s.InFile)
 		outWig = convert.BedReadsToWig(rec, ref)
 	} else if s.Method == "Name" || s.Method == "Score" || s.Method == "Annotation" {
-		outWig = convert.BedValuesToWig(s.InFile, ref, s.Missing, s.Method, s.UseRange, s.AnnotationField)
+		outWig = convert.BedValuesToWig(s.InFile, ref, s.DefaultValue, s.Method, s.UseRange, s.AnnotationField)
 	} else {
 		log.Fatalf("Unrecognized method. Expected 'Reads', 'Name', 'Score', or 'Annotation'. Found: %s.", s.Method)
 	}
@@ -53,7 +54,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 4
-	var missing *float64 = flag.Float64("missingData", 0, "For BedNameToWig, sets the value of the output wig in regions where there is no bed data.")
+	var defaultValue *float64 = flag.Float64("defaultValue", math.MaxFloat64, "(Developer) Set the default value of the wig struct. Set to a value that is unlikely to be found in the real wig data.")
 	var useRange *bool = flag.Bool("useRange", false, "For Name, Annotation, or Score method, set the wig value across the whole bed range instead of the midpoint.")
 	var annotationField *int = flag.Int("annotationField", 0, "Specify which annotation column to use for wig values.")
 
@@ -77,7 +78,7 @@ func main() {
 		InFile:          inFile,
 		RefFile:         reference,
 		OutFile:         outFile,
-		Missing:         *missing,
+		DefaultValue:    *defaultValue,
 		UseRange:        *useRange,
 		AnnotationField: *annotationField,
 	}

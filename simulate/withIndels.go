@@ -31,7 +31,7 @@ func indelLength(lambda float64) int {
 
 const bufferSize = 10_000_000
 
-// SimulateWithIndels takes an input fastaFile, which must contain a single fasta entry, and simulates a mutated sequence.
+// WithIndels takes an input fastaFile, which must contain a single fasta entry, and simulates a mutated sequence.
 // The output sequence is provided in a multiFa alignment, aligned to the initial sequence.
 // branchLength (a float from 0 to 1) specifies the expected value of the proportion of sites in the input sequence that will be mutated.
 // propIndel (a float from 0 to 1) specifies the expected value of the proportion of indels in the output sequence.
@@ -40,7 +40,7 @@ const bufferSize = 10_000_000
 // vcfOutFile specifies an optional (empty string disables this option) return that records all variants made during the simulated mutation process.
 // transitionBias specifies the expected value of the ratio of transitions to transversions in the output sequence.
 // qName sets the suffix for the output query fasta name.
-func SimulateWithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, transitionBias float64, vcfOutFile string, qName string) []fasta.Fasta {
+func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, transitionBias float64, vcfOutFile string, qName string) []fasta.Fasta {
 	var answer = make([]fasta.Fasta, 2)
 	var emptyRoomInBuffer = bufferSize
 	var currRand, currRand2, currRand3 float64

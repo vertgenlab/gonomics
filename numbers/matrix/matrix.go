@@ -148,9 +148,9 @@ func Rref(m [][]float64) [][]float64 {
 	return mCopy
 }
 
-// approxEqual returns true if the entries of 2 input matrices are approximately equal,
+// approxDenseEqual returns true if the entries of 2 input matrices are approximately equal,
 // within some bound of relative precision.
-func approxEqual(m1 *mat.Dense, m2 *mat.Dense, precision float64) bool {
+func approxDenseEqual(m1 *mat.Dense, m2 *mat.Dense, precision float64) bool {
 	var currRow, currCol int
 	rows1, cols1 := m1.Dims()
 	rows2, cols2 := m2.Dims()
@@ -169,5 +169,30 @@ func approxEqual(m1 *mat.Dense, m2 *mat.Dense, precision float64) bool {
 		}
 	}
 
+	return true
+}
+
+// ApproxEqual returns true if two input matrices are equal, where their values are within
+// some user-specified amount of relative precision.
+func ApproxEqual(m1 [][]float64, m2 [][]float64, precision float64) bool {
+	var currRow, currCol int
+	if len(m1) != len(m2) {
+		return false
+	}
+	if len(m1) == 0 {
+		return true
+	}
+	for currRow = range m1 {
+		if len(m1[currRow]) != len(m2[currRow]) {
+			return false
+		}
+	}
+	for currRow = range m1 {
+		for currCol = range m1[currRow] {
+			if math.Abs(m1[currRow][currCol]-m2[currRow][currCol])/math.Max(m1[currRow][currCol], m2[currRow][currCol]) > precision {
+				return false
+			}
+		}
+	}
 	return true
 }

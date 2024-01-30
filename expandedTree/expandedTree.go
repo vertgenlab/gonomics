@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/tree"
 	"strconv"
 	"strings"
 
@@ -28,6 +29,10 @@ type ETree struct {
 	DescendentBasePresent bool           // True if any descendent nodes have a base, in a specific position
 	BasePresent           bool           // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
 	Pfasta                *pFasta.PFasta // Contains the pdna sequence associated with this node. PFasta.Name should equal Name.
+	Up                    *ETree      // The immediate ancestral node.
+	DescendentBasePresent bool        // True if any descendent nodes have a base, in a specific position
+	BasePresent           bool        // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
+	SubstitutionMatrix    [][]float64 // for custom substitution matrices. This is a 4x4 substitution matrices for nucleotides.
 }
 
 // ReadTree takes a filename of a tree in newick format and a filename of a fasta file.  The names in the tree will be assigned
@@ -45,16 +50,7 @@ func ReadTree(newickFilename string, fastasFilename string) (*ETree, error) {
 func ReadNewick(filename string) (*ETree, error) {
 	var singleLineTree string
 	singleLineTree = fileio.ReadFileToSingleLineString(filename)
-
 	return parseNewick(singleLineTree[strings.Index(singleLineTree, "(") : 1+strings.LastIndex(singleLineTree, ";")])
-}
-
-// NewickToTree takes a newick tree stored in a single string, and returns a pointer to the root node.
-func NewickToTree(tree string) *ETree {
-	makeTree, err := parseNewick(tree)
-	if err != nil {
-	}
-	return makeTree
 }
 
 // GetTree takes a root node and returns a slice of all nodes in the tree.
@@ -262,4 +258,26 @@ func FindNodeName(node *ETree, findMe string) *ETree {
 		}
 	}
 	return nil
+}
+
+// ToNewickString converts a *ETree to a Newick-format string.
+func ToNewickString(node *ETree) string {
+	treeToWrite := toTree(node)
+	return tree.ToString(treeToWrite)
+}
+
+// toTree converts an input *ETree to a *tree.Tree
+func toTree(node *ETree) *tree.Tree {
+	var answer *tree.Tree = &tree.Tree{
+		Name:         node.Name,
+		OnlyTopology: node.OnlyTopology,
+		BranchLength: node.BranchLength,
+	}
+	if node.Left != nil {
+		answer.Left = toTree(node.Left)
+	}
+	if node.Right != nil {
+		answer.Right = toTree(node.Right)
+	}
+	return answer
 }

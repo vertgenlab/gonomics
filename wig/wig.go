@@ -19,12 +19,13 @@ import (
 // Wig stores information on the chromosome location and step properties of Wig data. Individual wig values
 // are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
 type Wig struct {
-	StepType string
-	Chrom    string
-	Start    int
-	Step     int
-	Span     int
-	Values   []float64
+	StepType     string
+	Chrom        string
+	Start        int
+	Step         int
+	Span         int
+	DefaultValue float64 // this will be the value in positions where there is no wig data, alternatively referred to as "MissingValue" in some functions
+	Values       []float64
 }
 
 // NextWig returns a Wig struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
@@ -125,32 +126,40 @@ func Write(filename string, records map[string]Wig) {
 // WriteToFileHandle is a helper function for Write that writes the Wig data structure to an io.Writer
 func WriteToFileHandle(file io.Writer, rec Wig) {
 	var err error
-	if rec.StepType == "fixedStep" {
-		if rec.Span != -1 { //if there was a span in the header line
-			_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d span=%d\n", rec.StepType, rec.Chrom,
-				rec.Start, rec.Step, rec.Span)
-		} else {
-			_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d\n", rec.StepType, rec.Chrom,
-				rec.Start, rec.Step)
-		}
-		exception.PanicOnErr(err)
-	} else if rec.StepType == "variableStep" {
-		log.Fatalf("ERROR: %s is variableStep Wig, must convert to fixedStep before reading in Wig to gonomics", rec.StepType)
-	} else {
-		log.Fatalf("Invalid step type for wig.")
-	}
-
-	for i := range rec.Values {
-		if rec.StepType == "fixedStep" {
-			if rec.Values[i] == 0 {
-				_, err = fmt.Fprintf(file, "0\n") //will turn a 0.000000 to a 0 to save mem
-			} else {
-				_, err = fmt.Fprintf(file, "%f\n", rec.Values[i])
-			} //Only print significant figures to some capacity? rpkm
-			// We want to make this as concise as possible.
-			// How can we break up a wig into sections that actually has data and skip over large sections of zeros?
+	var inDefaultRegion bool = true // bool to detect when we are in a region of defaultValues, where we don't need to write to file
+	for currIndex := range rec.Values {
+		if rec.Values[currIndex] != rec.DefaultValue {
+			if inDefaultRegion {
+				inDefaultRegion = false
+				_, err = fmt.Fprintf(file, "%s\n", makeWigHeaderString(rec, rec.Start+currIndex-1))
+				exception.PanicOnErr(err)
+			}
+			_, err = fmt.Fprintf(file, "%g\n", rec.Values[currIndex])
 			exception.PanicOnErr(err)
+		} else {
+			inDefaultRegion = true
 		}
+	}
+}
+
+// makeWigHeaderString makes a wig header for a given Wig struct at a user-specified index position.
+// currIndex is index of values, and therefore zero-based. Note that wig start positions are 1-based.
+func makeWigHeaderString(record Wig, currIndex int) string {
+	switch record.StepType {
+	case "fixedStep":
+		if record.Span != -1 { //-1 encodes missing Span, so this is the case where the header had a Span
+			return fmt.Sprintf("%s chrom=%s start=%d step=%d span=%d", record.StepType, record.Chrom,
+				currIndex+1, record.Step, record.Span)
+		} else {
+			return fmt.Sprintf("%s chrom=%s start=%d step=%d", record.StepType, record.Chrom,
+				currIndex+1, record.Step)
+		}
+	case "variableStep":
+		log.Fatalf("Error: VariableStep Wig detected, must convert to fixedStep before reading in Wig to gonomics.\n")
+		return ""
+	default:
+		log.Fatalf("Error: Invalid step type for wig.")
+		return ""
 	}
 }
 
@@ -198,7 +207,7 @@ func MakeSkeleton(chromSizes map[string]chromInfo.ChromInfo, defaultValue float6
 	var x int
 
 	for _, v := range chromSizes {
-		currentWig = Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1, Span: -1}
+		currentWig = Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1, Span: -1, DefaultValue: defaultValue}
 		currentWig.Values = make([]float64, v.Size)
 		for x = 0; x < v.Size; x++ {
 			currentWig.Values[x] = defaultValue
