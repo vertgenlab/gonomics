@@ -196,22 +196,37 @@ func calculateProbabilities(s settings, bins []bin, total int) (avgDistance, avg
 	o := fileio.EasyCreate(fmt.Sprintf("%s/averageContactsByDist.txt", s.outDir))
 	fileio.WriteToFileHandle(o, "averageDistance\taverageContacts")
 	for i := range bins {
-		avgC = (float64(bins[i].nObservedContacts) / float64(bins[i].possiblePairs)) / float64(total)
-		avgD = (bins[i].allDistancesSum / float64(bins[i].possiblePairs)) * 1e6
+		avgC = float64(float64(bins[i].nObservedContacts)/float64(bins[i].possiblePairs)) / float64(total) //possible pairs is a bit of normalizing factor
+		avgD = (bins[i].allDistancesSum / float64(bins[i].possiblePairs)) * 1000000                        // take closer look at this
 		avgContacts = append(avgContacts, avgC)
 		avgDistance = append(avgDistance, avgD)
-		fileio.WriteToFileHandle(o, fmt.Sprintf("%f\t%f", avgD, avgC))
+		fileio.WriteToFileHandle(o, fmt.Sprintf("%f\t%.15f", avgD, avgC))
 	}
 	err := o.Close()
 	exception.PanicOnErr(err)
 	return avgDistance, avgContacts
 }
 
-func splineFit(x, y []float64, s settings) {
-	fmt.Println(x[len(x)-1])
-	sp := gospline.NewCubicSpline(x, y)
-	vals := sp.Range(float64(2*s.resolution), x[len(x)-1], float64(s.resolution))
+func splineFit(x, y []float64, s settings, mp map[int]int) {
+	//fmt.Println(x[len(x)-1])
+	var vals, spVals []float64
+	o := fileio.EasyCreate(fmt.Sprintf("%s/splineVals.txt", s.outDir))
+	fileio.WriteToFileHandle(o, "dist\tsplineVal")
+	for i := range mp {
+		if i >= 2*s.resolution && float64(i) <= x[len(x)-1] {
+			vals = append(vals, float64(i))
+		}
+	}
+	sort.Float64s(vals)
 	fmt.Println(vals)
+	sp := gospline.NewCubicSpline(x, y)
+	for i := range vals {
+		spVals = append(spVals, sp.At(vals[i]))
+		fileio.WriteToFileHandle(o, fmt.Sprintf("%f\t%.12f", vals[i], sp.At(vals[i])))
+	}
+	err := o.Close()
+	exception.PanicOnErr(err)
+	fmt.Println(spVals)
 }
 
 func main() {
