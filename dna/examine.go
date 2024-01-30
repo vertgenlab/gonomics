@@ -55,7 +55,7 @@ func CountGaps(seq []Base) int {
 	return gapCount
 }
 
-// GCContent returns the GC content for the input sequence. Note that n/Ns are ignored.
+// GCContent returns the GC content for the input sequence. Note that n/Ns are ignored and output is truncated to the nearest int.
 func GCContent(seq []Base) (gcContent int) {
 	ACount, CCount, GCount, TCount, _, aCount, cCount, gCount, tCount, _, _ := Count(seq)
 	gcContent = ((CCount + GCount + cCount + gCount) * 100) / (ACount + CCount + GCount + TCount + aCount + cCount + gCount + tCount)
