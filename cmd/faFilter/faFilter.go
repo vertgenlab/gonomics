@@ -13,7 +13,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-func faFilter(infile string, outfile string, name string, notName string, nameContains string, refPositions bool, start int, end int, minSize int, maxGC int) {
+func faFilter(infile string, outfile string, name string, notName string, nameContains string, refPositions bool, start int, end int, minSize int, maxGC float64) {
 	records := fasta.Read(infile) //read the fasta infile
 	var outlist []fasta.Fasta     //make the variable to store the fasta records that will be written out
 	var pass bool = true
@@ -76,7 +76,7 @@ func main() {
 	var notName *string = flag.String("notName", "", "Returns all fasta records except for this input.")
 	var nameContains *string = flag.String("nameContains", "", "Returns all fasta records whose name contains this input. String matching is case-sensitive.")
 	var minSize *int = flag.Int("minSize", 0, "Retains all fasta records with a sequence of at least that size")
-	var maxGC *int = flag.Int("maxGC", 100, "Retains all fasta records with GC content less than or equal to this percentage.")
+	var maxGC *float64 = flag.Float64("maxGC", 100, "Retains all fasta records with GC content less than or equal to this percentage.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)

@@ -56,9 +56,19 @@ func CountGaps(seq []Base) int {
 }
 
 // GCContent returns the GC content for the input sequence. Note that n/Ns are ignored.
-func GCContent(seq []Base) (gcContent int) {
+func GCContent(seq []Base) (gcContent float32) {
 	ACount, CCount, GCount, TCount, _, aCount, cCount, gCount, tCount, _, _ := Count(seq)
-	gcContent = ((CCount + GCount + cCount + gCount) * 100) / (ACount + CCount + GCount + TCount + aCount + cCount + gCount + tCount)
+	// Convert count output from int to float
+	ACountFloat := float32(ACount)
+	CCountFloat := float32(CCount)
+	GCountFloat := float32(GCount)
+	TCountFloat := float32(TCount)
+	aCountFloat := float32(aCount)
+	cCountFloat := float32(cCount)
+	gCountFloat := float32(gCount)
+	tCountFloat := float32(tCount)
+
+	gcContent = ((CCountFloat + GCountFloat + cCountFloat + gCountFloat) * 100) / (ACountFloat + CCountFloat + GCountFloat + TCountFloat + aCountFloat + cCountFloat + gCountFloat + tCountFloat)
 	return gcContent
 }
 

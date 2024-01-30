@@ -19,7 +19,7 @@ var FaFilterTests = []struct {
 	start        int
 	end          int
 	minSize      int
-	maxGC        int
+	maxGC        float64
 }{
 	{"testdata/minSizeTest.fa", "testdata/minSizeOutput.fa", "testdata/minSizeExpected.fa", "", "", "", false, 0, -1, 10, 100},
 	{"testdata/nameContainsTest.fa", "testdata/nameContainsOutput.fa", "testdata/nameContainsExpected.fa", "", "", "_maternal", false, 0, -1, 0, 100},
