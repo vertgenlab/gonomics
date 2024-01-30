@@ -59,7 +59,7 @@ func CountGaps(seq []Base) int {
 func GCContent(seq []Base) (gcContent int) {
 	ACount, CCount, GCount, TCount, _, aCount, cCount, gCount, tCount, _, _ := Count(seq)
 	gcContent = (CCount + GCount + cCount + gCount) / (ACount + CCount + GCount + TCount + aCount + cCount + gCount + tCount) * 100
-	return
+	return gcContent
 }
 
 // Dist returns the number of bases that do not match between the input sequences.
