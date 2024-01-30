@@ -4,9 +4,6 @@ package expandedTree
 import (
 	"errors"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta/pFasta"
-	"github.com/vertgenlab/gonomics/tree"
 	"log"
 	"strconv"
 	"strings"
@@ -14,6 +11,9 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/tree"
 )
 
 // ETree is a struct that represents a node in a binary tree, and has additional fields for simulation and reconstruction.
@@ -28,13 +28,10 @@ type ETree struct {
 	Left                  *ETree
 	Right                 *ETree
 	Up                    *ETree         // The immediate ancestral node.
-	DescendentBasePresent bool           // True if any descendent nodes have a base, in a specific position
-	BasePresent           bool           // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
-	Pfasta                *pFasta.PFasta // Contains the pdna sequence associated with this node. PFasta.Name should equal Name.
-	Up                    *ETree      // The immediate ancestral node.
 	DescendentBasePresent bool        // True if any descendent nodes have a base, in a specific position
 	BasePresent           bool        // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
 	SubstitutionMatrix    [][]float64 // for custom substitution matrices. This is a 4x4 substitution matrices for nucleotides.
+	Pfasta                *pFasta.PFasta // Contains the pdna sequence associated with this node. PFasta.Name should equal Name.
 }
 
 // ReadTree takes a filename of a tree in newick format and a filename of a fasta file.  The names in the tree will be assigned

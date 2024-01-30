@@ -6,13 +6,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/reconstruct"
+	"github.com/vertgenlab/gonomics/simulate"
 )
 
 type Settings struct {
@@ -26,11 +26,12 @@ type Settings struct {
 	SubMatrix              bool
 	UnitBranchLength       float64
 	SubstitutionMatrixFile string
-	PDnaOut              string
+	PDnaOut                string
 }
 
 func ReconstructSeq(s Settings) {
 	var treeFastas []fasta.Fasta
+	var nodePFasta pFasta
 
 	if s.NonBiasProbThreshold < 0 || s.NonBiasProbThreshold > 1 {
 		log.Fatalf("Error: nonBiasProbThreshold must be a value between 0 and 1. Found: %v.\n", s.NonBiasProbThreshold)
@@ -54,12 +55,26 @@ func ReconstructSeq(s Settings) {
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
 
+	wantPDna := len(s.PDnaOut) > 0
+	var pDnaNode string
+	if !wantPDna{
+		pDnaNode = ""
+	} else {
+		pDnaNode = s.PDnaOut
+	}
+
 	for i := range leaves[0].Fasta.Seq {
-		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix)
+		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix., pDnaNode)
 	}
 	for j := range leaves {
+		if wantPDna {
+			if *leaves[j].Name == pDnaNode {
+				nodePFasta = *leaves[j].Pfasta
+			}
+		}
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
 	}
+	
 	for k := range branches {
 		treeFastas = append(treeFastas, *branches[k].Fasta)
 	}
@@ -80,6 +95,10 @@ func ReconstructSeq(s Settings) {
 		}
 	}
 
+	if len(s.PDnaOut) > 0 {
+		outPFasta := 
+		pfasta.Write(s.OutFile, treeFastas)
+	}
 	fasta.Write(s.OutFile, treeFastas)
 }
 
@@ -130,7 +149,7 @@ func main() {
 		SubstitutionMatrixFile: *substitutionMatrixFile,
 		UnitBranchLength:       *unitBranchLength,
 		SubMatrix:              *subMatrix,
-		PDnaOut:              *pDnaOut,
+		PDnaOut:                *pDnaOut,
 	}
 
 	ReconstructSeq(s)

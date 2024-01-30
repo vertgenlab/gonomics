@@ -2,13 +2,12 @@
 package reconstruct
 
 import (
-	"github.com/vertgenlab/gonomics/dna/pDna"
 	"log"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
+	"github.com/vertgenlab/gonomics/dna/pDna"
 )
 
 // WriteTreeToFasta writes assigned sequences at all nodes to a fasta file.
