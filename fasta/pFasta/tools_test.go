@@ -523,9 +523,6 @@ func TestExtractBed(t *testing.T) {
 
 func TestSample(t *testing.T) {
 	for _, testCase := range SampleTests {
-		InFile := "testdata_tools/test_sample_input.pfa"
-		Write(InFile, testCase.Input)
-
 		rand.Seed(testCase.SetSeed)
 		observed := Sample(testCase.Input, testCase.Chrom)
 		if !fasta.IsEqual(observed, testCase.Expected) {
