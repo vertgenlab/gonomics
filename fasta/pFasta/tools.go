@@ -58,7 +58,8 @@ func Extract(input []PFasta, start int, end int, outputName string, chrom string
 }
 
 // ExtractBed returns a new pFa that is a subsequence of the input pFa
-// defined by the bed region
+// defined by the region in the bed region (currently only accepts one region in bed file)
+// TODO: add multiple regions in bed
 func ExtractBed(input []PFasta, region bed.Bed, outputName string) PFasta {
 	return Extract(input, region.ChromStart, region.ChromEnd, outputName, region.Chrom)
 }
