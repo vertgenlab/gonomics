@@ -20,7 +20,7 @@ var extractTests = []struct {
 	Precision    float32
 }{
 	{InFile: "testdata/test_extract_input.pfa",
-		Chrom:        "chrom1",
+		Chrom:        "chr1",
 		OutName:      "testChr1",
 		OutFile:      "testdata/test_extract_output.pfa",
 		Start:        1,
@@ -56,7 +56,6 @@ func TestExtract(t *testing.T) {
 
 var extractBedTests = []struct {
 	InFile       string
-	Chrom        string
 	Region       string
 	OutName      string
 	OutFile      string
@@ -64,7 +63,6 @@ var extractBedTests = []struct {
 	Precision    float32
 }{
 	{InFile: "testdata/test_extract_input.pfa",
-		Chrom:        "chrom1",
 		Region:       "testdata/test_extractbed_input_region.bed",
 		OutName:      "testChr1",
 		OutFile:      "testdata/test_extractbed_bed_output.pfa",

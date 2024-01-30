@@ -11,14 +11,140 @@ import (
 
 // ExtractTests tests a valid input to Extract
 var ExtractTests = []struct {
-	Input      PFasta
+	Input      []PFasta
 	Start      int
 	End        int
 	OutputName string
+	Chrom      string
 	Expected   PFasta
 	Precision  float32
 }{
-	{Input: PFasta{Name: "chr1",
+	{Input: []PFasta{PFasta{Name: "chr3",
+		Seq: []pDna.Float32Base{
+			pDna.Float32Base{
+				A: 0.2,
+				C: 0.3,
+				G: 0.4,
+				T: 0.1,
+			},
+			pDna.Float32Base{
+				A: 0.25,
+				C: 0.25,
+				G: 0.25,
+				T: 0.25,
+			},
+			pDna.Float32Base{
+				A: 0.2,
+				C: 0.3,
+				G: 0.3,
+				T: 0.2,
+			},
+			pDna.Float32Base{
+				A: 0.1,
+				C: 0.2,
+				G: 0.3,
+				T: 0.4,
+			},
+			pDna.Float32Base{
+				A: 0.6,
+				C: 0.2,
+				G: 0.1,
+				T: 0.1,
+			},
+		},
+	},
+		PFasta{Name: "chr1",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.3,
+					T: 0.2,
+				},
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.2,
+					G: 0.3,
+					T: 0.4,
+				},
+				pDna.Float32Base{
+					A: 0.25,
+					C: 0.25,
+					G: 0.25,
+					T: 0.25,
+				},
+				pDna.Float32Base{
+					A: 0.6,
+					C: 0.2,
+					G: 0.1,
+					T: 0.1,
+				},
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.4,
+					T: 0.1,
+				},
+			},
+		},
+		PFasta{Name: "chr2",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.4,
+					T: 0.1,
+				},
+				pDna.Float32Base{
+					A: 0.25,
+					C: 0.25,
+					G: 0.25,
+					T: 0.25,
+				},
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.3,
+					T: 0.2,
+				},
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.2,
+					G: 0.3,
+					T: 0.4,
+				},
+				pDna.Float32Base{
+					A: 0.6,
+					C: 0.2,
+					G: 0.1,
+					T: 0.1,
+				},
+			},
+		},
+	},
+		Start:      1,
+		End:        3,
+		OutputName: "testChr1",
+		Chrom:      "chr1",
+		Expected: PFasta{Name: "testChr1",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.2,
+					G: 0.3,
+					T: 0.4,
+				},
+				pDna.Float32Base{
+					A: 0.25,
+					C: 0.25,
+					G: 0.25,
+					T: 0.25,
+				},
+			},
+		},
+		Precision: 1e-3,
+	},
+	{Input: []PFasta{PFasta{Name: "chr1",
 		Seq: []pDna.Float32Base{
 			pDna.Float32Base{
 				A: 0.2,
@@ -52,9 +178,11 @@ var ExtractTests = []struct {
 			},
 		},
 	},
+	},
 		Start:      1,
 		End:        3,
 		OutputName: "testChr1",
+		Chrom:      "chr1",
 		Expected: PFasta{Name: "testChr1",
 			Seq: []pDna.Float32Base{
 				pDna.Float32Base{
@@ -287,10 +415,9 @@ var SampleTests = []struct {
 func TestExtract(t *testing.T) {
 	for _, testCase := range ExtractTests {
 		InFile := "testdata_tools/test_extract_input.pfa"
-		recordsIn := []PFasta{testCase.Input}
-		Write(InFile, recordsIn)
+		Write(InFile, testCase.Input)
 
-		res := Extract(testCase.Input, testCase.Start, testCase.End, testCase.OutputName)
+		res := Extract(testCase.Input, testCase.Start, testCase.End, testCase.OutputName, testCase.Chrom)
 
 		if !IsEqual(res, testCase.Expected, testCase.Precision) {
 			t.Errorf("Error: in pFasta. Extract valid input test was not as expected.")
