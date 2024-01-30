@@ -2,6 +2,7 @@
 package reconstruct
 
 import (
+	"github.com/vertgenlab/gonomics/dna/pDna"
 	"log"
 
 	"github.com/vertgenlab/gonomics/dna"
@@ -205,14 +206,14 @@ func mutationProbability(a int, b int, t float64) float64 {
 func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, highestProbThreshold float64) dna.Base {
 	var highestProb, nonBiasBaseProb, total float64 = 0, 0, 0
 	var answer dna.Base = biasBase
-	for p, v := range likelihoods {
-		total += v
-		if dna.Base(p) != biasBase {
-			nonBiasBaseProb += v
+	for baseIdx, baseProb := range likelihoods {
+		total += baseProb
+		if dna.Base(baseIdx) != biasBase {
+			nonBiasBaseProb += baseProb
 		}
-		if v > highestProb {
-			highestProb = v
-			answer = dna.Base(p)
+		if baseProb > highestProb {
+			highestProb = baseProb
+			answer = dna.Base(baseIdx)
 		}
 	}
 	if highestProb/total < highestProbThreshold {
@@ -221,6 +222,20 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 	if nonBiasBaseProb/total < nonBiasBaseThreshold {
 		return biasBase
 	}
+	return answer
+}
+
+func LikelihoodsToPBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, highestProbThreshold float64) pDna.Float32Base {
+	if len(likelihoods) < 4 {
+		log.Fatalf("Error: Expected four bases, received less.")
+	}
+
+	var answer pDna.Float32Base
+	answer.A = float32(likelihoods[0])
+	answer.C = float32(likelihoods[1])
+	answer.G = float32(likelihoods[2])
+	answer.T = float32(likelihoods[3])
+
 	return answer
 }
 
@@ -421,9 +436,10 @@ func descendentBaseExists(node *expandedTree.ETree, pos int) {
 // will be biased towards that descendent. The degree of this bias is controlled by the option 'nonBiasBaseThreshold'.
 // The user may also specify a 'highestProbThreshold'. If the program is uncertain about ancestral reconstruction for a particular
 // node, this option will allow LoopNodes to return an 'N' for that node instead.
-func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64) {
+func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64, pDnaOut string) {
 	var fix []float64
 	var biasBase, answerBase dna.Base
+	var answerPBase pDna.Float32Base
 	var biasParentName string
 	var biasLeafNode *expandedTree.ETree
 
@@ -448,13 +464,26 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 			if biasParentName != "" && internalNodes[k].Name == biasParentName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
+				if internalNodes[k].Name == pDnaOut {
+					answerPBase = LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold)
+				}
 			} else {
 				answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
+				if internalNodes[k].Name == pDnaOut {
+					answerPBase = LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold)
+				}
 			}
 		} else {
 			answerBase = dna.Gap
+			if internalNodes[k].Name == pDnaOut {
+				answerPBase = dna.Gap // FIX THIS TO AN EQUIVALENT?
+			}
 		}
 
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)
+
+		if internalNodes[k].Name == pDnaOut {
+			internalNodes[k].Pfasta.Seq = append(internalNodes[k].Pfasta.Seq, answerPBase)
+		}
 	}
 }

@@ -22,6 +22,7 @@ type Settings struct {
 	NonBiasProbThreshold float64
 	HighestProbThreshold float64
 	KeepAllSeq           bool
+	PDnaOut              string
 }
 
 func ReconstructSeq(s Settings) {
@@ -86,7 +87,7 @@ func main() {
 	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasBaseThreshold", 0, "Given that a biasLeafName specifies a reference species, when reconstructing the sequence of a non-reference species, unless the sum of probabilities for all non-reference bases is above this value, the reference base is returned.")
 	var highestProbThreshold *float64 = flag.Float64("highestProbThreshold", 0, "The highest probability base must be above this value to be accepted for reconstruction. Otherwise, dna.N will be returned.")
 	var keepAllSeq *bool = flag.Bool("keepAllSeq", false, "By default, reconstructSeq discards sequences in the fasta input that are not specified in the newick input, because they are not used in the reconstruction. If keepAllSeq is set to TRUE, reconstructSeq will keep all sequences in the fasta input, even if they are not used in the reconstruction.")
-
+	var pDnaOut *string = flag.String("pDnaOut", "", "Specify a node to get the pDNA sequence of.")
 	var expectedNumArgs = 3
 
 	flag.Usage = usage
@@ -111,6 +112,7 @@ func main() {
 		NonBiasProbThreshold: *nonBiasProbThreshold,
 		HighestProbThreshold: *highestProbThreshold,
 		KeepAllSeq:           *keepAllSeq,
+		PDnaOut:              *pDnaOut,
 	}
 
 	ReconstructSeq(s)

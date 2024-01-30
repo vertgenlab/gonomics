@@ -4,6 +4,7 @@ package expandedTree
 import (
 	"errors"
 	"fmt"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"strconv"
 	"strings"
 
@@ -23,9 +24,10 @@ type ETree struct {
 	Scrap                 float64
 	Left                  *ETree
 	Right                 *ETree
-	Up                    *ETree // The immediate ancestral node.
-	DescendentBasePresent bool   // True if any descendent nodes have a base, in a specific position
-	BasePresent           bool   // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
+	Up                    *ETree         // The immediate ancestral node.
+	DescendentBasePresent bool           // True if any descendent nodes have a base, in a specific position
+	BasePresent           bool           // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
+	Pfasta                *pFasta.PFasta // Contains the pdna sequence associated with this node. PFasta.Name should equal Name.
 }
 
 // ReadTree takes a filename of a tree in newick format and a filename of a fasta file.  The names in the tree will be assigned
