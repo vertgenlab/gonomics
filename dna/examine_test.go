@@ -40,8 +40,7 @@ func TestCountGaps(t *testing.T) {
 
 func TestGCContent(t *testing.T) {
 	if GCContent(alpha) != 50 {
-		check := GCContent(alpha)
-		t.Errorf("problem with GCContent, %d", check)
+		t.Errorf("problem with GCContent")
 	}
 }
 
