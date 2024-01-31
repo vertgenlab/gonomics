@@ -209,3 +209,8 @@ func AbsInt(x int) int {
 		return x
 	}
 }
+
+// AlmostEqual determines if two floating-point numbers are equal within a specified tolerance level.
+func AlmostEqual(a, b, tolerance float64) bool {
+	return math.Abs(a-b) <= tolerance
+}

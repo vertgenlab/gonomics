@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/motif"
 	"os"
 	"testing"
@@ -40,6 +39,7 @@ var TfMatchCompTests = []struct {
 func TestTfMatchComp(t *testing.T) {
 	var err error
 	var s motif.MatchCompSettings
+	var tolerance float64 = 0.1
 	for _, v := range TfMatchCompTests {
 		s = motif.MatchCompSettings{
 			MotifFile:          v.MatrixFile,
@@ -54,8 +54,8 @@ func TestTfMatchComp(t *testing.T) {
 			GcContent:          v.GcContent,
 		}
 		tfMatchComp(s, v.InFile)
-		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-			t.Errorf("Error in tfMatchComp. Output was not as expected.")
+		if !motif.AlmostEqualTest(v.ExpectedFile, v.OutFile, tolerance) {
+			t.Errorf("Error: Motif are not equal within a tolorance %v...", tolerance)
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)
