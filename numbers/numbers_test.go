@@ -116,3 +116,28 @@ func TestBinomCoefficientLog(t *testing.T) {
 		}
 	}
 }
+
+/*
+TestAlmostEqual checks the AlmostEqual function with various pairs of numbers
+and tolerance levels to ensure it accurately determines whether the numbers are
+within the specified epsilon range of each other.
+*/
+func TestAlmostEqualFloatPrecision(t *testing.T) {
+	tests := []struct {
+		alpha, beta, epsilon float64
+		answer               bool
+	}{
+		{alpha: 1.0, beta: 1.0, epsilon: 0.01, answer: true},
+		{alpha: 1.0, beta: 1.1, epsilon: 0.01, answer: false},
+		{alpha: 1.0, beta: 1.005, epsilon: 0.01, answer: true},
+		{alpha: -1.0, beta: -1.004, epsilon: 0.005, answer: true},
+		{alpha: -1.0, beta: 1.0, epsilon: 0.1, answer: false},
+	}
+
+	for _, tt := range tests {
+		got := AlmostEqual(tt.alpha, tt.beta, tt.epsilon)
+		if got != tt.answer {
+			t.Errorf("ErrorL AlmostEqual(%v, %v, %v) = %v; answer %v", tt.alpha, tt.beta, tt.epsilon, got, tt.answer)
+		}
+	}
+}
