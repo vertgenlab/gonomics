@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-func AlmostEqualTest(alpha, beta string, tolerance float64) bool {
+// AlmostEqualTest determines if floating-point numbers within two files are equal within a specified epsilon level.
+func AlmostEqualTest(alpha, beta string, epsilon float64) bool {
 	query, answer := fileio.Read(alpha), fileio.Read(beta)
 	indexes := []int{7, 8} // Assuming these are the indexes you want to compare
 
@@ -38,7 +39,7 @@ func AlmostEqualTest(alpha, beta string, tolerance float64) bool {
 			answerValue := parse.StringToFloat64(answerFields[index])
 
 			// Compare the parsed values for near equality
-			if !numbers.AlmostEqual(queryValue, answerValue, tolerance) {
+			if !numbers.AlmostEqual(queryValue, answerValue, epsilon) {
 				fmt.Errorf("Error: Values on line %d at index %d are not almost equal: %v, %v", i, index, queryValue, answerValue)
 				return false
 			}
