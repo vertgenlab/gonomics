@@ -23,31 +23,31 @@ var ExtractTests = []struct {
 }{
 	{Input: PFasta{Name: "chr1",
 		Seq: []pDna.Float32Base{
-			pDna.Float32Base{
+			{
 				A: 0.2,
 				C: 0.3,
 				G: 0.3,
 				T: 0.2,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.1,
 				C: 0.2,
 				G: 0.3,
 				T: 0.4,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.25,
 				C: 0.25,
 				G: 0.25,
 				T: 0.25,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.6,
 				C: 0.2,
 				G: 0.1,
 				T: 0.1,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.2,
 				C: 0.3,
 				G: 0.4,
@@ -60,13 +60,13 @@ var ExtractTests = []struct {
 		OutputName: "testChr1",
 		Expected: PFasta{Name: "testChr1",
 			Seq: []pDna.Float32Base{
-				pDna.Float32Base{
+				{
 					A: 0.1,
 					C: 0.2,
 					G: 0.3,
 					T: 0.4,
 				},
-				pDna.Float32Base{
+				{
 					A: 0.25,
 					C: 0.25,
 					G: 0.25,
@@ -86,33 +86,33 @@ var ExtractBedTests = []struct {
 	Expected   PFasta
 	Precision  float32
 }{
-	{Input: []PFasta{PFasta{Name: "chr3",
+	{Input: []PFasta{{Name: "chr3",
 		Seq: []pDna.Float32Base{
-			pDna.Float32Base{
+			{
 				A: 0.2,
 				C: 0.3,
 				G: 0.4,
 				T: 0.1,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.25,
 				C: 0.25,
 				G: 0.25,
 				T: 0.25,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.2,
 				C: 0.3,
 				G: 0.3,
 				T: 0.2,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.1,
 				C: 0.2,
 				G: 0.3,
 				T: 0.4,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.6,
 				C: 0.2,
 				G: 0.1,
@@ -120,33 +120,33 @@ var ExtractBedTests = []struct {
 			},
 		},
 	},
-		PFasta{Name: "chr1",
+		{Name: "chr1",
 			Seq: []pDna.Float32Base{
-				pDna.Float32Base{
+				{
 					A: 0.2,
 					C: 0.3,
 					G: 0.3,
 					T: 0.2,
 				},
-				pDna.Float32Base{
+				{
 					A: 0.1,
 					C: 0.2,
 					G: 0.3,
 					T: 0.4,
 				},
-				pDna.Float32Base{
+				{
 					A: 0.25,
 					C: 0.25,
 					G: 0.25,
 					T: 0.25,
 				},
-				pDna.Float32Base{
+				{
 					A: 0.6,
 					C: 0.2,
 					G: 0.1,
 					T: 0.1,
 				},
-				pDna.Float32Base{
+				{
 					A: 0.2,
 					C: 0.3,
 					G: 0.4,
@@ -154,33 +154,33 @@ var ExtractBedTests = []struct {
 				},
 			},
 		},
-		PFasta{Name: "chr2",
+		{Name: "chr2",
 			Seq: []pDna.Float32Base{
-				pDna.Float32Base{
+				{
 					A: 0.2,
 					C: 0.3,
 					G: 0.4,
 					T: 0.1,
 				},
-				pDna.Float32Base{
+				{
 					A: 0.25,
 					C: 0.25,
 					G: 0.25,
 					T: 0.25,
 				},
-				pDna.Float32Base{
+				{
 					A: 0.2,
 					C: 0.3,
 					G: 0.3,
 					T: 0.2,
 				},
-				pDna.Float32Base{
+				{
 					A: 0.1,
 					C: 0.2,
 					G: 0.3,
 					T: 0.4,
 				},
-				pDna.Float32Base{
+				{
 					A: 0.6,
 					C: 0.2,
 					G: 0.1,
@@ -196,13 +196,13 @@ var ExtractBedTests = []struct {
 		OutputName: "testChr1",
 		Expected: PFasta{Name: "testChr1",
 			Seq: []pDna.Float32Base{
-				pDna.Float32Base{
+				{
 					A: 0.6,
 					C: 0.2,
 					G: 0.1,
 					T: 0.1,
 				},
-				pDna.Float32Base{
+				{
 					A: 0.2,
 					C: 0.3,
 					G: 0.4,
@@ -221,62 +221,62 @@ var SampleTests = []struct {
 }{
 	{Input: PFasta{Name: "chr1",
 		Seq: []pDna.Float32Base{
-			pDna.Float32Base{
+			{
 				A: 0.2,
 				C: 0.3,
 				G: 0.3,
 				T: 0.2,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.1,
 				C: 0.2,
 				G: 0.3,
 				T: 0.4,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.25,
 				C: 0.25,
 				G: 0.25,
 				T: 0.25,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.6,
 				C: 0.2,
 				G: 0.1,
 				T: 0.1,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.2,
 				C: 0.3,
 				G: 0.4,
 				T: 0.1,
 			},
 
-			pDna.Float32Base{
+			{
 				A: 0.2,
 				C: 0.4,
 				G: 0.1,
 				T: 0.3,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.2,
 				C: 0.2,
 				G: 0.2,
 				T: 0.4,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.1,
 				C: 0.3,
 				G: 0.3,
 				T: 0.3,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.5,
 				C: 0.4,
 				G: 0.1,
 				T: 0,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.1,
 				C: 0.1,
 				G: 0.7,
