@@ -14,8 +14,8 @@ import (
 type ExtractBedSettings struct {
 	InFile  string
 	Region  string
-	OutName string
 	OutFile string
+	TakeCoords bool
 }
 
 // extractBedUsage defines the usage statement for the pFaTools extractBed subcommand.
@@ -32,11 +32,11 @@ func extractBedUsage(extractBedFlags *flag.FlagSet) {
 
 // parseExtractBedArgs is the main function of the pFaTools extractBed subcommand. It parses options and runs the pFaExtractBed function.
 func parseExtractBedArgs() {
-	var expectedNumArgs int = 4
+	var expectedNumArgs int = 3
 	var err error
 	extractBedFlags := flag.NewFlagSet("extractBed", flag.ExitOnError)
-	var outName *string = extractBedFlags.String("outName", "", "Specify name of the out file. If none is provided, output name will be the same as the input name.")
-	err = extractBedFlags.Parse(os.Args[5:])
+	var takeCoords *bool = extractBedFlags.Bool("takeCoords", false, "Specify if bed coordinate fields should be used to differentiate regions in FASTA. Defaults to false.")
+	err = extractBedFlags.Parse(os.Args[4:])
 	exception.PanicOnErr(err)
 	extractBedFlags.Usage = func() { extractBedUsage(extractBedFlags) }
 
@@ -53,8 +53,8 @@ func parseExtractBedArgs() {
 	s := ExtractBedSettings{
 		InFile:  inFile,
 		Region:  region,
-		OutName: *outName,
 		OutFile: outFile,
+		TakeCoords: *takeCoords,
 	}
 
 	pFaExtractBed(s)
@@ -62,6 +62,6 @@ func parseExtractBedArgs() {
 
 // pFaExtractBed parses an input pFasta file and input Bed file, and extractBeds the file according to the Bed file.
 func pFaExtractBed(s ExtractBedSettings) {
-	records := pFasta.ExtractBed(pFasta.Read(s.InFile), bed.Read(s.Region), s.OutName)
+	records := pFasta.ExtractBed(pFasta.Read(s.InFile), bed.Read(s.Region), s.TakeCoords)
 	pFasta.Write(s.OutFile, records)
 }

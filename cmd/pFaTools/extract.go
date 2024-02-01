@@ -67,6 +67,6 @@ func parseExtractArgs() {
 
 // pFaExtract parses an input pFasta file and extracts the file according to user-defined settings.
 func pFaExtract(s ExtractSettings) {
-	records := []pFasta.PFasta{pFasta.Extract(pFasta.Read(s.InFile), s.Start, s.End, s.OutName, s.Chrom)}
+	records := []pFasta.PFasta{pFasta.Extract(pFasta.Read(s.InFile), s.Start, s.End, s.OutName, s.Chrom, false)}
 	pFasta.Write(s.OutFile, records)
 }
