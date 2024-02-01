@@ -10,7 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-var SimulateWithIndelsTests = []struct {
+var WithIndelsTests = []struct {
 	FastaFile         string
 	BranchLength      float64
 	PropIndel         float64
@@ -49,12 +49,12 @@ var SimulateWithIndelsTests = []struct {
 	},
 }
 
-func TestSimulateWithIndels(t *testing.T) {
+func TestWithIndels(t *testing.T) {
 	rand.Seed(-1)
 	var err error
 	var records []fasta.Fasta
-	for _, v := range SimulateWithIndelsTests {
-		records = SimulateWithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.TransitionBias, v.VcfOutFile, v.QName)
+	for _, v := range WithIndelsTests {
+		records = WithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.TransitionBias, v.VcfOutFile, v.QName)
 		fasta.Write(v.OutFastaFile, records)
 		if !fileio.AreEqual(v.OutFastaFile, v.ExpectedFastaFile) {
 			t.Errorf("Error in SimulateWithIndels. Output fasta was not as expected.")
