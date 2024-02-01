@@ -98,6 +98,21 @@ func TestStringToIntSlice(t *testing.T) {
 	}
 }
 
+// BenchmarkStringToIntSlice benchmarks the performance of the StringToIntSlice function.
+func BenchmarkStringToIntSlice(b *testing.B) {
+	// Example input string; adjust as needed for your use case.
+	input := "1,2,3,4,5,6,7,8,9,10"
+
+	// The benchmark loop
+	for i := 0; i < b.N; i++ {
+		list := StringToIntSlice(input)
+		if len(list) != 10 {
+			b.Errorf("Error: StringToIntSlice did not parse lice correctly: %v", input)
+		}
+
+	}
+}
+
 func TestIntSliceToString(t *testing.T) {
 	expected := "0,1,2,3,4,5,6,7,8,9,"
 	data := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}

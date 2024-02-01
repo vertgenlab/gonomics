@@ -3,7 +3,6 @@ package fileio
 import (
 	"bufio"
 	"bytes"
-	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/klauspost/pgzip"
 	"github.com/vertgenlab/gonomics/exception"
 )
 
@@ -19,94 +19,69 @@ const (
 	defaultBufSize = 4096
 )
 
-// ByteReader implements the io.Reader interface by providing
-// the Read(b []byte) method. The struct contains an embedded *bufio.Reader
-// and a pointer to os.File for closure when reading is complete.
-// The primary advantage of ByteReader over EasyReader is that data
-// is read into a shared bytes.Buffer instead of allocating memory for a
-// string as is done with EasyReader.
-// ByteReader can be be used to efficiently parse files on the byte level
-// which may be significantly faster and require less memory than using
-// strings.Split on a string derived from EasyReader.
-// The drawback is that ByteReader is not as easy to use as EasyReader
-// and should generally be reserved for performance intensive tasks.
+// ByteReader provides enhanced byte reading from files, with transparent support for pgzip decompression
 type ByteReader struct {
 	*bufio.Reader
 	File         *os.File
-	internalGzip *gzip.Reader
+	internalGzip *pgzip.Reader // Pgzip reader for gzipped files.
 	line         []byte
-	Buffer       *bytes.Buffer
+	Buffer       *bytes.Buffer // Internal line buffer.
 }
 
 // Read reads data into p and is a method required to implement the io.Reader interface.
-// It returns the number of bytes read into p.
 func (reader *ByteReader) Read(b []byte) (n int, err error) {
 	return reader.Read(b)
 }
 
-// NewByteReader will process a given file and performs error handling if an error occurs.
-// ByteReader will process gzipped files accordingly by performing a check on the suffix
-// of the provided file.
+// NewByteReader creates a ByteReader for reading from the specified file, automatically handling gzip decompression
 func NewByteReader(filename string) *ByteReader {
 	var err error
-	file := MustOpen(filename)
-	var answer ByteReader = ByteReader{
-		File:   file,
+	var answer = ByteReader{
+		File:   MustOpen(filename),
 		Buffer: &bytes.Buffer{},
 	}
 	switch true {
 	case strings.HasSuffix(filename, ".gz"):
-		answer.internalGzip, err = gzip.NewReader(file)
+		answer.internalGzip, err = pgzip.NewReader(answer.File)
 		exception.PanicOnErr(err)
 		answer.Reader = bufio.NewReader(answer.internalGzip)
 	default:
-		answer.Reader = bufio.NewReader(file)
+		answer.internalGzip = nil
+		answer.Reader = bufio.NewReader(answer.File)
 	}
 	return &answer
 }
 
-// ReadLine will return a bytes.Buffer pointing to the internal slice of bytes. Provided this function is called within a loop,
-// the function will read one line at a time, and return bool to continue reading. Important to note the buffer return points to
-// the internal slice belonging to the reader, meaning the slice will be overridden if the data is not copied.
+// ReadLine reads a single line from the file into bufio.Reader, handling line breaks.
 func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 	var err error
-	reader.line, err = reader.ReadSlice('\n')
-	reader.Buffer.Reset()
-	if err == nil {
-		if reader.line[len(reader.line)-1] == '\n' {
-			return bytesToBuffer(reader), false
-		} else {
-			log.Panicf("Error: end of line did not end with an end of line character...\n")
-		}
-	} else {
-		if err == bufio.ErrBufferFull {
-			reader.line = readMore(reader)
-			return bytesToBuffer(reader), false
-		} else {
-			CatchErrThrowEOF(err)
-		}
+	reader.line, err = reader.Reader.ReadBytes('\n') // Assuming Reader is a bufio.Reader or similar.
+	if err != nil && err != io.EOF {
+		// Handle non-EOF errors directly. For EOF, we'll handle it after checking the line content.
+		log.Fatalf("Error reading line: %v", err)
 	}
-	return nil, true
-}
-
-// readMore is a private helper function to deal with very long lines to
-// avoid alocating too much memory upfront and only resize the size of the buffer
-// only when necessary.
-func readMore(reader *ByteReader) []byte {
-	_, err := reader.Buffer.Write(reader.line)
-	exception.PanicOnErr(err)
-	reader.line, err = reader.ReadSlice('\n')
-	if err == nil {
-		return reader.line
-	}
-	if err == bufio.ErrBufferFull {
+	// If line is not empty or err is EOF (might still have data to return)
+	if len(reader.line) > 0 || err == io.EOF {
+		// Check for and trim a trailing newline character, if present.
+		if len(reader.line) > 0 && reader.line[len(reader.line)-1] == '\n' {
+			reader.line = reader.line[:len(reader.line)-1] // Trim \n
+			// Further check for \r\n (Windows) reader.line endings if necessary:
+			if len(reader.line) > 0 && reader.line[len(reader.line)-1] == '\r' {
+				reader.line = reader.line[:len(reader.line)-1] // Trim \r
+			}
+		}
+		// Write the line to the buffer.
+		reader.Buffer.Reset()
 		_, err = reader.Buffer.Write(reader.line)
-		exception.PanicOnErr(err)
-		// recursive call to read next bytes until reaching end of line character
-		return readMore(reader)
+		if err != nil {
+			exception.PanicOnErr(err)
+		}
+		// Return the buffer and a flag indicating whether we should continue reading.
+		// If err is io.EOF, this might be the last line.
+		return reader.Buffer, err != io.EOF
 	}
-	exception.PanicOnErr(err)
-	return reader.line
+	// If we got here because of an EOF with no data, return nil and false.
+	return nil, false
 }
 
 // CatchErrThrowEOF will silently handles and throws the EOF error and will log and exit any other errors.
@@ -130,9 +105,7 @@ func bytesToBuffer(reader *ByteReader) *bytes.Buffer {
 	return reader.Buffer
 }
 
-// Close closes the File, rendering it unusable for I/O. On files that support SetDeadline,
-// any pending I/O operations will be canceled and return immediately with an error.
-// Close will return an error if it has already been called.
+// Close closes the ByteReader, releasing any resources associated with the file and the gzip reader, if present.
 func (br *ByteReader) Close() error {
 	var gzErr, fileErr error
 	if br.internalGzip != nil {
