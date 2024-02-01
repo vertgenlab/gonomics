@@ -8,13 +8,13 @@ import (
 	"log"
 )
 
-// MultiFaSubsequenceSwap swaps a series of specified regions from a bed file between two sequences in a MultiFa object
+// multiFaSubsequenceSwap swaps a series of specified regions from a bed file between two sequences in a MultiFa object
 // The foregroundName is the name of the sequence containing the regions in the bed elements;  backgroundName is the name of the sequence including the regions outside the bed elements
 // input of this function includes the multiFa file name, the index of the background and foreground sequences from the multiFa, and a bed object with the relevant
 // start and stop indices of the swap regions
 // it will return a file containing a Fasta slice (which includes several sequences), with one more sequence that the sequences in the original
 // multiFa; this extra sequence is the background sequence with relevant foreground spots swapped as dictated by the bed file.
-func MultiFaSubsequenceSwap(inFile string, swapRegionsFile string, backgroundName, foregroundName string, outFile string, outSeqName string) {
+func multiFaSubsequenceSwap(inFile string, swapRegionsFile string, backgroundName, foregroundName string, outFile string, outSeqName string) {
 	var currStart, currEnd, currPos int //these variables will be used to swap regions later in the code
 	// Load the original sequences from the multiFa file.
 	originalSeqs := fasta.Read(inFile)
@@ -98,6 +98,6 @@ func main() {
 	outFile := flag.Arg(4)
 	outSeqName := flag.Arg(5)
 
-	MultiFaSubsequenceSwap(inFile, bedFile, backgroundName, foregroundName, outFile, outSeqName)
+	multiFaSubsequenceSwap(inFile, bedFile, backgroundName, foregroundName, outFile, outSeqName)
 
 }

@@ -31,7 +31,7 @@ func TestSubsequenceSwap(t *testing.T) {
 	var err error
 	for _, tc := range SubsequenceSwapTestCases {
 		//loop through all test cases
-		MultiFaSubsequenceSwap(tc.InFile, tc.SwapRegions, tc.BackgroundName, tc.ForegroundName, tc.OutFile, tc.OutSeqName)
+		multiFaSubsequenceSwap(tc.InFile, tc.SwapRegions, tc.BackgroundName, tc.ForegroundName, tc.OutFile, tc.OutSeqName)
 
 		if !fileio.AreEqual(tc.OutFile, tc.ExpectedFile) {
 			t.Errorf("Error: Output was not as expected. \n")
