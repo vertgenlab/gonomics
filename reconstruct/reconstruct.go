@@ -303,7 +303,7 @@ func descendentBaseExists(node *expandedTree.ETree, pos int) {
 // The user may also specify a 'highestProbThreshold'. If the program is uncertain about ancestral reconstruction for a particular
 // node, this option will allow LoopNodes to return an 'N' for that node instead.
 // if subMatrix is true, mutation probabilities will be calculated from the tree's substitution matrix instead of from the branch length
-func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64, subMatrix bool, pDnaOut string) {
+func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaOutfile string) {
 	var fix []float64
 	var biasBase, answerBase dna.Base
 	var answerPBase pDna.Float32Base
@@ -331,26 +331,25 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 			if biasParentName != "" && internalNodes[k].Name == biasParentName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
-				if internalNodes[k].Name == pDnaOut {
-					answerPBase = LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold)
+				if internalNodes[k].Name == pDnaNode {
+					records := pFasta.Read(pDnaOutfile)
+					records.Seq = Append(records.Seq, LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold))
+					pFasta.Write(pDnaOutfile, records)
 				}
 			} else {
 				answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
-				if internalNodes[k].Name == pDnaOut {
-					answerPBase = LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold)
+				if internalNodes[k].Name == pDnaNode {
+					records := pFasta.Read(pDnaOutfile)
+					records.Seq = Append(records.Seq, LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold))
+					pFasta.Write(pDnaOutfile, records)
 				}
+				
 			}
 		} else {
 			answerBase = dna.Gap
-			if internalNodes[k].Name == pDnaOut {
-				answerPBase = dna.Gap // FIX THIS TO AN EQUIVALENT?
-			}
+			// don't add anything to pDnaOutfile
 		}
 
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)
-
-		if internalNodes[k].Name == pDnaOut {
-			internalNodes[k].Pfasta.Seq = append(internalNodes[k].Pfasta.Seq, answerPBase)
-		}
 	}
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/tree"
 )
 
@@ -31,7 +30,6 @@ type ETree struct {
 	DescendentBasePresent bool        // True if any descendent nodes have a base, in a specific position
 	BasePresent           bool        // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
 	SubstitutionMatrix    [][]float64 // for custom substitution matrices. This is a 4x4 substitution matrices for nucleotides.
-	Pfasta                *pFasta.PFasta // Contains the pdna sequence associated with this node. PFasta.Name should equal Name.
 }
 
 // ReadTree takes a filename of a tree in newick format and a filename of a fasta file.  The names in the tree will be assigned

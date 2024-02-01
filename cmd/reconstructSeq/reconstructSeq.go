@@ -26,12 +26,11 @@ type Settings struct {
 	SubMatrix              bool
 	UnitBranchLength       float64
 	SubstitutionMatrixFile string
-	PDnaOut                string
+	PDnaNode               string					
 }
 
 func ReconstructSeq(s Settings) {
 	var treeFastas []fasta.Fasta
-	var nodePFasta pFasta
 
 	if s.NonBiasProbThreshold < 0 || s.NonBiasProbThreshold > 1 {
 		log.Fatalf("Error: nonBiasProbThreshold must be a value between 0 and 1. Found: %v.\n", s.NonBiasProbThreshold)
@@ -55,23 +54,25 @@ func ReconstructSeq(s Settings) {
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
 
-	wantPDna := len(s.PDnaOut) > 0
+
+	// TODO
 	var pDnaNode string
-	if !wantPDna{
+	var pDnaOutFile string
+	if len(s.PDnaOut) > 0 {
+		pDnaOutfile = ""
 		pDnaNode = ""
 	} else {
-		pDnaNode = s.PDnaOut
+		pDnaNode = s.pDnaOut
+		pDnaOutfile = fmt.Sprintf("%s.pfa")
+		outPFasta := PFasta{Name: s.PDnaOut, Seq: make([]pDna.Float32Base)}
+		pfasta.Write(pDnaOutfile, outPFasta)
 	}
+	// END TODO
 
 	for i := range leaves[0].Fasta.Seq {
-		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix., pDnaNode)
+		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix, pDnaNode, pDnaOutfile)
 	}
 	for j := range leaves {
-		if wantPDna {
-			if *leaves[j].Name == pDnaNode {
-				nodePFasta = *leaves[j].Pfasta
-			}
-		}
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
 	}
 	
@@ -96,8 +97,7 @@ func ReconstructSeq(s Settings) {
 	}
 
 	if len(s.PDnaOut) > 0 {
-		outPFasta := 
-		pfasta.Write(s.OutFile, treeFastas)
+		
 	}
 	fasta.Write(s.OutFile, treeFastas)
 }
