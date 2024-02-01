@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta/pfasta"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 )
 
@@ -306,7 +307,6 @@ func descendentBaseExists(node *expandedTree.ETree, pos int) {
 func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaOutfile string) {
 	var fix []float64
 	var biasBase, answerBase dna.Base
-	var answerPBase pDna.Float32Base
 	var biasParentName string
 	var biasLeafNode *expandedTree.ETree
 
@@ -333,14 +333,14 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
 				if internalNodes[k].Name == pDnaNode {
 					records := pFasta.Read(pDnaOutfile)
-					records.Seq = Append(records.Seq, LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold))
+					records[0].Seq = append(records[0].Seq, LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold))
 					pFasta.Write(pDnaOutfile, records)
 				}
 			} else {
 				answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
 				if internalNodes[k].Name == pDnaNode {
 					records := pFasta.Read(pDnaOutfile)
-					records.Seq = Append(records.Seq, LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold))
+					records[0].Seq = append(records[0].Seq, LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold))
 					pFasta.Write(pDnaOutfile, records)
 				}
 				

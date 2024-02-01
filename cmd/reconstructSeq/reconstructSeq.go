@@ -11,8 +11,10 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta/pfasta"
 	"github.com/vertgenlab/gonomics/reconstruct"
 	"github.com/vertgenlab/gonomics/simulate"
+	"github.com/vertgenlab/gonomics/dna/pDna"
 )
 
 type Settings struct {
@@ -58,19 +60,19 @@ func ReconstructSeq(s Settings) {
 	// TODO
 	var pDnaNode string
 	var pDnaOutFile string
-	if len(s.PDnaOut) > 0 {
-		pDnaOutfile = ""
+	if len(s.PDnaNode) > 0 {
+		pDnaOutFile = ""
 		pDnaNode = ""
 	} else {
-		pDnaNode = s.pDnaOut
-		pDnaOutfile = fmt.Sprintf("%s.pfa")
-		outPFasta := PFasta{Name: s.PDnaOut, Seq: make([]pDna.Float32Base)}
-		pfasta.Write(pDnaOutfile, outPFasta)
+		pDnaNode = s.PDnaNode
+		pDnaOutFile = fmt.Sprintf("%s_%s.pfa", s.OutFile[:len(s.OutFile)-3], s.PDnaNode)
+		outPFasta := []pFasta.PFasta{pFasta.PFasta{Name: s.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+		pFasta.Write(pDnaOutFile, outPFasta)
 	}
 	// END TODO
 
 	for i := range leaves[0].Fasta.Seq {
-		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix, pDnaNode, pDnaOutfile)
+		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix, pDnaNode, pDnaOutFile)
 	}
 	for j := range leaves {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
@@ -96,9 +98,6 @@ func ReconstructSeq(s Settings) {
 		}
 	}
 
-	if len(s.PDnaOut) > 0 {
-		
-	}
 	fasta.Write(s.OutFile, treeFastas)
 }
 
@@ -121,7 +120,7 @@ func main() {
 	var substitutionMatrixFile *string = flag.String("substitutionMatrixFile", "", "Set a file to define a substitution matrix.")
 	var unitBranchLength *float64 = flag.Float64("unitBranchLength", -1, "If using a substitution matrix, specify the branch length over which the substitution matrix was derived.")
 	var subMatrix *bool = flag.Bool("subMatrix", false, "Use a substitution matrix instead of the default model. If no substitution matrix file is provided, the Jukes-Cantor model will be used.")
-	var pDnaOut *string = flag.String("pDnaOut", "", "Specify a node to get the pDNA sequence of.")
+	var pDnaNode *string = flag.String("pDnaOut", "", "Specify a node to get the pDNA sequence of. Defaults to empty.")
 	var expectedNumArgs = 3
 
 	flag.Usage = usage
@@ -149,7 +148,7 @@ func main() {
 		SubstitutionMatrixFile: *substitutionMatrixFile,
 		UnitBranchLength:       *unitBranchLength,
 		SubMatrix:              *subMatrix,
-		PDnaOut:                *pDnaOut,
+		PDnaNode:                *pDnaNode,
 	}
 
 	ReconstructSeq(s)

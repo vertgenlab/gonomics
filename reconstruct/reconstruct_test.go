@@ -1,12 +1,15 @@
 package reconstruct
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta/pfasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
-	"testing"
+	"github.com/vertgenlab/gonomics/dna/pDna"
 )
 
 var ReconstructTests = []struct {
@@ -23,6 +26,8 @@ var ReconstructTests = []struct {
 	NonBiasProbThreshold float64
 	HighestProbThreshold float64
 	SubMatrix            bool
+	PDnaNode			 string
+	PDnaOutfile			 string
 }{
 	{NewickFileName: "testdata/newickLongBranches.txt",
 		GenePredFile:         "testdata/genePred.gp",
@@ -37,6 +42,8 @@ var ReconstructTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
 		SubMatrix:            false,
+		PDnaNode:			  "child_4",
+		PDnaOutfile:		  "child_4.pfa",
 	},
 }
 
@@ -60,8 +67,14 @@ func TestReconstruct(t *testing.T) {
 		tree, err = expandedTree.ReadTree(v.NewickFileName, v.LeavesFile)
 		exception.FatalOnErr(err)
 		leaves = expandedTree.GetLeaves(tree)
+
+		if len(v.PDnaNode) > 0 {
+			outPFasta := []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+			pFasta.Write(v.PDnaOutfile, outPFasta)
+		}
+
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
-			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, v.HighestProbThreshold, v.SubMatrix)
+			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, v.PDnaOutfile)
 		}
 		WriteTreeToFasta(tree, v.ReconOutFile)
 
