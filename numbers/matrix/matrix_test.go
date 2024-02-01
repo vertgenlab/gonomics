@@ -96,7 +96,7 @@ func TestDenseLogSymmetric(t *testing.T) {
 		var output mat.Dense // we have to allocate in the loop to reset the dimensions
 		output = *DenseLogSymmetric(v.Input)
 
-		if !mat.EqualApprox(&output, v.Expected, 1e-4) {
+		if !mat.EqualApprox(&output, v.Expected, 1e-6) {
 			fmt.Println(mat.Formatted(&output))
 			t.Errorf("Error: DenseLogSymmetric output not as expected.")
 		}
