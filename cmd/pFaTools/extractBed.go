@@ -62,6 +62,6 @@ func parseExtractBedArgs() {
 
 // pFaExtractBed parses an input pFasta file and input Bed file, and extractBeds the file according to the Bed file.
 func pFaExtractBed(s ExtractBedSettings) {
-	records := []pFasta.PFasta{pFasta.ExtractBed(pFasta.Read(s.InFile), bed.Read(s.Region)[0], s.OutName)}
+	records := pFasta.ExtractBed(pFasta.Read(s.InFile), bed.Read(s.Region), s.OutName)
 	pFasta.Write(s.OutFile, records)
 }

@@ -2,6 +2,7 @@ package pFasta
 
 import (
 	"log"
+	"fmt"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
@@ -14,7 +15,7 @@ import (
 func checkIfChromInPfasta(input []PFasta, chrom string) int {
 	chromInInput := false
 	var answer int
-	
+
 	for inputIdx, inputpFa := range input {
 		if inputpFa.Name == chrom {
 			chromInInput = true
@@ -25,13 +26,13 @@ func checkIfChromInPfasta(input []PFasta, chrom string) int {
 	if !chromInInput {
 		log.Fatalf("Error: input sequence name does not match requested chrom.")
 	}
-	
+
 	return answer
 }
 
 // Extract returns a new pFa that is a subsequence of the input pFa, defined by a
 // start (inclusive) and end (exclusive) position, like in bed; makes memory copy
-func Extract(input []PFasta, start int, end int, outputName string, chrom string) PFasta {
+func Extract(input []PFasta, start int, end int, outputName string, chrom string, takeCoords bool) PFasta {
 
 	chromIdx := checkIfChromInPfasta(input, chrom)
 
@@ -42,7 +43,9 @@ func Extract(input []PFasta, start int, end int, outputName string, chrom string
 	}
 
 	var outName string
-	if len(outputName) > 0 {
+	if takeCoords {
+		outName = fmt.Sprintf("%s:%v-%v", chrom, start, end)
+	} else if len(outputName) > 0 {
 		outName = outputName
 	} else {
 		outName = chrom
@@ -57,11 +60,15 @@ func Extract(input []PFasta, start int, end int, outputName string, chrom string
 	return answer
 }
 
-// ExtractBed returns a new pFa that is a subsequence of the input pFa
-// defined by the region in the bed region (currently only accepts one region in bed file)
-// TODO: add multiple regions in bed
-func ExtractBed(input []PFasta, region bed.Bed, outputName string) PFasta {
-	return Extract(input, region.ChromStart, region.ChromEnd, outputName, region.Chrom)
+// ExtractBed returns a pFa that has a list of subsequences of the input pFa
+// defined by the regions in the bed region
+// takeCoords specifies if name fields in output should be original names in region or identified by ChromStart and ChromEnd
+func ExtractBed(input []PFasta, region []bed.Bed, takeCoords bool) []PFasta {
+	answer := make([]PFasta, 0)
+	for _, reg := range region {
+		answer = append(answer, Extract(input, reg.ChromStart, reg.ChromEnd, "", reg.Chrom, takeCoords))
+	}
+	return answer
 }
 
 // Sample returns a new Fasta sampled from the given pFasta probability distribution
