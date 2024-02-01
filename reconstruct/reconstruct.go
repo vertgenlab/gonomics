@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fasta/pfasta"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 )
 
@@ -304,7 +304,7 @@ func descendentBaseExists(node *expandedTree.ETree, pos int) {
 // The user may also specify a 'highestProbThreshold'. If the program is uncertain about ancestral reconstruction for a particular
 // node, this option will allow LoopNodes to return an 'N' for that node instead.
 // if subMatrix is true, mutation probabilities will be calculated from the tree's substitution matrix instead of from the branch length
-func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaOutfile string) {
+func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaRecords []pFasta.PFasta) {
 	var fix []float64
 	var biasBase, answerBase dna.Base
 	var biasParentName string
@@ -331,17 +331,13 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 			if biasParentName != "" && internalNodes[k].Name == biasParentName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
-				if internalNodes[k].Name == pDnaNode {
-					records := pFasta.Read(pDnaOutfile)
-					records[0].Seq = append(records[0].Seq, LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold))
-					pFasta.Write(pDnaOutfile, records)
+				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
+					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold))
 				}
 			} else {
 				answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
-				if internalNodes[k].Name == pDnaNode {
-					records := pFasta.Read(pDnaOutfile)
-					records[0].Seq = append(records[0].Seq, LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold))
-					pFasta.Write(pDnaOutfile, records)
+				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
+					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold))
 				}
 				
 			}

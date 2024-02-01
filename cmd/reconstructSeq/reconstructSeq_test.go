@@ -20,6 +20,7 @@ var ReconstructSeqTests = []struct {
 	KeepAllSeq           bool
 	SubMatrix            bool
 	PDnaNode			 string
+	PDnaOutFile			 string
 	ExpectedPFile		 string
 }{
 	{NewickFile: "testdata/4d.genericNames.mod",
@@ -31,7 +32,8 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
-		PDnaNode:			  "",
+		PDnaNode:			  "hca",
+		PDnaOutFile:	      "hca.pfa",
 		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
@@ -44,6 +46,7 @@ var ReconstructSeqTests = []struct {
 		KeepAllSeq:           false,
 		SubMatrix:            false,
 		PDnaNode:			  "",
+		PDnaOutFile:	      "",
 		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
@@ -56,6 +59,7 @@ var ReconstructSeqTests = []struct {
 		KeepAllSeq:           false,
 		SubMatrix:            false,
 		PDnaNode:			  "",
+		PDnaOutFile:	      "",
 		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
@@ -68,6 +72,7 @@ var ReconstructSeqTests = []struct {
 		KeepAllSeq:           false,
 		SubMatrix:            false,
 		PDnaNode:			  "",
+		PDnaOutFile:	      "",
 		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
@@ -80,6 +85,7 @@ var ReconstructSeqTests = []struct {
 		KeepAllSeq:           false,
 		SubMatrix:            false,
 		PDnaNode:			  "",
+		PDnaOutFile:	      "",
 		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
@@ -92,6 +98,7 @@ var ReconstructSeqTests = []struct {
 		KeepAllSeq:           true,
 		SubMatrix:            false,
 		PDnaNode:			  "",
+		PDnaOutFile:	      "",
 		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
@@ -103,6 +110,7 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
 		PDnaNode:			  "",
+		PDnaOutFile:	      "",
 		ExpectedPFile:		  "",
 	},
 }
@@ -151,6 +159,7 @@ func TestReconstructSeq(t *testing.T) {
 			KeepAllSeq:           v.KeepAllSeq,
 			SubMatrix:            v.SubMatrix,
 			PDnaNode:			  v.PDnaNode,
+			PDnaOutFile:		  v.PDnaOutFile,
 		}
 		ReconstructSeq(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
@@ -161,3 +170,5 @@ func TestReconstructSeq(t *testing.T) {
 		}
 	}
 }
+
+// maake 20 bases of regular fasta, read against 

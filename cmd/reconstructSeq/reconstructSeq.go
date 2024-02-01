@@ -11,7 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fasta/pfasta"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/reconstruct"
 	"github.com/vertgenlab/gonomics/simulate"
 	"github.com/vertgenlab/gonomics/dna/pDna"
@@ -28,7 +28,8 @@ type Settings struct {
 	SubMatrix              bool
 	UnitBranchLength       float64
 	SubstitutionMatrixFile string
-	PDnaNode               string					
+	PDnaNode               string
+	PDnaOutFile		   	   string			
 }
 
 func ReconstructSeq(s Settings) {
@@ -56,23 +57,16 @@ func ReconstructSeq(s Settings) {
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
 
-
-	// TODO
-	var pDnaNode string
-	var pDnaOutFile string
-	if len(s.PDnaNode) > 0 {
-		pDnaOutFile = ""
-		pDnaNode = ""
-	} else {
-		pDnaNode = s.PDnaNode
-		pDnaOutFile = fmt.Sprintf("%s_%s.pfa", s.OutFile[:len(s.OutFile)-3], s.PDnaNode)
-		outPFasta := []pFasta.PFasta{pFasta.PFasta{Name: s.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
-		pFasta.Write(pDnaOutFile, outPFasta)
-	}
-	// END TODO
+	// var pDnaNode string
+	// var tempWriter *fileio.EasyWriter
+	// if s.PDnaNode != "" {
+	// 	tempWriter = fileio.EasyCreate(s.TempDirOption)
+	// }
+	
+	pDnaRecords := []pFasta.PFasta{{Name: s.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 
 	for i := range leaves[0].Fasta.Seq {
-		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix, pDnaNode, pDnaOutFile)
+		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix, s.PDnaNode, pDnaRecords)
 	}
 	for j := range leaves {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
@@ -99,7 +93,21 @@ func ReconstructSeq(s Settings) {
 	}
 
 	fasta.Write(s.OutFile, treeFastas)
+
+	if s.PDnaNode != "" {
+		pFasta.Write(s.PDnaOutFile, pDnaRecords)
+		
+	}
 }
+
+// func writePfastaHeader(out *fileio.EasyWriter, name string, seqLength int) {
+// 	_, err = fmt.Fprint(out, "pFasta_format_1.0\n")
+// 	exception.PanicOnErr(err)
+// 	_, err = fmt.Fprintf(out, "%s\t%v\n", record.Name, seqLength)
+// 	exception.PanicOnErr(err)
+// 	_, err = fmt.Fprintf(out, "EndHeader\n")
+// 	exception.PanicOnErr(err)
+// }
 
 func usage() {
 	fmt.Print(
@@ -120,7 +128,8 @@ func main() {
 	var substitutionMatrixFile *string = flag.String("substitutionMatrixFile", "", "Set a file to define a substitution matrix.")
 	var unitBranchLength *float64 = flag.Float64("unitBranchLength", -1, "If using a substitution matrix, specify the branch length over which the substitution matrix was derived.")
 	var subMatrix *bool = flag.Bool("subMatrix", false, "Use a substitution matrix instead of the default model. If no substitution matrix file is provided, the Jukes-Cantor model will be used.")
-	var pDnaNode *string = flag.String("pDnaOut", "", "Specify a node to get the pDNA sequence of. Defaults to empty.")
+	var pDnaNode *string = flag.String("pDnaNode", "", "Specify a node to get the pDNA sequence of. Defaults to empty. Requires pDnaOutFile")
+	var pDnaOutFile *string = flag.String("pDnaOutFile", "", "Name of pDnaNode pfasta. Requires pDnaNode.")
 	var expectedNumArgs = 3
 
 	flag.Usage = usage
@@ -148,7 +157,8 @@ func main() {
 		SubstitutionMatrixFile: *substitutionMatrixFile,
 		UnitBranchLength:       *unitBranchLength,
 		SubMatrix:              *subMatrix,
-		PDnaNode:                *pDnaNode,
+		PDnaNode:               *pDnaNode,
+		PDnaOutFile:			*pDnaOutFile,
 	}
 
 	ReconstructSeq(s)
