@@ -63,7 +63,7 @@ func TestFractionalSymmetricMatrixExponentiation(t *testing.T) {
 	for _, v := range FractionalSymmetricMatrixExponentiationTests {
 		var observed *mat.Dense
 		observed = FractionalSymmetricMatrixExponentiation(v.InMat, v.Power)
-		if !approxEqual(observed, v.Expected, v.Precision) {
+		if !approxDenseEqual(observed, v.Expected, v.Precision) {
 			fmt.Println(mat.Formatted(observed))
 			t.Errorf("Error: FractionalSymmetricMatrixExponentiation output was not as expected.")
 		}

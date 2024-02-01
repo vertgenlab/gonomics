@@ -6,7 +6,7 @@ func Smooth(w Wig, windowSize int, missing float64) Wig {
 	var sum float64
 	var missingFound bool = false
 	//first we make a fresh copy of the input wig to serve as our output. Default value is "missing".
-	var answer = Wig{StepType: "fixedStep", Chrom: w.Chrom, Start: w.Start, Step: w.Step, Span: w.Span, Values: make([]float64, len(w.Values))}
+	var answer = Wig{StepType: "fixedStep", Chrom: w.Chrom, Start: w.Start, Step: w.Step, Span: w.Span, DefaultValue: w.DefaultValue, Values: make([]float64, len(w.Values))}
 	copy(answer.Values, w.Values)
 	for i := range answer.Values {
 		answer.Values[i] = missing
