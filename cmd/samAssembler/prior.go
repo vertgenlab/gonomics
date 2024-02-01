@@ -3,15 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"os"
 )
 
+// create struct for keeping list of arguments clean
 type PriorSettings struct {
 	SamFileName         string
 	ReferenceFile       string
@@ -22,6 +24,15 @@ type PriorSettings struct {
 	AsCounts            bool
 }
 
+// estimation of error rates
+type EmpiricalErrorEstimator struct {
+	NumEpsilon             int
+	NumLambdaPlusEpsilon   int
+	TotalEpsilon           int
+	TotalLambdaPlusEpsilon int
+}
+
+// help message
 func priorUsage(priorFlags *flag.FlagSet) {
 	fmt.Print("samAssembler prior - Construct an empirical conditional Dirichlet prior for output diploid" +
 		"genotypes based on maximum likelihood estimation of genotypes from aligned short reads.\n" +
@@ -31,6 +42,7 @@ func priorUsage(priorFlags *flag.FlagSet) {
 	priorFlags.PrintDefaults()
 }
 
+// define and setup arguments for prior creation
 func parsePriorArgs() {
 	var err error
 	var expectedNumArgs int = 3
@@ -69,14 +81,20 @@ func parsePriorArgs() {
 	SamAssemblerPrior(s)
 }
 
+// create prior for samAssembler pipeline
 func SamAssemblerPrior(s PriorSettings) {
+	// substitution matrix for priors
 	var answer = make([][]float64, 4)
+	// set pseudocount in matrix
 	for i := range answer {
 		answer[i] = make([]float64, 10)
 		for j := range answer[i] {
 			answer[i][j] = s.PseudoCount
 		}
 	}
+
+	var errorEstimator = EmpiricalErrorEstimator{NumEpsilon: 0, NumLambdaPlusEpsilon: 0, TotalEpsilon: 0, TotalLambdaPlusEpsilon: 0}
+
 	var refBase dna.Base
 	var currChrom string
 	var baseCall sam.DiploidBase
@@ -91,34 +109,47 @@ func SamAssemblerPrior(s PriorSettings) {
 		dna.AllToUpper(ref[i].Seq)
 	}
 	refMap := fasta.ToMap(ref)
-
+	// cache of substitution matrix if assembling genome is homozygous
 	homozygousCache := make([][]float64, s.LikelihoodCacheSize)
 	for i := range homozygousCache {
 		homozygousCache[i] = make([]float64, s.LikelihoodCacheSize)
 	}
+	// cache of substitution matrix if assembling genome is heterozygous
 	heterozygousCache := make([][]float64, s.LikelihoodCacheSize)
 	for i := range heterozygousCache {
 		heterozygousCache[i] = make([]float64, s.LikelihoodCacheSize)
 	}
+	// non-empirical cache, just flat, equally probable substitutions between all bases
 	diploidBasePriorCache := sam.MakeDiploidBaseFlatPriorCache()
-
+	// for all pileups
 	for p := range piles {
 		currChrom = header.Chroms[p.RefIdx].Name
 		refBase = refMap[currChrom][p.Pos-1]
+		// if the baseCall doesn't return a genotype with an unknown base, then add the base to the transition matrix
 		if refBase < 4 {
 			baseCall = sam.DiploidBaseCallFromPile(p, refBase, diploidBasePriorCache, homozygousCache, heterozygousCache, sam.AncientLikelihoodCache{}, s.Epsilon, 0)
 			if baseCall < 10 {
 				answer[refBase][baseCall]++
+				updateErrorEstimate(&errorEstimator, baseCall, p)
 			}
 		}
 	}
 
+	EpsilonEstimate := float64(errorEstimator.NumEpsilon) / float64(errorEstimator.TotalEpsilon)
+	LambdaEstimate := (float64(errorEstimator.NumLambdaPlusEpsilon) / float64(errorEstimator.TotalLambdaPlusEpsilon)) - EpsilonEstimate
+
+	// convert matrix to probability
 	if !s.AsCounts {
 		answer = convertToProb(answer)
 	}
-
+	// format output file using aliases
 	out := fileio.EasyCreate(s.OutFile)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "Epsilon: %v\n", EpsilonEstimate)
+	exception.PanicOnErr(err)
+	_, err = fmt.Fprintf(out, "Lambda: %v\n", LambdaEstimate)
 	_, err = fmt.Fprintf(out, ".\tAA\tAC\tAG\tAT\tCC\tCG\tCT\tGG\tGT\tTT\n")
+	// 10 possible genotypes per reference genotype
 	exception.PanicOnErr(err)
 	_, err = fmt.Fprintf(out, "RefA\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\n",
 		answer[dna.A][0],
@@ -177,6 +208,7 @@ func SamAssemblerPrior(s PriorSettings) {
 	exception.PanicOnErr(err)
 }
 
+// calculation probability of each substitution using row and column sums
 func convertToProb(input [][]float64) [][]float64 {
 	var currRowSum float64
 	var currRow, currColumn int
@@ -194,4 +226,21 @@ func convertToProb(input [][]float64) [][]float64 {
 		}
 	}
 	return output
+}
+
+func updateErrorEstimate(errorEstimator *EmpiricalErrorEstimator, baseCall sam.DiploidBase, p sam.Pile) {
+	switch baseCall {
+	case sam.AA:
+		errorEstimator.NumEpsilon = errorEstimator.NumEpsilon + p.CountF[dna.C] + p.CountF[dna.G] + p.CountF[dna.T] + p.CountR[dna.C] + p.CountR[dna.G] + p.CountR[dna.T]
+		errorEstimator.TotalEpsilon = errorEstimator.TotalEpsilon + p.CountF[dna.A] + p.CountF[dna.C] + p.CountF[dna.G] + p.CountF[dna.T] + p.CountR[dna.A] + p.CountR[dna.C] + p.CountR[dna.G] + p.CountR[dna.T]
+	case sam.CC:
+		errorEstimator.NumLambdaPlusEpsilon = errorEstimator.NumLambdaPlusEpsilon + p.CountF[dna.T] + p.CountR[dna.T]
+		errorEstimator.TotalLambdaPlusEpsilon = errorEstimator.TotalLambdaPlusEpsilon + p.CountF[dna.A] + p.CountF[dna.C] + p.CountF[dna.G] + p.CountF[dna.T] + p.CountR[dna.A] + p.CountR[dna.C] + p.CountR[dna.G] + p.CountR[dna.T]
+	case sam.GG:
+		errorEstimator.NumLambdaPlusEpsilon = errorEstimator.NumLambdaPlusEpsilon + p.CountF[dna.A] + p.CountR[dna.A]
+		errorEstimator.TotalLambdaPlusEpsilon = errorEstimator.TotalLambdaPlusEpsilon + p.CountF[dna.A] + p.CountF[dna.C] + p.CountF[dna.G] + p.CountF[dna.T] + p.CountR[dna.A] + p.CountR[dna.C] + p.CountR[dna.G] + p.CountR[dna.T]
+	case sam.TT:
+		errorEstimator.NumEpsilon = errorEstimator.NumEpsilon + p.CountF[dna.A] + p.CountF[dna.C] + p.CountF[dna.G] + p.CountR[dna.A] + p.CountR[dna.C] + p.CountR[dna.G]
+		errorEstimator.TotalEpsilon = errorEstimator.TotalEpsilon + p.CountF[dna.A] + p.CountF[dna.C] + p.CountF[dna.G] + p.CountF[dna.T] + p.CountR[dna.A] + p.CountR[dna.C] + p.CountR[dna.G] + p.CountR[dna.T]
+	}
 }
