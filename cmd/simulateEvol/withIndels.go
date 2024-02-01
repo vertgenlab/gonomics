@@ -44,9 +44,9 @@ func parseWithIndelsFlags() {
 	var branchLength *float64 = withIndelsFlags.Float64("branchLength", 0, "Specify the divergence rate (must be between 0 and 1).")
 	var gcContent *float64 = withIndelsFlags.Float64("gcContent", 0.42, "Set the GC content for simulated insertion sequences.")
 	var setSeed *int64 = withIndelsFlags.Int64("setSeed", -1, "Use a specific seed for the RNG.")
-	var qName *string = flag.String("qName", "evol", "Set the suffix for the output sequence fasta name. Default suffix evol for an example chr1 will appear as chr1_evol.")
-	var vcfOutFile *string = flag.String("vcfOutFile", "", "Specify a vcf filename to record simulated mutations.")
-	var transitionBias *float64 = flag.Float64("transitionBias", 1, "Set a bias for transitions over transversions during sequence evolution. Defaults to the Jukes-Cantor model, where the transition bias is 1 (even with transversion frequency).")
+	var qName *string = withIndelsFlags.String("qName", "evol", "Set the suffix for the output sequence fasta name. Default suffix evol for an example chr1 will appear as chr1_evol.")
+	var vcfOutFile *string = withIndelsFlags.String("vcfOutFile", "", "Specify a vcf filename to record simulated mutations.")
+	var transitionBias *float64 = withIndelsFlags.Float64("transitionBias", 1, "Set a bias for transitions over transversions during sequence evolution. Defaults to the Jukes-Cantor model, where the transition bias is 1 (even with transversion frequency).")
 
 	err = withIndelsFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
