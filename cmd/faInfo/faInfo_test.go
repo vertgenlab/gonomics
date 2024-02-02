@@ -12,14 +12,15 @@ var FaInfoTests = []struct {
 	inputFile    string
 	outputFile   string
 	expectedFile string
+	gcContent    bool
 }{
-	{"testdata/input.fa", "testdata/output.fa", "testdata/expected.fa"},
+	{"testdata/input.fa", "testdata/output.fa", "testdata/expected.fa", true},
 }
 
 func TestFaInfo(t *testing.T) {
 	var err error
 	for _, v := range FaInfoTests {
-		faInfo(v.inputFile, v.outputFile)
+		faInfo(v.inputFile, v.outputFile, v.gcContent)
 		if !fileio.AreEqual(v.outputFile, v.expectedFile) {
 			t.Errorf("Error in faInfo, output and expected do not match.")
 		} else {
