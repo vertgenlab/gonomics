@@ -29,3 +29,5 @@ func TestFaInfo(t *testing.T) {
 		}
 	}
 }
+
+//TODO: update testing files for options
