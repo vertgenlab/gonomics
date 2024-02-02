@@ -48,21 +48,27 @@ func TestApproxEqualsExtended(t *testing.T) {
 	}{
 		{
 			name:         "DifferingNumberOfLines",
-			contentAlpha: "chr9\t114159\t114165\tGeneX\t0\t+\t1\t0.2586407359495857\t0.7413592640504143\n",
-			contentBeta: "chr9\t114159\t114165\tGeneX\t0\t+\t1\t0.2586407359495857\t0.7413592640504143\n" +
+			contentAlpha: "chrX\t114159\t114165\tGeneX\t0\t+\t1\t0.2586407359495857\t0.7413592640504143\n",
+			contentBeta: "chrX\t114159\t114165\tGeneX\t0\t+\t1\t0.2586407359495857\t0.7413592640504143\n" +
 				"chr9\t114050\t114056\tZNF354C\t0\t-\t0\t0.8165285748498434\t0.8165285748498434\n",
 			want: false,
 		},
 		{
 			name:         "DifferingNumberOfFields",
-			contentAlpha: "chr9\t114159\t114165\tGeneX\t0\t+\t1\t0.2586407359495857\n",
+			contentAlpha: "chrX\t114159\t114165\tGeneX\t0\t+\t1\t0.2586407359495857\n",
 			contentBeta:  "chr9\t114159\t114165\tGeneX\t0\t+\t1\n",
 			want:         false,
 		},
 		{
 			name:         "IndexOutOfRange",
-			contentAlpha: "chr9\t114159\t114165\tGeneX\t0\t+\t1\n",
-			contentBeta:  "chr9\t114159\t114165\tGeneX\t0\t+\t1\n",
+			contentAlpha: "chrX\t114159\t114165\tGeneX\t0\t+\t1\n",
+			contentBeta:  "chrX\t114159\t114165\tGeneX\t0\t+\t1\n",
+			want:         false,
+		},
+		{
+			name:         "NotEqual",
+			contentAlpha: "chr1\t0\t100\tGeneX\t0\t+\t1\t0.2586407359495857\t0.7413592640504143\n",
+			contentBeta:  "chr1\t0\t100\tGeneX\t0\t+\t1\t0.3586407359495857\t0.8413592640504143\n",
 			want:         false,
 		},
 	}
