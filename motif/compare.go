@@ -8,13 +8,13 @@ import (
 	"strings"
 )
 
-// ApproxEqual determines if floating-point numbers within two files are equal within a specified epsilon level.
-func ApproxEqual(alpha, beta string, epsilon float64) bool {
+// AlmostEquals determines if floating-point numbers within two files are equal within a specified epsilon level.
+func ApproxEquals(alpha, beta string, epsilon float64) bool {
 	query, answer := fileio.Read(alpha), fileio.Read(beta)
 	indexes := []int{7, 8} // Assuming these are the indexes you want to compare
 
 	if len(query) != len(answer) {
-		fmt.Errorf("Error: %s and %s do not have the same number of bed records...", alpha, beta)
+		//fmt.Errorf("Error: %s and %s do not have the same number of bed records...", alpha, beta)
 		return false
 	}
 
