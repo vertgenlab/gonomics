@@ -187,7 +187,7 @@ func makeComparisonCountCache(contactScoreCache [][]int, searchSpaceMins map[str
 	var comparisonCountCache []int = make([]int, len(contactScoreCache))
 	for i := range comparisonCountCache {
 		totalWindows = 0
-		for currKey, _ = range searchSpaceMins {
+		for currKey = range searchSpaceMins {
 			// this calculation is the number of valid contact windows on a chromosome. ChromSize/binSize is windows
 			// on chromosome, minus i, the binDistance.
 			totalWindows += (searchSpaceMaxes[currKey]-searchSpaceMins[currKey])/s.BinSize - i

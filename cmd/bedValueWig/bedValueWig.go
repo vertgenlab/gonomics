@@ -31,7 +31,7 @@ func bedValueWig(s Settings) {
 	var err error
 
 	if s.NormFlag {
-		for currKey, _ = range wigData {
+		for currKey = range wigData {
 			wigCounterByChrom = 0
 			for k := range wigData[currKey].Values { //Cycle through each value in the float64[]
 				if wigData[currKey].Values[k] != s.NoDataValue {

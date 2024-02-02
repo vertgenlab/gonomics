@@ -190,4 +190,3 @@ func TestBedGraphToWig(t *testing.T) {
 	}
 }
 */
-
