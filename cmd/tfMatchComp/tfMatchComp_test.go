@@ -54,7 +54,7 @@ func TestTfMatchComp(t *testing.T) {
 			GcContent:          v.GcContent,
 		}
 		tfMatchComp(s, v.InFile)
-		if !motif.ApproxEqual(v.ExpectedFile, v.OutFile, epsilon) {
+		if !motif.ApproxEquals(v.ExpectedFile, v.OutFile, epsilon) {
 			t.Errorf("Error: Motif are not equal within a tolorance %v...", epsilon)
 		} else {
 			err = os.Remove(v.OutFile)
