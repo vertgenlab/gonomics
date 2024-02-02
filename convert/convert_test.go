@@ -1,11 +1,12 @@
 package convert
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/sam"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/sam"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -67,6 +68,14 @@ func TestPairwiseFaToVcf(t *testing.T) { //this test is for the default settings
 	if err != nil {
 		exception.PanicOnErr(err)
 	}
+}
+
+func TestThreeWayFaToVcf(t *testing.T) {
+	// var err error
+	out := fileio.EasyCreate("tmp.threeWayFaToVcf.txt")
+	threewayInputFa := fasta.Read("testdata/threeWayFaToVcf/input.fa")
+	ThreeWayFaToVcf(threewayInputFa, "chr1", out, false, false)
+
 }
 
 func TestPairwiseFaToVcfRetainN(t *testing.T) {
@@ -190,4 +199,3 @@ func TestBedGraphToWig(t *testing.T) {
 	}
 }
 */
-

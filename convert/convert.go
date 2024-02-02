@@ -2,11 +2,14 @@
 package convert
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedGraph"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -14,7 +17,6 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 	"github.com/vertgenlab/gonomics/vcf"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
 )
 
 // SingleBedToFasta extracts a sub-Fasta from a reference Fasta sequence at positions specified by an input bed.
@@ -194,6 +196,78 @@ func bedMidpoint(b bed.Bed) int {
 	return (b.ChromEnd + b.ChromStart) / 2
 }
 
+func ThreeWayFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substitutionOnly bool, retainN bool) {
+	var currRefPos, currAlnPos int = 0, 0
+	// var insertion1, insertion2, deletion1, deletion2 bool = false, false, false, false
+	// var insertionAlnPos1, insertionAlnPos2, deletionAlnPos1, deletionAlnPos2 int
+
+	if len(f) != 3 {
+		log.Fatalf("ThreeWayFaToVcf expects a fasta input with three entries.")
+	}
+
+	for i := range f[0].Seq {
+		if f[0].Seq[i] != f[1].Seq[i] || f[0].Seq[i] != f[2].Seq[i] { // normal substitution
+			currRefPos = fasta.AlnPosToRefPosCounter(f[0], i, currRefPos, currAlnPos)
+			currAlnPos = i
+
+			var altAllele []string
+			var samples []vcf.Sample
+
+			if f[0].Seq[i] != f[1].Seq[i] && f[0].Seq[i] == f[2].Seq[i] { // 1/0; substitution at allele1 only
+				altAllele = []string{dna.BaseToString(f[1].Seq[i])}
+				samples = []vcf.Sample{
+					{
+						Alleles:    []int16{1, 0},
+						Phase:      []bool{false, false},
+						FormatData: []string{"1/0"},
+					},
+				}
+			} else if f[0].Seq[i] == f[1].Seq[i] && f[0].Seq[i] != f[2].Seq[i] { // 0/1; substitution at allele2 only
+				altAllele = []string{dna.BaseToString(f[2].Seq[i])}
+				samples = []vcf.Sample{
+					{
+						Alleles:    []int16{0, 1},
+						Phase:      []bool{false, false},
+						FormatData: []string{"0/1"},
+					},
+				}
+			} else if f[0].Seq[i] != f[1].Seq[i] && f[0].Seq[i] != f[2].Seq[i] && f[1].Seq[i] == f[2].Seq[i] { // 1/1; substitution at both allele1 and allele2, same alt
+				altAllele = []string{dna.BaseToString(f[1].Seq[i])}
+				samples = []vcf.Sample{
+					{
+						Alleles:    []int16{1, 1},
+						Phase:      []bool{false, false},
+						FormatData: []string{"1/1"},
+					},
+				}
+			} else if f[0].Seq[i] != f[1].Seq[i] && f[0].Seq[i] != f[2].Seq[i] && f[1].Seq[i] != f[2].Seq[i] { // 1/2; substitution at both allele1 and allele2, same alt
+				altAllele = []string{dna.BaseToString(f[1].Seq[i]), dna.BaseToString(f[2].Seq[i])}
+				samples = []vcf.Sample{
+					{
+						Alleles:    []int16{1, 2},
+						Phase:      []bool{false, false},
+						FormatData: []string{"1/2"},
+					},
+				}
+			}
+			vcf.WriteVcf(out, vcf.Vcf{
+				Chr:     chr,
+				Pos:     currRefPos + 1, // 1-based indexing for VCF
+				Id:      ".",
+				Ref:     dna.BaseToString(f[0].Seq[i]), // ref allele in string format
+				Alt:     altAllele,
+				Qual:    100.0,
+				Filter:  "PASS",
+				Info:    ".",
+				Format:  []string{"GT"},
+				Samples: samples,
+			})
+		}
+	}
+	err := out.Close()
+	exception.PanicOnErr(err)
+}
+
 // PairwiseFaToVcf takes in a pairwise multiFa alignment and writes Vcf entries for segregating sites with the first
 // entry as the reference and the second fasta entry as the alt allele.
 // This will have to be done by chromosome, as a pairwise multiFa will only have two entries, thus containing one chromosome per file.
@@ -213,7 +287,7 @@ func PairwiseFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 				}
 				insertion = true
 			}
-		} else if f[0].Seq[i] != f[1].Seq[i] {
+		} else if f[0].Seq[i] != f[1].Seq[i] { // sequences diff at the same position
 			pastStart = true
 			if insertion { //catches the case where an insertion, now complete, is followed directly by a snp.
 				if !substitutionsOnly {
