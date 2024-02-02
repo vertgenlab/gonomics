@@ -24,14 +24,14 @@ func ApproxEquals(alpha, beta string, epsilon float64) bool {
 
 		// Check if both lines have the same number of fields
 		if len(queryFields) != len(answerFields) {
-			fmt.Errorf("Error: Line %d of files %s and %s have different number of fields", i, alpha, beta)
+			// fmt.Errorf("Error: Line %d of files %s and %s have different number of fields", i, alpha, beta)
 			return false
 		}
 
 		// Compare the specific fields for near equality
 		for _, index := range indexes {
 			if index >= len(queryFields) || index >= len(answerFields) {
-				fmt.Errorf("Error: Index out of range for line %d", i)
+				// fmt.Errorf("Error: Index out of range for line %d", i)
 				return false
 			}
 
@@ -40,7 +40,7 @@ func ApproxEquals(alpha, beta string, epsilon float64) bool {
 
 			// Compare the parsed values for near equality
 			if !numbers.ApproxEqual(queryValue, answerValue, epsilon) {
-				fmt.Errorf("Error: Values on line %d at index %d are not almost equal: %v, %v", i, index, queryValue, answerValue)
+				// fmt.Errorf("Error: Values on line %d at index %d are not almost equal: %v, %v", i, index, queryValue, answerValue)
 				return false
 			}
 		}
