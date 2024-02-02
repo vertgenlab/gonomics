@@ -80,7 +80,7 @@ func main() {
 	var nameContains *string = flag.String("nameContains", "", "Returns all fasta records whose name contains this input. String matching is case-sensitive.")
 	var minSize *int = flag.Int("minSize", 0, "Retains all fasta records with a sequence of at least that size")
 	var maxGC *float64 = flag.Float64("maxGC", 100, "Retains all fasta records with GC content less than or equal to this percentage.")
-	var minGC *float64 = flag.Float64("minGC", 100, "Retains all fasta records with GC content greater than or equal to this percentage")
+	var minGC *float64 = flag.Float64("minGC", 0, "Retains all fasta records with GC content greater than or equal to this percentage")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
