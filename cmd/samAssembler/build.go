@@ -95,9 +95,9 @@ func parseBuildArgs() {
 
 	var delta *float64 = buildFlags.Float64("delta", 0.01, "Set the expected divergence frequency.")
 	var gamma *float64 = buildFlags.Float64("gamma", 3, "Set the expected transition bias.")
-	var epsilon *float64 = buildFlags.Float64("epsilon", 0.01, "Set the expected misclassification error rate.")
+	var epsilon *float64 = buildFlags.Float64("epsilon", 0.01, "Set the expected misclassification error rate. If using an empirical prior, the value defined in the prior file will be used, and this value will be ignored.")
 	var kappa *float64 = buildFlags.Float64("kappa", 0.1, "Set the expected proportion of divergent sites that are INDELs.")
-	var lambda *float64 = buildFlags.Float64("lambda", 0, "Set the expected rate of cytosine deamination.")
+	var lambda *float64 = buildFlags.Float64("lambda", 0, "Set the expected rate of cytosine deamination. If using an empirical prior, the value defined in the prior file will be used, and this value will be ignored.")
 	var multiFaDir *string = buildFlags.String("multiFaDir", "", "Output the reference and generated sequences as an aligned multiFa, each file by chrom.")
 	var qNameA *string = buildFlags.String("qNameA", "QueryA", "Set the qName for the first generated chromosome in the optional multiFa output.")
 	var qNameB *string = buildFlags.String("qNameB", "QueryB", "Set the qName for the second generated chromosome in the optional multiFa output.")
@@ -162,8 +162,9 @@ func samAssemblerBuild(s BuildSettings) {
 
 	preCheck(s)
 
-	// initialize caches for likelihood and priors
-	cacheStruct := cacheSetup(s)
+	// initialize caches for likelihood and priors.
+	var cacheStruct CacheStruct
+	cacheStruct, s.Epsilon, s.Lambda = cacheSetup(s)
 
 	// initialize reference genome
 	ref := fasta.Read(s.RefFile)

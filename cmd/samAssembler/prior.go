@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"os"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-// create struct for keeping list of arguments clean
+// PriorSettings defines the set of options and arguments for the samAssembler prior subcommand.
 type PriorSettings struct {
 	SamFileName         string
 	ReferenceFile       string
@@ -21,10 +22,12 @@ type PriorSettings struct {
 	Epsilon             float64
 	LikelihoodCacheSize int
 	PseudoCount         float64
+	MinCoverage         int
 	AsCounts            bool
 }
 
-// estimation of error rates
+// EmpiricalErrorEstimator keeps track of several variables used to estimate sequencing error rates (epsilon)
+// and cytosine deamination error rates (lambda) from pileup data.
 type EmpiricalErrorEstimator struct {
 	NumEpsilon             int
 	NumLambdaPlusEpsilon   int
@@ -32,7 +35,7 @@ type EmpiricalErrorEstimator struct {
 	TotalLambdaPlusEpsilon int
 }
 
-// help message
+// priorUsage defines the help message for the samAssembler prior subcommand and prints default options.
 func priorUsage(priorFlags *flag.FlagSet) {
 	fmt.Print("samAssembler prior - Construct an empirical conditional Dirichlet prior for output diploid" +
 		"genotypes based on maximum likelihood estimation of genotypes from aligned short reads.\n" +
@@ -42,7 +45,7 @@ func priorUsage(priorFlags *flag.FlagSet) {
 	priorFlags.PrintDefaults()
 }
 
-// define and setup arguments for prior creation
+// parsePriorArgs is the main function of the samAssembler prior subcommand. Defines and parses arguments before running the SamAssemblerPrior function.
 func parsePriorArgs() {
 	var err error
 	var expectedNumArgs int = 3
@@ -54,6 +57,7 @@ func parsePriorArgs() {
 		"Increasing this value regularizes the prior against overfitting.\n"+
 		"The model will underfit, biased towards Jukes-Cantor, if this value is set too high.")
 	var asCounts *bool = priorFlags.Bool("asCounts", false, "Return output as counts, instead of probabilities. Useful for debugging, but count matrices cannot be used directly in 'build'.")
+	var minCoverage *int = priorFlags.Int("minCoverage", 0, "Specifies a threshold where only piles with coverage above this value contribute to the substitution matrix and error  rate estimations.")
 
 	err = priorFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
@@ -77,11 +81,12 @@ func parsePriorArgs() {
 		LikelihoodCacheSize: *likelihoodCacheSize,
 		PseudoCount:         *pseudoCount,
 		AsCounts:            *asCounts,
+		MinCoverage:         *minCoverage,
 	}
 	SamAssemblerPrior(s)
 }
 
-// create prior for samAssembler pipeline
+// SamAssemblerPrior creates an empirical prior from SAM/BAM pileup data for the samAssembler build command.
 func SamAssemblerPrior(s PriorSettings) {
 	// substitution matrix for priors
 	var answer = make([][]float64, 4)
@@ -125,18 +130,21 @@ func SamAssemblerPrior(s PriorSettings) {
 	for p := range piles {
 		currChrom = header.Chroms[p.RefIdx].Name
 		refBase = refMap[currChrom][p.Pos-1]
-		// if the baseCall doesn't return a genotype with an unknown base, then add the base to the transition matrix
-		if refBase < 4 {
-			baseCall = sam.DiploidBaseCallFromPile(p, refBase, diploidBasePriorCache, homozygousCache, heterozygousCache, sam.AncientLikelihoodCache{}, s.Epsilon, 0)
-			if baseCall < 10 {
-				answer[refBase][baseCall]++
-				updateErrorEstimate(&errorEstimator, baseCall, p)
+		if getPileCoverage(p) > s.MinCoverage {
+			// if the baseCall doesn't return a genotype with an unknown base, then add the base to the transition matrix
+			if refBase < 4 {
+				baseCall = sam.DiploidBaseCallFromPile(p, refBase, diploidBasePriorCache, homozygousCache, heterozygousCache, sam.AncientLikelihoodCache{}, s.Epsilon, 0)
+				if baseCall < 10 { //checks that we have a valid genotype (not NN)
+					answer[refBase][baseCall]++
+					updateErrorEstimate(&errorEstimator, baseCall, p)
+				}
 			}
 		}
 	}
 
+	// epsilon MLE is just the empirical proportion of reads in homozygous sites that have incorrect bases.
 	EpsilonEstimate := float64(errorEstimator.NumEpsilon) / float64(errorEstimator.TotalEpsilon)
-	LambdaEstimate := (float64(errorEstimator.NumLambdaPlusEpsilon) / float64(errorEstimator.TotalLambdaPlusEpsilon)) - EpsilonEstimate
+	LambdaEstimate := numbers.Max((float64(errorEstimator.NumLambdaPlusEpsilon)/float64(errorEstimator.TotalLambdaPlusEpsilon))-EpsilonEstimate, 0)
 
 	// convert matrix to probability
 	if !s.AsCounts {
@@ -145,9 +153,9 @@ func SamAssemblerPrior(s PriorSettings) {
 	// format output file using aliases
 	out := fileio.EasyCreate(s.OutFile)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out, "Epsilon: %v\n", EpsilonEstimate)
+	_, err = fmt.Fprintf(out, "Epsilon\t%v\n", EpsilonEstimate)
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out, "Lambda: %v\n", LambdaEstimate)
+	_, err = fmt.Fprintf(out, "Lambda\t%v\n", LambdaEstimate)
 	_, err = fmt.Fprintf(out, ".\tAA\tAC\tAG\tAT\tCC\tCG\tCT\tGG\tGT\tTT\n")
 	// 10 possible genotypes per reference genotype
 	exception.PanicOnErr(err)
@@ -203,7 +211,6 @@ func SamAssemblerPrior(s PriorSettings) {
 		answer[dna.T][9],
 	)
 	exception.PanicOnErr(err)
-
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
@@ -228,6 +235,19 @@ func convertToProb(input [][]float64) [][]float64 {
 	return output
 }
 
+// getPileCoverage calculates the coverage, defined as the number of As, Cs, Gs, and Ts observed at a position.
+func getPileCoverage(p sam.Pile) int {
+	var answer int
+	answer += p.CountF[0] + p.CountR[0]
+	answer += p.CountF[1] + p.CountR[1]
+	answer += p.CountF[2] + p.CountR[2]
+	answer += p.CountF[3] + p.CountR[3]
+	return answer
+}
+
+// updateErrorEstimate updates the EmpiricalErrorEstimator for a given pileup. Epsilon is estimated as the empirical proportion
+// of errors in homozygous A and T sites, whereas LambdaPlusEpsilon can be estimated from the empirical proportion of Ts in homozygous
+// CC piles and As in homozygous GG piles.
 func updateErrorEstimate(errorEstimator *EmpiricalErrorEstimator, baseCall sam.DiploidBase, p sam.Pile) {
 	switch baseCall {
 	case sam.AA:
