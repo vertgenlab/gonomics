@@ -31,10 +31,10 @@ func TestApproxEquals(t *testing.T) {
 	defer os.Remove(alphaPath)
 	defer os.Remove(betaPath)
 
-	got := ApproxEquals(alphaPath, betaPath, epsilon)
+	comparison := ApproxEquals(alphaPath, betaPath, epsilon)
 	want := true
-	if got != want {
-		t.Errorf("ApproxEquals() = %v; want %v", got, want)
+	if comparison != want {
+		t.Errorf("ApproxEquals() = %v; want %v", comparison, want)
 	}
 }
 
@@ -80,9 +80,9 @@ func TestApproxEqualsExtended(t *testing.T) {
 			defer os.Remove(alphaPath)
 			defer os.Remove(betaPath)
 
-			got := ApproxEquals(alphaPath, betaPath, epsilon)
-			if got != tt.want {
-				t.Errorf("ApproxEquals() for %s = %v; want %v", tt.name, got, tt.want)
+			comparison := ApproxEquals(alphaPath, betaPath, epsilon)
+			if comparison != tt.want {
+				t.Errorf("ApproxEquals() for %s = %v; want %v", tt.name, comparison, tt.want)
 			}
 		})
 	}
