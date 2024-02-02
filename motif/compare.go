@@ -1,7 +1,6 @@
 package motif
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
