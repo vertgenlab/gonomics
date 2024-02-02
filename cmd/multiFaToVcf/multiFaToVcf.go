@@ -1,17 +1,18 @@
 // Command Group: "Data Conversion"
 
-// Generates a VCF file from an input pairwise multiFa alignment with the first entry as the reference
+// Generates a VCF file from an input pairwise or three-way multiFa alignment with the first entry as the reference
 package main
 
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/convert"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
 )
 
 func multiFaToVcf(inFile string, chr string, outFile string, substitutionsOnly bool, retainN bool) {
