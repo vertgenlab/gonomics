@@ -1,4 +1,4 @@
-FROM golang:1.20.0-alpine3.16
+FROM golang:1.20.3-alpine3.16
 
 # Build docker image with the following command:
 # docker build . -t gonomics
