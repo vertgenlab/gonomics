@@ -13,7 +13,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-func faFilter(infile string, outfile string, name string, notName string, nameContains string, refPositions bool, start int, end int, minSize int, maxGC float64) {
+func faFilter(infile string, outfile string, name string, notName string, nameContains string, refPositions bool, start int, end int, minSize int, maxGC float64, minGC float64) {
 	records := fasta.Read(infile) //read the fasta infile
 	var outlist []fasta.Fasta     //make the variable to store the fasta records that will be written out
 	var pass bool = true
@@ -42,6 +42,9 @@ func faFilter(infile string, outfile string, name string, notName string, nameCo
 			pass = false
 		}
 		if dna.GCContent(records[i].Seq) > maxGC { //filtering based on GC content of the fasta record; GC content must be less than or equal to the value given to the maxGC option
+			pass = false
+		}
+		if dna.GCContent(records[i].Seq) < minGC { //filtering based on GC content of the fasta record; GC content must be greater than or equal to the value given to the minGC option
 			pass = false
 		}
 		if pass { //if checks passed on a record
@@ -77,6 +80,7 @@ func main() {
 	var nameContains *string = flag.String("nameContains", "", "Returns all fasta records whose name contains this input. String matching is case-sensitive.")
 	var minSize *int = flag.Int("minSize", 0, "Retains all fasta records with a sequence of at least that size")
 	var maxGC *float64 = flag.Float64("maxGC", 100, "Retains all fasta records with GC content less than or equal to this percentage.")
+	var minGC *float64 = flag.Float64("minGC", 100, "Retains all fasta records with GC content greater than or equal to this percentage")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -91,5 +95,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFilter(inFile, outFile, *name, *notName, *nameContains, *refPositions, *start, *end, *minSize, *maxGC) //all options exist as pointers in the arguments of the function call, since they may or may not exist when the user calls the function.
+	faFilter(inFile, outFile, *name, *notName, *nameContains, *refPositions, *start, *end, *minSize, *maxGC, *minGC) //all options exist as pointers in the arguments of the function call, since they may or may not exist when the user calls the function.
 }
