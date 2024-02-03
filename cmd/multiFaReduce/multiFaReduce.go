@@ -13,6 +13,7 @@ import (
 
 func mfaReduce(inFilename, outFilename, bedFilename, chrom string) {
 	aln := fasta.Read(inFilename)
+	// TODO: don't do function for all aln, but only positions specified in an input []bed
 	var answer []fasta.Fasta
 	var answerBedPos [][]int // answerBedPos is [][]int not [][]bed.Bed to avoid circular dependencies, aka trying to import bed package in fasta package
 	if bedFilename != "" {
