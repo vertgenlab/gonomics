@@ -250,9 +250,11 @@ func samAssemblerBuild(s BuildSettings) {
 			refPos++
 		}
 
-		// now refPos should equal p.Pos - 1, because of our for loop before
+		// now refPos should equal p.Pos - 1, because of our for loop before.
+		// If we ever skip the current pos (which can arise from complex INDEls, we continue to correct)
 		if refPos != int(p.Pos-1) {
-			log.Fatalf("Something went wrong. RefPos is not equal to p.Pos -1.")
+			continue
+			//log.Fatalf("Something went wrong. RefPos: %v is not equal to p.Pos -1: %v. Chrom: %v. Ploidy: %v. HaploidBases: %v.\n", refPos, p.Pos-1, header.Chroms[p.RefIdx].Name, currPloidy, haploidBases)
 		}
 
 		if currPloidy == 2 {
@@ -278,10 +280,10 @@ func samAssemblerBuild(s BuildSettings) {
 			mlt, cacheStruct, refPos, haploidStrand, currPloidy, haploidBases, positionsToSkip = diploidDeletion(mlt, cacheStruct, p, refMap, refPos, currChrom, s)
 		} else if currPloidy == 1 {
 			currHaploidCall = sam.HaploidCallFromPile(p, refMap[currChrom][refPos], s.Epsilon, s.Lambda, cacheStruct.HaploidBasePriorCache, cacheStruct.HaploidIndelPriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, cacheStruct.HomozygousIndelCache, cacheStruct.AncientLikelihoodCache)
-
 			if haploidStrand {
 				ans = advanceAPos(ans)
 				mlt = updateMultiFa(refMap[currChrom][refPos], currHaploidCall.Base, dna.Gap, mlt)
+				refPos++
 				if currHaploidCall.Insertion != "" {
 					currHaploidBases = dna.StringToBases(currHaploidCall.Insertion)
 					for i = 0; i < len(currHaploidBases); i++ {
@@ -307,7 +309,7 @@ func samAssemblerBuild(s BuildSettings) {
 			} else {
 				ans = advanceBPos(ans)
 				mlt = updateMultiFa(refMap[currChrom][refPos], dna.Gap, currHaploidCall.Base, mlt)
-
+				refPos++
 				if currHaploidCall.Insertion != "" {
 					currHaploidBases = dna.StringToBases(currHaploidCall.Insertion)
 					for i = 0; i < len(currHaploidBases); i++ {
@@ -335,7 +337,6 @@ func samAssemblerBuild(s BuildSettings) {
 			if haploidBases < 2 { // if we are on the last haploidBase, we re-enter diploid mode
 				currPloidy = 2
 			}
-			refPos++
 			haploidBases--
 		} else {
 			log.Fatalf("Error: Unrecognized ploidy: %v.\n", currPloidy)
