@@ -24,7 +24,7 @@ var ParseSubstitutionMatrixTests = []struct {
 func TestParseSubstitutionMatrix(t *testing.T) {
 	var observed [][]float64
 	for _, v := range ParseSubstitutionMatrixTests {
-		observed = parseSubstitutionMatrix(v.InFile)
+		observed = ParseSubstitutionMatrix(v.InFile)
 		if !matrix.ApproxEqual(observed, v.Expected, v.Precision) {
 			t.Errorf("Error: parseSubstitutionMatrix. Output was not as expected.\n%v\n", observed)
 		}

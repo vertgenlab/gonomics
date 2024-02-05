@@ -20,7 +20,7 @@ var defaultSubstitutionMatrix [][]float64 = [][]float64{
 }
 
 func NonCoding(root *expandedTree.ETree, substitutionMatrixFile string, unitBranchLength float64) *expandedTree.ETree {
-	unitMatrix := parseSubstitutionMatrix(substitutionMatrixFile)
+	unitMatrix := ParseSubstitutionMatrix(substitutionMatrixFile)
 	expandedTree.PopulateSubstitutionMatrices(root, unitMatrix, unitBranchLength)
 	recursiveEvolveSequence(root)
 	return root
@@ -67,8 +67,8 @@ func substituteWithMatrix(inBase dna.Base, substitutionMatrix [][]float64) dna.B
 	return dna.T
 }
 
-// parseSubstitutionMatrix reads a substitution matrix from an input file and returns it as a [][]float64
-func parseSubstitutionMatrix(filename string) [][]float64 {
+// ParseSubstitutionMatrix reads a substitution matrix from an input file and returns it as a [][]float64
+func ParseSubstitutionMatrix(filename string) [][]float64 {
 	if filename == "" {
 		return defaultSubstitutionMatrix
 	}

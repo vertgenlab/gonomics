@@ -99,8 +99,8 @@ func hgaIsPresent(human, bonobo, chimp, gorilla, orangutan dna.Base) bool {
 func reconHcaBase(root, humanNode, chimpNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64, nonBiasProbThreshold float64, humanBias bool, chimpBias bool) {
 	var likelihoods []float64
 	var nextBase dna.Base
-	reconstruct.SetState(root, position)
-	likelihoods = reconstruct.FixFc(root, nodeToRecon)
+	reconstruct.SetState(root, position, false)
+	likelihoods = reconstruct.FixFc(root, nodeToRecon, false)
 	if humanBias {
 		nextBase = likelihoodsToBaseBias(likelihoods, humanNode.Fasta.Seq[position], probThreshold, nonBiasProbThreshold)
 	} else if chimpBias {
@@ -114,8 +114,8 @@ func reconHcaBase(root, humanNode, chimpNode, nodeToRecon *expandedTree.ETree, p
 func reconHgaBase(root, gorillaNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64, nonBiasProbThreshold float64) {
 	var likelihoods []float64
 	var nextBase dna.Base
-	reconstruct.SetState(root, position)
-	likelihoods = reconstruct.FixFc(root, nodeToRecon)
+	reconstruct.SetState(root, position, false)
+	likelihoods = reconstruct.FixFc(root, nodeToRecon, false)
 	nextBase = likelihoodsToBaseBias(likelihoods, gorillaNode.Fasta.Seq[position], probThreshold, nonBiasProbThreshold)
 	nodeToRecon.Fasta.Seq = append(nodeToRecon.Fasta.Seq, nextBase)
 }
