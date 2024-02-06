@@ -1,7 +1,6 @@
 package starrSeq
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/interval"
@@ -56,6 +55,7 @@ func whichConstruct(ans1, ans2 []interval.Interval) string {
 	return ""
 }
 
+/*
 func CountPlasmidUMI(inSam, inBed, outFile string) {
 	var ans1, ans2 []interval.Interval
 	var curr, poss1, poss2 string
@@ -89,4 +89,4 @@ func CountPlasmidUMI(inSam, inBed, outFile string) {
 			fmt.Println(j, mp[i][j])
 		}
 	}
-}
+}*/

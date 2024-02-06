@@ -13,20 +13,6 @@ func CoordsToString(i Interval) string {
 	return fmt.Sprintf("%s:%v-%v", i.GetChrom(), i.GetChromStart(), i.GetChromEnd())
 }
 
-<<<<<<< HEAD
-func AreEqual(a Interval, b Interval) bool {
-	var isEqual bool = false
-
-	if a.GetChrom() == b.GetChrom() {
-		if a.GetChromStart() == b.GetChromStart() {
-			if a.GetChromEnd() == b.GetChromEnd() {
-				isEqual = true
-			}
-		}
-	}
-
-	return isEqual
-=======
 // IntervalSize calculates the size of the interval
 func IntervalSize(i Interval) int {
 	return i.GetChromEnd() - i.GetChromStart()
@@ -155,5 +141,4 @@ func BedSliceToIntervals(inBed []bed.Bed) []Interval {
 		intervalSlice = append(intervalSlice, inBed[bd])
 	}
 	return intervalSlice
->>>>>>> 503e2a1a54193d7ab41a905f4fdd10d76fcba756
 }
