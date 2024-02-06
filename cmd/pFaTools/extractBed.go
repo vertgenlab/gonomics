@@ -23,9 +23,9 @@ func extractBedUsage(extractBedFlags *flag.FlagSet) {
 	fmt.Printf("pFaTools extractBed - a tool for extracting a subsequence from a pFa, as specified by a Bed file.\n" +
 		"A note on input and output file types:\n" +
 		"\tpFa (probabilistic FASTA) encodes position-wise probabilities in matrix entries. Columns should therefore sum to 1.\n" +
-		"\tbed (browser extensible data) stores genomic regions as coordinates and associated annotations." +
+		"\tbed (browser extensible data) stores genomic regions as coordinates and associated annotations. User can specify multiple regions to be extracted." +
 		"Usage:\n" +
-		"pFaTools extractBed in.pFa region.bed outFile\n" +
+		"pFaTools extractBed in.pFa region.bed outFile.pFa\n" +
 		"options:\n")
 	extractBedFlags.PrintDefaults()
 }
