@@ -25,6 +25,15 @@ var SubsequenceSwapTestCases = []struct {
 		OutSeqName:     "Seq5",
 		ExpectedFile:   "testdata/expectedSwap.fa",
 	},
+	{
+		InFile:         "testdata/testWithIndels.fa",
+		BackgroundName: "hg38",
+		ForegroundName: "hca",
+		SwapRegions:    "testdata/swapWithIndels.bed",
+		OutFile:        "testdata/test.OutputWithIndels.fa",
+		OutSeqName:     "hg38_Ancestralized",
+		ExpectedFile:   "testdata/expected.SwapWithIndel.fa",
+	},
 }
 
 func TestSubsequenceSwap(t *testing.T) {
