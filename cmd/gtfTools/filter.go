@@ -82,6 +82,7 @@ func gtfFilter(s FilterSettings) {
 			for t := range currTranscripts {
 				if currTranscripts[t].Chr != s.ChromFilter {
 					pass = false
+					break
 				}
 			}
 		}
