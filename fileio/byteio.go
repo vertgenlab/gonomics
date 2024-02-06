@@ -59,12 +59,11 @@ func NewByteReader(filename string) *ByteReader {
 	}
 
 	if strings.HasSuffix(filename, ".gz") {
-		// Initialize pgzip.Reader for gzip files
-		gzReader, err := pgzip.NewReader(file)
+		var err error
+		reader.internalGzip, err = pgzip.NewReader(file)
 		exception.PanicOnErr(err)
 
-		reader.internalGzip = gzReader
-		reader.Reader = bufio.NewReader(gzReader)
+		reader.Reader = bufio.NewReader(reader.internalGzip)
 	} else {
 		reader.Reader = bufio.NewReader(file)
 	}
@@ -77,13 +76,9 @@ func NewByteReader(filename string) *ByteReader {
 func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 	reader.Buffer.Reset() // Reset buffer for new line reading
 	var err error
-	for {
-		reader.line, err = reader.ReadSlice('\n')
-		if err != nil && err != bufio.ErrBufferFull {
-			if err == io.EOF {
-				return reader.Buffer, true // End of file reached
-			}
-			exception.PanicOnErr(err) // Handle unexpected errors
+	for reader.line, err = reader.ReadSlice('\n'); err != nil || err != bufio.ErrBufferFull; reader.line, err = reader.ReadSlice('\n') {
+		if err == io.EOF {
+			return reader.Buffer, true // End of file reached
 		}
 		// Write the read part to the buffer, handling both partial and complete lines
 		if len(reader.line) > 0 && reader.line[len(reader.line)-1] == '\n' {
@@ -94,9 +89,7 @@ func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 				_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
 			}
 			exception.PanicOnErr(err)
-			if err == nil {
-				break // Complete line read, exit loop
-			}
+			break // Complete line read, exit loop
 		} else {
 			_, err = reader.Buffer.Write(reader.line)
 			exception.PanicOnErr(err)
