@@ -1,0 +1,2 @@
+chrM	ncbiRefSeq.2022-10-28	transcript	15888	15953	.	+	.	gene_id "TRNT"; transcript_id "rna-TRNT"; gene_name "TRNT";
+chrM	ncbiRefSeq.2022-10-28	exon	15888	15953	.	+	.	gene_id "TRNT"; transcript_id "rna-TRNT"; exon_number "1"; exon_id "rna-TRNT.1"; gene_name "TRNT";

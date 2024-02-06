@@ -57,11 +57,18 @@ var FilterTests = []struct {
 	OutFile      string
 	ExpectedFile string
 	GeneNameList string
+	ChromFilter  string
 }{
 	{InFile: "../../gtf/testdata/test.gtf",
 		OutFile:      "testdata/tmp.filter.gtf",
 		ExpectedFile: "testdata/expected.filter.gtf",
-		GeneNameList: "testdata/geneList.txt"},
+		GeneNameList: "testdata/geneList.txt",
+		ChromFilter:  ""},
+	{InFile: "testdata/chromFilter.gtf",
+		OutFile:      "testdata/tmp.filter.gtf",
+		ExpectedFile: "testdata/expected.chromFilter.gtf",
+		GeneNameList: "",
+		ChromFilter:  "chrM"},
 }
 
 func TestFilter(t *testing.T) {
@@ -72,6 +79,7 @@ func TestFilter(t *testing.T) {
 			InFile:       v.InFile,
 			OutFile:      v.OutFile,
 			GeneNameList: v.GeneNameList,
+			ChromFilter:  v.ChromFilter,
 		}
 		gtfFilter(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {

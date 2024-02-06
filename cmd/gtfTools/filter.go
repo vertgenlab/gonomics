@@ -15,6 +15,7 @@ type FilterSettings struct {
 	InFile       string
 	OutFile      string
 	GeneNameList string
+	ChromFilter  string
 }
 
 func filterUsage(filterFlags *flag.FlagSet) {
@@ -32,6 +33,7 @@ func parseFilterArgs() {
 	var err error
 	filterFlags := flag.NewFlagSet("filter", flag.ExitOnError)
 	var geneNameList *string = filterFlags.String("geneNameList", "", "Specify a new-line delimited file containing the geneNames for records to be retained.\n")
+	var chromFilter *string = filterFlags.String("chromFilter", "", "Specify a chromosome for which all transcript records will be in the output.")
 	err = filterFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	filterFlags.Usage = func() { filterUsage(filterFlags) }
@@ -49,6 +51,7 @@ func parseFilterArgs() {
 		InFile:       inFile,
 		OutFile:      outFile,
 		GeneNameList: *geneNameList,
+		ChromFilter:  *chromFilter,
 	}
 	gtfFilter(s)
 }
@@ -57,6 +60,7 @@ func gtfFilter(s FilterSettings) {
 	var pass, foundInMap bool
 	var err error
 	var geneNameMap = make(map[string]bool)
+	var currTranscripts []*gtf.Transcript
 	out := fileio.EasyCreate(s.OutFile)
 
 	if s.GeneNameList != "" {
@@ -72,6 +76,13 @@ func gtfFilter(s FilterSettings) {
 		if s.GeneNameList != "" {
 			if _, foundInMap = geneNameMap[records[currGene].GeneName]; !foundInMap {
 				pass = false
+			}
+		} else if s.ChromFilter != "" {
+			currTranscripts = records[currGene].Transcripts
+			for t := range currTranscripts {
+				if currTranscripts[t].Chr != s.ChromFilter {
+					pass = false
+				}
 			}
 		}
 		if pass {
