@@ -3,7 +3,6 @@ package fileio
 import (
 	"bufio"
 	"bytes"
-	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/klauspost/pgzip"
 	"github.com/vertgenlab/gonomics/exception"
 )
 
@@ -33,7 +33,7 @@ const (
 type ByteReader struct {
 	*bufio.Reader
 	File         *os.File
-	internalGzip *gzip.Reader
+	internalGzip *pgzip.Reader // Use pgzip.Reader here
 	line         []byte
 	Buffer       *bytes.Buffer
 }
@@ -41,72 +41,71 @@ type ByteReader struct {
 // Read reads data into p and is a method required to implement the io.Reader interface.
 // It returns the number of bytes read into p.
 func (reader *ByteReader) Read(b []byte) (n int, err error) {
-	return reader.Read(b)
+	if reader.internalGzip != nil {
+		return reader.internalGzip.Read(b)
+	}
+	return reader.Reader.Read(b)
 }
 
 // NewByteReader will process a given file and performs error handling if an error occurs.
 // ByteReader will process gzipped files accordingly by performing a check on the suffix
 // of the provided file.
 func NewByteReader(filename string) *ByteReader {
-	var err error
 	file := MustOpen(filename)
-	var answer ByteReader = ByteReader{
+
+	reader := &ByteReader{
 		File:   file,
 		Buffer: &bytes.Buffer{},
 	}
-	switch true {
-	case strings.HasSuffix(filename, ".gz"):
-		answer.internalGzip, err = gzip.NewReader(file)
+
+	if strings.HasSuffix(filename, ".gz") {
+		// Initialize pgzip.Reader for gzip files
+		gzReader, err := pgzip.NewReader(file)
 		exception.PanicOnErr(err)
-		answer.Reader = bufio.NewReader(answer.internalGzip)
-	default:
-		answer.Reader = bufio.NewReader(file)
+
+		reader.internalGzip = gzReader
+		reader.Reader = bufio.NewReader(gzReader)
+	} else {
+		reader.Reader = bufio.NewReader(file)
 	}
-	return &answer
+	return reader
 }
 
 // ReadLine will return a bytes.Buffer pointing to the internal slice of bytes. Provided this function is called within a loop,
 // the function will read one line at a time, and return bool to continue reading. Important to note the buffer return points to
 // the internal slice belonging to the reader, meaning the slice will be overridden if the data is not copied.
 func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
+	reader.Buffer.Reset() // Reset buffer for new line reading
 	var err error
-	reader.line, err = reader.ReadSlice('\n')
-	reader.Buffer.Reset()
-	if err == nil {
-		if reader.line[len(reader.line)-1] == '\n' {
-			return bytesToBuffer(reader), false
-		} else {
-			log.Panicf("Error: end of line did not end with an end of line character...\n")
+	for {
+		reader.line, err = reader.ReadSlice('\n')
+		if err != nil && err != bufio.ErrBufferFull {
+			if err == io.EOF {
+				return reader.Buffer, true // End of file reached
+			}
+			exception.PanicOnErr(err) // Handle unexpected errors
 		}
-	} else {
-		if err == bufio.ErrBufferFull {
-			reader.line = readMore(reader)
-			return bytesToBuffer(reader), false
+		// Write the read part to the buffer, handling both partial and complete lines
+		if len(reader.line) > 0 && reader.line[len(reader.line)-1] == '\n' {
+			// Check for carriage return before newline and adjust accordingly
+			if len(reader.line) > 1 && reader.line[len(reader.line)-2] == '\r' {
+				_, err = reader.Buffer.Write(reader.line[:len(reader.line)-2])
+			} else {
+				_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
+			}
+			exception.PanicOnErr(err)
+			if err == nil {
+				break // Complete line read, exit loop
+			}
 		} else {
-			CatchErrThrowEOF(err)
+			_, err = reader.Buffer.Write(reader.line)
+			exception.PanicOnErr(err)
+			if err == bufio.ErrBufferFull {
+				continue // Buffer was full, continue reading the line
+			}
 		}
 	}
-	return nil, true
-}
-
-// readMore is a private helper function to deal with very long lines to
-// avoid alocating too much memory upfront and only resize the size of the buffer
-// only when necessary.
-func readMore(reader *ByteReader) []byte {
-	_, err := reader.Buffer.Write(reader.line)
-	exception.PanicOnErr(err)
-	reader.line, err = reader.ReadSlice('\n')
-	if err == nil {
-		return reader.line
-	}
-	if err == bufio.ErrBufferFull {
-		_, err = reader.Buffer.Write(reader.line)
-		exception.PanicOnErr(err)
-		// recursive call to read next bytes until reaching end of line character
-		return readMore(reader)
-	}
-	exception.PanicOnErr(err)
-	return reader.line
+	return reader.Buffer, false
 }
 
 // CatchErrThrowEOF will silently handles and throws the EOF error and will log and exit any other errors.
