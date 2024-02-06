@@ -1,6 +1,6 @@
 module github.com/vertgenlab/gonomics
 
-go 1.20
+go 1.21
 
 require (
 	github.com/x448/float16 v0.8.4

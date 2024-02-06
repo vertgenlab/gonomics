@@ -6,7 +6,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"log"
+	"strings"
 
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
@@ -22,10 +24,15 @@ type Settings struct {
 	NonBiasProbThreshold float64
 	HighestProbThreshold float64
 	KeepAllSeq           bool
+	OutPfaFile           string
+	PfaNames             []string
 }
 
 func ReconstructSeq(s Settings) {
 	var treeFastas []fasta.Fasta
+	// TODO: a better way may be to separate ReconstructSeq and ReconstructSeqPfa into sub-functions?
+	// min requires go 1.21
+	var answerPfa = make([]pFasta.PFasta, max(len(s.PfaNames), 1))
 
 	if s.NonBiasProbThreshold < 0 || s.NonBiasProbThreshold > 1 {
 		log.Fatalf("Error: nonBiasProbThreshold must be a value between 0 and 1. Found: %v.\n", s.NonBiasProbThreshold)
@@ -46,7 +53,11 @@ func ReconstructSeq(s Settings) {
 	branches := expandedTree.GetBranch(tree)
 
 	for i := range leaves[0].Fasta.Seq {
-		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold)
+		if s.OutPfaFile != "" {
+			answerPfa = reconstruct.LoopNodesPfa(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, answerPfa, s.PfaNames)
+		} else {
+			reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold)
+		}
 	}
 	for j := range leaves {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
@@ -72,6 +83,15 @@ func ReconstructSeq(s Settings) {
 	}
 
 	fasta.Write(s.OutFile, treeFastas)
+
+	if s.OutPfaFile != "" {
+		pFasta.Write(s.OutPfaFile, answerPfa)
+		//TODO: put the below as another function in pfa package to print human-readable (non-binary) pfa to terminal or remove/comment-out after debugging
+		outpfa := pFasta.Read(s.OutPfaFile)
+		for i, v := range outpfa {
+			fmt.Printf("%v: %v\n", i, v)
+		}
+	}
 }
 
 func usage() {
@@ -90,6 +110,8 @@ func main() {
 	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasBaseThreshold", 0, "Given that a biasLeafName specifies a reference species, when reconstructing the sequence of a non-reference species, unless the sum of probabilities for all non-reference bases is above this value, the reference base is returned.")
 	var highestProbThreshold *float64 = flag.Float64("highestProbThreshold", 0, "The highest probability base must be above this value to be accepted for reconstruction. Otherwise, dna.N will be returned.")
 	var keepAllSeq *bool = flag.Bool("keepAllSeq", false, "By default, reconstructSeq discards sequences in the fasta input that are not specified in the newick input, because they are not used in the reconstruction. If keepAllSeq is set to TRUE, reconstructSeq will keep all sequences in the fasta input, even if they are not used in the reconstruction.")
+	var outPfaFile *string = flag.String("outPfaFile", "", "Write a pFasta file for the inferred ancestral nodes specified by name in the -pfaNames option.")
+	var pfaNames *string = flag.String("pfaNames", "", "A comma-delimited list of the names of inferred ancestral nodes to write a pFasta file for, e.g. -pfaNames=hca,hoa.")
 
 	var expectedNumArgs = 3
 
@@ -103,6 +125,19 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
+	var pfaNamesSplit []string
+	if *outPfaFile != "" {
+		if *pfaNames == "" {
+			flag.Usage()
+			log.Fatalf("Error: -outPfaFile was specified, but -pfaNames was empty\n")
+		} else { // -outPfaFile and -pfaNames were both specified. Parse -pfaNames
+			pfaNamesSplit = strings.Split(*pfaNames, ",")
+		}
+	} else if *outPfaFile == "" && *pfaNames != "" {
+		flag.Usage()
+		log.Fatalf("Error: -outPfaFile was not specified, but -pfaNames was not empty\n")
+	} // else is -outPfaFile and -pfaNames were both empty, aka mode without pFa
+
 	newickInput := flag.Arg(0)
 	fastaInput := flag.Arg(1)
 	outFile := flag.Arg(2)
@@ -115,6 +150,8 @@ func main() {
 		NonBiasProbThreshold: *nonBiasProbThreshold,
 		HighestProbThreshold: *highestProbThreshold,
 		KeepAllSeq:           *keepAllSeq,
+		OutPfaFile:           *outPfaFile,
+		PfaNames:             pfaNamesSplit,
 	}
 
 	ReconstructSeq(s)

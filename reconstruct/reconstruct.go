@@ -3,8 +3,10 @@ package reconstruct
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"log"
 )
 
@@ -63,6 +65,21 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 		return biasBase
 	}
 	return answer
+}
+
+// LikelihoodsToPdna converts the likelihoods of each base at a position of a sequence into a pdna for that position
+func LikelihoodsToPdna(likelihoods []float64) pDna.Float32Base {
+	// TODO: I am assuming that the order is A,C,G,T, but I am not sure
+	var total float64 = 0
+	for _, v := range likelihoods {
+		total += v
+	}
+	return pDna.Float32Base{
+		A: float32(likelihoods[0] / total),
+		C: float32(likelihoods[1] / total),
+		G: float32(likelihoods[2] / total),
+		T: float32(likelihoods[3] / total),
+	}
 }
 
 // allZero checks if all values in a slice = 0 and returns a bool.
@@ -298,4 +315,78 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)
 	}
+}
+
+// LoopNodesPfa is LoopNodes plus pFasta output for user-specified inferred ancestral nodes
+func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64, answerPfa []pFasta.PFasta, pfaNames []string) []pFasta.PFasta {
+	var fix []float64
+	var biasBase, answerBase dna.Base
+	var biasParentName string
+	var biasLeafNode *expandedTree.ETree
+	var answerBasePdna pDna.Float32Base
+
+	for i, v := range pfaNames {
+		answerPfa[i].Name = v
+	}
+
+	if biasLeafName != "" {
+		biasLeafNode = expandedTree.FindNodeName(root, biasLeafName)
+		if biasLeafNode == nil {
+			log.Fatalf("Didn't find %s in tree.\n", biasLeafName)
+		}
+		if biasLeafNode.Up == nil {
+			log.Fatalf("Error: Bias reconstruction node was specified as the root node.")
+		}
+		biasParentName = biasLeafNode.Up.Name
+	}
+
+	internalNodes := expandedTree.GetBranch(root)
+	SetState(root, position)
+	BaseExistsAtNodes(root, position)
+	for k := range internalNodes {
+		fix = FixFc(root, internalNodes[k])
+
+		if internalNodes[k].BasePresent {
+			if biasParentName != "" && internalNodes[k].Name == biasParentName {
+				biasBase = biasLeafNode.Fasta.Seq[position]
+				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
+				// for pFasta, range through pfaNames. If any of them is the same as current internalNode name, e.g. hca, write pDna
+				for _, v := range pfaNames {
+					if internalNodes[k].Fasta.Name == v {
+						answerBasePdna = LikelihoodsToPdna(fix)
+					}
+				}
+			} else {
+				answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
+				for _, v := range pfaNames {
+					if internalNodes[k].Fasta.Name == v {
+						answerBasePdna = LikelihoodsToPdna(fix)
+					}
+				}
+			}
+		} else {
+			answerBase = dna.Gap
+			for _, v := range pfaNames {
+				if internalNodes[k].Fasta.Name == v {
+					answerBasePdna = pDna.Float32Base{
+						A: 0,
+						C: 0,
+						G: 0,
+						T: 0,
+					}
+				}
+			}
+		}
+
+		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)
+
+		// append pdna to the correct pFasta in []pFasta
+		for i, v := range pfaNames {
+			if internalNodes[k].Fasta.Name == v {
+				answerPfa[i].Seq = append(answerPfa[i].Seq, answerBasePdna)
+			}
+		}
+
+	}
+	return answerPfa
 }
