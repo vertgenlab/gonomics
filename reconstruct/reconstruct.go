@@ -366,10 +366,10 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 	}
 
 	internalNodes := expandedTree.GetBranch(root)
-	SetState(root, position)
+	SetState(root, position, false)
 	BaseExistsAtNodes(root, position)
 	for k := range internalNodes {
-		fix = FixFc(root, internalNodes[k])
+		fix = FixFc(root, internalNodes[k], false)
 
 		if internalNodes[k].BasePresent {
 			if biasParentName != "" && internalNodes[k].Name == biasParentName {
