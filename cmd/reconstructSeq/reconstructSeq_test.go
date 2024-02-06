@@ -19,6 +19,7 @@ var ReconstructSeqTests = []struct {
 	NonBiasProbThreshold float64
 	HighestProbThreshold float64
 	KeepAllSeq           bool
+  SubMatrix            bool
 	OutPfaFile           string
 	PfaNamesSplit        []string // directly input []string. Bypass the splitting of 1 string
 	ExpectedPfaFile      string
@@ -31,6 +32,7 @@ var ReconstructSeqTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
+		SubMatrix:            false,
 		OutPfaFile:           "",
 		PfaNamesSplit:        []string{""},
 		ExpectedPfaFile:      "",
@@ -43,6 +45,7 @@ var ReconstructSeqTests = []struct {
 		NonBiasProbThreshold: 0.8,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
+		SubMatrix:            false,
 		OutPfaFile:           "",
 		PfaNamesSplit:        []string{""},
 		ExpectedPfaFile:      "",
@@ -55,7 +58,8 @@ var ReconstructSeqTests = []struct {
 		NonBiasProbThreshold: 0.99,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
-		OutPfaFile:           "",
+		SubMatrix:            false,
+   	OutPfaFile:           "",
 		PfaNamesSplit:        []string{""},
 		ExpectedPfaFile:      "",
 	},
@@ -67,7 +71,8 @@ var ReconstructSeqTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0.99,
 		KeepAllSeq:           false,
-		OutPfaFile:           "",
+		SubMatrix:            false,
+   	OutPfaFile:           "",
 		PfaNamesSplit:        []string{""},
 		ExpectedPfaFile:      "",
 	},
@@ -79,6 +84,7 @@ var ReconstructSeqTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
+		SubMatrix:            false,
 		OutPfaFile:           "",
 		PfaNamesSplit:        []string{""},
 		ExpectedPfaFile:      "",
@@ -91,6 +97,7 @@ var ReconstructSeqTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
+		SubMatrix:            false,
 		OutPfaFile:           "",
 		PfaNamesSplit:        []string{""},
 		ExpectedPfaFile:      "",
@@ -103,6 +110,7 @@ var ReconstructSeqTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
+   	SubMatrix:            false,
 		OutPfaFile:           "",
 		PfaNamesSplit:        []string{""},
 		ExpectedPfaFile:      "",
@@ -115,6 +123,7 @@ var ReconstructSeqTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
+   	SubMatrix:            false,
 		OutPfaFile:           "testdata/out.short.pFa",
 		PfaNamesSplit:        []string{"hca", "hoa"},
 		ExpectedPfaFile:      "testdata/expected.short.pFa",
@@ -163,6 +172,7 @@ func TestReconstructSeq(t *testing.T) {
 			NonBiasProbThreshold: v.NonBiasProbThreshold,
 			HighestProbThreshold: v.HighestProbThreshold,
 			KeepAllSeq:           v.KeepAllSeq,
+			SubMatrix:            v.SubMatrix,
 			OutPfaFile:           v.OutPfaFile,
 			PfaNames:             v.PfaNamesSplit,
 		}
