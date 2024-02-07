@@ -69,6 +69,11 @@ var FilterTests = []struct {
 		ExpectedFile: "testdata/expected.chromFilter.gtf",
 		GeneNameList: "",
 		ChromFilter:  "chrM"},
+	{InFile: "testdata/chromFilter.gtf",
+		OutFile:      "testdata/tmp.filter.gtf",
+		ExpectedFile: "testdata/expected.chromFilterGeneFilter.gtf",
+		GeneNameList: "testdata/geneListForChromFilter.txt",
+		ChromFilter:  "chr1"},
 }
 
 func TestFilter(t *testing.T) {
