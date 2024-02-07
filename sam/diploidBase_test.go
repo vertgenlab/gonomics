@@ -159,27 +159,38 @@ func TestBaseLikelihoodExpressions(t *testing.T) {
 }
 
 var MakeDiploidBaseEmpiricalPriorCacheTests = []struct {
-	InFile    string
-	Expected  [][]float64
-	Precision float64
+	InFile          string
+	ExpectedMatrix  [][]float64
+	Precision       float64
+	ExpectedEpsilon float64
+	ExpectedLambda  float64
 }{
 	{InFile: "testdata/samAssemblerPrior.txt",
-		Expected: [][]float64{
+		ExpectedMatrix: [][]float64{
 			{0.9126446419587451, 0.017122253899044093, 0.053010229750125745, 0.013935938286097592, 0.0003521717256414554, 0.0003521717256414554, 0.00018447090390742905, 0.0013583766560456138, 0.0008552741908435346, 0.00018447090390742905},
 			{0.00026842362127867255, 0.02027818448023426, 2.440214738897023e-05, 0.0005124450951683749, 0.9019277696437287, 0.01612981942410932, 0.059077598828696926, 2.440214738897023e-05, 0.00026842362127867255, 0.001488530990727184},
 			{0.0005128205128205129, 0.0005128205128205129, 0.05326007326007327, 2.4420024420024423e-05, 2.4420024420024423e-05, 0.016874236874236875, 0.0002686202686202687, 0.9106471306471308, 0.017606837606837608, 0.0002686202686202687},
 			{1.709986320109439e-05, 0.0005300957592339261, 0.00018809849521203833, 0.01591997264021888, 0.0005300957592339261, 0.0003590971272229822, 0.04704172366621068, 1.709986320109439e-05, 0.018313953488372094, 0.9170827633378934},
 		},
-		Precision: 1e-6,
+		Precision:       1e-6,
+		ExpectedEpsilon: 6.139962813866241e-05,
+		ExpectedLambda:  0,
 	},
 }
 
 func TestMakeDiploidBaseEmpiricalPriorCache(t *testing.T) {
-	var current [][]float64
+	var currentMatrix [][]float64
+	var currentEpsilon, currentLambda float64
 	for _, v := range MakeDiploidBaseEmpiricalPriorCacheTests {
-		current = MakeDiploidBaseEmpiricalPriorCache(v.InFile)
-		if !equalMatrix(current, v.Expected, v.Precision) {
-			t.Errorf("Error in parsing an empirical prior file for samAssembler.\n")
+		currentMatrix, currentEpsilon, currentLambda = MakeDiploidBaseEmpiricalPriorCache(v.InFile)
+		if !equalMatrix(currentMatrix, v.ExpectedMatrix, v.Precision) {
+			t.Errorf("Error: parsing an empirical prior file for samAssembler.\n")
+		}
+		if (currentEpsilon-v.ExpectedEpsilon)/v.ExpectedEpsilon > v.Precision {
+			t.Errorf("Error: epsilon measurement for samAssembler: %v was not as expected: %v.\n", currentEpsilon, v.ExpectedEpsilon)
+		}
+		if (currentLambda-v.ExpectedLambda)/v.ExpectedLambda > v.Precision {
+			t.Errorf("Error: lambda measurement for samAssembler: %v was not as expected: %v.\n", currentLambda, v.ExpectedLambda)
 		}
 	}
 }
