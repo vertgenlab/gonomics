@@ -38,8 +38,7 @@ func (reader *ByteReader) Read(b []byte) (n int, err error) {
 
 // NewByteReader initializes a ByteReader for given filename, supporting p/gzip.
 func NewByteReader(filename string) *ByteReader {
-	file, err := os.Open(filename)
-	exception.PanicOnErr(err)
+	file := MustOpen(filename)
 
 	reader := &ByteReader{
 		File:   file,
