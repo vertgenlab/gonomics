@@ -121,7 +121,7 @@ func (br *ByteReader) Close() error {
 		return errors.New("no file found")
 	}
 
-	switch { // Handle error returns. Priority is gzErr > fileErr
+	switch { // Handle error returns. Priority is gzErr > fileErr 
 	case gzErr != nil:
 		return gzErr
 
