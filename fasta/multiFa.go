@@ -255,3 +255,38 @@ func PairwiseMutationDistanceInRange(seq1 Fasta, seq2 Fasta, alnStart int, alnEn
 
 	return diff
 }
+
+// Scan takes in a multiFa alignment, scans the user-specified sequence for a user-specified pattern (N for now) and returns the positions in reference sequence coordinates
+func ScanN(aln []Fasta, queryName string) [][]int {
+	// create variables
+	var bedPos [][]int
+	var i, bedChromStart, bedChromEnd int
+
+	// find the sequenceIndex of queryName in the multiFa
+	queryIndex := findSequenceIndex(aln, queryName)
+
+	// loop through the query sequence in the multiFa
+	for i = 0; i < len(aln[queryIndex].Seq); i++ {
+		if aln[queryIndex].Seq[i] == dna.N { // scan for N
+			bedChromStart = AlnPosToRefPos(aln[0], i) // convert position in sequence (AlnPos) to RefPos, of the reference sequence in the multiFa (not the query sequence)
+			bedChromEnd = bedChromStart + 1
+			bedPos = append(bedPos, []int{bedChromStart, bedChromEnd})
+		}
+	}
+
+	return bedPos
+}
+
+// nextFasta is a helper function for ScanN to find the sequenceIndex of queryName in the multiFa
+func findSequenceIndex(aln []Fasta, queryName string) int {
+	nameIndexMap := make(map[string]int) // map of [sequenceName]sequenceIndex
+	for i := range aln {                 // range through the entire multiFa to make sure record names are unique
+		_, found := nameIndexMap[aln[i].Name]
+		if !found {
+			nameIndexMap[aln[i].Name] = i
+		} else {
+			log.Panicf("%s used for multiple fasta records. record names must be unique.", aln[i].Name)
+		}
+	}
+	return nameIndexMap[queryName]
+}
