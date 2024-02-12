@@ -6,8 +6,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/simulate"
 	"log"
+	"strings"
 
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
@@ -16,20 +18,25 @@ import (
 )
 
 type Settings struct {
-	NewickInput            string
-	FastaInput             string
-	OutFile                string
-	BiasLeafName           string
-	NonBiasProbThreshold   float64
-	HighestProbThreshold   float64
-	KeepAllSeq             bool
+	NewickInput          string
+	FastaInput           string
+	OutFile              string
+	BiasLeafName         string
+	NonBiasProbThreshold float64
+	HighestProbThreshold float64
+	KeepAllSeq           bool
 	SubMatrix              bool
 	UnitBranchLength       float64
 	SubstitutionMatrixFile string
+  OutPfaFile           string
+	PfaNames             []string
 }
 
 func ReconstructSeq(s Settings) {
 	var treeFastas []fasta.Fasta
+	// TODO: a better way may be to separate ReconstructSeq and ReconstructSeqPfa into sub-functions?
+	// min requires go 1.21
+	var answerPfa = make([]pFasta.PFasta, max(len(s.PfaNames), 1))
 
 	if s.NonBiasProbThreshold < 0 || s.NonBiasProbThreshold > 1 {
 		log.Fatalf("Error: nonBiasProbThreshold must be a value between 0 and 1. Found: %v.\n", s.NonBiasProbThreshold)
@@ -54,7 +61,11 @@ func ReconstructSeq(s Settings) {
 	branches := expandedTree.GetBranch(tree)
 
 	for i := range leaves[0].Fasta.Seq {
-		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix)
+		if s.OutPfaFile != "" {
+			answerPfa = reconstruct.LoopNodesPfa(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, answerPfa, s.PfaNames)
+		} else {
+			reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix)
+		}
 	}
 	for j := range leaves {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
@@ -80,6 +91,15 @@ func ReconstructSeq(s Settings) {
 	}
 
 	fasta.Write(s.OutFile, treeFastas)
+
+	if s.OutPfaFile != "" {
+		pFasta.Write(s.OutPfaFile, answerPfa)
+		//TODO: put the below as another function in pfa package to print human-readable (non-binary) pfa to terminal or remove/comment-out after debugging
+		outpfa := pFasta.Read(s.OutPfaFile)
+		for i, v := range outpfa {
+			fmt.Printf("%v: %v\n", i, v)
+		}
+	}
 }
 
 func usage() {
@@ -101,6 +121,8 @@ func main() {
 	var substitutionMatrixFile *string = flag.String("substitutionMatrixFile", "", "Set a file to define a substitution matrix.")
 	var unitBranchLength *float64 = flag.Float64("unitBranchLength", -1, "If using a substitution matrix, specify the branch length over which the substitution matrix was derived.")
 	var subMatrix *bool = flag.Bool("subMatrix", false, "Use a substitution matrix instead of the default model. If no substitution matrix file is provided, the Jukes-Cantor model will be used.")
+	var outPfaFile *string = flag.String("outPfaFile", "", "Write a pFasta file for the inferred ancestral nodes specified by name in the -pfaNames option.")
+	var pfaNames *string = flag.String("pfaNames", "", "A comma-delimited list of the names of inferred ancestral nodes to write a pFasta file for, e.g. -pfaNames=hca,hoa.")
 
 	var expectedNumArgs = 3
 
@@ -114,21 +136,36 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
+	var pfaNamesSplit []string
+	if *outPfaFile != "" {
+		if *pfaNames == "" {
+			flag.Usage()
+			log.Fatalf("Error: -outPfaFile was specified, but -pfaNames was empty\n")
+		} else { // -outPfaFile and -pfaNames were both specified. Parse -pfaNames
+			pfaNamesSplit = strings.Split(*pfaNames, ",")
+		}
+	} else if *outPfaFile == "" && *pfaNames != "" {
+		flag.Usage()
+		log.Fatalf("Error: -outPfaFile was not specified, but -pfaNames was not empty\n")
+	} // else is -outPfaFile and -pfaNames were both empty, aka mode without pFa
+
 	newickInput := flag.Arg(0)
 	fastaInput := flag.Arg(1)
 	outFile := flag.Arg(2)
 
 	s := Settings{
-		NewickInput:            newickInput,
-		FastaInput:             fastaInput,
-		OutFile:                outFile,
-		BiasLeafName:           *biasLeafName,
-		NonBiasProbThreshold:   *nonBiasProbThreshold,
-		HighestProbThreshold:   *highestProbThreshold,
-		KeepAllSeq:             *keepAllSeq,
+		NewickInput:          newickInput,
+		FastaInput:           fastaInput,
+		OutFile:              outFile,
+		BiasLeafName:         *biasLeafName,
+		NonBiasProbThreshold: *nonBiasProbThreshold,
+		HighestProbThreshold: *highestProbThreshold,
+		KeepAllSeq:           *keepAllSeq,
 		SubstitutionMatrixFile: *substitutionMatrixFile,
 		UnitBranchLength:       *unitBranchLength,
 		SubMatrix:              *subMatrix,
+    OutPfaFile:           *outPfaFile,
+		PfaNames:             pfaNamesSplit,
 	}
 
 	ReconstructSeq(s)

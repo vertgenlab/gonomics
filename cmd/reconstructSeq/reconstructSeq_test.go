@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
@@ -18,7 +19,10 @@ var ReconstructSeqTests = []struct {
 	NonBiasProbThreshold float64
 	HighestProbThreshold float64
 	KeepAllSeq           bool
-	SubMatrix            bool
+  SubMatrix            bool
+	OutPfaFile           string
+	PfaNamesSplit        []string // directly input []string. Bypass the splitting of 1 string
+	ExpectedPfaFile      string
 }{
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -29,6 +33,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		OutPfaFile:           "",
+		PfaNamesSplit:        []string{""},
+		ExpectedPfaFile:      "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -39,6 +46,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		OutPfaFile:           "",
+		PfaNamesSplit:        []string{""},
+		ExpectedPfaFile:      "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -49,6 +59,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+   	OutPfaFile:           "",
+		PfaNamesSplit:        []string{""},
+		ExpectedPfaFile:      "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -59,6 +72,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0.99,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+   	OutPfaFile:           "",
+		PfaNamesSplit:        []string{""},
+		ExpectedPfaFile:      "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
@@ -69,6 +85,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		OutPfaFile:           "",
+		PfaNamesSplit:        []string{""},
+		ExpectedPfaFile:      "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
@@ -79,6 +98,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
 		SubMatrix:            false,
+		OutPfaFile:           "",
+		PfaNamesSplit:        []string{""},
+		ExpectedPfaFile:      "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqsRef.fa",
@@ -88,6 +110,23 @@ var ReconstructSeqTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
+   	SubMatrix:            false,
+		OutPfaFile:           "",
+		PfaNamesSplit:        []string{""},
+		ExpectedPfaFile:      "",
+	},
+	{NewickFile: "testdata/4d.genericNames.mod",
+		FastaFile:            "testdata/short.fa",
+		OutFile:              "testdata/out.short.fa",
+		ExpectedFile:         "testdata/expected.short.fa",
+		BiasLeafName:         "",
+		NonBiasProbThreshold: 0,
+		HighestProbThreshold: 0,
+		KeepAllSeq:           true,
+   	SubMatrix:            false,
+		OutPfaFile:           "testdata/out.short.pFa",
+		PfaNamesSplit:        []string{"hca", "hoa"},
+		ExpectedPfaFile:      "testdata/expected.short.pFa",
 	},
 }
 
@@ -134,6 +173,8 @@ func TestReconstructSeq(t *testing.T) {
 			HighestProbThreshold: v.HighestProbThreshold,
 			KeepAllSeq:           v.KeepAllSeq,
 			SubMatrix:            v.SubMatrix,
+			OutPfaFile:           v.OutPfaFile,
+			PfaNames:             v.PfaNamesSplit,
 		}
 		ReconstructSeq(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
@@ -141,6 +182,17 @@ func TestReconstructSeq(t *testing.T) {
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)
+		}
+		if v.OutPfaFile != "" {
+			outPfa := pFasta.Read(v.OutPfaFile)
+			expectedpFa := pFasta.Read(v.ExpectedPfaFile)
+			// TODO: is this precision level ok?
+			if !pFasta.AllAreEqual(outPfa, expectedpFa, 1e-040) { // test fails when precision is set to smallest positive float32 5.4e-079
+				t.Errorf("Error: output Pfa was not as expected.")
+			} else {
+				err = os.Remove(v.OutPfaFile)
+				exception.PanicOnErr(err)
+			}
 		}
 	}
 }
