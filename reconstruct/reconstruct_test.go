@@ -2,6 +2,7 @@ package reconstruct
 
 import (
 	"testing"
+	"fmt"
 
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
@@ -27,7 +28,7 @@ var ReconstructTests = []struct {
 	HighestProbThreshold float64
 	SubMatrix            bool
 	PDnaNode			 string
-	PDnaOutfile			 string
+	PDnaOutFile			 string
 }{
 	{NewickFileName: "testdata/newickLongBranches.txt",
 		GenePredFile:         "testdata/genePred.gp",
@@ -42,8 +43,8 @@ var ReconstructTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
 		SubMatrix:            false,
-		PDnaNode:			  "child_4",
-		PDnaOutfile:		  "child_4.pfa",
+		PDnaNode:			  "child_3",
+		PDnaOutFile:		  "testdata/child_3.pfa",
 	},
 }
 
@@ -55,6 +56,7 @@ func TestReconstruct(t *testing.T) {
 	var baseAccuracy map[string][]float64
 	var baseAccData []float64
 	var foundInMap bool
+	var outPFasta []pFasta.PFasta
 
 	for _, v := range ReconstructTests {
 		tree, err = expandedTree.ReadNewick(v.NewickFileName)
@@ -68,15 +70,18 @@ func TestReconstruct(t *testing.T) {
 		exception.FatalOnErr(err)
 		leaves = expandedTree.GetLeaves(tree)
 
-		if len(v.PDnaNode) > 0 {
-			outPFasta := []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
-			pFasta.Write(v.PDnaOutfile, outPFasta)
+		if v.PDnaNode != "" {
+			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 		}
 
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
-			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, v.PDnaOutfile)
+			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
 		}
 		WriteTreeToFasta(tree, v.ReconOutFile)
+		
+		if v.PDnaNode != "" {
+			pFasta.Write(v.PDnaOutFile, outPFasta)
+		}
 
 		accuracyData, baseAccuracy = ReconAccuracy(v.SimTree, v.ReconOutFile, v.LeavesFile, v.GenePredFile, true)
 		for name, acc := range accuracyData {

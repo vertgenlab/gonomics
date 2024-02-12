@@ -56,12 +56,6 @@ func ReconstructSeq(s Settings) {
 
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
-
-	// var pDnaNode string
-	// var tempWriter *fileio.EasyWriter
-	// if s.PDnaNode != "" {
-	// 	tempWriter = fileio.EasyCreate(s.TempDirOption)
-	// }
 	
 	pDnaRecords := []pFasta.PFasta{{Name: s.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 

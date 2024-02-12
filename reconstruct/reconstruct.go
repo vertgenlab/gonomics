@@ -73,11 +73,15 @@ func LikelihoodsToPBase(likelihoods []float64, nonBiasBaseThreshold float64, bia
 		log.Fatalf("Error: Expected four bases, received less.")
 	}
 
+	var total float64 = 0
+	for _, v := range likelihoods {
+		total += v
+	}
 	var answer pDna.Float32Base
-	answer.A = float32(likelihoods[0])
-	answer.C = float32(likelihoods[1])
-	answer.G = float32(likelihoods[2])
-	answer.T = float32(likelihoods[3])
+	answer.A = float32(likelihoods[0]/ total) 
+	answer.C = float32(likelihoods[1]/ total)
+	answer.G = float32(likelihoods[2]/ total)
+	answer.T = float32(likelihoods[3]/ total)
 
 	return answer
 }
