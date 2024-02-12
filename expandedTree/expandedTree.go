@@ -4,7 +4,9 @@ package expandedTree
 import (
 	"errors"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/tree"
+	"log"
 	"strconv"
 	"strings"
 
@@ -261,6 +263,15 @@ func ToNewickString(node *ETree) string {
 	return tree.ToString(treeToWrite)
 }
 
+// ToNewickFile writes a newick tree to a filename from a specified root.
+func ToNewickFile(filename string, root *ETree) {
+	out := fileio.EasyCreate(filename)
+	_, err := fmt.Fprintf(out, "%v\n", ToNewickString(root))
+	exception.PanicOnErr(err)
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
 // toTree converts an input *ETree to a *tree.Tree
 func toTree(node *ETree) *tree.Tree {
 	var answer *tree.Tree = &tree.Tree{
@@ -275,4 +286,26 @@ func toTree(node *ETree) *tree.Tree {
 		answer.Right = toTree(node.Right)
 	}
 	return answer
+}
+
+// ToMap creates a map[string]*Etree, mapping each node's name to the *ETree struct.
+func ToMap(root *ETree) map[string]*ETree {
+	var answer = make(map[string]*ETree)
+	toMapHelper(root, answer)
+	return answer
+}
+
+// toMapHelper is a helper function of ToMap, and assists in the creation of a map[string]*ETree.
+func toMapHelper(node *ETree, answer map[string]*ETree) {
+	answer[node.Name] = node
+	if node.Left == nil && node.Right != nil {
+		log.Fatalf("Error: poorly formed binary tree. Node: %v has a nil left node and a non-nil right node.\n", node.Name)
+	}
+	if node.Left != nil && node.Right == nil {
+		log.Fatalf("Error: poorly formed binary tree. Node: %v has a non-nil left node and a nil right node.\n", node.Name)
+	}
+	if node.Left != nil && node.Right != nil {
+		toMapHelper(node.Left, answer)
+		toMapHelper(node.Right, answer)
+	}
 }

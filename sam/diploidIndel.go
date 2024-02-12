@@ -71,7 +71,8 @@ func DiploidInsertionCallFromPile(p Pile, priorCache []float64, homozygousIndelC
 	var cCount = p.CountF[dna.C] + p.CountR[dna.C]
 	var gCount = p.CountF[dna.G] + p.CountR[dna.G]
 	var tCount = p.CountF[dna.T] + p.CountR[dna.T]
-	var N = aCount + cCount + gCount + tCount //this is the base read depth at the pile.
+	var nCount = p.CountF[dna.N] + p.CountR[dna.N]
+	var N = aCount + cCount + gCount + tCount + nCount //this is the base read depth at the pile.
 
 	var insertions = make(map[string]int, 0) //this will be the combined insertion depth map, merging the for and rev observations
 	for key, value := range p.InsCountF {
