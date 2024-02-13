@@ -39,6 +39,7 @@ func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int)
 
 // AlnPosToRefPos returns the reference position associated with a given AlnPos for an input Fasta. If the AlnPos corresponds to a gap, it gives the preceding reference position.
 // 0 based.
+// Consider using AlnPosToRefPosCounter instead if tracking refStart and alnStart will be beneficial, e.g. when working through entire chromosomes
 func AlnPosToRefPos(record Fasta, AlnPos int) int {
 	return AlnPosToRefPosCounter(record, AlnPos, 0, 0)
 }
@@ -261,6 +262,7 @@ func ScanN(aln []Fasta, queryName string) [][]int {
 	// create variables
 	var bedPos [][]int
 	var i, bedChromStart, bedChromEnd int
+	var lastRefPos, lastAlnPos = 0, 0
 
 	// find the sequenceIndex of queryName in the multiFa
 	queryIndex := findSequenceIndex(aln, queryName)
@@ -268,7 +270,8 @@ func ScanN(aln []Fasta, queryName string) [][]int {
 	// loop through the query sequence in the multiFa
 	for i = 0; i < len(aln[queryIndex].Seq); i++ {
 		if aln[queryIndex].Seq[i] == dna.N { // scan for N
-			bedChromStart = AlnPosToRefPos(aln[0], i) // convert position in sequence (AlnPos) to RefPos, of the reference sequence in the multiFa (not the query sequence)
+			bedChromStart = AlnPosToRefPosCounter(aln[0], i, lastRefPos, lastAlnPos) // convert position in sequence (AlnPos) to RefPos, of the reference sequence in the multiFa (not the query sequence)
+			lastRefPos, lastAlnPos = bedChromStart, i                                // update stored conversion of alnPos to refPos
 			bedChromEnd = bedChromStart + 1
 			bedPos = append(bedPos, []int{bedChromStart, bedChromEnd})
 		}
