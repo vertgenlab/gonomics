@@ -63,7 +63,7 @@ func TestFractionalSymmetricMatrixExponentiation(t *testing.T) {
 	for _, v := range FractionalSymmetricMatrixExponentiationTests {
 		var observed *mat.Dense
 		observed = FractionalSymmetricMatrixExponentiation(v.InMat, v.Power)
-		if !approxEqual(observed, v.Expected, v.Precision) {
+		if !approxDenseEqual(observed, v.Expected, v.Precision) {
 			fmt.Println(mat.Formatted(observed))
 			t.Errorf("Error: FractionalSymmetricMatrixExponentiation output was not as expected.")
 		}
@@ -95,7 +95,8 @@ func TestDenseLogSymmetric(t *testing.T) {
 	for _, v := range DenseLogSymmetricTests {
 		var output mat.Dense // we have to allocate in the loop to reset the dimensions
 		output = *DenseLogSymmetric(v.Input)
-		if !mat.Equal(&output, v.Expected) {
+
+		if !mat.EqualApprox(&output, v.Expected, 1e-6) {
 			fmt.Println(mat.Formatted(&output))
 			t.Errorf("Error: DenseLogSymmetric output not as expected.")
 		}

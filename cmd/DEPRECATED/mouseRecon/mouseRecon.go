@@ -76,8 +76,8 @@ func baseIsPresent(b dna.Base) bool {
 func reconMraBase(root, mouseNode, nodeToRecon *expandedTree.ETree, position int, probThreshold float64, nonBiasProbThreshold float64) {
 	var likelihoods []float64
 	var nextBase dna.Base
-	reconstruct.SetState(root, position)
-	likelihoods = reconstruct.FixFc(root, nodeToRecon)
+	reconstruct.SetState(root, position, false)
+	likelihoods = reconstruct.FixFc(root, nodeToRecon, false)
 	nextBase = likelihoodToBaseBias(likelihoods, mouseNode.Fasta.Seq[position], probThreshold, nonBiasProbThreshold)
 	nodeToRecon.Fasta.Seq = append(nodeToRecon.Fasta.Seq, nextBase)
 }

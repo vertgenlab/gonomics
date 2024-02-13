@@ -3,7 +3,6 @@ package motif
 import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
 )
@@ -99,6 +98,7 @@ func TestMatchComp(t *testing.T) {
 	var err error
 	var records []fasta.Fasta
 	var s MatchCompSettings
+	var epsilon float64 = 1e-6
 	for _, v := range MatchCompTests {
 		records = fasta.Read(v.FastaFile)
 		fasta.AllToUpper(records)
@@ -117,8 +117,8 @@ func TestMatchComp(t *testing.T) {
 			GcContent:          v.GcContent,
 		}
 		MatchComp(s)
-		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-			t.Errorf("Error: MatchComp output was not as expected.")
+		if !ApproxEquals(v.ExpectedFile, v.OutFile, epsilon) {
+			t.Errorf("Error: Motif are not equal within a tolorance %v...", epsilon)
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)

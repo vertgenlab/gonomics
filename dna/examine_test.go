@@ -38,6 +38,12 @@ func TestCountGaps(t *testing.T) {
 	}
 }
 
+func TestGCContent(t *testing.T) {
+	if GCContent(alpha) != 50 {
+		t.Errorf("problem with GCContent")
+	}
+}
+
 func TestDist(t *testing.T) {
 	actual := Dist(alpha, beta)
 	if actual != 4 {

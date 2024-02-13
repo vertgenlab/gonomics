@@ -4,6 +4,9 @@ package expandedTree
 import (
 	"errors"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/tree"
+	"log"
 	"strconv"
 	"strings"
 
@@ -23,9 +26,10 @@ type ETree struct {
 	Scrap                 float64
 	Left                  *ETree
 	Right                 *ETree
-	Up                    *ETree // The immediate ancestral node.
-	DescendentBasePresent bool   // True if any descendent nodes have a base, in a specific position
-	BasePresent           bool   // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
+	Up                    *ETree      // The immediate ancestral node.
+	DescendentBasePresent bool        // True if any descendent nodes have a base, in a specific position
+	BasePresent           bool        // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
+	SubstitutionMatrix    [][]float64 // for custom substitution matrices. This is a 4x4 substitution matrices for nucleotides.
 }
 
 // ReadTree takes a filename of a tree in newick format and a filename of a fasta file.  The names in the tree will be assigned
@@ -43,16 +47,7 @@ func ReadTree(newickFilename string, fastasFilename string) (*ETree, error) {
 func ReadNewick(filename string) (*ETree, error) {
 	var singleLineTree string
 	singleLineTree = fileio.ReadFileToSingleLineString(filename)
-
 	return parseNewick(singleLineTree[strings.Index(singleLineTree, "(") : 1+strings.LastIndex(singleLineTree, ";")])
-}
-
-// NewickToTree takes a newick tree stored in a single string, and returns a pointer to the root node.
-func NewickToTree(tree string) *ETree {
-	makeTree, err := parseNewick(tree)
-	if err != nil {
-	}
-	return makeTree
 }
 
 // GetTree takes a root node and returns a slice of all nodes in the tree.
@@ -260,4 +255,57 @@ func FindNodeName(node *ETree, findMe string) *ETree {
 		}
 	}
 	return nil
+}
+
+// ToNewickString converts a *ETree to a Newick-format string.
+func ToNewickString(node *ETree) string {
+	treeToWrite := toTree(node)
+	return tree.ToString(treeToWrite)
+}
+
+// ToNewickFile writes a newick tree to a filename from a specified root.
+func ToNewickFile(filename string, root *ETree) {
+	out := fileio.EasyCreate(filename)
+	_, err := fmt.Fprintf(out, "%v\n", ToNewickString(root))
+	exception.PanicOnErr(err)
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+// toTree converts an input *ETree to a *tree.Tree
+func toTree(node *ETree) *tree.Tree {
+	var answer *tree.Tree = &tree.Tree{
+		Name:         node.Name,
+		OnlyTopology: node.OnlyTopology,
+		BranchLength: node.BranchLength,
+	}
+	if node.Left != nil {
+		answer.Left = toTree(node.Left)
+	}
+	if node.Right != nil {
+		answer.Right = toTree(node.Right)
+	}
+	return answer
+}
+
+// ToMap creates a map[string]*Etree, mapping each node's name to the *ETree struct.
+func ToMap(root *ETree) map[string]*ETree {
+	var answer = make(map[string]*ETree)
+	toMapHelper(root, answer)
+	return answer
+}
+
+// toMapHelper is a helper function of ToMap, and assists in the creation of a map[string]*ETree.
+func toMapHelper(node *ETree, answer map[string]*ETree) {
+	answer[node.Name] = node
+	if node.Left == nil && node.Right != nil {
+		log.Fatalf("Error: poorly formed binary tree. Node: %v has a nil left node and a non-nil right node.\n", node.Name)
+	}
+	if node.Left != nil && node.Right == nil {
+		log.Fatalf("Error: poorly formed binary tree. Node: %v has a non-nil left node and a nil right node.\n", node.Name)
+	}
+	if node.Left != nil && node.Right != nil {
+		toMapHelper(node.Left, answer)
+		toMapHelper(node.Right, answer)
+	}
 }

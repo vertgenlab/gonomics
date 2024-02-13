@@ -8,15 +8,12 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-var SimulateEvolTests = []struct {
+var WithIndelsTests = []struct {
 	InputFastaFile  string
 	OutFile         string
-	TreeFile        string
-	SimOutFile      string
-	GenePredFile    string
 	BranchLength    float64
 	Lambda          float64
-	PropIndel       float64
+	PropIndels      float64
 	GcContent       float64
 	SetSeed         int64
 	TransitionBias  float64
@@ -27,12 +24,9 @@ var SimulateEvolTests = []struct {
 }{
 	{InputFastaFile: "testdata/rand.fa",
 		OutFile:         "testdata/tmp.out.fa",
-		TreeFile:        "",
-		SimOutFile:      "",
-		GenePredFile:    "",
 		BranchLength:    0.1,
 		Lambda:          1,
-		PropIndel:       0.2,
+		PropIndels:      0.2,
 		GcContent:       0.42,
 		SetSeed:         -1,
 		TransitionBias:  1,
@@ -44,33 +38,30 @@ var SimulateEvolTests = []struct {
 
 func TestSimulateEvol(t *testing.T) {
 	var err error
-	var s Settings
-	for _, v := range SimulateEvolTests {
-		s = Settings{
+	var s WithIndelsSettings
+	for _, v := range WithIndelsTests {
+		s = WithIndelsSettings{
 			FastaFile:      v.InputFastaFile,
-			TreeFile:       v.TreeFile,
-			LeafOutFile:    v.OutFile,
-			SimOutFile:     v.SimOutFile,
-			GenePredFile:   v.GenePredFile,
+			OutFile:        v.OutFile,
 			BranchLength:   v.BranchLength,
 			Lambda:         v.Lambda,
-			PropIndel:      v.PropIndel,
+			PropIndels:     v.PropIndels,
 			GcContent:      v.GcContent,
 			SetSeed:        v.SetSeed,
 			VcfOutFile:     v.VcfOutFile,
 			TransitionBias: v.TransitionBias,
 			QName:          v.QName,
 		}
-		SimulateEvol(s)
+		WithIndels(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedOutFile) {
-			t.Errorf("Error in SimulateEvol. OutFile was not as expected.")
+			t.Errorf("Error in SimulateEvol withIndels. OutFile was not as expected.")
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)
 		}
 		if v.VcfOutFile != "" {
 			if !fileio.AreEqual(v.VcfOutFile, v.ExpectedVcfFile) {
-				t.Errorf("Error in SimulateEvol. Output Vcf file was not as expected.")
+				t.Errorf("Error in SimulateEvol withIndels. Output Vcf file was not as expected.")
 			} else {
 				err = os.Remove(v.VcfOutFile)
 				exception.PanicOnErr(err)

@@ -86,6 +86,7 @@ func TestSamAssemblerBuild(t *testing.T) {
 			LikelihoodCacheSize: v.LikelihoodCacheSize,
 			SetSeed:             v.SetSeed,
 			Verbose:             v.Verbose,
+			EmpiricalPrior:      v.EmpiricalPrior,
 		}
 		samAssemblerBuild(s)
 		if !fileio.AreEqual(v.OutFileA, v.ExpectedOutFileA) {
@@ -152,6 +153,7 @@ var PriorTests = []struct {
 	ExpectedFile        string
 	PseudoCount         float64
 	AsCounts            bool
+	MinCoverage         int
 }{
 	{SamFileName: "testdata/diverged.RefAln.sorted.bam",
 		ReferenceFile:       "testdata/ref.fa",
@@ -161,6 +163,7 @@ var PriorTests = []struct {
 		ExpectedFile:        "testdata/expected.SamAssemblerPrior.txt",
 		PseudoCount:         0.1,
 		AsCounts:            false,
+		MinCoverage:         0,
 	},
 	{SamFileName: "testdata/diverged.RefAln.sorted.bam",
 		ReferenceFile:       "testdata/ref.fa",
@@ -170,6 +173,17 @@ var PriorTests = []struct {
 		ExpectedFile:        "testdata/expected.SamAssemblerPrior.AsCounts.txt",
 		PseudoCount:         0.1,
 		AsCounts:            true,
+		MinCoverage:         0,
+	},
+	{SamFileName: "testdata/diverged.RefAln.sorted.bam",
+		ReferenceFile:       "testdata/ref.fa",
+		OutFile:             "testdata/out.SamAssemblerPrior.minCoverage.txt",
+		Epsilon:             0.01,
+		LikelihoodCacheSize: 100,
+		ExpectedFile:        "testdata/expected.SamAssemblerPrior.minCoverage.txt",
+		PseudoCount:         0.1,
+		AsCounts:            false,
+		MinCoverage:         30,
 	},
 }
 
@@ -185,6 +199,7 @@ func TestSamAssemblerPrior(t *testing.T) {
 			LikelihoodCacheSize: v.LikelihoodCacheSize,
 			PseudoCount:         v.PseudoCount,
 			AsCounts:            v.AsCounts,
+			MinCoverage:         v.MinCoverage,
 		}
 		SamAssemblerPrior(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
