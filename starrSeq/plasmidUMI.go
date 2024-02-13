@@ -7,6 +7,10 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
+func PlasmidUMI(inSam, inBed string) {
+	tree := makeTree(inBed)
+}
+
 func makeTree(inBed string) map[string]*interval.IntervalNode {
 	var constructs []interval.Interval
 	b := bed.Read(inBed)
