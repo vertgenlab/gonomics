@@ -16,8 +16,8 @@ func makeTree(inBed string) map[string]*interval.IntervalNode {
 	return interval.BuildTree(constructs)
 }
 
-func findUMI(s sam.Sam) string {
-	var test, find []dna.Base
+func FindUMI(s sam.Sam) string {
+	var test, find, bs []dna.Base
 	var ans int
 
 	find = dna.StringToBases("GCATGCGGAT")
@@ -29,14 +29,17 @@ func findUMI(s sam.Sam) string {
 			continue
 		}
 		if ans == 1 {
+			if i+20 >= len(s.Seq) {
+				return ""
+			}
 			return dna.BasesToString(s.Seq[i+10 : i+20])
 		}
 		if ans == 2 {
 			if i-10 < 0 {
 				return ""
 			}
-			bs := s.Seq[i-10 : i]
-			dna.ReverseComplementAndCopy(bs)
+			bs = s.Seq[i-10 : i]
+			dna.ReverseComplement(bs)
 			return dna.BasesToString(bs)
 		}
 	}
