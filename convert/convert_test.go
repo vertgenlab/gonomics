@@ -70,12 +70,28 @@ func TestPairwiseFaToVcf(t *testing.T) { //this test is for the default settings
 	}
 }
 
-func TestThreeWayFaToVcf(t *testing.T) {
-	// var err error
-	out := fileio.EasyCreate("tmp.threeWayFaToVcf.txt")
-	threewayInputFa := fasta.Read("testdata/threeWayFaToVcf/input.fa")
-	ThreeWayFaToVcf(threewayInputFa, "chr1", out, false, false)
+var ThreeWayFaToVcfTests = []struct {
+	InFile       string
+	OutFile      string
+	ExpectedFile string
+	Chrom        string
+}{
+	{InFile: "testdata/threeWayFaToVcf/input.fa", OutFile: "tmp.threeWayFaToVcf.txt", ExpectedFile: "testdata/threeWayFaToVcf/expected.vcf", Chrom: "chr1"},
+}
 
+func TestThreeWayFaToVcf(t *testing.T) {
+	var err error
+	for _, v := range ThreeWayFaToVcfTests {
+		out := fileio.EasyCreate(v.OutFile)
+		threewayInputFa := fasta.Read(v.InFile)
+		ThreeWayFaToVcf(threewayInputFa, v.Chrom, out, false, false)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Threeway VCF results do not match.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
 }
 
 func TestPairwiseFaToVcfRetainN(t *testing.T) {

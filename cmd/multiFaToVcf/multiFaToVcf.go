@@ -20,14 +20,20 @@ func multiFaToVcf(inFile string, chr string, outFile string, substitutionsOnly b
 	out := fileio.EasyCreate(outFile)
 	header := vcf.NewHeader()
 	vcf.NewWriteHeader(out, header)
-	convert.PairwiseFaToVcf(f, chr, out, substitutionsOnly, retainN)
+	if len(f) == 2 {
+		convert.PairwiseFaToVcf(f, chr, out, substitutionsOnly, retainN)
+	} else if len(f) == 3 {
+		convert.ThreeWayFaToVcf(f, chr, out, substitutionsOnly, retainN)
+	}
 	err := out.Close()
 	exception.PanicOnErr(err)
 }
 
 func usage() {
 	fmt.Print(
-		"multiFaToVcf - Generates a VCF file from an input pairwise multiFa alignment with the first entry as the reference." +
+		"multiFaToVcf - Generates a VCF file from an input multiFa alignment with the first entry as the reference." +
+			"If the input multiFa is pairwise alignment, checks for substitutions as well as indels," +
+			"but if the input multiFa is three-way alignment, it only checks for substitutions." +
 			"Note that deletions in the first position of an alignment will not appear in the output Vcf.\n" +
 			"Usage:\n" +
 			"multiFaToVcf multi.Fa chromName out.vcf \n" +
