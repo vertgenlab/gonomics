@@ -74,13 +74,22 @@ func TestReconstruct(t *testing.T) {
 			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 		}
 
+		fmt.Print("Preloop\n")
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
 			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
 		}
+		fmt.Print("Postloop\n")
 		WriteTreeToFasta(tree, v.ReconOutFile)
 		
 		if v.PDnaNode != "" {
+			fmt.Print("Hi\n")
 			pFasta.Write(v.PDnaOutFile, outPFasta)
+
+			for _, base := range outPFasta[0].Seq {
+				fmt.Printf("%v\t%v\t%v\t%v\n", base.A, base.C, base.G, base.T)
+			}
+
+			fmt.Print("Bye\n")
 		}
 
 		accuracyData, baseAccuracy = ReconAccuracy(v.SimTree, v.ReconOutFile, v.LeavesFile, v.GenePredFile, true)

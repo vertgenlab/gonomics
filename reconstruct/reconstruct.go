@@ -3,6 +3,7 @@ package reconstruct
 
 import (
 	"log"
+	"fmt"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
@@ -335,7 +336,9 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 			if biasParentName != "" && internalNodes[k].Name == biasParentName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
+				fmt.Print("check node \n")
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
+					fmt.Print("HIhihihihiHIHIHIHIHIHIHIHIHIH\n")
 					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold))
 				}
 			} else {
