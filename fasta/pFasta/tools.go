@@ -92,3 +92,18 @@ func Sample(input []PFasta, chrom string) fasta.Fasta {
 
 	return answer
 }
+
+// Browse produces command line visualizations of pFasta format alignments from a specified start and end position.
+// Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
+func MultiFaVisualizer(infile string, outfile string, start int, end int, sigFigs int, lineLength int) {
+	if !(start < end) {
+		log.Fatalf("Error: Invalid arguments, start must be lower than end")
+	}
+
+	records := Read(infile) // for now, assume only 1 seq in pfasta
+
+	for _, pBase : range records[0].Seq {
+
+	}
+}
+
