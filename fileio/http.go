@@ -2,8 +2,8 @@ package fileio
 
 import (
 	"bufio"
-	"compress/gzip"
 	"fmt"
+	"github.com/klauspost/pgzip"
 	"net/http"
 	"strings"
 
@@ -16,7 +16,7 @@ func EasyHttp(url string) *EasyReader {
 	resp, err := http.Get(url)
 	exception.PanicOnErr(err)
 	if strings.HasSuffix(url, ".gz") {
-		answer.internalGzip, err = gzip.NewReader(resp.Body)
+		answer.internalGzip, err = pgzip.NewReader(resp.Body)
 		exception.PanicOnErr(err)
 		answer.BuffReader = bufio.NewReader(answer.internalGzip)
 	} else {
