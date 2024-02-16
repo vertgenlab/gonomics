@@ -3,6 +3,7 @@ package pFasta
 import (
 	"log"
 	"fmt"
+	"math"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
@@ -95,15 +96,55 @@ func Sample(input []PFasta, chrom string) fasta.Fasta {
 
 // Browse produces command line visualizations of pFasta format alignments from a specified start and end position.
 // Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
-func MultiFaVisualizer(infile string, outfile string, start int, end int, sigFigs int, lineLength int) {
+// If 0 sig figs, returns full probability
+func browsePfasta(infile string, outfile string, start int, end int, sigFigs int, lineLength int) {
 	if !(start < end) {
 		log.Fatalf("Error: Invalid arguments, start must be lower than end")
 	}
 
-	records := Read(infile) // for now, assume only 1 seq in pfasta
+	records := Read(infile) // for now, assuming only 1 seq in pfasta, will rewrite for multiple
 
-	for _, pBase : range records[0].Seq {
-
+	finishedPrinting := false
+	lineA := make([]float32, lineLength)
+	lineC := make([]float32, lineLength)
+	lineG := make([]float32, lineLength)
+	lineT := make([]float32, lineLength)
+	lineIdx := 0
+	setOfLinesIdx := 0
+	fmt.Printf(records[0].Name)
+	for setOfLinesIdx = 0; setOfLinesIdx < (end-start)/sigFigs; setOfLinesIdx++ {
+		printOneSetLines(lineLength, setOfLinesIdx, lineLength, lineA, lineC, lineG, lineT, start, records)
 	}
+	printOneSetLines(lineLength, setOfLinesIdx, (end-start)%sigFigs, lineLength, lineA, lineC, lineG, lineT, start, records)
 }
 
+// Prints from init pos =(setOfLinesIdx*lineLength + start) in pFasta to (init pos + numIters )
+func printOneSetLines(lineLength int, setOfLinesIdx int, numIters int, lineA []float32, lineC []float32, lineG []float32, lineT []float32, start int, records) {
+	recordIdx = setOfLinesIdx*lineLength + start
+	for lineIdx = 0; lineIdx < numIters; lineIdx++ {
+		lineA[lineIdx], lineC[lineIdx], lineG[lineIdx], lineT[lineIdx] = getBaseProbsAtPos(records[0].Seq[recordIdx], sigFigs)
+		recordIdx++
+	}
+	fmt.Printf("%v", lineA[0:lineIdx])
+	fmt.Printf("%v", lineC[0:lineIdx])
+	fmt.Printf("%v", lineG[0:lineIdx])
+	fmt.Printf("%v", lineT[0:lineIdx])
+}
+
+// returns the four probabilities rounded to sigFigs in given base
+func getBaseProbsAtPos(base pDna.Float32Base, sigFigs int) {
+	return roundToSigFigs(base.A, sigFigs), roundToSigFigs(base.C, sigFigs), roundToSigFigs(base.G, sigFigs), roundToSigFigs(base.T, sigFigs)
+}
+
+// rounds num to a given number of significant figures
+func roundToSigFigs(num float64, sigFigs int) {
+	if (num == 0) {
+		return 0
+	}
+	if (num < 0) {num = -num}
+	answer := math.Ceil(math.Log10(num))
+	power := sigFigs - int(answer)
+	magnitude := math.Pow10(power)
+	shift := math.Round(num*magnitude)
+	return shift/magnitude
+}
