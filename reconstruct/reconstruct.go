@@ -3,7 +3,7 @@ package reconstruct
 
 import (
 	"log"
-	"fmt"
+	// "fmt"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
@@ -331,19 +331,23 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 	BaseExistsAtNodes(root, position)
 	for k := range internalNodes {
 		fix = FixFc(root, internalNodes[k], subMatrix)
-
+		// fmt.Print("before basePresent\n")
 		if internalNodes[k].BasePresent {
+			// fmt.Print("inside basePresent\n")
+			// fmt.Printf("%s, %s\n", biasParentName, internalNodes[k].Name)
 			if biasParentName != "" && internalNodes[k].Name == biasParentName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
-				fmt.Print("check node \n")
+				// fmt.Print("check node \n")
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
-					fmt.Print("HIhihihihiHIHIHIHIHIHIHIHIHIH\n")
+					// fmt.Print("HIhihihihiHIHIHIHIHIHIHIHIHIH\n")
 					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold))
 				}
 			} else {
 				answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
+				// fmt.Printf("%s, %s\n", pDnaNode, internalNodes[k].Name)
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
+					// fmt.Print("check node no bias \n")
 					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold))
 				}
 				
