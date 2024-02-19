@@ -26,6 +26,7 @@ func multiFaScan(s Settings) {
 func usage() {
 	fmt.Print(
 		"multiFaScan - Scan multiple Fasta alignment for a user-specified pattern (N for now) and report bed regions in reference sequence coordinates.\n" +
+			"Note that the reference sequence is assumed to be the first sequence in the multiple Fasta alignment.\n" +
 			"Usage:\n" +
 			"multiFaScan multi.fa out.fa\n" +
 			"options:\n")
