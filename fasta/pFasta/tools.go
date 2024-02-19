@@ -4,12 +4,13 @@ import (
 	"log"
 	"fmt"
 	"math"
+	"math/rand"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"math/rand"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // checks if input pFasta has a sequence with chrom as name and returns its index
@@ -97,54 +98,58 @@ func Sample(input []PFasta, chrom string) fasta.Fasta {
 // Browse produces command line visualizations of pFasta format alignments from a specified start and end position.
 // Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
 // If 0 sig figs, returns full probability
-func browsePfasta(infile string, outfile string, start int, end int, sigFigs int, lineLength int) {
-	if !(start < end) {
-		log.Fatalf("Error: Invalid arguments, start must be lower than end")
-	}
+// func browsePfasta(infile string, outfile string, start int, end int, sigFigs int, lineLength int, seqName string) {
+// 	//add 'end' as input in cmd (look at multfavisualiser)
+// 	if !(start < end) {
+// 		log.Fatalf("Error: Invalid arguments, start must be lower than end")
+// 	}
 
-	records := Read(infile) // for now, assuming only 1 seq in pfasta, will rewrite for multiple
+// 	records := Read(infile) // for now, assuming only 1 seq in pfasta, will rewrite for multiple
+// 	out := fileio.EasyCreate(outfile)
+// 	lineA := make([]float32, lineLength)
+// 	lineC := make([]float32, lineLength)
+// 	lineG := make([]float32, lineLength)
+// 	lineT := make([]float32, lineLength)
+// 	setOfLinesIdx := 0
 
-	finishedPrinting := false
-	lineA := make([]float32, lineLength)
-	lineC := make([]float32, lineLength)
-	lineG := make([]float32, lineLength)
-	lineT := make([]float32, lineLength)
+// 	for setOfLinesIdx = 0; setOfLinesIdx < (end-start)/sigFigs; setOfLinesIdx++ {
+// 		printOneSetLines(lineLength, setOfLinesIdx, lineLength, lineA, lineC, lineG, lineT, start, records, out, sigFigs)
+// 	}
+// 	printOneSetLines(lineLength, setOfLinesIdx, (end-start)%sigFigs, lineA, lineC, lineG, lineT, start, records, out, sigFigs)
+// }
+
+// printOneSetLines prints from init_pos =(setOfLinesIdx*lineLength + start) in pFasta to (init_pos + numIters )
+func printOneSetLines(lineLength int, setOfLinesIdx int, numIters int, lineA []float32, lineC []float32, lineG []float32, lineT []float32, start int, records []PFasta, out *fileio.EasyWriter, sigFigs int) {
+	// add start position (look at mulfavisualiser), empty spacer lines
+	recordIdx := setOfLinesIdx*lineLength + start
 	lineIdx := 0
-	setOfLinesIdx := 0
-	fmt.Printf(records[0].Name)
-	for setOfLinesIdx = 0; setOfLinesIdx < (end-start)/sigFigs; setOfLinesIdx++ {
-		printOneSetLines(lineLength, setOfLinesIdx, lineLength, lineA, lineC, lineG, lineT, start, records)
-	}
-	printOneSetLines(lineLength, setOfLinesIdx, (end-start)%sigFigs, lineLength, lineA, lineC, lineG, lineT, start, records)
-}
-
-// Prints from init pos =(setOfLinesIdx*lineLength + start) in pFasta to (init pos + numIters )
-func printOneSetLines(lineLength int, setOfLinesIdx int, numIters int, lineA []float32, lineC []float32, lineG []float32, lineT []float32, start int, records) {
-	recordIdx = setOfLinesIdx*lineLength + start
 	for lineIdx = 0; lineIdx < numIters; lineIdx++ {
+		fmt.Printf("sigfigs:%v", sigFigs)
 		lineA[lineIdx], lineC[lineIdx], lineG[lineIdx], lineT[lineIdx] = getBaseProbsAtPos(records[0].Seq[recordIdx], sigFigs)
 		recordIdx++
 	}
-	fmt.Printf("%v", lineA[0:lineIdx])
-	fmt.Printf("%v", lineC[0:lineIdx])
-	fmt.Printf("%v", lineG[0:lineIdx])
-	fmt.Printf("%v", lineT[0:lineIdx])
+	fmt.Fprintf(out, "%v", lineA[0:lineIdx])
+	fmt.Fprintf(out, "%v", lineC[0:lineIdx])
+	fmt.Fprintf(out, "%v", lineG[0:lineIdx])
+	fmt.Fprintf(out, "%v", lineT[0:lineIdx])
 }
 
-// returns the four probabilities rounded to sigFigs in given base
-func getBaseProbsAtPos(base pDna.Float32Base, sigFigs int) {
+// getBaseProbsAtPos returns the four probabilities rounded to sigFigs in given base
+func getBaseProbsAtPos(base pDna.Float32Base, sigFigs int) (float32, float32, float32, float32) {
 	return roundToSigFigs(base.A, sigFigs), roundToSigFigs(base.C, sigFigs), roundToSigFigs(base.G, sigFigs), roundToSigFigs(base.T, sigFigs)
 }
 
-// rounds num to a given number of significant figures
-func roundToSigFigs(num float64, sigFigs int) {
+// roundToSigFigs rounds num to a given number of significant figures
+func roundToSigFigs(num float32, sigFigs int) float32 {
+	fmt.Printf("num: %v\n", num)
 	if (num == 0) {
-		return 0
+		return float32(0)
 	}
 	if (num < 0) {num = -num}
 	answer := math.Ceil(math.Log10(num))
 	power := sigFigs - int(answer)
 	magnitude := math.Pow10(power)
-	shift := math.Round(num*magnitude)
-	return shift/magnitude
+	shift := round32Bits(num*magnitude)
+	res := float32(shift/magnitude)
+	return res
 }

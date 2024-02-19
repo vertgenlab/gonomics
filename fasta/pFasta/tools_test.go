@@ -11,7 +11,6 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-// ExtractTests tests a valid input to Extract
 var ExtractTests = []struct {
 	Input      []PFasta
 	Start      int
@@ -208,7 +207,6 @@ var ExtractTests = []struct {
 	},
 }
 
-// ExtractBedTests tests a valid input to ExtractBed
 var ExtractBedTests = []struct {
 	Input      []PFasta
 	Region     []bed.Bed
@@ -667,6 +665,80 @@ func TestSample(t *testing.T) {
 		observed := Sample(testCase.Input, testCase.Chrom)
 		if !fasta.IsEqual(observed, testCase.Expected) {
 			t.Errorf("Error: in pFasta. Sample valid input test not as expected.\n")
+		}
+	}
+}
+
+var roundToSigFigsTests = []struct {
+	Num		float64
+	SigFigs	int
+	Expected float32	
+}{
+	{Num: 0.2837562,
+	SigFigs: 4,
+	Expected: 0.2838,
+		},
+	{Num: 0.2837562,
+		SigFigs: 7,
+		Expected: 0.2837562,
+		},
+	{Num: 1.2837523,
+		SigFigs: 3,
+		Expected: 1.28,
+		},	
+}
+
+func TestRoundToSigFigs(t *testing.T) {
+	for _, testCase := range roundToSigFigsTests {
+		res := roundToSigFigs(testCase.Num, testCase.SigFigs)
+		if res != testCase.Expected {
+			t.Errorf("Error: in in pFasta. roundToSigFigs test not as expected.")
+		}
+	}
+}
+
+var getBaseProbsAtPosTests = []struct {
+	Base	pDna.Float32Base
+	SigFigs	int
+	Expected []float32	
+}{
+	{Base: pDna.Float32Base{
+			A: 0.246,
+			C: 0.355,
+			G: 0.371,
+			T: 0.028,
+		},
+		SigFigs: 2,	
+		Expected: []float32{0.25, 0.36, 0.37, 0.028},
+	},
+	// {Base: pDna.Float32Base{
+	// 			A: 0.246,
+	// 			C: 0.355,
+	// 			G: 0.371,
+	// 			T: 0.028,
+	// 		},
+	// 	SigFigs: 1,
+	// 	Expected: []float32{0.2, 0.4, 0.4, 0.03},
+	// },
+	// {Base: pDna.Float32Base{
+	// 			A: 0.24694832,
+	// 			C: 0.3,
+	// 			G: 0.371,
+	// 			T: 0.028388585937,
+	// 		},
+	// 	SigFigs: 4,
+	// 	Expected: []float32{0.2469, 0.3, 0.371, 0.02839},
+	// },	
+}
+
+func TestGetBaseProbsAtPos(t *testing.T) {
+	for _, testCase := range getBaseProbsAtPosTests {
+		resA, resC, resG, resT := getBaseProbsAtPos(testCase.Base, testCase.SigFigs)
+		
+		if (resA != testCase.Expected[0] || resC != testCase.Expected[1] || resG != testCase.Expected[2] || resT != testCase.Expected[3]) {
+			fmt.Printf("%v, %v, %v, %v\n", resA, resC, resG, resT)
+			
+			t.Errorf("Error: in in pFasta. getBaseProbsAtPos test not as expected.")
 		}
 	}
 }
