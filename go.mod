@@ -8,3 +8,8 @@ require (
 	golang.org/x/image v0.10.0
 	gonum.org/v1/gonum v0.14.0
 )
+
+require (
+	github.com/klauspost/compress v1.17.6 // indirect
+	github.com/klauspost/pgzip v1.2.6 // indirect
+)
