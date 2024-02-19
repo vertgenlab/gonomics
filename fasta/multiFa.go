@@ -280,7 +280,7 @@ func ScanN(aln []Fasta, queryName string) [][]int {
 	return bedPos
 }
 
-// nextFasta is a helper function for ScanN to find the sequenceIndex of queryName in the multiFa
+// findSequenceIndex is a helper function for ScanN to find the sequenceIndex of queryName in the multiFa
 func findSequenceIndex(aln []Fasta, queryName string) int {
 	nameIndexMap := make(map[string]int) // map of [sequenceName]sequenceIndex
 	for i := range aln {                 // range through the entire multiFa to make sure record names are unique
