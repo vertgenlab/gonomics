@@ -74,7 +74,7 @@ func TestReconstruct(t *testing.T) {
 		}
 
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
-			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
+			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, false, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
 		}
 		WriteTreeToFasta(tree, v.ReconOutFile)
 		

@@ -23,6 +23,7 @@ type Settings struct {
 	OutFile                string
 	BiasLeafName           string
 	NonBiasProbThreshold   float64
+	BiasN                  bool
 	HighestProbThreshold   float64
 	KeepAllSeq             bool
 	SubMatrix              bool
@@ -60,7 +61,7 @@ func ReconstructSeq(s Settings) {
 	pDnaRecords := []pFasta.PFasta{{Name: s.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 
 	for i := range leaves[0].Fasta.Seq {
-		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix, s.PDnaNode, pDnaRecords)
+		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.BiasN, s.HighestProbThreshold, s.SubMatrix, s.PDnaNode, pDnaRecords)
 	}
 	for j := range leaves {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
@@ -117,6 +118,7 @@ func usage() {
 func main() {
 	var biasLeafName *string = flag.String("biasLeafName", "", "Specify an extant (leaf) sequence towards which we will bias reconstruction for the immediate ancestor (parent node).")
 	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasBaseThreshold", 0, "Given that a biasLeafName specifies a reference species, when reconstructing the sequence of a non-reference species, unless the sum of probabilities for all non-reference bases is above this value, the reference base is returned.")
+	var biasN *bool = flag.Bool("biasN", false, "Given -biasLeafName and -nonBiasBasThreshold, unless the sum of probabilities for all non-reference bases is above this value, dna.N is returned.")
 	var highestProbThreshold *float64 = flag.Float64("highestProbThreshold", 0, "The highest probability base must be above this value to be accepted for reconstruction. Otherwise, dna.N will be returned.")
 	var keepAllSeq *bool = flag.Bool("keepAllSeq", false, "By default, reconstructSeq discards sequences in the fasta input that are not specified in the newick input, because they are not used in the reconstruction. If keepAllSeq is set to TRUE, reconstructSeq will keep all sequences in the fasta input, even if they are not used in the reconstruction.")
 	var substitutionMatrixFile *string = flag.String("substitutionMatrixFile", "", "Set a file to define a substitution matrix.")
@@ -146,6 +148,7 @@ func main() {
 		OutFile:                outFile,
 		BiasLeafName:           *biasLeafName,
 		NonBiasProbThreshold:   *nonBiasProbThreshold,
+		BiasN:                  *biasN,
 		HighestProbThreshold:   *highestProbThreshold,
 		KeepAllSeq:             *keepAllSeq,
 		SubstitutionMatrixFile: *substitutionMatrixFile,

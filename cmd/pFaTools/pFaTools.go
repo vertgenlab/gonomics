@@ -15,9 +15,9 @@ func usage() {
 			"Usage:\n" +
 			"\tpFaTools extract in.pfa chrom start end out.pFa\n" +
 			"\tOR\n" +
-			"\tpFaTools extractBed in.pfa regions.bed outDir\n" +
+			"\tpFaTools extractBed in.pfa regions.bed outDir.pFa\n" +
 			"\tOR\n" +
-			"\tpFaTools sample in.pfa outDir\n" +
+			"\tpFaTools sample in.pfa outDir.Fa\n" +
 			"Enter a subcommand to view options.\n")
 }
 

@@ -17,13 +17,15 @@ type CacheStruct struct {
 }
 
 // cacheSetup returns a CacheStruct of initialized samAssembler caches based on the user Settings struct.
-func cacheSetup(s BuildSettings) CacheStruct {
+// the second and third return are epsilon and lambda, respectively. They will be the same as in the input
+// unless overwritten by an empirical prior.
+func cacheSetup(s BuildSettings) (CacheStruct, float64, float64) {
 	var i int
 	var diploidBasePriorCache [][]float64
 	if s.FlatPrior {
 		diploidBasePriorCache = sam.MakeDiploidBaseFlatPriorCache()
 	} else if s.EmpiricalPrior != "" {
-		diploidBasePriorCache = sam.MakeDiploidBaseEmpiricalPriorCache(s.EmpiricalPrior)
+		diploidBasePriorCache, s.Epsilon, s.Lambda = sam.MakeDiploidBaseEmpiricalPriorCache(s.EmpiricalPrior)
 	} else {
 		diploidBasePriorCache = sam.MakeDiploidBasePriorCache(s.Delta, s.Gamma)
 	}
@@ -57,7 +59,7 @@ func cacheSetup(s BuildSettings) CacheStruct {
 		HomozygousIndelCache:   homozygousIndelCache,
 		HeterozygousIndelCache: heterozygousIndelCache,
 		AncientLikelihoodCache: setupAncientLikelihoodCache(s.LikelihoodCacheSize),
-	}
+	}, s.Epsilon, s.Lambda
 }
 
 func setupAncientLikelihoodCache(size int) sam.AncientLikelihoodCache {

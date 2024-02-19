@@ -47,7 +47,7 @@ func mutationProbability(a int, b int, t float64) float64 {
 }
 
 // LikelihoodsToBase returns the index of the most likely base for each position of a sequence. That position refers to a specific base.
-func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, highestProbThreshold float64) dna.Base {
+func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, biasN bool, highestProbThreshold float64) dna.Base {
 	var highestProb, nonBiasBaseProb, total float64 = 0, 0, 0
 	var answer dna.Base = biasBase
 	for baseIdx, baseProb := range likelihoods {
@@ -64,7 +64,11 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 		return dna.N
 	}
 	if nonBiasBaseProb/total < nonBiasBaseThreshold {
-		return biasBase
+		if biasN {
+			return dna.N
+		} else {
+			return biasBase
+		}
 	}
 	return answer
 }
@@ -309,7 +313,7 @@ func descendentBaseExists(node *expandedTree.ETree, pos int) {
 // The user may also specify a 'highestProbThreshold'. If the program is uncertain about ancestral reconstruction for a particular
 // node, this option will allow LoopNodes to return an 'N' for that node instead.
 // if subMatrix is true, mutation probabilities will be calculated from the tree's substitution matrix instead of from the branch length
-func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaRecords []pFasta.PFasta) {
+func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, biasN bool, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaRecords []pFasta.PFasta) {
 	var fix []float64
 	var biasBase, answerBase dna.Base
 	var biasParentName string
@@ -337,14 +341,14 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 			// fmt.Printf("%s, %s\n", biasParentName, internalNodes[k].Name)
 			if biasParentName != "" && internalNodes[k].Name == biasParentName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
-				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold) //biased estimate
+				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, biasN, highestProbThreshold) //biased estimate
 				// fmt.Print("check node \n")
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
 					// fmt.Print("HIhihihihiHIHIHIHIHIHIHIHIHIH\n")
 					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold))
 				}
 			} else {
-				answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
+				answerBase = LikelihoodsToBase(fix, 0, dna.N, biasN, highestProbThreshold) //unbiased estimate
 				// fmt.Printf("%s, %s\n", pDnaNode, internalNodes[k].Name)
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
 					// fmt.Print("check node no bias \n")

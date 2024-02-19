@@ -26,7 +26,7 @@ func extractUsage(extractFlags *flag.FlagSet) {
 		"A note on input and output file types:\n" +
 		"\tpFa (probabilistic FASTA) encodes position-wise probabilities in matrix entries. Columns should therefore sum to 1.\n" +
 		"Usage:\n" +
-		"pFaTools extract in.pFa chrom out.fasta start end\n" +
+		"pFaTools extract in.pFa chrom out.pFa start end\n" +
 		"options:\n")
 	extractFlags.PrintDefaults()
 }
@@ -67,6 +67,6 @@ func parseExtractArgs() {
 
 // pFaExtract parses an input pFasta file and extracts the file according to user-defined settings.
 func pFaExtract(s ExtractSettings) {
-	records := []pFasta.PFasta{pFasta.Extract(pFasta.Read(s.InFile), s.Start, s.End, s.OutName, s.Chrom)}
+	records := []pFasta.PFasta{pFasta.Extract(pFasta.Read(s.InFile), s.Start, s.End, s.OutName, s.Chrom, false)}
 	pFasta.Write(s.OutFile, records)
 }
