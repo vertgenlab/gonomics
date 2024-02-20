@@ -132,3 +132,18 @@ func Read(inFile string) []PFasta {
 	exception.PanicOnErr(err)
 	return records
 }
+
+// ToMap converts a slice of pFasta records (e.g. the output of the Read function)
+// to a map of sequences keyed to the sequences name.
+func ToMap(ref []PFasta) map[string][]pDna.Float32Base {
+	m := make(map[string][]pDna.Float32Base)
+	for i := range ref {
+		_, ok := m[ref[i].Name]
+		if !ok {
+			m[ref[i].Name] = ref[i].Seq
+		} else {
+			log.Panicf("%s used for multiple pFasta records. record names must be unique.", ref[i].Name)
+		}
+	}
+	return m
+}

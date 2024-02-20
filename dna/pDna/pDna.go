@@ -21,6 +21,25 @@ type Float64Diff struct {
 	T float64
 }
 
+// IsGap returns true if the DNA base's probability vector is 0 at all 4 bases, indicating that the base is a gap
+func IsGap(p Float32Base) bool {
+	if p.A == 0 && p.C == 0 && p.G == 0 && p.T == 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+// TODO: should I worry about precision here? Use EqualBase, with some standard precision?
+// IsN returns true if the DNA base's probability vector is the same (==0.25) at all 4 bases, indicating that the base is an N
+func IsN(p Float32Base) bool {
+	if p.A == p.C && p.A == p.G && p.A == p.T {
+		return true
+	} else {
+		return false
+	}
+}
+
 // EqualBase returns true if two input Float32Base structs, p and q, are 'equal', defined
 // within a user-defined degree of precision.
 func EqualBase(p Float32Base, q Float32Base, precision float32) bool {
