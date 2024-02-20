@@ -60,7 +60,7 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 		return dna.N
 	}
 	if nonBiasBaseProb/total < nonBiasBaseThreshold {
-		if biasN {
+		if biasN && ((1 - nonBiasBaseProb/total) < nonBiasBaseThreshold) {
 			return dna.N
 		} else {
 			return biasBase
