@@ -2,15 +2,16 @@ package genomeGraph
 
 import (
 	"fmt"
+	"math"
+	"strings"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
-	"math"
-	"strings"
-	"sync"
 )
 
 func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *MatrixAln, scoreMatrix [][]int64, seedPool *sync.Pool, dnaPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper, seedBuildHelper *seedHelper) *giraf.Giraf {
@@ -49,8 +50,8 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			sk.queryStart = int(sk.currSeed.QueryStart)
 			sk.currScore = sk.seedScore
 		} else {
-			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = LeftAlignTraversal(&gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[:sk.currSeed.QueryStart], scoreMatrix, matrix, sk, dynamicScore, dnaPool)
-			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = RightAlignTraversal(&gg.Nodes[sk.tailSeed.TargetId], sk.rightSeq, int(sk.tailSeed.TargetStart+sk.tailSeed.Length), sk.rightPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[sk.tailSeed.QueryStart+sk.tailSeed.Length:], scoreMatrix, matrix, sk, dynamicScore, dnaPool)
+			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = AlignGraphTraversal(&gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[:sk.currSeed.QueryStart], scoreMatrix, matrix, sk, dynamicScore, dnaPool, LeftDirection)
+			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = AlignGraphTraversal(&gg.Nodes[sk.tailSeed.TargetId], sk.rightSeq, int(sk.tailSeed.TargetStart+sk.tailSeed.Length), sk.rightPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[sk.tailSeed.QueryStart+sk.tailSeed.Length:], scoreMatrix, matrix, sk, dynamicScore, dnaPool, RightDirection)
 			sk.currScore = sk.leftScore + sk.seedScore + sk.rightScore
 		}
 		if sk.currScore > int64(currBest.AlnScore) {
