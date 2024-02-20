@@ -121,3 +121,31 @@ func TestGenesToCanonicalTranscriptsTssBed(t *testing.T) {
 		}
 	}
 }
+
+var GenesToFirstTwoBasesOfCodonsBedTests = []struct {
+	GtfFile      string
+	OutFile      string
+	ExpectedFile string
+}{
+	{GtfFile: "testdata/test.gtf",
+		OutFile:      "testdata/firstTwoCodonBases.bed",
+		ExpectedFile: "testdata/expected.firstTwoCodonBases.bed",
+	},
+}
+
+func TestGeneToFirstTwoBasesOfCodonsBed(t *testing.T) {
+	var records map[string]*Gene
+	var currAnswer []bed.Bed
+	var err error
+	for _, v := range GenesToFirstTwoBasesOfCodonsBedTests {
+		records = Read(v.GtfFile)
+		currAnswer = GenesToBedFirstTwoCodonBases(records)
+		bed.Write(v.OutFile, currAnswer)
+		if !fileio.AreEqual(v.ExpectedFile, v.OutFile) {
+			t.Errorf("Error: output was not as expected, GenesToBedFirstTwoCodonBases.\n")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
