@@ -2,6 +2,12 @@ package genomeGraph
 
 import (
 	"bytes"
+	"io"
+	"log"
+	"math"
+	"sort"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
@@ -10,11 +16,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
-	"io"
-	"log"
-	"math"
-	"sort"
-	"sync"
 )
 
 const (
@@ -145,27 +146,7 @@ func getRightBases(n *Node, extension int, start int, seq []dna.Base, ans []dna.
 	return append(append(ans, seq...), n.Seq[start:start+numbers.Min(len(seq)+len(n.Seq)-start, extension)-len(seq)]...)
 }
 
-/*
-func leftBasesFromTwoBit(n *Node, extension int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
-	var availableBases int = len(seq) + refEnd
-	var targetLength int = common.Min(availableBases, extension)
-	var basesToTake int = targetLength - len(seq)
-	return append(append(ans, seq...), dnaTwoBit.GetFrag(n.SeqTwoBit, refEnd-basesToTake, refEnd)...)
-}*/
-
-/*
-func rightBasesFromTwoBit(n *Node, extension int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
-	var availableBases int = len(seq) + len(n.Seq) - start
-	var targetLength int = common.Min(availableBases, extension)
-	var basesToTake int = targetLength - len(seq)
-
-	return append(append(ans, seq...), dnaTwoBit.GetFrag(n.SeqTwoBit, start, start+basesToTake)...)
-}*/
-
 func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
-	//if len(seq) >= extension {
-	//	log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extension=%d.\n", len(seq), extension)
-	//}
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
 	s.Seq = getLeftTargetBases(n, extension, refEnd, seq, s.Seq)
@@ -199,9 +180,6 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 }
 
 func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, extension int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
-	//if len(seq) >= extension {
-	//	log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extension=%d.\n", len(seq), extension)
-	//}
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
 	s.Seq = getRightBases(n, extension, start, seq, s.Seq)
@@ -335,47 +313,65 @@ func rightSeed(i int) int {
 	return 2*i + 2
 }
 
-func seedsHeapify(a []SeedDev, i int) []SeedDev {
-	l := leftSeed(i)
-	r := rightSeed(i)
-	var max int
-	if l < len(a) && l >= 0 && a[l].TotalLength < a[i].TotalLength {
-		max = l
-	} else {
-		max = i
+func seedsHeapify(a []SeedDev, i, size int) {
+	largest := i
+	l := 2*i + 1
+	r := 2*i + 2
+
+	if l < size && a[l].TotalLength < a[largest].TotalLength {
+		largest = l
 	}
-	if r < len(a) && r >= 0 && a[r].TotalLength < a[max].TotalLength {
-		max = r
+	if r < size && a[r].TotalLength < a[largest].TotalLength {
+		largest = r
 	}
-	if max != i {
-		a[i], a[max] = a[max], a[i]
-		a = seedsHeapify(a, max)
+
+	if largest != i {
+		a[i], a[largest] = a[largest], a[i]
+		seedsHeapify(a, largest, size)
 	}
-	return a
 }
 
-func buildSeedHeap(a []SeedDev) []SeedDev {
-	for i := len(a)/2 - 1; i >= 0; i-- {
-		a = seedsHeapify(a, i)
+func buildSeedHeap(a []SeedDev) {
+	n := len(a)
+	for i := n/2 - 1; i >= 0; i-- {
+		seedsHeapify(a, i, n)
 	}
-	return a
 }
 
 func heapSortSeeds(a []SeedDev) {
-	a = buildSeedHeap(a)
-	size := len(a)
-	for i := size - 1; i >= 1; i-- {
+	buildSeedHeap(a)
+	for i := len(a) - 1; i > 0; i-- {
 		a[0], a[i] = a[i], a[0]
-		size--
-		seedsHeapify(a[:size], 0)
+		seedsHeapify(a, 0, i)
 	}
 }
 
-func quickSort(arr []*SeedDev) []*SeedDev {
-	newArr := make([]*SeedDev, len(arr))
-	copy(newArr, arr)
-	recursiveSort(newArr, 0, len(arr)-1)
-	return newArr
+func quickSort(seeds []*SeedDev) {
+	if len(seeds) < 2 {
+		return // Base case: array is already sorted
+	}
+	quickSortRecursive(seeds, 0, len(seeds)-1)
+}
+
+func quickSortRecursive(seeds []*SeedDev, low, high int) {
+	if low < high {
+		pi := partition(seeds, low, high)
+		quickSortRecursive(seeds, low, pi-1)
+		quickSortRecursive(seeds, pi+1, high)
+	}
+}
+
+func partition(seeds []*SeedDev, low, high int) int {
+	pivot := seeds[high]
+	i := low - 1
+	for j := low; j < high; j++ {
+		if seeds[j].TotalLength <= pivot.TotalLength {
+			i++
+			seeds[i], seeds[j] = seeds[j], seeds[i]
+		}
+	}
+	seeds[i+1], seeds[high] = seeds[high], seeds[i+1]
+	return i + 1
 }
 
 func recursiveSort(arr []*SeedDev, start, end int) {
