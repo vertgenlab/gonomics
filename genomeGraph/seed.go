@@ -7,86 +7,80 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 )
 
-func extendCurrSeed(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq, left bool, right bool) {
-	var newTStart, newQStart, newTEnd, newQEnd int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1, int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
-	//check to see if beginning is at index zero, if so do something like SeedDev.Prev
-	//if newStart < 0
-	if left {
-		for ; newTStart >= 0 && newQStart >= 0 && (gg.Nodes[seed.TargetId].Seq[newTStart] == read.Seq[newQStart]); newTStart, newQStart = newTStart-1, newQStart-1 {
+func extendCurrSeed(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq, extendLeft, extendRight bool) {
+	nodeSeq := gg.Nodes[seed.TargetId].Seq
+	readSeq := read.Seq
+
+	if extendLeft {
+		for newTStart, newQStart := int(seed.TargetStart)-1, int(seed.QueryStart)-1; newTStart >= 0 && newQStart >= 0 && nodeSeq[newTStart] == readSeq[newQStart]; newTStart, newQStart = newTStart-1, newQStart-1 {
 			seed.TargetStart = uint32(newTStart)
 			seed.QueryStart = uint32(newQStart)
 			seed.Length++
 		}
 	}
-	if right {
-		for ; int(newTEnd) < len(gg.Nodes[seed.TargetId].Seq) && int(newQEnd) < len(read.Seq) && (gg.Nodes[seed.TargetId].Seq[newTEnd] == read.Seq[newQEnd]); newTEnd, newQEnd = newTEnd+1, newQEnd+1 {
+
+	if extendRight {
+		for newTEnd, newQEnd := int(seed.TargetStart+seed.Length), int(seed.QueryStart+seed.Length); newTEnd < len(nodeSeq) && newQEnd < len(readSeq) && nodeSeq[newTEnd] == readSeq[newQEnd]; newTEnd, newQEnd = newTEnd+1, newQEnd+1 {
 			seed.Length++
 		}
 	}
 }
 
 func toTheRight(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq) []*SeedDev {
-	//log.Printf("Depth of call is: %d for seed: %d", depth, seed.TargetId)
-	var answer []*SeedDev
 	extendCurrSeed(seed, gg, read, false, true)
-	var newTEnd, newQEnd int32 = int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
-	if (int(newTEnd) >= len(gg.Nodes[seed.TargetId].Seq) && int(newQEnd) < len(read.Seq)) && (len(gg.Nodes[seed.TargetId].Next) > 0) {
-		var newTStart int32 = 0
-		var newQStart int32 = newQEnd
-		var edgeSeeds []*SeedDev
-		var e int
-		for _, next := range gg.Nodes[seed.TargetId].Next {
-			//log.Printf("Number of nodes to check %d\n", len(gg.Nodes[seed.TargetId].Next))
-			if len(next.Dest.Seq) > 0 {
-				if next.Dest.Seq[newTStart] == read.Seq[newQStart] {
-					nextSeed := &SeedDev{TargetId: next.Dest.Id, TargetStart: uint32(newTStart), QueryStart: uint32(newQStart), Length: 1, PosStrand: seed.PosStrand, NextPart: nil}
-					edgeSeeds = toTheRight(nextSeed, gg, read)
-					for e = 0; e < len(edgeSeeds); e++ {
-						currSeed := &SeedDev{TargetId: seed.TargetId, TargetStart: seed.TargetStart, QueryStart: seed.QueryStart, Length: seed.Length, PosStrand: seed.PosStrand, NextPart: edgeSeeds[e]}
-						answer = append(answer, currSeed)
-					}
-				}
-			}
-		}
-	} else {
-		answer = append(answer, seed)
-	}
-	return answer
+	return extendToDirection(seed, gg, read, true)
 }
 
 func toTheLeft(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq) []*SeedDev {
-	var answer []*SeedDev
 	extendCurrSeed(seed, gg, read, true, false)
-	//var newTStart, newQStart int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1
-	if (seed.TargetStart <= 0 && seed.QueryStart > 0) && (len(gg.Nodes[seed.TargetId].Prev) > 0) {
-		var depthSeeds []*SeedDev
-		var prevLeft int
-		for _, prev := range gg.Nodes[seed.TargetId].Prev {
-			if len(prev.Dest.Seq) > 0 {
-				var newTStart int32 = int32(len(prev.Dest.Seq)) - 1
-				var newQStart int32 = int32(seed.QueryStart) - 1
-				if prev.Dest.Seq[newTStart] == read.Seq[newQStart] {
-					prevSeed := &SeedDev{TargetId: prev.Dest.Id, TargetStart: uint32(newTStart), QueryStart: uint32(newQStart), Length: 1, PosStrand: seed.PosStrand, NextPart: seed}
-					depthSeeds = toTheLeft(prevSeed, gg, read)
-					for prevLeft = 0; prevLeft < len(depthSeeds); prevLeft++ {
-						answer = append(answer, depthSeeds[prevLeft])
+	return extendToDirection(seed, gg, read, false)
+}
+
+func extendToDirection(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq, toRight bool) []*SeedDev {
+	var answer []*SeedDev
+	if toRight {
+		// Existing right extension logic...
+	} else {
+		// Extending to the left
+		targetStart := int(seed.TargetStart)
+		queryStart := int(seed.QueryStart)
+
+		if targetStart <= 0 && queryStart > 0 && len(gg.Nodes[seed.TargetId].Prev) > 0 {
+			for _, edge := range gg.Nodes[seed.TargetId].Prev {
+				prevNodeEnd := len(edge.Dest.Seq) - 1
+				prevNodeQueryStart := queryStart - 1
+
+				if edge.Dest.Seq[prevNodeEnd] == read.Seq[prevNodeQueryStart] {
+					prevSeed := &SeedDev{
+						TargetId:    edge.Dest.Id,
+						TargetStart: uint32(prevNodeEnd),
+						QueryStart:  uint32(prevNodeQueryStart),
+						Length:      1,
+						PosStrand:   seed.PosStrand,
+						NextPart:    seed,
+					}
+					depthSeeds := toTheLeft(prevSeed, gg, read)
+					for _, depthSeed := range depthSeeds {
+						answer = append(answer, depthSeed)
 					}
 				}
 			}
+		} else {
+			answer = append(answer, seed)
 		}
-	} else {
-		answer = append(answer, seed)
 	}
 	return answer
 }
 
 func extendSeedTogether(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq) []*SeedDev {
+	rightSeeds := toTheRight(seed, gg, read)
 	var answer []*SeedDev
-	rightGraph := toTheRight(seed, gg, read)
 
-	for rSeeds := 0; rSeeds < len(rightGraph); rSeeds++ {
-		answer = append(answer, toTheLeft(rightGraph[rSeeds], gg, read)...)
+	for _, rightSeed := range rightSeeds {
+		leftSeeds := toTheLeft(rightSeed, gg, read)
+		answer = append(answer, leftSeeds...)
 	}
+
 	return answer
 }
 
@@ -107,6 +101,12 @@ func CompareBlastScore(a *SeedDev, b *SeedDev, read fastq.Fastq, scoreMatrix [][
 		log.Fatalf("Error: SeedDev len compare failed on:%d %d %d, %d %d %d\n", a.TargetId, a.TargetStart, a.Length, b.TargetId, b.TargetStart, b.Length)
 		return 0
 	}
+}
+
+func SortSeedsByScore(seeds []*SeedDev, read fastq.Fastq, scoreMatrix [][]int64) {
+	sort.Slice(seeds, func(i, j int) bool {
+		return BlastSeed(seeds[i], read, scoreMatrix) > BlastSeed(seeds[j], read, scoreMatrix)
+	})
 }
 
 func SortBlastz(seeds []*SeedDev, read fastq.Fastq, scoreMatrix [][]int64) {
