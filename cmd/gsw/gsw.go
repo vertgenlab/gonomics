@@ -7,12 +7,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/genomeGraph"
+	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
 )
 
@@ -87,7 +91,7 @@ func RunAlignExe() {
 // TODO: add check for too many args or an implementation for multiple fastq pairs.
 func graphSmithWaterman(seedNum int, stepSize int, cpus int, score string, out string, liftover string, args []string) {
 	//should be at most 3 args to add to the input, reference, readOne and/or readTwo
-	var genomeGraph *genomeGraph.GenomeGraph = genomeGraph.Read(args[0])
+	var genome *genomeGraph.GenomeGraph = genomeGraph.Read(args[0])
 	var readOne string
 	var readTwo string
 
@@ -99,17 +103,40 @@ func graphSmithWaterman(seedNum int, stepSize int, cpus int, score string, out s
 	}
 	switch true {
 	case len(args) == 2 && !strings.HasSuffix(liftover, ".sizes"):
-		GswToGiraf(genomeGraph, readOne, out, cpus, seedNum, stepSize, selectScoreMatrix(score))
+		GswToGiraf(genome, readOne, out, cpus, seedNum, stepSize, selectScoreMatrix(score))
 	case len(args) == 3 && !strings.HasSuffix(liftover, ".sizes"):
-		GswToGirafPair(genomeGraph, readOne, readTwo, out, cpus, seedNum, stepSize, selectScoreMatrix(score))
+		var tileSize, stepSize = 32, 32
+		dictionary := genomeGraph.IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+		var cpus int = 6
+
+		input := make(chan fastq.PairedEndBig, 824)
+		output := make(chan giraf.GirafPair, 824)
+
+		var worker, bee sync.WaitGroup
+		go fastq.ReadPairBigToChan(readOne, readTwo, input)
+		log.Printf("Starting alignment worker...\n")
+
+		worker.Add(cpus)
+
+		for i := 0; i < cpus; i++ {
+			go genomeGraph.RoutineFqPairToGiraf(genome, dictionary, tileSize, stepSize, genomeGraph.HumanChimpTwoScoreMatrix, input, output, &worker)
+		}
+		go giraf.GirafPairChanToFile(out, output, &bee)
+
+		bee.Add(1)
+		worker.Wait()
+		close(output)
+		log.Printf("Aligners finished and channel closed\n")
+		bee.Wait()
+
 	case strings.HasSuffix(liftover, ".sizes"):
 		chrSize := chromInfo.ReadToSlice(liftover)
 		header := sam.GenerateHeader(chrSize, nil, sam.Unsorted, sam.None)
 		if len(args) == 2 {
-			GswToSam(genomeGraph, readOne, out, cpus, seedNum, stepSize, selectScoreMatrix(score), header)
+			GswToSam(genome, readOne, out, cpus, seedNum, stepSize, selectScoreMatrix(score), header)
 		}
 		if len(args) == 3 {
-			GswToSamPair(genomeGraph, readOne, readTwo, out, cpus, seedNum, stepSize, selectScoreMatrix(score), header)
+			GswToSamPair(genome, readOne, readTwo, out, cpus, seedNum, stepSize, selectScoreMatrix(score), header)
 		}
 	default:
 		extendedAlignUsage()

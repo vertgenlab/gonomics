@@ -15,7 +15,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	var output string = "testdata/pairedTest.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 1
+	var numberOfReads int = 50000
 	var readLength int = 150
 	var mutations int = 4
 	var workerWaiter, writerWaiter sync.WaitGroup

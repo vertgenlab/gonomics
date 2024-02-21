@@ -2,87 +2,22 @@ package genomeGraph
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/sam"
 )
 
-func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, m [][]int64, trace [][]rune, memoryPool **SeedDev) sam.Sam {
-	var currBest sam.Sam = sam.Sam{QName: read.Name, Flag: 4, RName: "*", Pos: 0, MapQ: 255, Cigar: []cigar.Cigar{{Op: '*'}}, RNext: "*", PNext: 0, TLen: 0, Seq: read.Seq, Qual: "", Extra: "BZ:i:0\tGP:Z:-1"}
-	var leftAlignment, rightAlignment []cigar.Cigar
-	var minTarget int
-	var minQuery int
-	var leftScore, rightScore int64 = 0, 0
-	var bestScore int64
-	var leftPath, rightPath, bestPath []uint32
-	var currScore int64 = 0
-	perfectScore := perfectMatchBig(read, scoreMatrix)
-
-	var s strings.Builder
-	var err error
-
-	var seeds []*SeedDev
-
-	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
-	SortSeedDevByLen(seeds)
-	var tailSeed *SeedDev
-	var seedScore int64
-	var currSeq []dna.Base
-	var currSeed *SeedDev
-
-	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
-		currSeed = seeds[i]
-		tailSeed = getLastPart(currSeed)
-		if currSeed.PosStrand {
-			currSeq = read.Seq
-		} else {
-			currSeq = read.SeqRc
-		}
-		if int(currSeed.TotalLength) == len(currSeq) {
-			leftScore, rightScore = int64(0), int64(0)
-
-			minTarget = int(currSeed.TargetStart)
-			minQuery = int(currSeed.QueryStart)
-		}
-		seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
-		currScore = leftScore + seedScore + rightScore
-
-		if currScore > bestScore {
-			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath)
-			bestScore = currScore
-			if currSeed.PosStrand {
-				currBest.Flag = 0
-			} else {
-				currBest.Flag = 16
-			}
-			currBest.Seq = currSeq // unsure why this line was lost
-
-			_, err = s.Write(read.Qual)
-			exception.PanicOnErr(err)
-			currBest.Qual = s.String()
-
-			_, err = s.WriteString(strconv.Itoa(int(bestPath[0])))
-			exception.PanicOnErr(err)
-			currBest.RName = s.String()
-
-			currBest.Pos = uint32(minTarget + 1)
-			_, err = s.WriteString(fmt.Sprintf("BZ:i:%dtGP:Z:%s", bestScore, PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath))))
-			exception.PanicOnErr(err)
-			currBest.Extra = s.String()
-
-			currBest.Cigar = AddSClip(minQuery, len(currSeq), cigar.CatCigar(cigar.AddCigar(leftAlignment, cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment))
-		}
+func createSeed(id uint32, readStart, nodeStart, length int, posStrand bool) *SeedDev {
+	return &SeedDev{
+		TargetId:    id,
+		TargetStart: uint32(nodeStart),
+		QueryStart:  uint32(readStart),
+		Length:      uint16(length),
+		PosStrand:   posStrand,
+		TotalLength: uint16(length),
 	}
-	if bestScore < 1200 {
-		currBest.Flag = 4
-	}
-	return currBest
 }
 
 // TODO: what about neg strand?
@@ -105,7 +40,7 @@ func scoreSeedSeq(seq []dna.Base, start uint32, end uint32, scoreMatrix [][]int6
 
 func scoreSeedPart(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
-	for _, base := range read.Seq[seed.QueryStart : seed.QueryStart+seed.Length] {
+	for _, base := range read.Seq[int(seed.QueryStart) : int(seed.QueryStart)+int(seed.Length)] {
 		score += scoreMatrix[base][base]
 	}
 	return score

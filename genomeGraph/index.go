@@ -11,9 +11,9 @@ type SeedDev struct {
 	TargetId    uint32
 	TargetStart uint32
 	QueryStart  uint32
-	Length      uint32
+	Length      uint16
+	TotalLength uint16
 	PosStrand   bool
-	TotalLength uint32
 	NextPart    *SeedDev
 }
 

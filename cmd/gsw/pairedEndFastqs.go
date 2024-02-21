@@ -34,7 +34,7 @@ func GswToGirafPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string
 		go genomeGraph.RoutineFqPairToGiraf(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, girafPipe, &wgAlign)
 	}
 	wgWrite.Add(1)
-	go genomeGraph.SimpleWriteGirafPair(output, girafPipe, &wgWrite)
+	go giraf.GirafPairChanToFile(output, girafPipe, &wgWrite)
 	wgAlign.Wait()
 	stop := time.Now()
 	close(girafPipe)

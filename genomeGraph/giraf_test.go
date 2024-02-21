@@ -163,3 +163,26 @@ func TestRandGiraf(t *testing.T) {
 		}
 	*/
 }
+
+func TestGiraf(t *testing.T) {
+	graph := MakeTestGraph()
+	numReads := 10
+	readLen := 4
+	randSeed := int64(777)
+
+	reads := RandGiraf(graph, numReads, readLen, randSeed)
+
+	if len(reads) != numReads {
+		t.Errorf("Expected %d reads, but got %d", numReads, len(reads))
+	}
+
+	for _, read := range reads {
+		if len(read.Seq) != readLen {
+			t.Errorf("Expected read length of %d, but got %d", readLen, len(read.Seq))
+		}
+
+		if dna.CountBaseInterval(read.Seq, dna.N, 0, readLen) != 0 {
+			t.Errorf("Error: Read contains N bases")
+		}
+	}
+}

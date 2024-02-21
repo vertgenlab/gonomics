@@ -18,10 +18,42 @@ func gswNothingWorker(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int
 	wg.Done()
 }
 
-func gswWorkerMemPool(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int, stepSize int, scoreMatrix [][]int64, incomingFastqs <-chan fastq.FastqBig, outgoingSams chan<- sam.Sam, wg *sync.WaitGroup) {
-	m, trace := swMatrixSetup(10000)
-	for read := range incomingFastqs {
-		outgoingSams <- GraphSmithWatermanMemPool(gg, read, seedHash, seedLen, stepSize, scoreMatrix, m, trace, nil)
-	}
-	wg.Done()
-}
+// func gswWorkerMemPool(genome *GenomeGraph) {
+// 	var tileSize int = 32
+// 	var stepSize int = 32
+
+// 	index := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+
+// 	var wg sync.WaitGroup
+// 	var numWorkers int = 6
+// 	input := make(chan fastq.FastqBig)
+
+// 	matrix := NewSwMatrix(defaultMatrixSize)
+// 	scores := HumanChimpTwoScoreMatrix
+
+// 	seedPool := NewMemSeedPool()
+// 	dnaPool := NewDnaPool()
+// 	seedBuildHelper := newSeedBuilder()
+
+// 	scorekeeper := scoreKeeper{}
+// 	dynamicKeeper := dynamicScoreKeeper{}
+
+// 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq")
+// 	output := make(chan giraf.Giraf)
+
+// 	go fastq.ReadPairBigToChan("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", input)
+
+// 	wg.Add(numWorkers)
+// 	for i := 0; i < numWorkers; i++ {
+// 		go GraphSmithWatermanToGiraf(genome, read, index, tileSize, stepSize, &matrix, scores, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper)
+// 	}
+// 	go giraf.GirafPairChanToFile(output, samPipe, &wg)
+// 	wg.Add(1)
+// 	wg.Wait()
+// 	close(samPipe)
+// 	log.Printf("Aligners finished and channel closed\n")
+// 	wg.Wait()
+// 	log.Printf("Sam writer finished and we are all done\n")
+// 	//stop := time.Now()
+// 	wg.Done()
+// }

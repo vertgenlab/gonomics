@@ -1,8 +1,10 @@
 package genomeGraph
 
 import (
-	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
+	"log"
 
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/numbers"
 )
@@ -34,58 +36,6 @@ func extendToTheRight(node *Node, read fastq.FastqBig, readStart, nodeStart int,
 	return answer
 }
 
-// extendToTheLeft extends a seed to the left, considering possible continuations in connected nodes.
-func extendToTheLeft(node *Node, read fastq.FastqBig, currPart *SeedDev) []*SeedDev {
-	// Immediate return if extension to the left is not possible
-	if currPart.QueryStart == 0 || currPart.TargetStart > 0 {
-		return []*SeedDev{currPart}
-	}
-
-	// Precompute read bases for both strands
-	readBaseFwd := dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
-	readBaseRev := dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
-
-	var answer []*SeedDev
-	for _, prev := range node.Prev {
-		prevNodeLastBase := dnaTwoBit.GetBase(prev.Dest.SeqTwoBit, uint(prev.Dest.SeqTwoBit.Len)-1)
-
-		// Check if the last base of the previous node matches the base before the current part's start
-		if (currPart.PosStrand && readBaseFwd == prevNodeLastBase) || (!currPart.PosStrand && readBaseRev == prevNodeLastBase) {
-			// Extend seed to the left within the previous node
-			prevParts := extendToTheLeftHelper(prev.Dest, read, currPart)
-			answer = append(answer, prevParts...)
-		}
-	}
-
-	// Return the current part if no extension is possible
-	if len(answer) == 0 {
-		return []*SeedDev{currPart}
-	}
-	return answer
-}
-
-// extendToTheLeftHelper assists in extending a seed to the left within a specific node.
-func extendToTheLeftHelper(node *Node, read fastq.FastqBig, nextPart *SeedDev) []*SeedDev {
-	nodePos := node.SeqTwoBit.Len - 1
-	readPos := int(nextPart.QueryStart) - 1
-	nodeOffset := nodePos % 32
-	readOffset := 31 - ((readPos - nodeOffset + 31) % 32)
-	var leftMatches int
-
-	if nextPart.PosStrand {
-		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.Rainbow[readOffset], readPos+readOffset))
-	} else {
-		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.RainbowRc[readOffset], readPos+readOffset))
-	}
-	currPart := createSeed(node.Id, int(readPos-(leftMatches-1)), int(nodePos-(leftMatches-1)), int(leftMatches)+int(nextPart.TotalLength), nextPart.PosStrand)
-
-	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
-		answer := generateLeftExtensionSeeds(node, read, currPart)
-		return answer
-	}
-	return []*SeedDev{currPart}
-}
-
 func generateLeftExtensionSeeds(node *Node, read fastq.FastqBig, currPart *SeedDev) []*SeedDev {
 	seeds := make([]*SeedDev, 0, len(node.Prev))
 	for _, prev := range node.Prev {
@@ -94,16 +44,141 @@ func generateLeftExtensionSeeds(node *Node, read fastq.FastqBig, currPart *SeedD
 	return seeds
 }
 
-// createSeed creates and returns a new seed.
-func createSeed(id uint32, readStart, nodeStart, length int, posStrand bool) *SeedDev {
-	return &SeedDev{
-		TargetId:    id,
-		TargetStart: uint32(nodeStart),
-		QueryStart:  uint32(readStart),
-		Length:      uint32(length),
-		PosStrand:   posStrand,
-		TotalLength: uint32(length),
+func extendToTheLeft(node *Node, read fastq.FastqBig, currPart *SeedDev) []*SeedDev {
+	var answer, prevParts []*SeedDev
+	var i int
+	var readBase dna.Base
+
+	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
+		for i = 0; i < len(node.Prev); i++ {
+			if currPart.PosStrand {
+				readBase = dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
+			} else {
+				readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
+			}
+			if readBase == dnaTwoBit.GetBase(node.Prev[i].Dest.SeqTwoBit, uint(node.Prev[i].Dest.SeqTwoBit.Len)-1) {
+				prevParts = extendToTheLeftHelper(node.Prev[i].Dest, read, currPart)
+				answer = append(answer, prevParts...)
+			}
+		}
 	}
+
+	if len(answer) == 0 {
+		return []*SeedDev{currPart}
+	} else {
+		return answer
+	}
+}
+
+func extendToTheLeftHelper(node *Node, read fastq.FastqBig, nextPart *SeedDev) []*SeedDev {
+	const basesPerInt int = 32
+	var nodePos int = node.SeqTwoBit.Len - 1
+	var readPos int = int(nextPart.QueryStart) - 1
+	var nodeOffset int = nodePos % basesPerInt
+	var readOffset int = 31 - ((readPos - nodeOffset + 31) % 32)
+	var leftMatches int = 0
+	var currPart *SeedDev = nil
+	var prevParts, answer []*SeedDev
+	var i int
+	var readBase dna.Base
+
+	if nextPart.PosStrand {
+		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.Rainbow[readOffset], readPos+readOffset))
+	} else {
+		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.RainbowRc[readOffset], readPos+readOffset))
+	}
+
+	if leftMatches == 0 {
+		log.Fatal("Error: should not have zero matches to the left\n")
+	}
+
+	currPart = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodePos - (leftMatches - 1)), QueryStart: uint32(readPos - (leftMatches - 1)), Length: uint16(leftMatches), PosStrand: nextPart.PosStrand, TotalLength: uint16(leftMatches) + nextPart.TotalLength, NextPart: nextPart}
+
+	// we went all the way to end and there might be more
+	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
+		for i = 0; i < len(node.Prev); i++ {
+			if nextPart.PosStrand {
+				readBase = dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
+			} else {
+				readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
+			}
+			if readBase == dnaTwoBit.GetBase(node.Prev[i].Dest.SeqTwoBit, uint(node.Prev[i].Dest.SeqTwoBit.Len)-1) {
+				prevParts = extendToTheLeftHelper(node.Prev[i].Dest, read, currPart)
+				answer = append(answer, prevParts...)
+			}
+		}
+	}
+
+	// if the alignment did not go to another node, return the match for this node
+	if len(answer) == 0 {
+		answer = []*SeedDev{currPart}
+	}
+
+	return answer
+}
+
+func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []Node, read fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
+	const basesPerInt int64 = 32
+	var currHits []uint64
+	var codedNodeCoord uint64
+	var leftMatches int = 0
+	var keyIdx, keyOffset, readOffset, nodeOffset int = 0, 0, 0, 0
+	var nodeIdx, nodePos int64 = 0, 0
+	//var poolHead *SeedDev = *memoryPool
+	var seqKey uint64
+	var keyShift uint = 64 - (uint(seedLen) * 2)
+	var tempSeeds, finalSeeds []*SeedDev
+	var tempSeed *SeedDev
+
+	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
+		keyIdx = (readStart + 31) / 32
+		keyOffset = 31 - ((readStart + 31) % 32)
+
+		// do fwd strand
+		seqKey = read.Rainbow[keyOffset].Seq[keyIdx] >> keyShift
+		currHits = seedHash[seqKey]
+		/*if len(currHits) > 0 {
+			log.Printf(" %d hits\n", len(currHits))
+		}*/
+		for _, codedNodeCoord = range currHits {
+			nodeIdx, nodePos = numberToChromAndPos(codedNodeCoord)
+			nodeOffset = int(nodePos % basesPerInt)
+			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
+
+			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.Rainbow[readOffset], readStart+readOffset))
+			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.Rainbow[readOffset], readStart+readOffset)
+			tempSeeds = extendToTheRight(&nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), true)
+			//log.Printf("After extendToTheRight fwd:\n")
+			//printSeedDev(tempSeeds)
+			for _, tempSeed = range tempSeeds {
+				finalSeeds = append(finalSeeds, extendToTheLeft(&nodes[nodeIdx], read, tempSeed)...)
+			}
+		}
+
+		// do rev strand
+		seqKey = read.RainbowRc[keyOffset].Seq[keyIdx] >> keyShift
+		currHits = seedHash[seqKey]
+		/*if len(currHits) > 0 {
+			log.Printf(" %d hits\n", len(currHits))
+		}*/
+		for _, codedNodeCoord = range currHits {
+			nodeIdx, nodePos = numberToChromAndPos(codedNodeCoord)
+			nodeOffset = int(nodePos % basesPerInt)
+			readOffset = 31 - ((readStart - nodeOffset + 31) % 32)
+
+			leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), &read.RainbowRc[readOffset], readStart+readOffset))
+			//rightMatches = dnaTwoBit.CountRightMatches(nodes[nodeIdx].SeqTwoBit, int(nodePos), read.RainbowRc[readOffset], readStart+readOffset)
+			tempSeeds = extendToTheRight(&nodes[nodeIdx], read, readStart-(leftMatches-1), int(nodePos)-(leftMatches-1), false)
+			//log.Printf("After extendToTheRight rev:\n")
+			//printSeedDev(tempSeeds)
+			for _, tempSeed = range tempSeeds {
+				//log.Printf("tempSeed.QueryStart = %d\n", tempSeed.QueryStart)
+				finalSeeds = append(finalSeeds, extendToTheLeft(&nodes[nodeIdx], read, tempSeed)...)
+			}
+		}
+	}
+
+	return finalSeeds
 }
 
 // generateSeeds generates the seeds for extend to the right operations.
@@ -134,18 +209,6 @@ func appendSeedExtensions(node *Node, read fastq.FastqBig, readStart, nodeStart 
 		}
 	}
 	return seeds
-}
-
-func findSeedsInSmallMapWithMemPool(seedHash map[uint64][]uint64, nodes []Node, read fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64) []*SeedDev {
-	keyShift := uint(64 - (seedLen * 2))
-	// Initialize slice to store final seeds
-	finalSeeds := make([]*SeedDev, 0)
-	// Loop through each start position in the read
-	for readStart := 0; readStart <= len(read.Seq)-seedLen; readStart++ {
-		//  strand processing
-		processStrand(seedHash, nodes, read, seedLen, &finalSeeds, readStart, keyShift)
-	}
-	return finalSeeds
 }
 
 func processStrand(seedHash map[uint64][]uint64, nodes []Node, read fastq.FastqBig, seedLen int, finalSeeds *[]*SeedDev, readStart int, keyShift uint) {
