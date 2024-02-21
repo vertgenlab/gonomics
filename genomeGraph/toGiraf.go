@@ -82,20 +82,6 @@ func readFastqGsw(fileOne string, fileTwo string, answer chan<- fastq.PairedEndB
 	close(answer)
 }
 
-type ScoreMatrixHelper struct {
-	Matrix                         [][]int64
-	MaxMatch                       int64
-	MinMatch                       int64
-	LeastSevereMismatch            int64
-	LeastSevereMatchMismatchChange int64
-}
-
-func getScoreMatrixHelp(scoreMatrix [][]int64) *ScoreMatrixHelper {
-	help := ScoreMatrixHelper{Matrix: scoreMatrix}
-	help.MaxMatch, help.MinMatch, help.LeastSevereMismatch, help.LeastSevereMatchMismatchChange = MismatchStats(scoreMatrix)
-	return &help
-}
-
 func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 	var maxMatch int64 = 0
 	var minMatch int64

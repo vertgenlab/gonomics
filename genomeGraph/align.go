@@ -86,18 +86,6 @@ func scoreSeedSeq(seq []dna.Base, start uint32, end uint32, scoreMatrix [][]int6
 	return score
 }
 
-func scoreSeedFastqBig(seed *SeedDev, read fastq.FastqBig, scoreMatrix [][]int64) int64 {
-	var score int64 = 0
-	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
-		if seed.PosStrand {
-			score += scoreMatrix[read.Seq[i]][read.Seq[i]]
-		} else {
-			score += scoreMatrix[read.SeqRc[i]][read.SeqRc[i]]
-		}
-	}
-	return score
-}
-
 func scoreSeedPart(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
 	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
@@ -112,14 +100,6 @@ func scoreSeed(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 		score += scoreSeedPart(seed, read, scoreMatrix)
 	}
 	return score
-}
-
-var HumanChimpTwoScoreMatrix = [][]int64{
-	{90, -330, -236, -356, -208},
-	{-330, 100, -318, -236, -196},
-	{-236, -318, 100, -330, -196},
-	{-356, -236, -330, 90, -208},
-	{-208, -196, -196, -208, -202},
 }
 
 func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {

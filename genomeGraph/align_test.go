@@ -36,14 +36,14 @@ func BenchmarkGsw(b *testing.B) {
 	var output string = "testdata/rabs_test.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	//var numberOfReads int = 50000
-	//var readLength int = 150
-	//var mutations int = 1
+	var numberOfReads int = 50000
+	var readLength int = 150
+	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 6
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	b.ResetTimer()
-	genome := Read("testdata/rabsTHREEspine.fa")
+	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
 
@@ -51,11 +51,11 @@ func BenchmarkGsw(b *testing.B) {
 	girafPipe := make(chan giraf.GirafPair, 2408)
 
 	//log.Printf("Simulating reads...\n")
-	//simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
+	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
 	//os.Remove("testdata/simReads_R1.fq")
 	//os.Remove("testdata/simReads_R2.fq")
 
-	//fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
@@ -69,7 +69,7 @@ func BenchmarkGsw(b *testing.B) {
 		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
 	}
 	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
-	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
+	go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
 	writerWaiter.Add(1)
 	workerWaiter.Wait()
 	close(girafPipe)

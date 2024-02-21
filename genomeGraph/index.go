@@ -8,16 +8,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-type SeedDev struct {
-	TargetId    uint32
-	TargetStart uint32
-	QueryStart  uint32
-	Length      uint32
-	PosStrand   bool
-	TotalLength uint32
-	NextPart    *SeedDev
-}
-
 func IndexGenomeIntoMap(genome []Node, seedLen int, seedStep int) map[uint64][]uint64 {
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
