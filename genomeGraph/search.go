@@ -41,13 +41,16 @@ type dnaPool struct {
 	queryEnd    int
 	targetStart int
 	targetEnd   int
+
+	currScore int64
 }
 
 type dynamicScoreKeeper struct {
-	i       int
-	j       int
-	currMax int64
-	route   []cigar.ByteCigar
+	i        int
+	j        int
+	routeIdx int
+	currMax  int64
+	route    []cigar.ByteCigar
 }
 
 type scoreKeeper struct {
@@ -133,81 +136,100 @@ func resetScoreKeeper(sk scoreKeeper) {
 }
 
 // AlignGraphTraversal performs graph traversal for alignment either to the left or right, calculating optimal alignment using dynamic programming.
-func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool, direction byte) ([]cigar.ByteCigar, int64, int, int, []uint32) {
+func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk *scoreKeeper, dynamicScore *dynamicScoreKeeper, pool *sync.Pool, direction byte) ([]cigar.ByteCigar, int64, int, int, []uint32) {
+	// Fetch a pooled object to reduce allocations.
 	s := pool.Get().(*dnaPool)
 	defer pool.Put(s)
 
-	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
-	s.Path = append([]uint32(nil), currentPath...)
+	// Initialize sequence and path slices without reallocation.
+	s.Seq = append(s.Seq[:0], seq...)
+	s.Path = append(s.Path[:0], currentPath...)
+
+	// Traverse node sequence and update the path accordingly.
+	s.Seq = nodeSeqTraversal(n, extension, position, seq, s.Seq, direction)
 	if direction == LeftDirection {
-		s.Seq = nodeSeqTraversal(n, extension, position, seq, s.Seq, LeftDirection)
-		AddPath(s.Path, n.Id)
-	} else {
-		s.Seq = nodeSeqTraversal(n, extension, position, seq, s.Seq, RightDirection)
+		s.Path = append(s.Path, n.Id) // Add node ID for left direction.
 	}
 
+	// Initialize local variables to hold alignment details.
 	var alignment []cigar.ByteCigar
 	var score int64
 	var targetStart, queryStart int
-	if direction == LeftDirection {
-		if len(s.Seq) >= extension || len(n.Prev) == 0 {
-			score, alignment, targetStart, queryStart = DynamicAln(s.Seq, read, scores, matrix, -600, dynamicScore, LeftDirection)
-			targetStart = position - len(s.Seq) + targetStart
-		} else {
-			score = math.MinInt64
-			for _, prevNode := range n.Prev {
-				route, currScore, targetStart, queryStart, path := AlignGraphTraversal(prevNode.Dest, s.Seq, len(prevNode.Dest.Seq), s.Path, extension, read, scores, matrix, sk, dynamicScore, pool, LeftDirection)
-				if currScore > score {
-					score, alignment, sk.targetStart, sk.queryStart, sk.leftPath = currScore, route, targetStart, queryStart, path
-				}
-			}
-			cigar.ReverseBytesCigar(alignment)
-			ReversePath(sk.leftPath)
+
+	// Check termination condition for recursion.
+	isEndOfTraversal := (direction == LeftDirection && (len(s.Seq) >= extension || len(n.Prev) == 0)) ||
+		(direction == RightDirection && (len(s.Seq) >= extension || len(n.Next) == 0))
+
+	if isEndOfTraversal {
+		// Perform dynamic alignment at the end of traversal.
+		score, alignment, targetStart, queryStart = DynamicAln(s.Seq, read, scores, matrix, -600, dynamicScore, direction)
+		if direction == RightDirection {
+			targetStart += position // Adjust target start for right direction.
 		}
-	} else {
-		if len(s.Seq) >= extension || len(n.Next) == 0 {
-			score, alignment, targetStart, queryStart = DynamicAln(s.Seq, read, scores, matrix, -600, dynamicScore, RightDirection)
-			targetStart += position
-		} else {
-			score = math.MinInt64
-			for _, nextNode := range n.Next {
-				route, currScore, targetEnd, queryEnd, path := AlignGraphTraversal(nextNode.Dest, s.Seq, 0, s.Path, extension, read, scores, matrix, sk, dynamicScore, pool, RightDirection)
-				if currScore > score {
-					score, alignment, sk.targetEnd, sk.queryEnd, sk.rightPath = currScore, route, targetEnd, queryEnd, path
-				}
-			}
+		return alignment, score, targetStart, queryStart, append([]uint32(nil), s.Path...)
+	}
+
+	// Recursive case: traverse next or previous nodes based on direction.
+	score = math.MinInt64
+	nodes := n.Next
+	if direction == LeftDirection {
+		nodes = n.Prev
+	}
+	for _, edge := range nodes {
+		route, currScore, end, start, path := AlignGraphTraversal(edge.Dest, s.Seq, 0, s.Path, extension, read, scores, matrix, sk, dynamicScore, pool, direction)
+		if currScore > score {
+			// Update alignment details if current score is better.
+			score, alignment, targetStart, queryStart = currScore, route, end, start
+			s.Path = path
 		}
 	}
 
-	return alignment, score, targetStart, queryStart, s.Path
+	// Adjust the target start for left direction after all recursive calls.
+	if direction == LeftDirection {
+		targetStart = position - len(s.Seq) + targetStart
+		cigar.ReverseBytesCigar(alignment)
+		ReversePath(s.Path)
+	} else {
+		targetStart += position // Adjust for right direction.
+	}
+
+	return alignment, score, targetStart, queryStart, append([]uint32(nil), s.Path...)
 }
 
 // DynamicAln performs dynamic programming alignment with traceback, adaptable for both leftward and rightward directions.
-func DynamicAln(alpha, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gapPen int64, dynamicScore dynamicScoreKeeper, direction byte) (int64, []cigar.ByteCigar, int, int) {
-	resetDynamicScore(dynamicScore)
-	var i, j int
-	var rows, columns = len(alpha), len(beta)
+func DynamicAln(alpha, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gapPen int64, dynamicScore *dynamicScoreKeeper, direction byte) (int64, []cigar.ByteCigar, int, int) {
+	dynamicScore.currMax = 0 // Reset the current max score.
 
-	// Initialize the matrix's first row and column based on gap penalties.
-	for i = 0; i <= rows; i++ {
+	// Initialize the first row and column based on gap penalties.
+	for i := 0; i <= len(alpha); i++ {
 		matrix.m[i][0] = int64(i) * gapPen
-		matrix.trace[i][0] = 'D' // Deletion
+		matrix.trace[i][0] = 'D' // Indicate a deletion.
 	}
-	for j = 1; j <= columns; j++ {
+	for j := 1; j <= len(beta); j++ {
 		matrix.m[0][j] = int64(j) * gapPen
-		matrix.trace[0][j] = 'I' // Insertion
+		matrix.trace[0][j] = 'I' // Indicate an insertion.
 	}
 
-	// Fill the matrix using dynamic programming.
-	for i = 1; i <= rows; i++ {
-		for j = 1; j <= columns; j++ {
-			matchScore := matrix.m[i-1][j-1] + scores[alpha[i-1]][beta[j-1]]
-			insertScore := matrix.m[i][j-1] + gapPen
-			deleteScore := matrix.m[i-1][j] + gapPen
+	// Fill in the scoring and traceback matrices.
+	for i := 1; i <= len(alpha); i++ {
+		for j := 1; j <= len(beta); j++ {
+			matchOrMismatch := matrix.m[i-1][j-1] + scores[alpha[i-1]][beta[j-1]]
+			deletion := matrix.m[i-1][j] + gapPen
+			insertion := matrix.m[i][j-1] + gapPen
 
-			matrix.m[i][j], matrix.trace[i][j] = maxScore(matchScore, insertScore, deleteScore)
+			// Choose the best score.
+			if matchOrMismatch >= deletion && matchOrMismatch >= insertion {
+				matrix.m[i][j] = matchOrMismatch
+				matrix.trace[i][j] = 'M'
+			} else if deletion > insertion {
+				matrix.m[i][j] = deletion
+				matrix.trace[i][j] = 'D'
+			} else {
+				matrix.m[i][j] = insertion
+				matrix.trace[i][j] = 'I'
+			}
 
-			// Update the maximum score and its position.
+			// Update the current maximum score.
 			if matrix.m[i][j] > dynamicScore.currMax {
 				dynamicScore.currMax = matrix.m[i][j]
 				dynamicScore.i, dynamicScore.j = i, j
@@ -215,9 +237,26 @@ func DynamicAln(alpha, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gap
 		}
 	}
 
-	// Traceback to construct the alignment.
-	alignment, alignStartI, alignStartJ := traceback(matrix, dynamicScore, direction)
-	return matrix.m[dynamicScore.i][dynamicScore.j], alignment, alignStartI, alignStartJ
+	// Traceback from the maximum score's position to build the alignment.
+	alignment := make([]cigar.ByteCigar, 0)
+	i, j := dynamicScore.i, dynamicScore.j
+	for i > 0 && j > 0 {
+		switch matrix.trace[i][j] {
+		case 'M':
+			alignment = cigar.AddCigarByte(alignment, cigar.ByteCigar{RunLen: 1, Op: 'M'})
+			i--
+			j--
+		case 'I':
+			alignment = cigar.AddCigarByte(alignment, cigar.ByteCigar{RunLen: 1, Op: 'I'})
+			j--
+		case 'D':
+			alignment = cigar.AddCigarByte(alignment, cigar.ByteCigar{RunLen: 1, Op: 'D'})
+			i--
+		}
+	}
+
+	// Prepend soft clips if necessary (not shown here, depends on alignment strategy).
+	return dynamicScore.currMax, alignment, dynamicScore.i, dynamicScore.j
 }
 
 // maxScore selects the maximum score and corresponding trace for dynamic programming.

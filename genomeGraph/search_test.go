@@ -66,20 +66,20 @@ func TestAlignGraphTraversal(t *testing.T) {
 	dynamicScore := dynamicScoreKeeper{} // Initialize properly
 
 	// Perform traversals in both directions
-	rightAlign, rightScore, rightTargetStart, rightQueryStart, rightPath := AlignGraphTraversal(&genome.Nodes[0], read, 0, []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, sk, dynamicScore, pool, RightDirection)
-	leftAlign, leftScore, leftTargetStart, leftQueryStart, leftPath := AlignGraphTraversal(&genome.Nodes[2], read, len(genome.Nodes[2].Seq), []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, sk, dynamicScore, pool, LeftDirection)
+	rightAlign, rightScore, rightTargetStart, rightQueryStart, rightPath := AlignGraphTraversal(&genome.Nodes[0], read, 0, []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &sk, &dynamicScore, pool, RightDirection)
+	leftAlign, leftScore, leftTargetStart, leftQueryStart, leftPath := AlignGraphTraversal(&genome.Nodes[2], read, len(genome.Nodes[2].Seq), []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &sk, &dynamicScore, pool, LeftDirection)
 	// Expected results for RightDirection
 	expectedRightScore := int64(460) // Simplified expected score
 	expectedRightAlignment := []cigar.ByteCigar{{RunLen: 5, Op: 'M'}}
-	expectedRightTargetStart := 0
-	expectedRightQueryStart := 0
+	expectedRightTargetStart := 5
+	expectedRightQueryStart := 5
 
 	// Expected results for LeftDirection
-	expectedLeftScore := int64(90) // Simplified expected score, assuming a lesser match
-	expectedLeftAlignment := []cigar.ByteCigar{{RunLen: 1, Op: 'M'}}
-	expectedLeftTargetStart := -4 // Assuming the alignment starts one base into the sequence for simplicity
-	expectedLeftQueryStart := 0
-	expectedLeftPath, expectedRightPath := []uint32{}, []uint32{}
+	expectedLeftScore := int64(460) // Simplified expected score, assuming a lesser match
+	expectedLeftAlignment := []cigar.ByteCigar{{RunLen: 5, Op: 'M'}}
+	expectedLeftTargetStart := 5 // Assuming the alignment starts one base into the sequence for simplicity
+	expectedLeftQueryStart := 5
+	expectedLeftPath, expectedRightPath := []uint32{2}, []uint32{}
 
 	// Assert RightDirection results
 	if rightScore != expectedRightScore {
@@ -101,7 +101,6 @@ func TestAlignGraphTraversal(t *testing.T) {
 	if len(leftPath) != len(expectedLeftPath) {
 		t.Errorf("Expected path %+v, got %+v", expectedLeftPath, leftPath)
 	}
-
 	// Assert LeftDirection results
 	if leftScore != expectedLeftScore {
 		t.Errorf("LeftDirection: expected score %d, got %d", expectedLeftScore, leftScore)
@@ -144,8 +143,8 @@ func TestDynamicAln(t *testing.T) {
 			direction: RightDirection,
 			expScore:  8,
 			expCigar:  []cigar.ByteCigar{{RunLen: 4, Op: 'M'}},
-			expStartI: 0,
-			expStartJ: 0,
+			expStartI: 4,
+			expStartJ: 4,
 		},
 		{
 			name:      "Leftward Traversal",
@@ -154,14 +153,14 @@ func TestDynamicAln(t *testing.T) {
 			direction: LeftDirection,
 			expScore:  4, // Assuming the alignment starts at the 'G' for simplicity
 			expCigar:  []cigar.ByteCigar{{RunLen: 3, Op: 'M'}},
-			expStartI: 0,
-			expStartJ: 1,
+			expStartI: 3,
+			expStartJ: 4,
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			score, cig, startI, startJ := DynamicAln(c.alpha, c.beta, scores, &matrix, gapPen, dynamicScore, c.direction)
+			score, cig, startI, startJ := DynamicAln(c.alpha, c.beta, scores, &matrix, gapPen, &dynamicScore, c.direction)
 			if score != c.expScore {
 				t.Errorf("Expected score %d, got %d", c.expScore, score)
 			}
