@@ -1,16 +1,16 @@
 package genomeGraph
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/sam"
-	"log"
 	"os"
 	"runtime/pprof"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/sam"
 )
 
 const Profile int = 0
@@ -25,32 +25,24 @@ func TestQuickMemPool(t *testing.T) {
 	var numWorkers int = 1
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 
-	log.Printf("Reading in the genome (simple graph)...\n")
-	//genome := Read("testdata/bigGenome.sg")
-	//genome := Read("testdata/rabsBepaChrI.gg")
-	//genome := Read("testdata/tiny.gg")
+	t.Logf("Reading in the genome (simple graph)...\n")
+
 	genome := Read("testdata/mini.gg")
 
-	log.Printf("Indexing the genome...\n")
+	t.Logf("Indexing the genome...\n")
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
-	log.Printf("Making fastq channel...\n")
 	fastqPipe := make(chan fastq.FastqBig, 824)
 
-	log.Printf("Making sam channel...\n")
 	samPipe := make(chan sam.Sam, 824)
 
-	log.Printf("Simulating reads...\n")
 	simReads := RandomReads(genome, readLength, numberOfReads, mutations)
 	fastq.Write("testdata/simReads.fq", simReads)
-
-	//header := NodesHeader(genome.Nodes)
 
 	go fastq.ReadBigToChan("testdata/simReads.fq", fastqPipe)
 	writerWaiter.Add(1)
 	go sam.WriteFromChan(samPipe, "testdata/sim.sam", sam.Header{}, &writerWaiter)
 
-	log.Printf("Starting alignment worker...\n")
 	time.Sleep(5 * time.Second)
 
 	if Profile > 0 {
@@ -71,11 +63,11 @@ func TestQuickMemPool(t *testing.T) {
 	pprof.StopCPUProfile()
 	close(samPipe)
 
-	log.Printf("Aligners finished and channel closed\n")
 	writerWaiter.Wait()
-	log.Printf("Sam writer finished and we are all done\n")
+
 	duration := stop.Sub(start)
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
+	t.Logf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
+
 	fileio.EasyRemove("testdata/simReads.fq")
 	fileio.EasyRemove("testdata/sim.sam")
 }

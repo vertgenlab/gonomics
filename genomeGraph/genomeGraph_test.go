@@ -1,7 +1,6 @@
 package genomeGraph
 
 import (
-	"log"
 	"sync"
 	"testing"
 	"time"
@@ -15,32 +14,24 @@ func TestWorkerWithWriting(t *testing.T) {
 	var output string = "testdata/pairedTest.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 100
+	var numberOfReads int = 10
 	var readLength int = 150
-	var mutations int = 0
+	var mutations int = 10
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 8
+	var numWorkers int = 6
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	genome := Read("testdata/bigGenome.sg")
-	log.Printf("Reading in the genome (simple graph)...\n")
-	log.Printf("Indexing the genome...\n")
-	log.Printf("Making fastq channel...\n")
-	fastqPipe := make(chan fastq.PairedEndBig, 824)
 
-	log.Printf("Making sam channel...\n")
-	samPipe := make(chan giraf.GirafPair, 824)
-
-	log.Printf("Simulating reads...\n")
+	fastqPipe := make(chan fastq.PairedEndBig, numWorkers)
+	samPipe := make(chan giraf.GirafPair, numWorkers)
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
-	//os.Remove("testdata/simReads_R1.fq")
-	//os.Remove("testdata/simReads_R2.fq")
+
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 	go fastq.ReadPairBigToChan("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
-	log.Printf("Finished Indexing Genome...\n")
+
 	start := time.Now()
 
-	log.Printf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
 		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, samPipe, &workerWaiter)
@@ -49,16 +40,60 @@ func TestWorkerWithWriting(t *testing.T) {
 	writerWaiter.Add(1)
 	workerWaiter.Wait()
 	close(samPipe)
-	log.Printf("Aligners finished and channel closed\n")
 	writerWaiter.Wait()
-	log.Printf("Sam writer finished and we are all done\n")
+
 	stop := time.Now()
 	duration := stop.Sub(start)
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+	t.Logf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration/2, float64(len(simReads)*2)/duration.Seconds())
+
 	fileio.EasyRemove("testdata/simReads_R1.fq")
 	fileio.EasyRemove("testdata/simReads_R2.fq")
 	fileio.EasyRemove("testdata/pairedTest.giraf")
 }
+
+// func validateAlign(aln giraf.Giraf, genome *GenomeGraph) bool {
+// 	qName := strings.Split(aln.QName, "_")
+
+// 	if len(aln.Cigar) < 1 {
+// 		return false
+// 	}
+
+// 	targetStart := aln.Path.TStart
+// 	targetEnd := aln.Path.TEnd
+// 	//if len(aln.Aln) < 1 {
+// 	if aln.Cigar[0].Op == 'S' {
+// 		//log.Printf("%s\n", giraf.GirafToString(aln))
+// 		targetStart = targetStart - int(aln.Cigar[0].RunLen)
+// 	}
+// 	if aln.Cigar[len(aln.Cigar)-1].Op == 'S' {
+// 		targetEnd = targetEnd + int(aln.Cigar[len(aln.Cigar)-1].RunLen)
+
+// 		//}
+// 	}
+// 	if parse.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && parse.StringToInt(qName[1]) == targetStart && targetEnd == parse.StringToInt(qName[3]) {
+// 		//log.Printf("%s\n", giraf.GirafToString(aln))
+// 		//log.Printf("Results: %d != %d or %d != %d\n", headNode, aln.Path.Nodes[0], startPos, aln.Path.TStart)
+// 		//	log.Printf("%s\n", giraf.GirafToString(aln))
+// 		return true
+// 	} else {
+// 		//log.Printf("endPos=%d, right side cigar runLength: %d\n", endPos, aln.Aln[len(aln.Aln)-1].RunLen)
+// 		//log.Printf("%s\n", giraf.GirafToString(aln))
+// 		//log.Printf("Error: this read is not aligning correctly...\n")
+// 	}
+// 	return false
+// }
+
+// func expectedEqual(input <-chan giraf.GirafPair, genome *GenomeGraph, wg *sync.WaitGroup) bool {
+// 	for pair := range input {
+// 		if !validateAlign(pair.Fwd, genome) || !validateAlign(pair.Rev, genome) {
+// 			return false
+// 		} else {
+// 			log.Printf("")
+// 		}
+// 	}
+// 	wg.Done()
+// 	return true
+// }
 
 /*
 func TestHippoAln(t *testing.T) {
