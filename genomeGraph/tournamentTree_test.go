@@ -197,3 +197,73 @@ func seedEqual(a, b *SeedDev) bool {
 		a.TotalLength == b.TotalLength &&
 		((a.NextPart == nil && b.NextPart == nil) || (a.NextPart != nil && b.NextPart != nil && seedEqual(a.NextPart, b.NextPart)))
 }
+
+func TestProcessStrand(t *testing.T) {
+	// Mock seedHash
+	chr0, chr1 := dna.StringToBases("ATCGATCG"), dna.StringToBases("ATTTTTTT")
+	target := [][]dna.Base{chr0, chr1}
+	query := dna.StringToBases("ATTT")
+
+	keyIdx := (0 + 31) / 32
+	keyOffset := 31 - ((0 + 31) % 32)
+
+	headNode := Node{
+		Id:        1,
+		SeqTwoBit: dnaTwoBit.NewTwoBit(target[1]),
+		Prev:      nil,
+	}
+
+	// Main node where the seed initially matches
+	nextNode := Node{
+		Id:        1,
+		SeqTwoBit: dnaTwoBit.NewTwoBit(query),
+		Prev: []Edge{ // Connection from the main node to the previous node
+			{
+				Dest: &headNode,
+			},
+		},
+	}
+
+	nodes := []Node{
+		headNode, nextNode,
+	}
+
+	read := fastq.FastqBig{
+		Name:    "read1",
+		Seq:     query,
+		Rainbow: dnaTwoBit.TwoBitRainbowDeReference(query),
+	}
+
+	read.SeqRc = make([]dna.Base, len(read.Seq))
+
+	copy(read.SeqRc, read.Seq)
+	dna.ReverseComplement(read.SeqRc)
+	read.RainbowRc = dnaTwoBit.TwoBitRainbowDeReference(read.SeqRc)
+	finalSeeds := []*SeedDev{}
+
+	keyShift := uint(0)
+
+	fwd, rev := read.Rainbow[keyOffset].Seq[keyIdx]>>keyShift, read.RainbowRc[keyOffset].Seq[keyIdx]>>keyShift
+	seedHash := map[uint64][]uint64{
+		fwd: {ChromAndPosToNumber(0, 0)},
+		rev: {ChromAndPosToNumber(1, 0)},
+	}
+
+	processStrand(seedHash, nodes, read, 6, &finalSeeds, 0, uint(0))
+	// Define the expected finalSeeds
+	expectedFinalSeeds := []*SeedDev{
+		{
+			TargetId:    1,
+			TargetStart: 0,
+			QueryStart:  0,
+			Length:      4,
+			PosStrand:   true,
+			TotalLength: 4,
+			NextPart:    nil,
+		},
+	}
+	// Validate results
+	if !compareSeeds(finalSeeds[0], expectedFinalSeeds[0]) {
+		t.Errorf("Error: Final seeds do not match expected result %v != %v", finalSeeds[0], expectedFinalSeeds[0])
+	}
+}

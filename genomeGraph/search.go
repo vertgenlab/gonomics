@@ -20,8 +20,8 @@ import (
 
 const (
 	defaultMatrixSize int  = 2480
-	LeftDirection     byte = 0
-	RightDirection    byte = 1
+	leftTraversal     byte = 0
+	rightTraversal    byte = 1
 )
 
 type memoryPool struct {
@@ -147,7 +147,7 @@ func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []ui
 
 	// Traverse node sequence and update the path accordingly.
 	s.Seq = nodeSeqTraversal(n, extension, position, seq, s.Seq, direction)
-	if direction == LeftDirection {
+	if direction == leftTraversal {
 		s.Path = append(s.Path, n.Id) // Add node ID for left direction.
 	}
 
@@ -157,13 +157,13 @@ func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []ui
 	var targetStart, queryStart int
 
 	// Check termination condition for recursion.
-	isEndOfTraversal := (direction == LeftDirection && (len(s.Seq) >= extension || len(n.Prev) == 0)) ||
-		(direction == RightDirection && (len(s.Seq) >= extension || len(n.Next) == 0))
+	isEndOfTraversal := (direction == leftTraversal && (len(s.Seq) >= extension || len(n.Prev) == 0)) ||
+		(direction == rightTraversal && (len(s.Seq) >= extension || len(n.Next) == 0))
 
 	if isEndOfTraversal {
 		// Perform dynamic alignment at the end of traversal.
 		score, alignment, targetStart, queryStart = DynamicAln(s.Seq, read, scores, matrix, -600, dynamicScore, direction)
-		if direction == RightDirection {
+		if direction == rightTraversal {
 			targetStart += position // Adjust target start for right direction.
 		}
 		return alignment, score, targetStart, queryStart, append([]uint32(nil), s.Path...)
@@ -172,7 +172,7 @@ func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []ui
 	// Recursive case: traverse next or previous nodes based on direction.
 	score = math.MinInt64
 	nodes := n.Next
-	if direction == LeftDirection {
+	if direction == leftTraversal {
 		nodes = n.Prev
 	}
 	for _, edge := range nodes {
@@ -185,7 +185,7 @@ func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []ui
 	}
 
 	// Adjust the target start for left direction after all recursive calls.
-	if direction == LeftDirection {
+	if direction == leftTraversal {
 		targetStart = position - len(s.Seq) + targetStart
 		cigar.ReverseBytesCigar(alignment)
 		ReversePath(s.Path)
@@ -196,23 +196,24 @@ func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []ui
 	return alignment, score, targetStart, queryStart, append([]uint32(nil), s.Path...)
 }
 
-// DynamicAln performs dynamic programming alignment with traceback, adaptable for both leftward and rightward directions.
+// DynamicAln performs dynamic programming-based sequence alignment by traversing a graph of nodes
 func DynamicAln(alpha, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gapPen int64, dynamicScore *dynamicScoreKeeper, direction byte) (int64, []cigar.ByteCigar, int, int) {
 	dynamicScore.currMax = 0 // Reset the current max score.
-
+	var i, j int
+	var rows, columns int = len(alpha), len(beta)
 	// Initialize the first row and column based on gap penalties.
-	for i := 0; i <= len(alpha); i++ {
+	for i = 1; i <= rows; i++ {
 		matrix.m[i][0] = int64(i) * gapPen
 		matrix.trace[i][0] = 'D' // Indicate a deletion.
 	}
-	for j := 1; j <= len(beta); j++ {
+	for j = 1; j <= columns; j++ {
 		matrix.m[0][j] = int64(j) * gapPen
 		matrix.trace[0][j] = 'I' // Indicate an insertion.
 	}
 
 	// Fill in the scoring and traceback matrices.
-	for i := 1; i <= len(alpha); i++ {
-		for j := 1; j <= len(beta); j++ {
+	for i = 1; i <= rows; i++ {
+		for j = 1; j <= columns; j++ {
 			matchOrMismatch := matrix.m[i-1][j-1] + scores[alpha[i-1]][beta[j-1]]
 			deletion := matrix.m[i-1][j] + gapPen
 			insertion := matrix.m[i][j-1] + gapPen
@@ -220,13 +221,13 @@ func DynamicAln(alpha, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gap
 			// Choose the best score.
 			if matchOrMismatch >= deletion && matchOrMismatch >= insertion {
 				matrix.m[i][j] = matchOrMismatch
-				matrix.trace[i][j] = 'M'
+				matrix.trace[i][j] = cigar.Match
 			} else if deletion > insertion {
 				matrix.m[i][j] = deletion
-				matrix.trace[i][j] = 'D'
+				matrix.trace[i][j] = cigar.Deletion
 			} else {
 				matrix.m[i][j] = insertion
-				matrix.trace[i][j] = 'I'
+				matrix.trace[i][j] = cigar.Insertion
 			}
 
 			// Update the current maximum score.
@@ -239,48 +240,7 @@ func DynamicAln(alpha, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gap
 
 	// Traceback from the maximum score's position to build the alignment.
 	alignment := make([]cigar.ByteCigar, 0)
-	i, j := dynamicScore.i, dynamicScore.j
-	for i > 0 && j > 0 {
-		switch matrix.trace[i][j] {
-		case 'M':
-			alignment = cigar.AddCigarByte(alignment, cigar.ByteCigar{RunLen: 1, Op: 'M'})
-			i--
-			j--
-		case 'I':
-			alignment = cigar.AddCigarByte(alignment, cigar.ByteCigar{RunLen: 1, Op: 'I'})
-			j--
-		case 'D':
-			alignment = cigar.AddCigarByte(alignment, cigar.ByteCigar{RunLen: 1, Op: 'D'})
-			i--
-		}
-	}
-
-	// Prepend soft clips if necessary (not shown here, depends on alignment strategy).
-	return dynamicScore.currMax, alignment, dynamicScore.i, dynamicScore.j
-}
-
-// maxScore selects the maximum score and corresponding trace for dynamic programming.
-func maxScore(matchScore, insertScore, deleteScore int64) (int64, byte) {
-	maxScore := matchScore
-	trace := cigar.Match
-	if insertScore > maxScore {
-		maxScore = insertScore
-		trace = cigar.Insertion // Insertion
-	}
-	if deleteScore > maxScore {
-		maxScore = deleteScore
-		trace = cigar.Deletion // Deletion
-	}
-	return maxScore, trace
-}
-
-// traceback constructs the alignment from the dynamic programming matrix, starting from the maximum score position.
-func traceback(matrix *MatrixAln, dynamicScore dynamicScoreKeeper, direction byte) ([]cigar.ByteCigar, int, int) {
-	var alignment []cigar.ByteCigar
-	i, j := dynamicScore.i, dynamicScore.j
-
-	// The traceback process might be adjusted based on the alignment direction.
-	// For the sake of this example, assume it's the same for both directions.
+	i, j = dynamicScore.i, dynamicScore.j
 	for i > 0 && j > 0 {
 		switch matrix.trace[i][j] {
 		case cigar.Match:
@@ -295,20 +255,13 @@ func traceback(matrix *MatrixAln, dynamicScore dynamicScoreKeeper, direction byt
 			i--
 		}
 	}
-
-	// For leftward alignment, additional adjustments might be needed.
-	if direction == LeftDirection {
-		// Adjust alignment start indices if needed.
-		i, j = adjustAlignmentStart(matrix, i, j)
-
-	}
-
-	return alignment, i, j // Return the starting indices of the alignment for further processing.
+	// Prepend soft clips if necessary (not shown here, depends on alignment strategy).
+	return dynamicScore.currMax, alignment, dynamicScore.i, dynamicScore.j
 }
 
 func nodeSeqTraversal(n *Node, extension int, position int, seq, ans []dna.Base, direction byte) []dna.Base {
 	switch direction {
-	case LeftDirection:
+	case leftTraversal:
 		startPos := position - extension
 		if startPos < 0 {
 			startPos = 0
@@ -321,7 +274,7 @@ func nodeSeqTraversal(n *Node, extension int, position int, seq, ans []dna.Base,
 		// Combine sequences.
 		ans = append(ans, n.Seq[startPos:endPos]...)
 		ans = append(ans, seq...)
-	case RightDirection:
+	case rightTraversal:
 		endPos := position + extension
 		if endPos > len(n.Seq) {
 			endPos = len(n.Seq)
@@ -331,18 +284,6 @@ func nodeSeqTraversal(n *Node, extension int, position int, seq, ans []dna.Base,
 		ans = append(ans, n.Seq[position:endPos]...)
 	}
 	return ans
-}
-
-// adjustAlignmentStart finds the starting indices of the alignment by tracing back from the given indices until a non-positive score is encountered
-func adjustAlignmentStart(matrix *MatrixAln, i, j int) (int, int) {
-	for i > 0 && j > 0 && matrix.m[i][j] > 0 {
-		switch matrix.trace[i][j] {
-		case cigar.Match, cigar.Insertion, cigar.Deletion:
-			i--
-			j--
-		}
-	}
-	return i, j
 }
 
 func ReversePath(alpha []uint32) {

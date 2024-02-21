@@ -20,8 +20,8 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	var currScore int64 = 0
 	perfectScore := perfectMatchBig(read, scoreMatrix)
 
-	var seeds []*SeedDev
-	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
+	seeds := findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
+
 	SortSeedDevByLen(seeds)
 	var tailSeed *SeedDev
 	var seedScore int64
@@ -37,7 +37,6 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			currSeq = read.SeqRc
 		}
 		if int(currSeed.TotalLength) == len(currSeq) {
-			currScore = seedScore
 			leftScore = 0
 			minTarget = int(currSeed.TargetStart)
 			minQuery = int(currSeed.QueryStart)
@@ -71,13 +70,19 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 
 // TODO: what about neg strand?
 func perfectMatchBig(read fastq.FastqBig, scoreMatrix [][]int64) int64 {
-	var perfectScore int64 = 0
-	for i := 0; i < len(read.Seq); i++ {
-		perfectScore += scoreMatrix[read.Seq[i]][read.Seq[i]]
+	var fwdScore, revScore int64 = 0, 0
+	for i, j := 0, len(read.Seq)-1; i <= j; i, j = i+1, j-1 {
+		fwdScore = scoreMatrix[read.Seq[i]][read.Seq[i]]
+		revScore = scoreMatrix[dna.ComplementSingleBase(read.Seq[j])][dna.ComplementSingleBase(read.Seq[j])]
 	}
-	return perfectScore
+	if fwdScore > revScore {
+		return fwdScore
+	} else {
+		return revScore
+	}
 }
 
+// scoreSeedSeq calculates the score of a seed sequence within a given range.
 func scoreSeedSeq(seq []dna.Base, start uint32, end uint32, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
 	for i := start; i < end; i++ {
@@ -86,22 +91,10 @@ func scoreSeedSeq(seq []dna.Base, start uint32, end uint32, scoreMatrix [][]int6
 	return score
 }
 
-func scoreSeedFastqBig(seed *SeedDev, read fastq.FastqBig, scoreMatrix [][]int64) int64 {
-	var score int64 = 0
-	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
-		if seed.PosStrand {
-			score += scoreMatrix[read.Seq[i]][read.Seq[i]]
-		} else {
-			score += scoreMatrix[read.SeqRc[i]][read.SeqRc[i]]
-		}
-	}
-	return score
-}
-
 func scoreSeedPart(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
-	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
-		score += scoreMatrix[read.Seq[i]][read.Seq[i]]
+	for _, base := range read.Seq[seed.QueryStart : seed.QueryStart+seed.Length] {
+		score += scoreMatrix[base][base]
 	}
 	return score
 }
@@ -139,26 +132,14 @@ func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
 	}
 }
 
-// perfect match.
 func perfectMatch(read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var perfectScore int64 = 0
-	for i := 0; i < len(read.Seq); i++ {
-		perfectScore += scoreMatrix[read.Seq[i]][read.Seq[i]]
+	seq := read.Seq
+	for _, base := range seq {
+		perfectScore += scoreMatrix[base][base]
 	}
 	return perfectScore
 }
-
-/*func NodesHeader(ref []*Node) *sam.Header {
-	var header sam.Header
-	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
-	var words string
-	for i := 0; i < len(ref); i++ {
-		words = fmt.Sprintf("@SQ\tSN:%s_%d\tLN:%d", ref[i].Name, ref[i].Id, len(ref[i].Seq))
-		header.Text = append(header.Text, words)
-		header.Chroms = append(header.Chroms, &chromInfo.ChromInfo{Name: ref[i].Name, Size: len(ref[i].Seq)})
-	}
-	return &header
-}*/
 
 func ChromAndPosToNumber(chrom int, start int) uint64 {
 	var chromCode uint64 = uint64(chrom)

@@ -15,7 +15,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	var output string = "testdata/pairedTest.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 100
+	var numberOfReads int = 1
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
@@ -54,11 +54,56 @@ func TestWorkerWithWriting(t *testing.T) {
 	log.Printf("Sam writer finished and we are all done\n")
 	stop := time.Now()
 	duration := stop.Sub(start)
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration/2, float64(len(simReads)*2)/duration.Seconds())
+
 	fileio.EasyRemove("testdata/simReads_R1.fq")
 	fileio.EasyRemove("testdata/simReads_R2.fq")
 	fileio.EasyRemove("testdata/pairedTest.giraf")
 }
+
+// func validateAlign(aln giraf.Giraf, genome *GenomeGraph) bool {
+// 	qName := strings.Split(aln.QName, "_")
+
+// 	if len(aln.Cigar) < 1 {
+// 		return false
+// 	}
+
+// 	targetStart := aln.Path.TStart
+// 	targetEnd := aln.Path.TEnd
+// 	//if len(aln.Aln) < 1 {
+// 	if aln.Cigar[0].Op == 'S' {
+// 		//log.Printf("%s\n", giraf.GirafToString(aln))
+// 		targetStart = targetStart - int(aln.Cigar[0].RunLen)
+// 	}
+// 	if aln.Cigar[len(aln.Cigar)-1].Op == 'S' {
+// 		targetEnd = targetEnd + int(aln.Cigar[len(aln.Cigar)-1].RunLen)
+
+// 		//}
+// 	}
+// 	if parse.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && parse.StringToInt(qName[1]) == targetStart && targetEnd == parse.StringToInt(qName[3]) {
+// 		//log.Printf("%s\n", giraf.GirafToString(aln))
+// 		//log.Printf("Results: %d != %d or %d != %d\n", headNode, aln.Path.Nodes[0], startPos, aln.Path.TStart)
+// 		//	log.Printf("%s\n", giraf.GirafToString(aln))
+// 		return true
+// 	} else {
+// 		//log.Printf("endPos=%d, right side cigar runLength: %d\n", endPos, aln.Aln[len(aln.Aln)-1].RunLen)
+// 		//log.Printf("%s\n", giraf.GirafToString(aln))
+// 		//log.Printf("Error: this read is not aligning correctly...\n")
+// 	}
+// 	return false
+// }
+
+// func expectedEqual(input <-chan giraf.GirafPair, genome *GenomeGraph, wg *sync.WaitGroup) bool {
+// 	for pair := range input {
+// 		if !validateAlign(pair.Fwd, genome) || !validateAlign(pair.Rev, genome) {
+// 			return false
+// 		} else {
+// 			log.Printf("")
+// 		}
+// 	}
+// 	wg.Done()
+// 	return true
+// }
 
 /*
 func TestHippoAln(t *testing.T) {

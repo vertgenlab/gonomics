@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
@@ -36,7 +38,7 @@ func BenchmarkGsw(b *testing.B) {
 	var output string = "testdata/pairedTest.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 5000
+	var numberOfReads int = 500
 	var readLength int = 150
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
@@ -155,4 +157,92 @@ func isGirafPairCorrect(input <-chan giraf.GirafPair, genome *GenomeGraph, wg *s
 	log.Printf("%f of the reads are mapping correctly\n", percentOfFloat(numReads-unmapped, numReads))
 
 	wg.Done()
+}
+
+func TestAddSClip(t *testing.T) {
+	// Test case 1: runLen < lengthOfRead
+	cig := []cigar.Cigar{
+		{RunLength: 10, Op: 'M'},
+		{RunLength: 5, Op: 'D'},
+		{RunLength: 15, Op: 'M'},
+	}
+	expected := []cigar.Cigar{
+		{RunLength: 5, Op: 'S'},
+		{RunLength: 10, Op: 'M'},
+		{RunLength: 5, Op: 'D'},
+		{RunLength: 15, Op: 'M'},
+	}
+	result := AddSClip(5, 30, cig)
+	if !cigarSliceEqual(result, expected) {
+		t.Errorf("Test case 1 failed: expected %v, got %v", expected, result)
+	}
+
+	// Test case 2: runLen >= lengthOfRead
+	cig = []cigar.Cigar{
+		{RunLength: 10, Op: 'M'},
+		{RunLength: 5, Op: 'D'},
+		{RunLength: 15, Op: 'M'},
+	}
+	expected = cig
+	result = AddSClip(5, 20, cig)
+	if !cigarSliceEqual(result, expected) {
+		t.Errorf("Test case 2 failed: expected %v, got %v", expected, result)
+	}
+}
+
+func cigarSliceEqual(a, b []cigar.Cigar) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func TestPerfectMatchBig(t *testing.T) {
+
+	// Test case 1: Perfect match
+	read := fastq.FastqBig{
+		Seq: dna.StringToBases("ACGT"),
+	}
+	expected := int64(100)
+	result := perfectMatchBig(read, HumanChimpTwoScoreMatrix)
+	if result != expected {
+		t.Errorf("Test case 1 failed: expected %d, got %d", expected, result)
+	}
+
+	// Test case 2: Reverse complement match
+	read = fastq.FastqBig{
+		Seq: dna.StringToBases("TGCA"),
+	}
+	expected = int64(100)
+	result = perfectMatchBig(read, HumanChimpTwoScoreMatrix)
+	if result != expected {
+		t.Errorf("Test case 2 failed: expected %d, got %d", expected, result)
+	}
+
+	// Test case 3: Mismatch
+	read = fastq.FastqBig{
+		Seq: dna.StringToBases("ACTT"),
+	}
+
+	expected = int64(90)
+	result = perfectMatchBig(read, HumanChimpTwoScoreMatrix)
+	if result != expected {
+		t.Errorf("Test case 3 failed: expected %d, got %d", expected, result)
+	}
+
+	// Test case 3: Mismatch
+	read = fastq.FastqBig{
+		Seq: dna.StringToBases("AAA"),
+	}
+
+	expected = int64(180)
+	result = perfectMatchBig(read, HumanChimpTwoScoreMatrix)
+	if result != expected {
+		t.Errorf("Test case 4 failed: expected %d, got %d", expected, result)
+	}
 }

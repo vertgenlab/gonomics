@@ -66,8 +66,8 @@ func TestAlignGraphTraversal(t *testing.T) {
 	dynamicScore := dynamicScoreKeeper{} // Initialize properly
 
 	// Perform traversals in both directions
-	rightAlign, rightScore, rightTargetStart, rightQueryStart, rightPath := AlignGraphTraversal(&genome.Nodes[0], read, 0, []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &sk, &dynamicScore, pool, RightDirection)
-	leftAlign, leftScore, leftTargetStart, leftQueryStart, leftPath := AlignGraphTraversal(&genome.Nodes[2], read, len(genome.Nodes[2].Seq), []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &sk, &dynamicScore, pool, LeftDirection)
+	rightAlign, rightScore, rightTargetStart, rightQueryStart, rightPath := AlignGraphTraversal(&genome.Nodes[0], read, 0, []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &sk, &dynamicScore, pool, rightTraversal)
+	leftAlign, leftScore, leftTargetStart, leftQueryStart, leftPath := AlignGraphTraversal(&genome.Nodes[2], read, len(genome.Nodes[2].Seq), []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &sk, &dynamicScore, pool, leftTraversal)
 	// Expected results for RightDirection
 	expectedRightScore := int64(460) // Simplified expected score
 	expectedRightAlignment := []cigar.ByteCigar{{RunLen: 5, Op: 'M'}}
@@ -140,7 +140,7 @@ func TestDynamicAln(t *testing.T) {
 			name:      "Rightward Traversal",
 			alpha:     dna.StringToBases("ACGT"),
 			beta:      dna.StringToBases("ACGT"),
-			direction: RightDirection,
+			direction: rightTraversal,
 			expScore:  8,
 			expCigar:  []cigar.ByteCigar{{RunLen: 4, Op: 'M'}},
 			expStartI: 4,
@@ -150,7 +150,7 @@ func TestDynamicAln(t *testing.T) {
 			name:      "Leftward Traversal",
 			alpha:     dna.StringToBases("ACGT"),
 			beta:      dna.StringToBases("GACG"),
-			direction: LeftDirection,
+			direction: leftTraversal,
 			expScore:  4, // Assuming the alignment starts at the 'G' for simplicity
 			expCigar:  []cigar.ByteCigar{{RunLen: 3, Op: 'M'}},
 			expStartI: 3,

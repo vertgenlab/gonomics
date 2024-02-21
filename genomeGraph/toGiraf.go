@@ -8,7 +8,6 @@ import (
 
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
@@ -28,13 +27,16 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 		Qual:      read.Qual,
 		Notes:     []giraf.Note{{Tag: []byte{'X', 'O'}, Type: 'Z', Value: "~"}},
 	}
-	resetScoreKeeper(sk)
+
 	sk.perfectScore = perfectMatchBig(read, scoreMatrix)
 	sk.extension = int(sk.perfectScore/600) + len(read.Seq)
 	seeds := seedPool.Get().(*memoryPool)
+	defer seedPool.Put(seeds)
+
 	seeds.Hits = seeds.Hits[:0]
 	seeds.Worker = seeds.Worker[:0]
 	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, seedLen, sk.perfectScore, scoreMatrix, seeds.Hits, seeds.Worker, seedBuildHelper)
+
 	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		sk.currSeed = seeds.Hits[i]
 		sk.tailSeed = *getLastPart(&sk.currSeed)
@@ -50,8 +52,8 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			sk.queryStart = int(sk.currSeed.QueryStart)
 			sk.currScore = sk.seedScore
 		} else {
-			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = AlignGraphTraversal(&gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[:sk.currSeed.QueryStart], scoreMatrix, matrix, &sk, &dynamicScore, dnaPool, LeftDirection)
-			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = AlignGraphTraversal(&gg.Nodes[sk.tailSeed.TargetId], sk.rightSeq, int(sk.tailSeed.TargetStart+sk.tailSeed.Length), sk.rightPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[sk.tailSeed.QueryStart+sk.tailSeed.Length:], scoreMatrix, matrix, &sk, &dynamicScore, dnaPool, RightDirection)
+			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = AlignGraphTraversal(&gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[:sk.currSeed.QueryStart], scoreMatrix, matrix, &sk, &dynamicScore, dnaPool, leftTraversal)
+			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = AlignGraphTraversal(&gg.Nodes[sk.tailSeed.TargetId], sk.rightSeq, int(sk.tailSeed.TargetStart+sk.tailSeed.Length), sk.rightPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[sk.tailSeed.QueryStart+sk.tailSeed.Length:], scoreMatrix, matrix, &sk, &dynamicScore, dnaPool, rightTraversal)
 			sk.currScore = sk.leftScore + sk.seedScore + sk.rightScore
 		}
 		if sk.currScore > int64(currBest.AlnScore) {
@@ -64,19 +66,11 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			currBest.Seq = sk.currSeq
 		}
 	}
-	seedPool.Put(seeds)
+
 	if !currBest.PosStrand {
 		fastq.ReverseQualUint8Record(currBest.Qual)
 	}
 	return &currBest
-}
-
-func readFastqGsw(fileOne string, fileTwo string, answer chan<- fastq.PairedEndBig) {
-	readOne, readTwo := fileio.NewByteReader(fileOne), fileio.NewByteReader(fileTwo)
-	for fq, done := fastq.ReadFqBigPair(readOne, readTwo); !done; fq, done = fastq.ReadFqBigPair(readOne, readTwo) {
-		answer <- fq
-	}
-	close(answer)
 }
 
 type ScoreMatrixHelper struct {
@@ -85,12 +79,6 @@ type ScoreMatrixHelper struct {
 	MinMatch                       int64
 	LeastSevereMismatch            int64
 	LeastSevereMatchMismatchChange int64
-}
-
-func getScoreMatrixHelp(scoreMatrix [][]int64) *ScoreMatrixHelper {
-	help := ScoreMatrixHelper{Matrix: scoreMatrix}
-	help.MaxMatch, help.MinMatch, help.LeastSevereMismatch, help.LeastSevereMatchMismatchChange = MismatchStats(scoreMatrix)
-	return &help
 }
 
 func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {

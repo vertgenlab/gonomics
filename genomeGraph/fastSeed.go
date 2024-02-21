@@ -2,7 +2,6 @@ package genomeGraph
 
 import (
 	"log"
-	"sort"
 )
 
 func printSeedDev(a []*SeedDev) {
@@ -12,7 +11,43 @@ func printSeedDev(a []*SeedDev) {
 }
 
 func SortSeedDevByLen(seeds []*SeedDev) {
-	sort.Slice(seeds, func(i, j int) bool { return CompareLenSeedDev(seeds[i], seeds[j]) == 1 })
+	stableSort(seeds, func(i, j int) bool { return CompareLenSeedDev(seeds[i], seeds[j]) == 1 })
+}
+
+func stableSort(a []*SeedDev, less func(i, j int) bool) {
+	n := len(a)
+	aux := make([]*SeedDev, n)
+	copy(aux, a)
+	mergeSort(a, aux, 0, n, less)
+}
+
+func mergeSort(a, aux []*SeedDev, lo, hi int, less func(i, j int) bool) {
+	if hi-lo <= 1 {
+		return
+	}
+	mid := lo + (hi-lo)/2
+	mergeSort(aux, a, lo, mid, less)
+	mergeSort(aux, a, mid, hi, less)
+	merge(a, aux, lo, mid, hi, less)
+}
+
+func merge(a, aux []*SeedDev, lo, mid, hi int, less func(i, j int) bool) {
+	i, j := lo, mid
+	for k := lo; k < hi; k++ {
+		if i == mid {
+			aux[k] = a[j]
+			j++
+		} else if j == hi {
+			aux[k] = a[i]
+			i++
+		} else if less(j, i) {
+			aux[k] = a[j]
+			j++
+		} else {
+			aux[k] = a[i]
+			i++
+		}
+	}
 }
 
 func CompareLenSeedDev(a *SeedDev, b *SeedDev) int {
