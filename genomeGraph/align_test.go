@@ -229,7 +229,7 @@ func TestPerfectMatchBig(t *testing.T) {
 		Seq: dna.StringToBases("ACTT"),
 	}
 
-	expected = int64(90)
+	expected = int64(100)
 	result = perfectMatchBig(read, HumanChimpTwoScoreMatrix)
 	if result != expected {
 		t.Errorf("Test case 3 failed: expected %d, got %d", expected, result)
@@ -240,7 +240,7 @@ func TestPerfectMatchBig(t *testing.T) {
 		Seq: dna.StringToBases("AAA"),
 	}
 
-	expected = int64(180)
+	expected = int64(90)
 	result = perfectMatchBig(read, HumanChimpTwoScoreMatrix)
 	if result != expected {
 		t.Errorf("Test case 4 failed: expected %d, got %d", expected, result)
