@@ -2,9 +2,6 @@ package genomeGraph
 
 import (
 	"flag"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"os"
 	"runtime"
@@ -13,6 +10,11 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
@@ -31,54 +33,55 @@ func BenchmarkGsw(b *testing.B) {
 		defer pprof.StopCPUProfile()
 	}
 	b.ReportAllocs()
-	//var output string = "/dev/stdout"
-	var output string = "testdata/rabs_test.giraf"
+	var output string = "testdata/pairedTest.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	//var numberOfReads int = 50000
-	//var readLength int = 150
-	//var mutations int = 1
+	var numberOfReads int = 5000
+	var readLength int = 150
+	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 6
+	var numWorkers int = 8
 	var scoreMatrix = HumanChimpTwoScoreMatrix
-	b.ResetTimer()
-	genome := Read("testdata/rabsTHREEspine.fa")
+	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
+	log.Printf("Making fastq channel...\n")
+	fastqPipe := make(chan fastq.PairedEndBig, 824)
 
-	fastqPipe := make(chan fastq.PairedEndBig, 2408)
-	girafPipe := make(chan giraf.GirafPair, 2408)
+	log.Printf("Making sam channel...\n")
+	samPipe := make(chan giraf.GirafPair, 824)
 
-	//log.Printf("Simulating reads...\n")
-	//simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
+	log.Printf("Simulating reads...\n")
+	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
 	//os.Remove("testdata/simReads_R1.fq")
 	//os.Remove("testdata/simReads_R2.fq")
-
-	//fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
-
+	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
-
-	go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
+	go fastq.ReadPairBigToChan("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
 	log.Printf("Finished Indexing Genome...\n")
+	start := time.Now()
 
 	log.Printf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
-	start := time.Now()
 	for i := 0; i < numWorkers; i++ {
-		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
+		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, samPipe, &workerWaiter)
 	}
-	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
-	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
+	go giraf.GirafPairChanToFile(output, samPipe, &writerWaiter)
 	writerWaiter.Add(1)
 	workerWaiter.Wait()
-	close(girafPipe)
-
+	close(samPipe)
+	log.Printf("Aligners finished and channel closed\n")
 	writerWaiter.Wait()
-
+	log.Printf("Sam writer finished and we are all done\n")
 	stop := time.Now()
 	duration := stop.Sub(start)
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+	fileio.EasyRemove("testdata/simReads_R1.fq")
+	fileio.EasyRemove("testdata/simReads_R2.fq")
+	fileio.EasyRemove("testdata/pairedTest.giraf")
+
 	//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", 50000*2, duration, float64(50000*2)/duration.Seconds())
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", numberOfReads*2, duration, float64(numberOfReads*2)/duration.Seconds())
 	if *memprofile != "" {
 		f, err := os.Create(*memprofile)
 		if err != nil {
