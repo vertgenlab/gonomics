@@ -199,6 +199,7 @@ func bedMidpoint(b bed.Bed) int {
 // ThreeWayFaToVcf takes in a three-way multiFa alignment and writes Vcf entries for segregating sites with the first
 // entry as the reference and the last two fasta entries as the alt alleles.
 // This is done by chromosome since a multiFa contains only one chromosome per file.
+// This function only checks for substitutions, not indels.
 func ThreeWayFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substitutionOnly bool, retainN bool) {
 	var currRefPos, currAlnPos int = 0, 0
 
