@@ -1,14 +1,58 @@
 package starrSeq
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/sam"
+	"sort"
 )
 
-func PlasmidUMI(inSam, inBed string) {
+func PlasmidUMI(inSam, inBed, outFile string) {
+	var constructR1, constructR2 []interval.Interval
+	var construct, umi string
+	var found bool
+	mp := make(map[string]map[string]int)
 	tree := makeTree(inBed)
+	ch, _ := sam.GoReadSamPeToChan(inSam)
+	for pe := range ch {
+		constructR1 = interval.Query(tree, pe.R1, "any")
+		constructR2 = interval.Query(tree, pe.R2, "any")
+		construct = whichConstruct(constructR1, constructR2)
+		umi = findUMI(pe.R1)
+		if umi == "" {
+			umi = findUMI(pe.R2)
+		}
+		if umi == "" {
+			continue
+		}
+		_, found = mp[construct]
+		if !found {
+			mp[construct] = make(map[string]int)
+		}
+		mp[construct][umi]++
+	}
+	writeMap(outFile, mp)
+}
+
+func writeMap(outFile string, mp map[string]map[string]int) {
+	var slc []string
+	o := fileio.EasyCreate(outFile)
+	fileio.WriteToFileHandle(o, "construct\tumi\tcount")
+	for i := range mp {
+		for j := range mp[i] {
+			slc = append(slc, fmt.Sprintf("%s\t%s\t%d", i, j, mp[i][j]))
+		}
+	}
+	sort.Strings(slc)
+	for i := range slc {
+		fileio.WriteToFileHandle(o, slc[i])
+	}
+	err := o.Close()
+	exception.PanicOnErr(err)
 }
 
 func makeTree(inBed string) map[string]*interval.IntervalNode {
@@ -20,7 +64,7 @@ func makeTree(inBed string) map[string]*interval.IntervalNode {
 	return interval.BuildTree(constructs)
 }
 
-func FindUMI(s sam.Sam) string {
+func findUMI(s sam.Sam) string {
 	var test, find, bs []dna.Base
 	var ans int
 
@@ -52,14 +96,14 @@ func FindUMI(s sam.Sam) string {
 
 func whichConstruct(ans1, ans2 []interval.Interval) string {
 	switch {
-	case len(ans1) == 1, len(ans2) != 1:
+	case len(ans1) == 1 && len(ans2) != 1:
 		return ans1[0].(bed.Bed).Name
-	case len(ans1) != 1, len(ans2) == 1:
+	case len(ans1) != 1 && len(ans2) == 1:
 		return ans2[0].(bed.Bed).Name
-	case len(ans1) == 1, len(ans2) == 1:
+	case len(ans1) == 1 && len(ans2) == 1:
 		return ans1[0].(bed.Bed).Name
 	}
-	return ""
+	return "unclear"
 }
 
 /*
