@@ -155,10 +155,19 @@ func IntSliceToString(nums []int) string {
 	ans := strings.Builder{}
 	ans.Grow(2 * len(nums))
 	for i := 0; i < len(nums); i++ {
-		ans.WriteString(fmt.Sprintf("%d", nums[i]))
+		ans.WriteString(strconv.Itoa(nums[i]))
 		ans.WriteByte(',')
 	}
 	return ans.String()
+}
+
+// IntSliceToString converts int slices to comma-separated strings.
+func Int32SliceToString(input []uint32) []int32 {
+	ans := make([]int32, len(input))
+	for i, v := range input {
+		ans[i] = int32(v)
+	}
+	return ans
 }
 
 // IntToString converts an int to a string.

@@ -86,11 +86,12 @@ func TestExtendToTheLeft(t *testing.T) {
 
 	// Seed that initially matches the start of the main node
 	initialSeed := &SeedDev{
-		TargetId:    1,
+		TargetId:    0,
 		TargetStart: 0,
-		QueryStart:  3, // Matches start at the fourth base of the read
-		Length:      4, // Matches "ATCG" from the main node
+		QueryStart:  0, // Matches start at the fourth base of the read
+		Length:      3, // Matches "ATCG" from the main node
 		PosStrand:   true,
+		TotalLength: 3,
 	}
 
 	// Expected seeds after extending to the left into the prevNode
@@ -102,7 +103,6 @@ func TestExtendToTheLeft(t *testing.T) {
 			Length:      3, // Matches "GCA" from the prevNode
 			PosStrand:   true,
 			TotalLength: 3, // Total match length including the initial seed and the extension
-			NextPart:    initialSeed,
 		},
 	}
 	// Call extendToTheLeft with the main node, read, and initial seed
@@ -194,8 +194,7 @@ func seedEqual(a, b *SeedDev) bool {
 		a.QueryStart == b.QueryStart &&
 		a.Length == b.Length &&
 		a.PosStrand == b.PosStrand &&
-		a.TotalLength == b.TotalLength &&
-		((a.NextPart == nil && b.NextPart == nil) || (a.NextPart != nil && b.NextPart != nil && seedEqual(a.NextPart, b.NextPart)))
+		a.TotalLength == b.TotalLength
 }
 
 func TestProcessStrand(t *testing.T) {

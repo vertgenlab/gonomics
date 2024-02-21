@@ -19,8 +19,8 @@ import (
 	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
-var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+var cpuprofile = flag.String("cpuprofile", "cpuprofile", "write cpu profile to `file`")
+var memprofile = flag.String("memprofile", "memprofile", "write memory profile to `file`")
 
 func BenchmarkGsw(b *testing.B) {
 	if *cpuprofile != "" {

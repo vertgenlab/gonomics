@@ -1,9 +1,6 @@
 package genomeGraph
 
 import (
-	"bytes"
-	"io"
-	"log"
 	"math"
 	"sort"
 	"sync"
@@ -11,10 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
@@ -46,11 +40,9 @@ type dnaPool struct {
 }
 
 type dynamicScoreKeeper struct {
-	i        int
-	j        int
-	routeIdx int
-	currMax  int64
-	route    []cigar.ByteCigar
+	i       int
+	j       int
+	currMax int64
 }
 
 type scoreKeeper struct {
@@ -76,63 +68,15 @@ type scoreKeeper struct {
 	rightAlignment []cigar.ByteCigar
 }
 
-func NewDnaPool() sync.Pool {
-	return sync.Pool{
-		New: func() interface{} {
-			dnaSeq := dnaPool{
-				Seq:         make([]dna.Base, 0, 150),
-				Path:        make([]uint32, 0, 10),
-				queryStart:  0,
-				targetStart: 0,
-				targetEnd:   0,
-				queryEnd:    0,
-			}
-			return &dnaSeq
-		},
-	}
-}
-
-func NewMemSeedPool() sync.Pool {
-	return sync.Pool{
-		New: func() interface{} {
-			pool := memoryPool{
-				Hits:   make([]SeedDev, 0, 10000),
-				Worker: make([]SeedDev, 0, 10000),
-			}
-			return &pool
-		},
-	}
-}
-
-func resetDynamicScore(sk dynamicScoreKeeper) {
-	sk.route = sk.route[:0]
-	sk.currMax = 0
-}
-func NewSwMatrix(size int) MatrixAln {
-	sw := MatrixAln{}
-	sw.m, sw.trace = MatrixSetup(size)
-	return sw
-}
-
-func MatrixSetup(size int) ([][]int64, [][]byte) {
-	m := make([][]int64, size)
-	trace := make([][]byte, size)
-	for idx := range m {
-		m[idx] = make([]int64, size)
-		trace[idx] = make([]byte, size)
-	}
-	return m, trace
-}
-
-func resetScoreKeeper(sk scoreKeeper) {
-	sk.targetStart, sk.targetEnd = 0, 0
-	sk.queryStart, sk.queryEnd = 0, 0
-	sk.currScore, sk.seedScore = 0, 0
-	sk.perfectScore = 0
-	sk.leftAlignment, sk.rightAlignment = sk.leftAlignment[:0], sk.rightAlignment[:0]
-	sk.leftPath, sk.rightPath = sk.leftPath[:0], sk.rightPath[:0]
-	sk.leftSeq, sk.rightSeq, sk.currSeq = sk.leftSeq[:0], sk.rightSeq[:0], sk.currSeq[:0]
-	sk.leftScore, sk.rightScore = 0, 0
+type seedHelper struct {
+	currHits                                  []uint64
+	codedNodeCoord                            uint64
+	seqKey                                    uint64
+	keyShift                                  uint
+	keyIdx, keyOffset, readOffset, nodeOffset int
+	nodeIdx, nodePos                          int64
+	leftMatches                               int
+	tempSeed                                  SeedDev
 }
 
 // AlignGraphTraversal performs graph traversal for alignment either to the left or right, calculating optimal alignment using dynamic programming.
@@ -229,7 +173,6 @@ func DynamicAln(alpha, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gap
 				matrix.m[i][j] = insertion
 				matrix.trace[i][j] = cigar.Insertion
 			}
-
 			// Update the current maximum score.
 			if matrix.m[i][j] > dynamicScore.currMax {
 				dynamicScore.currMax = matrix.m[i][j]
@@ -286,6 +229,50 @@ func nodeSeqTraversal(n *Node, extension int, position int, seq, ans []dna.Base,
 	return ans
 }
 
+func NewDnaPool() sync.Pool {
+	return sync.Pool{
+		New: func() interface{} {
+			dnaSeq := dnaPool{
+				Seq:         make([]dna.Base, 0, 150),
+				Path:        make([]uint32, 0, 10),
+				queryStart:  0,
+				targetStart: 0,
+				targetEnd:   0,
+				queryEnd:    0,
+			}
+			return &dnaSeq
+		},
+	}
+}
+
+func NewMemSeedPool() sync.Pool {
+	return sync.Pool{
+		New: func() interface{} {
+			pool := memoryPool{
+				Hits:   make([]SeedDev, 0, 10000),
+				Worker: make([]SeedDev, 0, 10000),
+			}
+			return &pool
+		},
+	}
+}
+
+func NewSwMatrix(size int) MatrixAln {
+	sw := MatrixAln{}
+	sw.m, sw.trace = MatrixSetup(size)
+	return sw
+}
+
+func MatrixSetup(size int) ([][]int64, [][]byte) {
+	m := make([][]int64, size)
+	trace := make([][]byte, size)
+	for idx := range m {
+		m[idx] = make([]int64, size)
+		trace[idx] = make([]byte, size)
+	}
+	return m, trace
+}
+
 func ReversePath(alpha []uint32) {
 	var i, off int
 	for i = len(alpha)/2 - 1; i >= 0; i-- {
@@ -327,17 +314,6 @@ func heapSortSeeds(a []SeedDev) {
 	}
 }
 
-type seedHelper struct {
-	currHits                                  []uint64
-	codedNodeCoord                            uint64
-	seqKey                                    uint64
-	keyShift                                  uint
-	keyIdx, keyOffset, readOffset, nodeOffset int
-	nodeIdx, nodePos                          int64
-	leftMatches                               int
-	tempSeed                                  SeedDev
-}
-
 func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool, answer []SeedDev) []SeedDev {
 	const basesPerInt int = 32
 	answer = answer[:0]
@@ -376,75 +352,6 @@ func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeSt
 	return answer
 }
 
-func extendToTheLeftDev(node *Node, read *fastq.FastqBig, currPart SeedDev) []SeedDev {
-	var answer, prevParts []SeedDev
-	var i int
-	var readBase dna.Base
-
-	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
-		for i = 0; i < len(node.Prev); i++ {
-			if currPart.PosStrand {
-				readBase = dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
-			} else {
-				readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
-			}
-			if readBase == dnaTwoBit.GetBase(node.Prev[i].Dest.SeqTwoBit, uint(node.Prev[i].Dest.SeqTwoBit.Len)-1) {
-				prevParts = extendToTheLeftHelperDev(node.Prev[i].Dest, read, currPart)
-				answer = append(answer, prevParts...)
-			}
-		}
-	}
-
-	if len(answer) == 0 {
-		return []SeedDev{currPart}
-	} else {
-		return answer
-	}
-}
-
-func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart SeedDev) []SeedDev {
-	const basesPerInt int = 32
-	var nodePos int = node.SeqTwoBit.Len - 1
-	var readPos int = int(nextPart.QueryStart) - 1
-	var nodeOffset int = nodePos % basesPerInt
-	var readOffset int = 31 - ((readPos - nodeOffset + 31) % 32)
-	var leftMatches int = 0
-	var currPart SeedDev
-	var prevParts, answer []SeedDev
-	var i int
-	var readBase dna.Base
-
-	if nextPart.PosStrand {
-		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.Rainbow[readOffset], readPos+readOffset))
-	} else {
-		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.RainbowRc[readOffset], readPos+readOffset))
-	}
-
-	if leftMatches == 0 {
-		log.Fatal("Error: should not have zero matches to the left\n")
-	}
-	currPart = SeedDev{TargetId: node.Id, TargetStart: uint32(nodePos - (leftMatches - 1)), QueryStart: uint32(readPos - (leftMatches - 1)), Length: uint32(leftMatches), PosStrand: nextPart.PosStrand, TotalLength: uint32(leftMatches) + nextPart.TotalLength, NextPart: &nextPart}
-	// we went all the way to end and there might be more
-	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
-		for i = 0; i < len(node.Prev); i++ {
-			if nextPart.PosStrand {
-				readBase = dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
-			} else {
-				readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
-			}
-			if readBase == dnaTwoBit.GetBase(node.Prev[i].Dest.SeqTwoBit, uint(node.Prev[i].Dest.SeqTwoBit.Len)-1) {
-				prevParts = extendToTheLeftHelperDev(node.Prev[i].Dest, read, currPart)
-				answer = append(answer, prevParts...)
-			}
-		}
-	}
-	// if the alignment did not go to another node, return the match for this node
-	if len(answer) == 0 {
-		answer = []SeedDev{currPart}
-	}
-	return answer
-}
-
 func newSeedBuilder() *seedHelper {
 	var tmp SeedDev = SeedDev{}
 	return &seedHelper{
@@ -453,56 +360,80 @@ func newSeedBuilder() *seedHelper {
 	}
 }
 
-func restartSeedHelper(helper *seedHelper) {
-	helper.currHits = helper.currHits[:0]
-	helper.keyIdx, helper.keyOffset, helper.readOffset, helper.nodeOffset = 0, 0, 0, 0
-	helper.nodeIdx, helper.nodePos = 0, 0
-	helper.seqKey, helper.codedNodeCoord = 0, 0
-	helper.leftMatches = 0
-}
-
 // seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int64 = 0, 0.
-func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []SeedDev, tempSeeds []SeedDev, seedBuildHelper *seedHelper) []SeedDev {
-	const basesPerInt int64 = 32
-	restartSeedHelper(seedBuildHelper)
-	seedBuildHelper.keyShift = 64 - (uint(seedLen) * 2)
+func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int,
+	perfectScore int64, scoreMatrix [][]int64, finalSeeds []SeedDev, tempSeeds []SeedDev, seedBuildHelper *seedHelper) []SeedDev {
+
+	resetSeedBuilder(seedBuildHelper, seedLen)
 
 	for readStart := 0; readStart < len(read.Seq)-seedLen+1; readStart++ {
-		seedBuildHelper.keyIdx = (readStart + 31) / 32
-		seedBuildHelper.keyOffset = 31 - ((readStart + 31) % 32)
-		// do fwd strand
-		seedBuildHelper.seqKey = read.Rainbow[seedBuildHelper.keyOffset].Seq[seedBuildHelper.keyIdx] >> seedBuildHelper.keyShift
-		seedBuildHelper.currHits = seedHash[seedBuildHelper.seqKey]
+		getSeedKey(read, seedBuildHelper, readStart)
 
-		for _, seedBuildHelper.codedNodeCoord = range seedBuildHelper.currHits {
-			seedBuildHelper.nodeIdx, seedBuildHelper.nodePos = numberToChromAndPos(seedBuildHelper.codedNodeCoord)
-			seedBuildHelper.nodeOffset = int(seedBuildHelper.nodePos % basesPerInt)
-			seedBuildHelper.readOffset = 31 - ((readStart - seedBuildHelper.nodeOffset + 31) % 32)
-			seedBuildHelper.leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[seedBuildHelper.nodeIdx].SeqTwoBit, int(seedBuildHelper.nodePos), &read.Rainbow[seedBuildHelper.readOffset], readStart+seedBuildHelper.readOffset))
-			tempSeeds = extendToTheRightDev(&nodes[seedBuildHelper.nodeIdx], read, readStart-(seedBuildHelper.leftMatches-1), int(seedBuildHelper.nodePos)-(seedBuildHelper.leftMatches-1), true, tempSeeds)
-			for _, seedBuildHelper.tempSeed = range tempSeeds {
-				finalSeeds = append(finalSeeds, extendToTheLeftDev(&nodes[seedBuildHelper.nodeIdx], read, seedBuildHelper.tempSeed)...)
-			}
-		}
-		// do rev strand
-		seedBuildHelper.seqKey = read.RainbowRc[seedBuildHelper.keyOffset].Seq[seedBuildHelper.keyIdx] >> seedBuildHelper.keyShift
-		seedBuildHelper.currHits = seedHash[seedBuildHelper.seqKey]
-		for _, seedBuildHelper.codedNodeCoord = range seedBuildHelper.currHits {
-			seedBuildHelper.nodeIdx, seedBuildHelper.nodePos = numberToChromAndPos(seedBuildHelper.codedNodeCoord)
-			seedBuildHelper.nodeOffset = int(seedBuildHelper.nodePos % basesPerInt)
-			seedBuildHelper.readOffset = 31 - ((readStart - seedBuildHelper.nodeOffset + 31) % 32)
-
-			seedBuildHelper.leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[seedBuildHelper.nodeIdx].SeqTwoBit, int(seedBuildHelper.nodePos), &read.RainbowRc[seedBuildHelper.readOffset], readStart+seedBuildHelper.readOffset))
-			tempSeeds = extendToTheRightDev(&nodes[seedBuildHelper.nodeIdx], read, readStart-(seedBuildHelper.leftMatches-1), int(seedBuildHelper.nodePos)-(seedBuildHelper.leftMatches-1), false, tempSeeds)
-			finalSeeds = append(finalSeeds, tempSeeds...)
-		}
+		processSeeds(seedHash, nodes, read, finalSeeds, tempSeeds, seedBuildHelper, readStart, true)
+		processSeeds(seedHash, nodes, read, finalSeeds, tempSeeds, seedBuildHelper, readStart, false)
 	}
+	sortSeedsIfRequired(finalSeeds)
+
+	return finalSeeds
+}
+
+// resetSeedBuilder resets the seedBuilder helper for use.
+func resetSeedBuilder(seedBuildHelper *seedHelper, seedLen int) {
+	seedBuildHelper.keyShift = 64 - (uint(seedLen) * 2)
+}
+
+// getSeedKey computes the seed key.
+func getSeedKey(read *fastq.FastqBig, seedBuildHelper *seedHelper, readStart int) {
+	seedBuildHelper.keyIdx = (readStart + 31) / 32
+	seedBuildHelper.keyOffset = 31 - ((readStart + 31) % 32)
+}
+
+// processSeeds processes the seeds for the forward/reverse strands.
+func processSeeds(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, finalSeeds []SeedDev,
+	tempSeeds []SeedDev, seedBuildHelper *seedHelper, readStart int, isForward bool) {
+
+	if isForward {
+		seedBuildHelper.seqKey = read.Rainbow[seedBuildHelper.keyOffset].Seq[seedBuildHelper.keyIdx] >> seedBuildHelper.keyShift
+	} else {
+		seedBuildHelper.seqKey = read.RainbowRc[seedBuildHelper.keyOffset].Seq[seedBuildHelper.keyIdx] >> seedBuildHelper.keyShift
+	}
+
+	seedBuildHelper.currHits = seedHash[seedBuildHelper.seqKey]
+
+	for _, seedBuildHelper.codedNodeCoord = range seedBuildHelper.currHits {
+		processHits(nodes, read, finalSeeds, tempSeeds, seedBuildHelper, readStart, isForward)
+	}
+}
+
+// processHits processes the hits for a given seed.
+func processHits(nodes []Node, read *fastq.FastqBig, finalSeeds []SeedDev, tempSeeds []SeedDev, seedBuildHelper *seedHelper,
+	readStart int, isForward bool) {
+
+	seedBuildHelper.nodeIdx, seedBuildHelper.nodePos = numberToChromAndPos(seedBuildHelper.codedNodeCoord)
+	seedBuildHelper.nodeOffset = int(seedBuildHelper.nodePos % basesPerInt)
+	seedBuildHelper.readOffset = 31 - ((readStart - seedBuildHelper.nodeOffset + 31) % 32)
+
+	if isForward {
+		seedBuildHelper.leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[seedBuildHelper.nodeIdx].SeqTwoBit,
+			int(seedBuildHelper.nodePos), &read.Rainbow[seedBuildHelper.readOffset], readStart+seedBuildHelper.readOffset))
+	} else {
+		seedBuildHelper.leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[seedBuildHelper.nodeIdx].SeqTwoBit,
+			int(seedBuildHelper.nodePos), &read.RainbowRc[seedBuildHelper.readOffset], readStart+seedBuildHelper.readOffset))
+	}
+
+	tempSeeds = extendToTheRightDev(&nodes[seedBuildHelper.nodeIdx], read, readStart-(seedBuildHelper.leftMatches-1),
+		int(seedBuildHelper.nodePos)-(seedBuildHelper.leftMatches-1), isForward, tempSeeds)
+
+	finalSeeds = append(finalSeeds, tempSeeds...)
+}
+
+// sortSeedsIfRequired sorts the seeds if required.
+func sortSeedsIfRequired(finalSeeds []SeedDev) {
 	if len(finalSeeds) > 100 {
 		SortSeedLen(finalSeeds)
 	} else {
 		heapSortSeeds(finalSeeds)
 	}
-	return finalSeeds
 }
 
 func SortSeedLen(seeds []SeedDev) {
@@ -514,13 +445,11 @@ func SoftClipBases(front int, lengthOfRead int, cig []cigar.ByteCigar) []cigar.B
 	if runLen >= lengthOfRead {
 		return cig
 	}
-
 	answer := make([]cigar.ByteCigar, 0, len(cig)+2)
 	if front > 0 {
 		answer = append(answer, cigar.ByteCigar{RunLen: uint16(front), Op: 'S'})
 	}
 	answer = append(answer, cig...)
-
 	// Calculate the remaining unaligned portion at the end and add soft clipping if necessary
 	remaining := lengthOfRead - (front + runLen)
 	if remaining > 0 {
@@ -529,31 +458,44 @@ func SoftClipBases(front int, lengthOfRead int, cig []cigar.ByteCigar) []cigar.B
 	return answer
 }
 
-func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *sync.WaitGroup) {
-	file := fileio.EasyCreate(filename)
-	var buf *bytes.Buffer
-	var simplePool = sync.Pool{
-		New: func() interface{} {
-			return &bytes.Buffer{}
-		},
-	}
-	var err error
-	for gp := range input {
-		buf = simplePool.Get().(*bytes.Buffer)
-		buf.Reset()
-		_, err = buf.WriteString(giraf.ToString(&gp.Fwd))
-		exception.PanicOnErr(err)
-		err = buf.WriteByte('\n')
-		exception.PanicOnErr(err)
-		_, err = buf.WriteString(giraf.ToString(&gp.Rev))
-		exception.PanicOnErr(err)
-		err = buf.WriteByte('\n')
-		exception.PanicOnErr(err)
-		_, err = io.Copy(file, buf)
-		exception.PanicOnErr(err)
-		simplePool.Put(buf)
-	}
-	err = file.Close()
-	exception.PanicOnErr(err)
-	wg.Done()
-}
+// func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *sync.WaitGroup) {
+// 	file := fileio.EasyCreate(filename)
+// 	defer file.Close()
+// 	defer wg.Done()
+
+// 	simplePool := &sync.Pool{
+// 		New: func() interface{} {
+// 			return new(bytes.Buffer)
+// 		},
+// 	}
+
+// 	for gp := range input {
+// 		writeGirafPairToFile(gp, file, simplePool)
+// 	}
+// }
+
+// func writeGirafPairToFile(gp giraf.GirafPair, file *os.File, pool *sync.Pool) {
+// 	buf := pool.Get().(*bytes.Buffer)
+// 	buf.Reset()
+
+// 	writeStringAndCheckErr(buf, giraf.ToString(&gp.Fwd))
+// 	writeByteAndCheckErr(buf, '\n')
+
+// 	writeStringAndCheckErr(buf, giraf.ToString(&gp.Rev))
+// 	writeByteAndCheckErr(buf, '\n')
+
+// 	_, err := io.Copy(file, buf)
+// 	exception.PanicOnErr(err)
+
+// 	pool.Put(buf)
+// }
+
+// func WriteStringAndCheckErr(buf *bytes.Buffer, s string) {
+// 	_, err := buf.WriteString(s)
+// 	exception.PanicOnErr(err)
+// }
+
+// func WriteByteAndCheckErr(buf *bytes.Buffer, b byte) {
+// 	err := buf.WriteByte(b)
+// 	exception.PanicOnErr(err)
+// }

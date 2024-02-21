@@ -2,10 +2,14 @@ package genomeGraph
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
 )
 
@@ -14,14 +18,18 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	var leftAlignment, rightAlignment []cigar.Cigar
 	var minTarget int
 	var minQuery int
-	var leftScore, rightScore int64
+	var leftScore, rightScore int64 = 0, 0
 	var bestScore int64
 	var leftPath, rightPath, bestPath []uint32
 	var currScore int64 = 0
 	perfectScore := perfectMatchBig(read, scoreMatrix)
 
-	seeds := findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
+	var s strings.Builder
+	var err error
 
+	var seeds []*SeedDev
+
+	seeds = findSeedsInSmallMapWithMemPool(seedHash, gg.Nodes, read, seedLen, perfectScore, scoreMatrix)
 	SortSeedDevByLen(seeds)
 	var tailSeed *SeedDev
 	var seedScore int64
@@ -37,13 +45,14 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			currSeq = read.SeqRc
 		}
 		if int(currSeed.TotalLength) == len(currSeq) {
-			leftScore = 0
+			leftScore, rightScore = int64(0), int64(0)
+
 			minTarget = int(currSeed.TargetStart)
 			minQuery = int(currSeed.QueryStart)
-			rightScore = 0
 		}
 		seedScore = scoreSeedSeq(currSeq, currSeed.QueryStart, tailSeed.QueryStart+tailSeed.Length, scoreMatrix)
 		currScore = leftScore + seedScore + rightScore
+
 		if currScore > bestScore {
 			bestPath = CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath)
 			bestScore = currScore
@@ -53,13 +62,21 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 				currBest.Flag = 16
 			}
 			currBest.Seq = currSeq // unsure why this line was lost
-			currBest.Qual = string(read.Qual)
-			currBest.RName = fmt.Sprintf("%d", bestPath[0])
-			currBest.Pos = uint32(minTarget + 1)
-			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath))
 
-			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment)
-			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
+			_, err = s.Write(read.Qual)
+			exception.PanicOnErr(err)
+			currBest.Qual = s.String()
+
+			_, err = s.WriteString(strconv.Itoa(int(bestPath[0])))
+			exception.PanicOnErr(err)
+			currBest.RName = s.String()
+
+			currBest.Pos = uint32(minTarget + 1)
+			_, err = s.WriteString(fmt.Sprintf("BZ:i:%dtGP:Z:%s", bestScore, PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath))))
+			exception.PanicOnErr(err)
+			currBest.Extra = s.String()
+
+			currBest.Cigar = AddSClip(minQuery, len(currSeq), cigar.CatCigar(cigar.AddCigar(leftAlignment, cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment))
 		}
 	}
 	if bestScore < 1200 {
@@ -75,14 +92,9 @@ func perfectMatchBig(read fastq.FastqBig, scoreMatrix [][]int64) int64 {
 		fwdScore = scoreMatrix[read.Seq[i]][read.Seq[i]]
 		revScore = scoreMatrix[dna.ComplementSingleBase(read.Seq[j])][dna.ComplementSingleBase(read.Seq[j])]
 	}
-	if fwdScore > revScore {
-		return fwdScore
-	} else {
-		return revScore
-	}
+	return numbers.Max(fwdScore, revScore)
 }
 
-// scoreSeedSeq calculates the score of a seed sequence within a given range.
 func scoreSeedSeq(seq []dna.Base, start uint32, end uint32, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
 	for i := start; i < end; i++ {
@@ -130,15 +142,6 @@ func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
 	} else {
 		return cig
 	}
-}
-
-func perfectMatch(read fastq.Fastq, scoreMatrix [][]int64) int64 {
-	var perfectScore int64 = 0
-	seq := read.Seq
-	for _, base := range seq {
-		perfectScore += scoreMatrix[base][base]
-	}
-	return perfectScore
 }
 
 func ChromAndPosToNumber(chrom int, start int) uint64 {

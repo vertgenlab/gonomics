@@ -14,6 +14,9 @@ import (
 )
 
 func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *MatrixAln, scoreMatrix [][]int64, seedPool *sync.Pool, dnaPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper, seedBuildHelper *seedHelper) *giraf.Giraf {
+	seeds := seedPool.Get().(*memoryPool)
+	defer seedPool.Put(seeds)
+
 	var currBest giraf.Giraf = giraf.Giraf{
 		QName:     read.Name,
 		QStart:    0,
@@ -25,13 +28,11 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 		MapQ:      255,
 		Seq:       read.Seq,
 		Qual:      read.Qual,
-		Notes:     []giraf.Note{{Tag: []byte{'X', 'O'}, Type: 'Z', Value: "~"}},
+		Notes:     []giraf.Note{{Tag: []byte{cigar.Mismatch, 'O'}, Type: 'Z', Value: "~"}},
 	}
 
 	sk.perfectScore = perfectMatchBig(read, scoreMatrix)
 	sk.extension = int(sk.perfectScore/600) + len(read.Seq)
-	seeds := seedPool.Get().(*memoryPool)
-	defer seedPool.Put(seeds)
 
 	seeds.Hits = seeds.Hits[:0]
 	seeds.Worker = seeds.Worker[:0]
@@ -61,7 +62,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			currBest.QEnd = int(sk.currSeed.QueryStart) + sk.queryStart + sk.queryEnd + int(sk.currSeed.TotalLength) - 1
 			currBest.PosStrand = sk.currSeed.PosStrand
 			currBest.Path = setPath(currBest.Path, sk.targetStart, CatPaths(CatPaths(sk.leftPath, getSeedPath(&sk.currSeed)), sk.rightPath), sk.targetEnd)
-			currBest.Cigar = SoftClipBases(sk.queryStart, len(sk.currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: uint16(sk.currSeed.TotalLength), Op: 'M'}), sk.rightAlignment))
+			currBest.Cigar = cigar.AppendSoftClipBases(sk.queryStart, len(sk.currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: uint16(sk.currSeed.TotalLength), Op: 'M'}), sk.rightAlignment))
 			currBest.AlnScore = int(sk.currScore)
 			currBest.Seq = sk.currSeq
 		}

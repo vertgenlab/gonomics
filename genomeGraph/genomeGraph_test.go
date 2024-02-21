@@ -17,9 +17,9 @@ func TestWorkerWithWriting(t *testing.T) {
 	var stepSize int = 32
 	var numberOfReads int = 1
 	var readLength int = 150
-	var mutations int = 0
+	var mutations int = 4
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 8
+	var numWorkers int = 12
 	var scoreMatrix = HumanChimpTwoScoreMatrix
 	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
