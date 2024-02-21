@@ -7,8 +7,10 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 	"sort"
+	"strings"
 )
 
 func PlasmidUMI(inSam, inBed, outFile string) {
@@ -47,7 +49,19 @@ func writeMap(outFile string, mp map[string]map[string]int) {
 			slc = append(slc, fmt.Sprintf("%s\t%s\t%d", i, j, mp[i][j]))
 		}
 	}
-	sort.Strings(slc)
+	var a, b []string
+	sort.Slice(slc, func(i, j int) bool {
+		a = strings.Fields(slc[i])
+		b = strings.Fields(slc[j])
+		if a[0] > b[0] {
+			return false
+		} else if a[0] < b[0] {
+			return true
+		} else {
+			return parse.StringToInt(a[2]) > parse.StringToInt(b[2])
+		}
+	})
+
 	for i := range slc {
 		fileio.WriteToFileHandle(o, slc[i])
 	}
