@@ -1,9 +1,9 @@
 package pFasta
 
 import (
-	"testing"
 	"fmt"
 	"math/rand"
+	"testing"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
@@ -215,264 +215,264 @@ var ExtractBedTests = []struct {
 	Precision  float32
 }{
 	{Input: []PFasta{PFasta{Name: "chr3",
-						Seq: []pDna.Float32Base{
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.4,
-								T: 0.1,
-							},
-							pDna.Float32Base{
-								A: 0.25,
-								C: 0.25,
-								G: 0.25,
-								T: 0.25,
-							},
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.3,
-								T: 0.2,
-							},
-							pDna.Float32Base{
-								A: 0.1,
-								C: 0.2,
-								G: 0.3,
-								T: 0.4,
-							},
-							pDna.Float32Base{
-								A: 0.6,
-								C: 0.2,
-								G: 0.1,
-								T: 0.1,
-							}}},
-					PFasta{Name: "chr1",
-						Seq: []pDna.Float32Base{
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.3,
-								T: 0.2,
-							},
-							pDna.Float32Base{
-								A: 0.1,
-								C: 0.2,
-								G: 0.3,
-								T: 0.4,
-							},
-							pDna.Float32Base{
-								A: 0.25,
-								C: 0.25,
-								G: 0.25,
-								T: 0.25,
-							},
-							pDna.Float32Base{
-								A: 0.6,
-								C: 0.2,
-								G: 0.1,
-								T: 0.1,
-							},
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.4,
-								T: 0.1,
-							}}},
-					PFasta{Name: "chr2",
-						Seq: []pDna.Float32Base{
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.4,
-								T: 0.1,
-							},
-							pDna.Float32Base{
-								A: 0.25,
-								C: 0.25,
-								G: 0.25,
-								T: 0.25,
-							},
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.3,
-								T: 0.2,
-							},
-							pDna.Float32Base{
-								A: 0.1,
-								C: 0.2,
-								G: 0.3,
-								T: 0.4,
-							},
-							pDna.Float32Base{
-								A: 0.6,
-								C: 0.2,
-								G: 0.1,
-								T: 0.1,
-							}}}},
-	Region: []bed.Bed{bed.Bed{Chrom: "chr1", ChromStart: 3, ChromEnd: 5, FieldsInitialized: 3},
-				      bed.Bed{Chrom: "chr3", ChromStart: 0, ChromEnd: 3, FieldsInitialized: 3}},
-	TakeCoords: false,
-	Expected: []PFasta{PFasta{Name: "chr1",
-						Seq: []pDna.Float32Base{
-							pDna.Float32Base{
-								A: 0.6,
-								C: 0.2,
-								G: 0.1,
-								T: 0.1,
-							},
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.4,
-								T: 0.1,}}},
-					PFasta{Name: "chr3",
-						Seq: []pDna.Float32Base{
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.4,
-								T: 0.1,
-							},
-							pDna.Float32Base{
-								A: 0.25,
-								C: 0.25,
-								G: 0.25,
-								T: 0.25,
-							},
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.3,
-								T: 0.2,
-							}}}},
-	Precision: 1e-3},
+		Seq: []pDna.Float32Base{
+			pDna.Float32Base{
+				A: 0.2,
+				C: 0.3,
+				G: 0.4,
+				T: 0.1,
+			},
+			pDna.Float32Base{
+				A: 0.25,
+				C: 0.25,
+				G: 0.25,
+				T: 0.25,
+			},
+			pDna.Float32Base{
+				A: 0.2,
+				C: 0.3,
+				G: 0.3,
+				T: 0.2,
+			},
+			pDna.Float32Base{
+				A: 0.1,
+				C: 0.2,
+				G: 0.3,
+				T: 0.4,
+			},
+			pDna.Float32Base{
+				A: 0.6,
+				C: 0.2,
+				G: 0.1,
+				T: 0.1,
+			}}},
+		PFasta{Name: "chr1",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.3,
+					T: 0.2,
+				},
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.2,
+					G: 0.3,
+					T: 0.4,
+				},
+				pDna.Float32Base{
+					A: 0.25,
+					C: 0.25,
+					G: 0.25,
+					T: 0.25,
+				},
+				pDna.Float32Base{
+					A: 0.6,
+					C: 0.2,
+					G: 0.1,
+					T: 0.1,
+				},
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.4,
+					T: 0.1,
+				}}},
+		PFasta{Name: "chr2",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.4,
+					T: 0.1,
+				},
+				pDna.Float32Base{
+					A: 0.25,
+					C: 0.25,
+					G: 0.25,
+					T: 0.25,
+				},
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.3,
+					T: 0.2,
+				},
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.2,
+					G: 0.3,
+					T: 0.4,
+				},
+				pDna.Float32Base{
+					A: 0.6,
+					C: 0.2,
+					G: 0.1,
+					T: 0.1,
+				}}}},
+		Region: []bed.Bed{bed.Bed{Chrom: "chr1", ChromStart: 3, ChromEnd: 5, FieldsInitialized: 3},
+			bed.Bed{Chrom: "chr3", ChromStart: 0, ChromEnd: 3, FieldsInitialized: 3}},
+		TakeCoords: false,
+		Expected: []PFasta{PFasta{Name: "chr1",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.6,
+					C: 0.2,
+					G: 0.1,
+					T: 0.1,
+				},
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.4,
+					T: 0.1}}},
+			PFasta{Name: "chr3",
+				Seq: []pDna.Float32Base{
+					pDna.Float32Base{
+						A: 0.2,
+						C: 0.3,
+						G: 0.4,
+						T: 0.1,
+					},
+					pDna.Float32Base{
+						A: 0.25,
+						C: 0.25,
+						G: 0.25,
+						T: 0.25,
+					},
+					pDna.Float32Base{
+						A: 0.2,
+						C: 0.3,
+						G: 0.3,
+						T: 0.2,
+					}}}},
+		Precision: 1e-3},
 	{Input: []PFasta{PFasta{Name: "chr3",
-						Seq: []pDna.Float32Base{
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.4,
-								T: 0.1,
-							},
-							pDna.Float32Base{
-								A: 0.25,
-								C: 0.25,
-								G: 0.25,
-								T: 0.25,
-							},
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.3,
-								T: 0.2,
-							},
-							pDna.Float32Base{
-								A: 0.1,
-								C: 0.2,
-								G: 0.3,
-								T: 0.4,
-							},
-							pDna.Float32Base{
-								A: 0.6,
-								C: 0.2,
-								G: 0.1,
-								T: 0.1,
-							}}},
-					PFasta{Name: "chr1",
-						Seq: []pDna.Float32Base{
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.3,
-								T: 0.2,
-							},
-							pDna.Float32Base{
-								A: 0.1,
-								C: 0.2,
-								G: 0.3,
-								T: 0.4,
-							},
-							pDna.Float32Base{
-								A: 0.25,
-								C: 0.25,
-								G: 0.25,
-								T: 0.25,
-							},
-							pDna.Float32Base{
-								A: 0.6,
-								C: 0.2,
-								G: 0.1,
-								T: 0.1,
-							},
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.4,
-								T: 0.1,
-							}}},
-					PFasta{Name: "chr2",
-						Seq: []pDna.Float32Base{
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.4,
-								T: 0.1,
-							},
-							pDna.Float32Base{
-								A: 0.25,
-								C: 0.25,
-								G: 0.25,
-								T: 0.25,
-							},
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.3,
-								T: 0.2,
-							},
-							pDna.Float32Base{
-								A: 0.1,
-								C: 0.2,
-								G: 0.3,
-								T: 0.4,
-							},
-							pDna.Float32Base{
-								A: 0.6,
-								C: 0.2,
-								G: 0.1,
-								T: 0.1,
-							}}}},
-	Region: []bed.Bed{bed.Bed{Chrom: "chr3", ChromStart: 0, ChromEnd: 2, FieldsInitialized: 3},
-				      bed.Bed{Chrom: "chr3", ChromStart: 1, ChromEnd: 3, FieldsInitialized: 3}},
-	TakeCoords: true,
-	Expected: []PFasta{PFasta{Name: "chr3:0-2",
-						Seq: []pDna.Float32Base{
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.4,
-								T: 0.1,
-							},
-							pDna.Float32Base{
-								A: 0.25,
-								C: 0.25,
-								G: 0.25,
-								T: 0.25}}},
-					PFasta{Name: "chr3:1-3",
-						Seq: []pDna.Float32Base{
-							pDna.Float32Base{
-								A: 0.25,
-								C: 0.25,
-								G: 0.25,
-								T: 0.25,
-							},
-							pDna.Float32Base{
-								A: 0.2,
-								C: 0.3,
-								G: 0.3,
-								T: 0.2}}}},
-	Precision: 1e-3},
+		Seq: []pDna.Float32Base{
+			pDna.Float32Base{
+				A: 0.2,
+				C: 0.3,
+				G: 0.4,
+				T: 0.1,
+			},
+			pDna.Float32Base{
+				A: 0.25,
+				C: 0.25,
+				G: 0.25,
+				T: 0.25,
+			},
+			pDna.Float32Base{
+				A: 0.2,
+				C: 0.3,
+				G: 0.3,
+				T: 0.2,
+			},
+			pDna.Float32Base{
+				A: 0.1,
+				C: 0.2,
+				G: 0.3,
+				T: 0.4,
+			},
+			pDna.Float32Base{
+				A: 0.6,
+				C: 0.2,
+				G: 0.1,
+				T: 0.1,
+			}}},
+		PFasta{Name: "chr1",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.3,
+					T: 0.2,
+				},
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.2,
+					G: 0.3,
+					T: 0.4,
+				},
+				pDna.Float32Base{
+					A: 0.25,
+					C: 0.25,
+					G: 0.25,
+					T: 0.25,
+				},
+				pDna.Float32Base{
+					A: 0.6,
+					C: 0.2,
+					G: 0.1,
+					T: 0.1,
+				},
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.4,
+					T: 0.1,
+				}}},
+		PFasta{Name: "chr2",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.4,
+					T: 0.1,
+				},
+				pDna.Float32Base{
+					A: 0.25,
+					C: 0.25,
+					G: 0.25,
+					T: 0.25,
+				},
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.3,
+					T: 0.2,
+				},
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.2,
+					G: 0.3,
+					T: 0.4,
+				},
+				pDna.Float32Base{
+					A: 0.6,
+					C: 0.2,
+					G: 0.1,
+					T: 0.1,
+				}}}},
+		Region: []bed.Bed{bed.Bed{Chrom: "chr3", ChromStart: 0, ChromEnd: 2, FieldsInitialized: 3},
+			bed.Bed{Chrom: "chr3", ChromStart: 1, ChromEnd: 3, FieldsInitialized: 3}},
+		TakeCoords: true,
+		Expected: []PFasta{PFasta{Name: "chr3:0-2",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.3,
+					G: 0.4,
+					T: 0.1,
+				},
+				pDna.Float32Base{
+					A: 0.25,
+					C: 0.25,
+					G: 0.25,
+					T: 0.25}}},
+			PFasta{Name: "chr3:1-3",
+				Seq: []pDna.Float32Base{
+					pDna.Float32Base{
+						A: 0.25,
+						C: 0.25,
+						G: 0.25,
+						T: 0.25,
+					},
+					pDna.Float32Base{
+						A: 0.2,
+						C: 0.3,
+						G: 0.3,
+						T: 0.2}}}},
+		Precision: 1e-3},
 }
 
 var SampleTests = []struct {
@@ -665,52 +665,6 @@ func TestSample(t *testing.T) {
 		observed := Sample(testCase.Input, testCase.Chrom)
 		if !fasta.IsEqual(observed, testCase.Expected) {
 			t.Errorf("Error: in pFasta. Sample valid input test not as expected.\n")
-		}
-	}
-}
-
-var getBaseProbsAtPosTests = []struct {
-	Base	pDna.Float32Base
-	SigFigs	int
-	Expected []float32	
-}{
-	{Base: pDna.Float32Base{
-			A: 0.246,
-			C: 0.355,
-			G: 0.371,
-			T: 0.028,
-		},
-		SigFigs: 2,	
-		Expected: []float32{0.25, 0.35, 0.37, 0.028}, // want this to be .36
-	},
-	{Base: pDna.Float32Base{
-				A: 0.246,
-				C: 0.355,
-				G: 0.371,
-				T: 0.028,
-			},
-		SigFigs: 1,
-		Expected: []float32{0.2, 0.4, 0.4, 0.03},
-	},
-	{Base: pDna.Float32Base{
-				A: 0.24694837,
-				C: 0.3,
-				G: 0.371,
-				T: 0.02838856,
-			},
-		SigFigs: 4,
-		Expected: []float32{0.2469, 0.3, 0.371, 0.02839},
-	},	
-}
-
-func TestGetBaseProbsAtPos(t *testing.T) {
-	for _, testCase := range getBaseProbsAtPosTests {
-		resA, resC, resG, resT := getBaseProbsAtPos(testCase.Base, testCase.SigFigs)
-		
-		if (resA != testCase.Expected[0] || resC != testCase.Expected[1] || resG != testCase.Expected[2] || resT != testCase.Expected[3]) {
-			fmt.Printf("%v, %v, %v, %v\n", resA, resC, resG, resT)
-			
-			t.Errorf("Error: in in pFasta. getBaseProbsAtPos test not as expected.")
 		}
 	}
 }

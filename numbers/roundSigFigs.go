@@ -5,7 +5,7 @@ import (
 )
 
 // roundSigFigs rounds a float64 to a specified number of significant figures and returns as a float32
-func roundSigFigs(num float64, sigFigs int) float32 {
+func RoundSigFigs(num float64, sigFigs int) float32 {
 	if (num == 0) {
 		return float32(0)
 	}

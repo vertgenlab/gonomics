@@ -25,7 +25,7 @@ var roundToSigFigsTests = []struct {
 
 func TestRoundToSigFigs(t *testing.T) {
 	for _, testCase := range roundToSigFigsTests {
-		res := roundSigFigs(testCase.Num, testCase.SigFigs)
+		res := RoundSigFigs(testCase.Num, testCase.SigFigs)
 		if res != testCase.Expected {
 			t.Errorf("Error: in in pFasta. roundToSigFigs test not as expected.")
 		}
