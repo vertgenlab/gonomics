@@ -58,16 +58,14 @@ func TestAlignGraphTraversal(t *testing.T) {
 
 	// Simulate a read
 	read := dna.StringToBases("TGAAT")
-
 	// Initialize matrix and scoreKeeper
 	matrix := NewSwMatrix(defaultMatrixSize) // Example initialization
-
-	sk := scoreKeeper{}                  // Initialize properly
+	// Initialize properly
 	dynamicScore := dynamicScoreKeeper{} // Initialize properly
 
 	// Perform traversals in both directions
-	rightAlign, rightScore, rightTargetStart, rightQueryStart, rightPath := AlignGraphTraversal(&genome.Nodes[0], read, 0, []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &sk, &dynamicScore, pool, rightTraversal)
-	leftAlign, leftScore, leftTargetStart, leftQueryStart, leftPath := AlignGraphTraversal(&genome.Nodes[2], read, len(genome.Nodes[2].Seq), []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &sk, &dynamicScore, pool, leftTraversal)
+	rightAlign, rightScore, rightTargetStart, rightQueryStart, rightPath := AlignGraphTraversal(&genome.Nodes[0], read, 0, []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &dynamicScore, pool, rightTraversal)
+	leftAlign, leftScore, leftTargetStart, leftQueryStart, leftPath := AlignGraphTraversal(&genome.Nodes[2], read, len(genome.Nodes[2].Seq), []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &dynamicScore, pool, leftTraversal)
 	// Expected results for RightDirection
 	expectedRightScore := int64(460) // Simplified expected score
 	expectedRightAlignment := []cigar.ByteCigar{{RunLen: 5, Op: 'M'}}

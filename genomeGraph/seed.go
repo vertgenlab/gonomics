@@ -28,6 +28,18 @@ type SeedDev struct {
 	NextPart    *SeedDev
 }
 
+type seedHelper struct {
+	currHits                                  []uint64
+	codedNodeCoord                            uint64
+	seqKey                                    uint64
+	keyShift                                  uint
+	keyIdx, keyOffset, readOffset, nodeOffset int
+	nodeIdx, nodePos                          int64
+	leftMatches                               int
+	rightMatches                              int
+	tempSeed                                  SeedDev
+}
+
 var HumanChimpTwoScoreMatrix = [][]int64{
 	{90, -330, -236, -356, -208},
 	{-330, 100, -318, -236, -196},
@@ -123,6 +135,18 @@ func NewMemSeedPool() sync.Pool {
 	}
 }
 
+func createSeed(id uint32, readStart, nodeStart, length int, posStrand bool) *SeedDev {
+	return &SeedDev{
+		TargetId:    id,
+		TargetStart: uint32(nodeStart),
+		QueryStart:  uint32(readStart),
+		Length:      uint32(length),
+		PosStrand:   posStrand,
+		TotalLength: uint32(length),
+		NextPart:    nil,
+	}
+}
+
 func extendToTheRight(node *Node, read fastq.FastqBig, readStart int, nodeStart int, posStrand bool) []*SeedDev {
 	const basesPerInt int = 32
 	var nodeOffset int = nodeStart % basesPerInt
@@ -154,8 +178,8 @@ func extendToTheRight(node *Node, read fastq.FastqBig, readStart int, nodeStart 
 		}
 	}
 
-	// if the alignment did not go to another node, return the match for this node
-	if len(answer) == 0 {
+	// if the alignment did not go to another node and the read sequence is not fully traversed, return the match for this node
+	if len(answer) == 0 && readStart+rightMatches < len(read.Seq) {
 		currNode = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches), NextPart: nil}
 		answer = []*SeedDev{currNode}
 	}
@@ -164,75 +188,59 @@ func extendToTheRight(node *Node, read fastq.FastqBig, readStart int, nodeStart 
 }
 
 func extendToTheLeft(node *Node, read fastq.FastqBig, currPart *SeedDev) []*SeedDev {
-	var answer, prevParts []*SeedDev
-	var i int
-	var readBase dna.Base
-
-	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
-		for i = 0; i < len(node.Prev); i++ {
-			if currPart.PosStrand {
-				readBase = dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
-			} else {
-				readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
-			}
-			if readBase == dnaTwoBit.GetBase(node.Prev[i].Dest.SeqTwoBit, uint(node.Prev[i].Dest.SeqTwoBit.Len)-1) {
-				prevParts = extendToTheLeftHelper(node.Prev[i].Dest, read, currPart)
-				answer = append(answer, prevParts...)
-			}
-		}
-	}
-
-	if len(answer) == 0 {
+	if currPart.QueryStart <= 0 || currPart.TargetStart != 0 {
 		return []*SeedDev{currPart}
-	} else {
-		return answer
 	}
+	var readBase dna.Base
+	var answer []*SeedDev
+	for _, prev := range node.Prev {
+		if currPart.PosStrand {
+			readBase = dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
+		} else {
+			readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
+		}
+		if readBase != dnaTwoBit.GetBase(prev.Dest.SeqTwoBit, uint(prev.Dest.SeqTwoBit.Len)-1) {
+			continue
+		}
+		prevParts := extendToTheLeftHelper(prev.Dest, read, currPart)
+		answer = append(answer, prevParts...)
+	}
+	return answer
 }
 
 func extendToTheLeftHelper(node *Node, read fastq.FastqBig, nextPart *SeedDev) []*SeedDev {
 	const basesPerInt int = 32
-	var nodePos int = node.SeqTwoBit.Len - 1
-	var readPos int = int(nextPart.QueryStart) - 1
-	var nodeOffset int = nodePos % basesPerInt
-	var readOffset int = 31 - ((readPos - nodeOffset + 31) % 32)
-	var leftMatches int = 0
-	var currPart *SeedDev = nil
-	var prevParts, answer []*SeedDev
-	var i int
-	var readBase dna.Base
-
+	nodePos := node.SeqTwoBit.Len - 1
+	readPos := int(nextPart.QueryStart) - 1
+	nodeOffset := nodePos % basesPerInt
+	readOffset := 31 - ((readPos - nodeOffset + 31) % 32)
+	var leftMatches int
 	if nextPart.PosStrand {
 		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.Rainbow[readOffset], readPos+readOffset))
 	} else {
 		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.RainbowRc[readOffset], readPos+readOffset))
 	}
-
 	if leftMatches == 0 {
 		log.Fatal("Error: should not have zero matches to the left\n")
 	}
-
-	currPart = &SeedDev{TargetId: node.Id, TargetStart: uint32(nodePos - (leftMatches - 1)), QueryStart: uint32(readPos - (leftMatches - 1)), Length: uint32(leftMatches), PosStrand: nextPart.PosStrand, TotalLength: uint32(leftMatches) + nextPart.TotalLength, NextPart: nextPart}
-
-	// we went all the way to end and there might be more
-	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
-		for i = 0; i < len(node.Prev); i++ {
-			if nextPart.PosStrand {
-				readBase = dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
-			} else {
-				readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
-			}
-			if readBase == dnaTwoBit.GetBase(node.Prev[i].Dest.SeqTwoBit, uint(node.Prev[i].Dest.SeqTwoBit.Len)-1) {
-				prevParts = extendToTheLeftHelper(node.Prev[i].Dest, read, currPart)
-				answer = append(answer, prevParts...)
-			}
+	currPart := createSeed(uint32(node.Id), int(nodePos-(leftMatches-1)), int(readPos-(leftMatches-1)), int(uint32(leftMatches)+nextPart.TotalLength), nextPart.PosStrand)
+	if currPart.QueryStart <= 0 || currPart.TargetStart != 0 {
+		return []*SeedDev{currPart}
+	}
+	var answer []*SeedDev
+	var readBase dna.Base
+	for _, prev := range node.Prev {
+		if nextPart.PosStrand {
+			readBase = dnaTwoBit.GetBase(&read.Rainbow[0], uint(currPart.QueryStart)-1)
+		} else {
+			readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
 		}
+		if readBase != dnaTwoBit.GetBase(prev.Dest.SeqTwoBit, uint(prev.Dest.SeqTwoBit.Len)-1) {
+			continue
+		}
+		prevParts := extendToTheLeftHelper(prev.Dest, read, currPart)
+		answer = append(answer, prevParts...)
 	}
-
-	// if the alignment did not go to another node, return the match for this node
-	if len(answer) == 0 {
-		answer = []*SeedDev{currPart}
-	}
-
 	return answer
 }
 

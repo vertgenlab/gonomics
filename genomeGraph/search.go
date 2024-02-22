@@ -19,7 +19,7 @@ import (
 )
 
 // AlignGraphTraversal performs graph traversal for alignment either to the left or right, calculating optimal alignment using dynamic programming.
-func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk *scoreKeeper, dynamicScore *dynamicScoreKeeper, pool *sync.Pool, direction byte) ([]cigar.ByteCigar, int64, int, int, []uint32) {
+func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, dynamicScore *dynamicScoreKeeper, pool *sync.Pool, direction byte) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	// Fetch a pooled object to reduce allocations.
 	s := pool.Get().(*dnaPool)
 	defer pool.Put(s)
@@ -27,12 +27,10 @@ func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []ui
 	// Initialize sequence and path slices without reallocation.
 	s.Seq = append(s.Seq[:0], seq...)
 	s.Path = append(s.Path[:0], currentPath...)
-	copy(s.Path, currentPath)
 
 	// Traverse node sequence and update the path accordingly.
 	s.Seq = nodeSeqTraversal(n, extension, position, seq, s.Seq, direction)
 	if direction == leftTraversal {
-		AddPath(s.Path, n.Id)
 		s.Path = append(s.Path, n.Id) // Add node ID for left direction.
 	}
 
@@ -51,7 +49,9 @@ func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []ui
 		if direction == rightTraversal {
 			targetStart += position // Adjust target start for right direction.
 		}
-		return alignment, score, targetStart, queryStart, append([]uint32(nil), s.Path...)
+		s.Path = append([]uint32(nil), s.Path...)
+		pool.Put(s) // Return the object to the pool after copying the path to avoid data races.
+		return alignment, score, targetStart, queryStart, s.Path
 	}
 
 	// Recursive case: traverse next or previous nodes based on direction.
@@ -61,11 +61,11 @@ func AlignGraphTraversal(n *Node, seq []dna.Base, position int, currentPath []ui
 		nodes = n.Prev
 	}
 	for _, edge := range nodes {
-		route, currScore, end, start, path := AlignGraphTraversal(edge.Dest, s.Seq, 0, s.Path, extension, read, scores, matrix, sk, dynamicScore, pool, direction)
+		route, currScore, end, start, path := AlignGraphTraversal(edge.Dest, s.Seq, 0, s.Path, extension, read, scores, matrix, dynamicScore, pool, direction)
 		if currScore > score {
 			// Update alignment details if current score is better.
 			score, alignment, targetStart, queryStart = currScore, route, end, start
-			s.Path = path
+			s.Path = append([]uint32(nil), path...)
 		}
 	}
 
@@ -86,6 +86,7 @@ func DynamicAln(alpha, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gap
 	dynamicScore.currMax = 0 // Reset the current max score.
 	var i, j int
 	var rows, columns int = len(alpha), len(beta)
+
 	// Initialize the first row and column based on gap penalties.
 	for i = 1; i <= rows; i++ {
 		matrix.m[i][0] = int64(i) * gapPen
@@ -114,6 +115,7 @@ func DynamicAln(alpha, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gap
 				matrix.m[i][j] = insertion
 				matrix.trace[i][j] = cigar.Insertion
 			}
+
 			// Update the current maximum score.
 			if matrix.m[i][j] > dynamicScore.currMax {
 				dynamicScore.currMax = matrix.m[i][j]
@@ -123,22 +125,39 @@ func DynamicAln(alpha, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gap
 	}
 
 	// Traceback from the maximum score's position to build the alignment.
+	var currOp byte
 	alignment := make([]cigar.ByteCigar, 0)
 	i, j = dynamicScore.i, dynamicScore.j
 	for i > 0 && j > 0 {
 		switch matrix.trace[i][j] {
 		case cigar.Match:
-			alignment = cigar.AddCigarByte(alignment, cigar.ByteCigar{RunLen: 1, Op: cigar.Match})
+			if currOp == cigar.Match {
+				alignment[len(alignment)-1].RunLen++
+			} else {
+				alignment = append(alignment, cigar.ByteCigar{RunLen: 1, Op: cigar.Match})
+				currOp = cigar.Match
+			}
 			i--
 			j--
 		case cigar.Insertion:
-			alignment = cigar.AddCigarByte(alignment, cigar.ByteCigar{RunLen: 1, Op: cigar.Insertion})
+			if currOp == cigar.Insertion {
+				alignment[len(alignment)-1].RunLen++
+			} else {
+				alignment = append(alignment, cigar.ByteCigar{RunLen: 1, Op: cigar.Insertion})
+				currOp = cigar.Insertion
+			}
 			j--
 		case cigar.Deletion:
-			alignment = cigar.AddCigarByte(alignment, cigar.ByteCigar{RunLen: 1, Op: cigar.Deletion})
+			if currOp == cigar.Deletion {
+				alignment[len(alignment)-1].RunLen++
+			} else {
+				alignment = append(alignment, cigar.ByteCigar{RunLen: 1, Op: cigar.Deletion})
+				currOp = cigar.Deletion
+			}
 			i--
 		}
 	}
+
 	// Prepend soft clips if necessary (not shown here, depends on alignment strategy).
 	return dynamicScore.currMax, alignment, dynamicScore.i, dynamicScore.j
 }
@@ -276,18 +295,6 @@ func recursiveSort(arr []*SeedDev, start, end int) {
 	recursiveSort(arr, splitIndex+1, end)
 }
 
-type seedHelper struct {
-	currHits                                  []uint64
-	codedNodeCoord                            uint64
-	seqKey                                    uint64
-	keyShift                                  uint
-	keyIdx, keyOffset, readOffset, nodeOffset int
-	nodeIdx, nodePos                          int64
-	leftMatches                               int
-	rightMatches                              int
-	tempSeed                                  SeedDev
-}
-
 func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool, answer []SeedDev) []SeedDev {
 	const basesPerInt int = 32
 	answer = answer[:0]
@@ -374,7 +381,7 @@ func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart SeedDev
 		log.Fatal("Error: should not have zero matches to the left\n")
 	}
 	currPart = SeedDev{TargetId: node.Id, TargetStart: uint32(nodePos - (leftMatches - 1)), QueryStart: uint32(readPos - (leftMatches - 1)), Length: uint32(leftMatches), PosStrand: nextPart.PosStrand, TotalLength: uint32(leftMatches) + nextPart.TotalLength, NextPart: &nextPart}
-	// we went all the way to end and there might be more
+
 	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
 		for i = 0; i < len(node.Prev); i++ {
 			if nextPart.PosStrand {
@@ -388,10 +395,11 @@ func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart SeedDev
 			}
 		}
 	}
-	// if the alignment did not go to another node, return the match for this node
+
 	if len(answer) == 0 {
 		answer = []SeedDev{currPart}
 	}
+
 	return answer
 }
 

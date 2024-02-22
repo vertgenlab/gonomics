@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"reflect"
 	"runtime"
 	"runtime/pprof"
 	"strings"
@@ -11,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
@@ -153,4 +156,77 @@ func isGirafPairCorrect(input <-chan giraf.GirafPair, genome *GenomeGraph, wg *s
 	log.Printf("%f of the reads are mapping correctly\n", percentOfFloat(numReads-unmapped, numReads))
 
 	wg.Done()
+}
+func TestAddSClip(t *testing.T) {
+	type args struct {
+		front        int
+		lengthOfRead int
+		cig          []cigar.Cigar
+	}
+	tests := []struct {
+		name string
+		args args
+		want []cigar.Cigar
+	}{
+		{
+			name: "No soft clipping needed",
+			args: args{front: 0, lengthOfRead: 5, cig: []cigar.Cigar{{RunLength: 5, Op: 'M'}}},
+			want: []cigar.Cigar{{RunLength: 5, Op: 'M'}},
+		},
+		{
+			name: "Soft clipping needed at the front",
+			args: args{front: 2, lengthOfRead: 5, cig: []cigar.Cigar{{RunLength: 3, Op: 'M'}}},
+			want: []cigar.Cigar{{RunLength: 2, Op: 'S'}, {RunLength: 3, Op: 'M'}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AddSClip(tt.args.front, tt.args.lengthOfRead, tt.args.cig); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AddSClip() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPerfectMatchBig(t *testing.T) {
+	tests := []struct {
+		name        string
+		seq         []dna.Base
+		scoreMatrix [][]int64
+		want        int64
+	}{
+		{
+			name:        "empty sequence",
+			seq:         dna.StringToBases("GGTAGAGAA"),
+			scoreMatrix: HumanChimpTwoScoreMatrix,
+			want:        100,
+		},
+		{
+			name:        "single character",
+			seq:         dna.StringToBases("GGTAGAGAA"),
+			scoreMatrix: HumanChimpTwoScoreMatrix,
+			want:        100,
+		},
+		{
+			name:        "same character",
+			seq:         dna.StringToBases("AAAGGTTTAA"),
+			scoreMatrix: HumanChimpTwoScoreMatrix,
+			want:        100,
+		},
+		{
+			name:        "reversed character",
+			seq:         dna.StringToBases("TTAGATAGGATT"),
+			scoreMatrix: HumanChimpTwoScoreMatrix,
+			want:        90,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			read := fastq.FastqBig{Seq: test.seq}
+			got := perfectMatchBig(read, test.scoreMatrix)
+			if got != test.want {
+				t.Errorf("perfectMatchBig() = %v, want %v", got, test.want)
+			}
+		})
+	}
 }

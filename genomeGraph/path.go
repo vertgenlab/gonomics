@@ -3,13 +3,19 @@ package genomeGraph
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
-	"strings"
 )
+
+// Remove the redeclaration of the GenomeGraph struct
+// type GenomeGraph struct {
+//     // define the fields of the GenomeGraph struct
+// }
 
 func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {
 	if len(p.Nodes) == 1 {
