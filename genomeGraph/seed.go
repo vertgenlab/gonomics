@@ -40,14 +40,6 @@ type seedHelper struct {
 	tempSeed                                  SeedDev
 }
 
-var HumanChimpTwoScoreMatrix = [][]int64{
-	{90, -330, -236, -356, -208},
-	{-330, 100, -318, -236, -196},
-	{-236, -318, 100, -330, -196},
-	{-356, -236, -330, 90, -208},
-	{-208, -196, -196, -208, -202},
-}
-
 type ScoreMatrixHelper struct {
 	Matrix                         [][]int64
 	MaxMatch                       int64

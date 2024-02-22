@@ -14,15 +14,14 @@ func IndexGenomeIntoMap(genome []Node, seedLen int, seedStep int) map[uint64][]u
 	}
 	answer := make(map[uint64][]uint64)
 	var seqCode, locationCode uint64
-	var nodeIdx, pos int
-	for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
-		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
+	for nodeIdx := 0; nodeIdx < len(genome); nodeIdx++ {
+		for pos := 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
 			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
 				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
 				answer[seqCode] = append(answer[seqCode], ChromAndPosToNumber(nodeIdx, pos))
 			}
 		}
-		for ; pos < len(genome[nodeIdx].Seq); pos += seedStep {
+		for pos := 0; pos < len(genome[nodeIdx].Seq); pos += seedStep {
 			locationCode = ChromAndPosToNumber(nodeIdx, pos)
 			for edgeIdx := 0; edgeIdx < len(genome[nodeIdx].Next); edgeIdx++ {
 				indexGenomeIntoMapHelper(genome[nodeIdx].Seq[pos:], genome[nodeIdx].Next[edgeIdx].Dest, locationCode, seedLen, answer)
