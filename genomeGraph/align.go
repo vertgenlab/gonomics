@@ -70,8 +70,6 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	return currBest
 }
 
-
-
 // TODO: what about neg strand?
 func scoreSeedSeq(seq []dna.Base, start uint32, end uint32, scoreMatrix [][]int64) int64 {
 	var score int64 = 0

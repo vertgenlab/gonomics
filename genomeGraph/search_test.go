@@ -5,6 +5,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 )
@@ -64,8 +65,8 @@ func TestAlignGraphTraversal(t *testing.T) {
 	dynamicScore := dynamicScoreKeeper{} // Initialize properly
 
 	// Perform traversals in both directions
-	rightAlign, rightScore, rightTargetStart, rightQueryStart, rightPath := AlignGraphTraversal(&genome.Nodes[0], read, 0, []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &dynamicScore, pool, rightTraversal)
-	leftAlign, leftScore, leftTargetStart, leftQueryStart, leftPath := AlignGraphTraversal(&genome.Nodes[2], read, len(genome.Nodes[2].Seq), []uint32{}, len(read), read, HumanChimpTwoScoreMatrix, &matrix, &dynamicScore, pool, leftTraversal)
+	rightAlign, rightScore, rightTargetStart, rightQueryStart, rightPath := AlignGraphTraversal(&genome.Nodes[0], read, 0, []uint32{}, len(read), read, align.HumanChimpTwoScoreMatrix, &matrix, &dynamicScore, pool, rightTraversal)
+	leftAlign, leftScore, leftTargetStart, leftQueryStart, leftPath := AlignGraphTraversal(&genome.Nodes[2], read, len(genome.Nodes[2].Seq), []uint32{}, len(read), read, align.HumanChimpTwoScoreMatrix, &matrix, &dynamicScore, pool, leftTraversal)
 	// Expected results for RightDirection
 	expectedRightScore := int64(460) // Simplified expected score
 	expectedRightAlignment := []cigar.ByteCigar{{RunLen: 5, Op: 'M'}}

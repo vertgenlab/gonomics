@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
@@ -41,7 +42,7 @@ func BenchmarkGsw(b *testing.B) {
 	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 6
-	var scoreMatrix = HumanChimpTwoScoreMatrix
+	var scoreMatrix = align.HumanChimpTwoScoreMatrix
 	b.ResetTimer()
 	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")

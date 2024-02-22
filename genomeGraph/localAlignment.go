@@ -3,23 +3,9 @@ package genomeGraph
 import (
 	"log"
 
-	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 )
-
-var HumanChimpTwoScoreMatrixNoGap = [][]int64{
-	{90, -330, -236, -356},
-	{-330, 100, -318, -236},
-	{-236, -318, 100, -330},
-	{-356, -236, -330, 90},
-}
-
-func reverseCigar(alpha []align.Cigar) {
-	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
-		alpha[i], alpha[j] = alpha[j], alpha[i]
-	}
-}
 
 func reverseCigarPointer(alpha []cigar.Cigar) {
 	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
@@ -19,7 +20,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	var mutations int = 10
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 6
-	var scoreMatrix = HumanChimpTwoScoreMatrix
+	var scoreMatrix = align.HumanChimpTwoScoreMatrix
 	genome := Read("testdata/bigGenome.sg")
 
 	fastqPipe := make(chan fastq.PairedEndBig, numWorkers)
