@@ -1,14 +1,14 @@
 package pFasta
 
 import (
-	"fmt"
 	"log"
-	"math/rand"
+	"fmt"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"math/rand"
 )
 
 // checks if input pFasta has a sequence with chrom as name and returns its index
