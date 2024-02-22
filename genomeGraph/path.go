@@ -12,11 +12,6 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-// Remove the redeclaration of the GenomeGraph struct
-// type GenomeGraph struct {
-//     // define the fields of the GenomeGraph struct
-// }
-
 func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {
 	if len(p.Nodes) == 1 {
 		answer := make([]dna.Base, p.TEnd-p.TStart)
