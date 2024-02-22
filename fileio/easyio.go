@@ -2,8 +2,8 @@ package fileio
 
 import (
 	"bufio"
-	"compress/gzip"
 	"fmt"
+	"github.com/klauspost/pgzip"
 	"io"
 	"log"
 	"os"
@@ -16,7 +16,7 @@ import (
 // Will silently handle reading gziped files. EasyReader is a valid io.Reader.
 type EasyReader struct {
 	File         *os.File
-	internalGzip *gzip.Reader
+	internalGzip *pgzip.Reader
 	BuffReader   *bufio.Reader
 }
 
@@ -26,7 +26,7 @@ type EasyReader struct {
 type EasyWriter struct {
 	file         *os.File
 	internalBuff *bufio.Writer
-	internalGzip *gzip.Writer
+	internalGzip *pgzip.Writer
 }
 
 // EasyOpen opens the input file. Panics if errors are encountered.
@@ -58,7 +58,7 @@ func EasyOpen(filename string) *EasyReader {
 	var err error
 	switch {
 	case strings.HasSuffix(filename, ".gz") && hasMagicGzip:
-		answer.internalGzip, err = gzip.NewReader(readerInput)
+		answer.internalGzip, err = pgzip.NewReader(readerInput)
 		exception.PanicOnErr(err)
 		answer.BuffReader = bufio.NewReader(answer.internalGzip)
 
@@ -94,7 +94,7 @@ func EasyCreate(filename string) *EasyWriter {
 	answer.internalBuff = bufio.NewWriter(answer.file)
 
 	if strings.HasSuffix(filename, ".gz") {
-		answer.internalGzip = gzip.NewWriter(answer.internalBuff)
+		answer.internalGzip = pgzip.NewWriter(answer.internalBuff)
 	} else {
 		answer.internalGzip = nil
 	}
