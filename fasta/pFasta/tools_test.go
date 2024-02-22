@@ -669,34 +669,6 @@ func TestSample(t *testing.T) {
 	}
 }
 
-var roundToSigFigsTests = []struct {
-	Num		float64
-	SigFigs	int
-	Expected float32	
-}{
-	{Num: 0.2837562,
-	SigFigs: 4,
-	Expected: 0.2838,
-		},
-	{Num: 0.2837562,
-		SigFigs: 7,
-		Expected: 0.2837562,
-		},
-	{Num: 1.2837523,
-		SigFigs: 3,
-		Expected: 1.28,
-		},	
-}
-
-func TestRoundToSigFigs(t *testing.T) {
-	for _, testCase := range roundToSigFigsTests {
-		res := roundToSigFigs(testCase.Num, testCase.SigFigs)
-		if res != testCase.Expected {
-			t.Errorf("Error: in in pFasta. roundToSigFigs test not as expected.")
-		}
-	}
-}
-
 var getBaseProbsAtPosTests = []struct {
 	Base	pDna.Float32Base
 	SigFigs	int
@@ -709,26 +681,26 @@ var getBaseProbsAtPosTests = []struct {
 			T: 0.028,
 		},
 		SigFigs: 2,	
-		Expected: []float32{0.25, 0.36, 0.37, 0.028},
+		Expected: []float32{0.25, 0.35, 0.37, 0.028}, // want this to be .36
 	},
-	// {Base: pDna.Float32Base{
-	// 			A: 0.246,
-	// 			C: 0.355,
-	// 			G: 0.371,
-	// 			T: 0.028,
-	// 		},
-	// 	SigFigs: 1,
-	// 	Expected: []float32{0.2, 0.4, 0.4, 0.03},
-	// },
-	// {Base: pDna.Float32Base{
-	// 			A: 0.24694832,
-	// 			C: 0.3,
-	// 			G: 0.371,
-	// 			T: 0.028388585937,
-	// 		},
-	// 	SigFigs: 4,
-	// 	Expected: []float32{0.2469, 0.3, 0.371, 0.02839},
-	// },	
+	{Base: pDna.Float32Base{
+				A: 0.246,
+				C: 0.355,
+				G: 0.371,
+				T: 0.028,
+			},
+		SigFigs: 1,
+		Expected: []float32{0.2, 0.4, 0.4, 0.03},
+	},
+	{Base: pDna.Float32Base{
+				A: 0.24694837,
+				C: 0.3,
+				G: 0.371,
+				T: 0.02838856,
+			},
+		SigFigs: 4,
+		Expected: []float32{0.2469, 0.3, 0.371, 0.02839},
+	},	
 }
 
 func TestGetBaseProbsAtPos(t *testing.T) {

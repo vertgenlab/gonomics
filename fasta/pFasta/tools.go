@@ -11,6 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers/roundSigFigs"
 )
 
 // checks if input pFasta has a sequence with chrom as name and returns its index
@@ -134,22 +135,10 @@ func printOneSetLines(lineLength int, setOfLinesIdx int, numIters int, lineA []f
 	fmt.Fprintf(out, "%v", lineT[0:lineIdx])
 }
 
-// getBaseProbsAtPos returns the four probabilities rounded to sigFigs in given base
+// getBaseProbsAtPos returns the four probabilities rounded to sigFigs for a specified base
 func getBaseProbsAtPos(base pDna.Float32Base, sigFigs int) (float32, float32, float32, float32) {
-	return roundToSigFigs(base.A, sigFigs), roundToSigFigs(base.C, sigFigs), roundToSigFigs(base.G, sigFigs), roundToSigFigs(base.T, sigFigs)
+	// return roundToSigFigs(base.A, sigFigs), roundToSigFigs(base.C, sigFigs), roundToSigFigs(base.G, sigFigs), roundToSigFigs(base.T, sigFigs)
+	return roundToSigFigs(float64(base.A), sigFigs), roundToSigFigs(float64(base.C), sigFigs), roundToSigFigs(float64(base.G), sigFigs), roundToSigFigs(float64(base.T), sigFigs)
 }
 
-// roundToSigFigs rounds num to a given number of significant figures
-func roundToSigFigs(num float32, sigFigs int) float32 {
-	fmt.Printf("num: %v\n", num)
-	if (num == 0) {
-		return float32(0)
-	}
-	if (num < 0) {num = -num}
-	answer := math.Ceil(math.Log10(num))
-	power := sigFigs - int(answer)
-	magnitude := math.Pow10(power)
-	shift := round32Bits(num*magnitude)
-	res := float32(shift/magnitude)
-	return res
-}
+
