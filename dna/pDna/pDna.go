@@ -93,3 +93,14 @@ func Mag(d Float64Diff) float64 {
 func Dist(p Float32Base, q Float32Base) float64 {
 	return Mag(Diff(p, q))
 }
+
+// Dot
+func Dot(p Float32Base, q Float32Base) float64 {
+	return float64(p.A*q.A + p.C*q.C + p.G*q.G + p.T*q.T)
+}
+
+// DotSubstProb
+// Make sure input is probabilities not likelihoods
+func DotSubstProb(p Float32Base, q Float32Base) float64 {
+	return 1 - Dot(p, q)
+}
