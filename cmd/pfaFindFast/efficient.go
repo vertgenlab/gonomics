@@ -214,9 +214,12 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 						percentDiverged = 100 * (float64(windowDotSubst+totalGaps) / float64(s.WindowSize))
 						//percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
 						//if totalSubst+totalGaps > s.WindowSize {
-						if windowDotSubst+totalGaps > s.WindowSize {
-							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
-						}
+						// TODO: uncomment "total number of mutations exceeds windowSize" error reporting after debugging
+						/*
+								if windowDotSubst+totalGaps > s.WindowSize {
+								log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
+							}
+						*/
 						rawPValue = scorePValueCache[windowDotSubst+totalGaps]
 						//rawPValue = scorePValueCache[totalSubst+totalGaps]
 						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\t%d\t%e\t%e\t%d\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, windowDotSubst+totalGaps, "+", percentDiverged, rawPValue, alnIdxBeforeWindow+1, windowDotSubst, windowDotMean, windowDot, windowDistDiv, windowDistMean, windowDist)
