@@ -2,6 +2,7 @@ package browser
 
 import (
 	"fmt"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/vertgenlab/gonomics/dna/pDna"
@@ -41,15 +42,21 @@ import (
 func printOneSetLines(lineLength int, setOfLinesIdx int, numIters int, lineA []float32, lineC []float32, lineG []float32, lineT []float32, start int, records []pFasta.PFasta, out *fileio.EasyWriter, sigFigs int, name string, longestName int) {
 	recordIdx := setOfLinesIdx*lineLength + start
 	lineIdx := 0
+	fmt.Fprintf(out, "Position: %d\n", recordIdx)
 	for lineIdx = 0; lineIdx < numIters; lineIdx++ {
 		lineA[lineIdx], lineC[lineIdx], lineG[lineIdx], lineT[lineIdx] = getBaseProbsAtPos(records[0].Seq[recordIdx], sigFigs)
+
 		recordIdx++
 	}
-	fmt.Fprintf(out, "Position: %d\n", recordIdx)
-	fmt.Fprintf(out, "|%-*s | A | %v\n", longestName, records[0].Name, lineA[0:lineIdx])
-	fmt.Fprintf(out, "|%-*s | C | %v\n", longestName, "", lineC[0:lineIdx])
-	fmt.Fprintf(out, "|%-*s | G | %v\n", longestName, "", lineG[0:lineIdx])
-	fmt.Fprintf(out, "|%-*s | T | %v\n\n", longestName, "", lineT[0:lineIdx])
+	//fmt.Fprintf(out, "|%-*s | A | %v\n", longestName, records[0].Name, lineA[0:lineIdx])
+	//fmt.Fprintf(out, "|%-*s | C | %v\n", longestName, "", lineC[0:lineIdx])
+	//fmt.Fprintf(out, "|%-*s | G | %v\n", longestName, "", lineG[0:lineIdx])
+	//fmt.Fprintf(out, "|%-*s | T | %v\n\n", longestName, "", lineT[0:lineIdx])
+
+	fmt.Fprintf(out, ">%-*s\t|\tA\t|\t%v\n", longestName, records[0].Name, arrayToString(lineA[0:lineIdx], "\t"))
+	fmt.Fprintf(out, "|%-*s\t|\tC\t|\t%v\n", longestName, "", arrayToString(lineC[0:lineIdx], "\t"))
+	fmt.Fprintf(out, "|%-*s\t|\tG\t|\t%v\n", longestName, "", arrayToString(lineG[0:lineIdx], "\t"))
+	fmt.Fprintf(out, "|%-*s\t|\tT\t|\t%v\n", longestName, "", arrayToString(lineT[0:lineIdx], "\t"))
 }
 
 // getBaseProbsAtPos returns the four probabilities rounded to sigFigs for a specified base
@@ -68,4 +75,10 @@ func calculateLongestNamePFa(f []pFasta.PFasta) int {
 		}
 	}
 	return ans
+}
+
+// https://stackoverflow.com/questions/37532255/one-liner-to-transform-int-into-string
+// arrayToString converts an array of float32 to a string, separated by the given separator, and returns the string
+func arrayToString(nums []float32, sep string) string {
+	return strings.Trim(strings.Join(strings.Fields(fmt.Sprint(nums)), sep), "[]")
 }

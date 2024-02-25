@@ -72,7 +72,7 @@ var PrintOneSetLinesTests = []struct {
 	Expected      string
 }{{LineLength: 10,
 	SetOfLinesIdx: 0,
-	NumIters:      7,
+	NumIters:      6,
 	LineA:         make([]float32, 30),
 	LineC:         make([]float32, 30),
 	LineG:         make([]float32, 30),
@@ -142,7 +142,7 @@ var PrintOneSetLinesTests = []struct {
 					T: 0.73224,
 				}}},
 	},
-	Out:         "testdata/pfa_printOneSetLines_output_toy_1.txt",
+	Out:         "testdata/pfa_printOneSetLines_output_toy_2.txt",
 	SigFigs:     3,
 	LongestName: 15,
 	Expected:    "testdata/pfa_printOneSetLines_expected_toy_1.txt",
@@ -155,6 +155,8 @@ func TestPrintOneSetLines(t *testing.T) {
 	for _, testCase := range PrintOneSetLinesTests {
 		pFaOut := "testdata/pfa_printOneSetLines_input_toy_1.pfa"
 		pFasta.Write(pFaOut, testCase.Records)
+		fmt.Printf("%s\n", testCase.Out)
+		fmt.Printf("%s\n", testCase.Expected)
 
 		testOut := fileio.EasyCreate(testCase.Out)
 
@@ -164,7 +166,7 @@ func TestPrintOneSetLines(t *testing.T) {
 
 		err := testOut.Close()
 		exception.PanicOnErr(err)
-		if fileio.AreEqual(testCase.Out, testCase.Expected) {
+		if !fileio.AreEqual(testCase.Out, testCase.Expected) {
 			t.Errorf("Error: in in pFasta. printOneSetLines test not as expected.")
 		}
 	}
