@@ -20,7 +20,7 @@ type settings struct {
 	nBins      int
 	resolution int
 	outDir     string
-	bias       []mHiC.Bias
+	bias       mHiC.Bias
 }
 
 type contacts struct {
@@ -28,6 +28,7 @@ type contacts struct {
 	bin1  int
 	bin2  int
 	score int
+	dist  int
 }
 
 type sizeDist struct {
@@ -52,6 +53,7 @@ func processContact(line string) contacts {
 	i.bin1 = parse.StringToInt(columns[1])
 	i.bin2 = parse.StringToInt(columns[3])
 	i.score = parse.StringToInt(columns[4])
+	i.dist = numbers.AbsInt(parse.StringToInt(columns[3]) - parse.StringToInt(columns[1]))
 	return i
 }
 
@@ -113,7 +115,7 @@ func buildMhicPrior(s settings) {
 	bins := parseIntoBins(dists, total, s.nBins)
 	populateBinData(s, bins)
 	//genomeWideBins, maxPossDist, possIntraInRange, possInterAllCount, interChromProb, baselineIntraChromProb := populateBinData(s, bins)
-	x, y := calculateProbabilities(s, bins, total)
+	x, y := calculateProbabilities(s, bins, total) // x = avg distance, y = avg contacts
 	writeBins(s, bins)
 	splineFit(x, y, s, mp)
 }
@@ -208,7 +210,6 @@ func calculateProbabilities(s settings, bins []bin, total int) (avgDistance, avg
 }
 
 func splineFit(x, y []float64, s settings, mp map[int]int) {
-	//fmt.Println(x[len(x)-1])
 	var vals, spVals []float64
 	o := fileio.EasyCreate(fmt.Sprintf("%s/splineVals.txt", s.outDir))
 	fileio.WriteToFileHandle(o, "dist\tsplineVal")
@@ -222,11 +223,48 @@ func splineFit(x, y []float64, s settings, mp map[int]int) {
 	sp := gospline.NewCubicSpline(x, y)
 	for i := range vals {
 		spVals = append(spVals, sp.At(vals[i]))
-		fileio.WriteToFileHandle(o, fmt.Sprintf("%f\t%.12f", vals[i], sp.At(vals[i])))
 	}
-	err := o.Close()
-	exception.PanicOnErr(err)
-	fmt.Println(spVals)
+	pValues(s, x)
+}
+
+func pValues(s settings, avgDist []float64) {
+	var b1, b2, dist float64
+	var min, max float64 = minFloatSlice(avgDist), maxFloatSlice(avgDist)
+	ch := goReadContactsToChan(s.inFile)
+	for i := range ch {
+		b1 = s.bias[i.chrom][i.bin1]
+		b2 = s.bias[i.chrom][i.bin2]
+		if b1 < 0 || b2 < 0 {
+			continue
+		}
+		if float64(i.dist) < min {
+			dist = min
+		} else if float64(i.dist) > max {
+			dist = max
+		} else {
+			dist = float64(i.dist)
+		}
+	}
+}
+
+func minFloatSlice(s []float64) float64 {
+	f := s[0]
+	for i := range s {
+		if s[i] < f {
+			f = s[i]
+		}
+	}
+	return f
+}
+
+func maxFloatSlice(s []float64) float64 {
+	f := s[0]
+	for i := range s {
+		if s[i] > f {
+			f = s[i]
+		}
+	}
+	return f
 }
 
 func main() {

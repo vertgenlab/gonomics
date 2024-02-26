@@ -19,15 +19,11 @@ type Interaction struct {
 	Full       string
 }
 
-type Bias struct {
-	chrom string
-	bin   int
-	value float64
-}
+type Bias map[string]map[int]float64
 
-func ReadBias(in string) []Bias {
-	var b []Bias
+func ReadBias(in string) Bias {
 	var val float64
+	b := make(map[string]map[int]float64)
 	s := fileio.Read(in)
 	for i := range s {
 		ss := strings.Split(s[i], "\t")
@@ -36,11 +32,12 @@ func ReadBias(in string) []Bias {
 		} else {
 			val = parse.StringToFloat64(ss[2])
 		}
-		b = append(b, Bias{
-			chrom: ss[0],
-			bin:   parse.StringToInt(ss[1]),
-			value: val,
-		})
+
+		_, found := b[ss[0]]
+		if !found {
+			b[ss[0]] = make(map[int]float64)
+		}
+		b[ss[0]][parse.StringToInt(ss[1])] = val
 	}
 	return b
 }
