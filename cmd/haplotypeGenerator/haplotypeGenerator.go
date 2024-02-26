@@ -20,7 +20,7 @@ type Settings struct {
 	ReferenceGenomeFile string
 	VcfFile             string
 	RegionBedFile       string
-	IncludeReference    bool
+	IncludeRef          bool
 	OutDir              string
 	Verbose             int
 	LineLength          int
@@ -50,7 +50,7 @@ func haplotypeGenerator(s Settings) {
 		outputFilename := fmt.Sprintf("%s/%s.%v.%v.fa", s.OutDir, regions[i].Chrom, regions[i].ChromStart, regions[i].ChromEnd)
 		out := fileio.EasyCreate(outputFilename)
 
-		if s.IncludeReference {
+		if s.IncludeRef {
 			fasta.WriteFasta(out, refHaplotype, s.LineLength)
 		}
 
@@ -117,7 +117,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 4
 	var lineLength *int = flag.Int("lineLength", 50, "Specify the number of bases per line in the output fasta.\n")
-	var includeReference *bool = flag.Bool("includeReference", false, "If set, the program will also write out the reference haplotype as the first result. Note that as only substitutions are considered, this renders the output file a valid multiFa.\n")
+	var includeRef *bool = flag.Bool("includeRef", false, "If set, the program will also write out the reference haplotype as the first result. Note that as only substitutions are considered, this renders the output file a valid multiFa.\n")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints.\n")
 
 	flag.Usage = usage
@@ -140,7 +140,7 @@ func main() {
 		VcfFile:             snpFile,
 		RegionBedFile:       regionFile,
 		OutDir:              outDir,
-		IncludeReference:    *includeReference,
+		IncludeRef:          *includeRef,
 		LineLength:          *lineLength,
 		Verbose:             *verbose,
 	}

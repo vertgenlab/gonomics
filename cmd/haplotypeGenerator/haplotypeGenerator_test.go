@@ -9,34 +9,34 @@ import (
 )
 
 var haplotypeGeneratorTests = []struct {
-	InputFaFile      string
-	InputVcfFile     string
-	InputBedFile     string
-	OutDir           string
-	IncludeReference bool
-	LineLength       int
-	Verbose          int
-	OutputFiles      []string
-	ExpectedFiles    []string
+	InputFaFile   string
+	InputVcfFile  string
+	InputBedFile  string
+	OutDir        string
+	IncludeRef    bool
+	LineLength    int
+	Verbose       int
+	OutputFiles   []string
+	ExpectedFiles []string
 }{
 	{InputFaFile: "testdata/test.fa",
-		InputVcfFile:     "testdata/test.vcf",
-		InputBedFile:     "testdata/test.bed",
-		OutDir:           "testdata/outdir",
-		LineLength:       50,
-		Verbose:          0,
-		IncludeReference: false,
-		OutputFiles:      []string{"testdata/outdir/CHR1.10.20.fa", "testdata/outdir/CHR1.35.45.fa"},
-		ExpectedFiles:    []string{"testdata/outdir/expected.CHR1.10.20.fa", "testdata/outdir/expected.CHR1.35.45.fa"}},
+		InputVcfFile:  "testdata/test.vcf",
+		InputBedFile:  "testdata/test.bed",
+		OutDir:        "testdata/outdir",
+		LineLength:    50,
+		Verbose:       0,
+		IncludeRef:    false,
+		OutputFiles:   []string{"testdata/outdir/CHR1.10.20.fa", "testdata/outdir/CHR1.35.45.fa"},
+		ExpectedFiles: []string{"testdata/outdir/expected.CHR1.10.20.fa", "testdata/outdir/expected.CHR1.35.45.fa"}},
 	{InputFaFile: "testdata/test.fa",
-		InputVcfFile:     "testdata/test.vcf",
-		InputBedFile:     "testdata/test.bed",
-		OutDir:           "testdata/outdir",
-		LineLength:       50,
-		Verbose:          0,
-		IncludeReference: true,
-		OutputFiles:      []string{"testdata/outdir/CHR1.10.20.fa", "testdata/outdir/CHR1.35.45.fa"},
-		ExpectedFiles:    []string{"testdata/outdir/expected.CHR1.10.20.includeRef.fa", "testdata/outdir/expected.CHR1.35.45.includeRef.fa"},
+		InputVcfFile:  "testdata/test.vcf",
+		InputBedFile:  "testdata/test.bed",
+		OutDir:        "testdata/outdir",
+		LineLength:    50,
+		Verbose:       0,
+		IncludeRef:    true,
+		OutputFiles:   []string{"testdata/outdir/CHR1.10.20.fa", "testdata/outdir/CHR1.35.45.fa"},
+		ExpectedFiles: []string{"testdata/outdir/expected.CHR1.10.20.includeRef.fa", "testdata/outdir/expected.CHR1.35.45.includeRef.fa"},
 	},
 }
 
@@ -49,7 +49,7 @@ func TestHaplotypeGenerator(t *testing.T) {
 			VcfFile:             v.InputVcfFile,
 			RegionBedFile:       v.InputBedFile,
 			OutDir:              v.OutDir,
-			IncludeReference:    v.IncludeReference,
+			IncludeRef:          v.IncludeRef,
 			LineLength:          v.LineLength,
 			Verbose:             v.Verbose,
 		}
