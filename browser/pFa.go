@@ -38,6 +38,7 @@ func PFaVisualizer(infile string, outfile string, start int, end int, endOfAlign
 	if seqName == "" {
 		longestName := calculateLongestNamePFa(records)
 		// need to reconfigure this so that it can auto stop when it's "going off the chrom/approaching end"
+		// WILL NOT WORK IF ALL RECORDS DO NOT HAVE SAME LENGTH
 		for setOfLinesIdx = 0; setOfLinesIdx < (end-start)/lineLength; setOfLinesIdx++ {
 			for seqIdx, seq := range records {
 				fmt.Fprintf(out, "\n")
