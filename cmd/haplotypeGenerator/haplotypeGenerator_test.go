@@ -36,7 +36,7 @@ var haplotypeGeneratorTests = []struct {
 		Verbose:          0,
 		IncludeReference: true,
 		OutputFiles:      []string{"testdata/outdir/CHR1.10.20.fa", "testdata/outdir/CHR1.35.45.fa"},
-		ExpectedFiles:    []string{"testdata/outdir/expected.chr1.10.20.includeRef.fa", "testdata/outdir/expected.chr1.35.45.includeRef.fa"},
+		ExpectedFiles:    []string{"testdata/outdir/expected.CHR1.10.20.includeRef.fa", "testdata/outdir/expected.CHR1.35.45.includeRef.fa"},
 	},
 }
 
