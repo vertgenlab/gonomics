@@ -3,15 +3,16 @@ package genomeGraph
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"io"
-	"log"
-	"strings"
 )
 
 // GenomeGraph struct contains a slice of Nodes.
@@ -49,6 +50,8 @@ type Edge struct {
 // Read will process a simple graph formated text file and parse the data into graph fields.
 func Read(filename string) *GenomeGraph {
 	simpleReader := fileio.NewByteReader(filename)
+	defer simpleReader.Close()
+
 	genome := EmptyGraph()
 	var weight float32
 	var line string
@@ -60,7 +63,7 @@ func Read(filename string) *GenomeGraph {
 	for reader, done := fileio.ReadLine(simpleReader); !done; reader, done = fileio.ReadLine(simpleReader) {
 		line = reader.String()
 		switch true {
-		case strings.HasPrefix(line, ">"):
+		case line[0] == '>':
 			nodeId = parse.StringToUint32(line[1:])
 			AddNode(genome, &Node{Id: nodeId})
 		case strings.Contains(line, "\t"):

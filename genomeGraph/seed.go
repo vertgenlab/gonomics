@@ -2,6 +2,7 @@ package genomeGraph
 
 import (
 	"log"
+	"math"
 	"sort"
 	"sync"
 
@@ -92,6 +93,7 @@ type scoreKeeper struct {
 type dnaPool struct {
 	Seq         []dna.Base
 	Path        []uint32
+	route       []cigar.ByteCigar
 	queryStart  int
 	queryEnd    int
 	targetStart int
@@ -105,10 +107,12 @@ func NewDnaPool() sync.Pool {
 			dnaSeq := dnaPool{
 				Seq:         make([]dna.Base, 0, 150),
 				Path:        make([]uint32, 0, 10),
+				route:       make([]cigar.ByteCigar, 0, 3),
 				queryStart:  0,
 				targetStart: 0,
 				targetEnd:   0,
 				queryEnd:    0,
+				currScore:   math.MinInt64,
 			}
 			return &dnaSeq
 		},
@@ -125,6 +129,22 @@ func NewMemSeedPool() sync.Pool {
 			return &pool
 		},
 	}
+}
+
+func NewSwMatrix(size int) MatrixAln {
+	sw := MatrixAln{}
+	sw.m, sw.trace = MatrixSetup(size)
+	return sw
+}
+
+func MatrixSetup(size int) ([][]int64, [][]byte) {
+	m := make([][]int64, size)
+	trace := make([][]byte, size)
+	for idx := range m {
+		m[idx] = make([]int64, size)
+		trace[idx] = make([]byte, size)
+	}
+	return m, trace
 }
 
 func createSeed(id uint32, readStart, nodeStart, length int, posStrand bool) *SeedDev {

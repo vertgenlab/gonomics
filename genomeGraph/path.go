@@ -197,7 +197,7 @@ func reversePath(alpha []uint32) {
 
 func PathToString(allPaths []uint32) string {
 	var s string = ""
-	if allPaths == nil {
+	if len(allPaths) == 0 {
 		return s
 	} else {
 		s += fmt.Sprint(allPaths[0])
