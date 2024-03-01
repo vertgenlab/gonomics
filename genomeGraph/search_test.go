@@ -182,7 +182,7 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	var stepSize int = 32
 	var numberOfReads int = 1
 	var readLength int = 150
-	var mutations int = 5
+	var mutations int = 12
 	//var workerWaiter, writerWaiter sync.WaitGroup
 	//var numWorkers int = 6
 	//var scoreMatrix = align.HumanChimpTwoScoreMatrix
@@ -195,37 +195,31 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	fastq.WritePair(fqOne, fqTwo, simReads)
 
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
-	// go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
+
 	fqs := []fastq.FastqBig{}
 	file := fileio.NewByteReader(fqOne)
 	for read, done := fastq.ReadFqBig(file); !done; read, done = fastq.ReadFqBig(file) {
 		fqs = append(fqs, read)
 	}
+
+	memory := NewMatrixPool()
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 
-	//t.ResetTimer()
-	//for bench := 0; bench < b.N; bench++ {
-
-	memory := NewMatrixPool()
-
 	var start, stop time.Time
 
 	for read := 0; read < len(fqs); read++ {
 		start = time.Now()
-
 		GraphSmithWatermanToGiraf(genome, fqs[read], tiles, tileSize, stepSize, memory, align.HumanChimpTwoScoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper)
-
 		stop = time.Now()
 
-		//b.Logf("%s\n", giraf.ToString(result))
 	}
 
 	duration := stop.Sub(start)
-	// b.ReportAllocs()
+	b.ReportAllocs()
 	b.Logf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
 	//}
 	os.Remove(fqOne)
