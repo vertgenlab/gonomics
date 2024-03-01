@@ -16,7 +16,10 @@ import (
 // PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
 // Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
 // If 0 sig figs, returns full probability
-func PFaVisualizer(infile string, outfile string, start int, end int, endOfAlignment bool, sigFigs int, lineLength int, seqName string) {
+// if no decimal places given, defaults to 7 (in cmd, to implement)
+// If no start given, defaults 0 (in cmd, to implement)
+// There will be slight floating point errors in the last (or last two) places
+func PFaVisualizer(infile string, outfile string, start int, end int, endOfAlignment bool, sigFigs int, decimalPlaces int, lineLength int, seqName string) {
 	//add 'end' as input in cmd (look at multfavisualiser)
 	if !endOfAlignment && !(start < end) {
 		log.Fatalf("Error: Invalid arguments, start must be lower than end")
@@ -29,62 +32,109 @@ func PFaVisualizer(infile string, outfile string, start int, end int, endOfAlign
 	lineG := make([]float32, lineLength)
 	lineT := make([]float32, lineLength)
 	setOfLinesIdx := 0
-	if !endOfAlignment {
-		fmt.Fprintf(out, "Start: %d. End: %d. SigFigs: %d.", start, end, sigFigs)
+
+	var err error
+	var formatting string
+	var formatNum int
+	if sigFigs == 0 {
+		formatting = "Decimal Places"
+		formatNum = decimalPlaces
 	} else {
-		fmt.Fprintf(out, "Start: %d. End: to end. SigFigs: %d.", start, sigFigs)
+		formatting = "SigFigs"
+		formatNum = sigFigs
+	}
+	if !endOfAlignment {
+		_, err = fmt.Fprintf(out, "Start: %d. End: %d. %s: %d.", start, end, formatting, formatNum)
+		exception.PanicOnErr(err)
+	} else {
+		_, err = fmt.Fprintf(out, "Start: %d. End: to end. %s: %d.", start, formatting, formatNum)
+		exception.PanicOnErr(err)
 	}
 
 	if seqName == "" {
-		longestName := calculateLongestNamePFa(records)
-		// need to reconfigure this so that it can auto stop when it's "going off the chrom/approaching end"
-		// WILL NOT WORK IF ALL RECORDS DO NOT HAVE SAME LENGTH
-		for setOfLinesIdx = 0; setOfLinesIdx < (end-start)/lineLength; setOfLinesIdx++ {
-			for seqIdx, seq := range records {
-				fmt.Fprintf(out, "\n")
-				printOneSetLines(lineLength, setOfLinesIdx, lineLength, lineA, lineC, lineG, lineT, start, seq, out, sigFigs, records[seqIdx].Name, longestName)
+		// only accepts single pFa or a .pFa with multiple pFastas and a specified record name
+		if len(records) > 0 {
+			log.Fatalf("Error: User provided empty fasta file.\n")
+		} else if len(records) > 1 {
+			log.Fatalf("Error: User must specify sequence name for pFasta file with more than 1 sequence.\n")
+		} else {
+			// pfa with 1 entry
+			for setOfLinesIdx = 0; setOfLinesIdx < (end-start)/lineLength; setOfLinesIdx++ {
+				_, err = fmt.Fprintf(out, "\n")
+				exception.PanicOnErr(err)
+				printOneSetLines(lineLength, setOfLinesIdx, lineLength, lineA, lineC, lineG, lineT, start, records[0], out, sigFigs, decimalPlaces, records[0].Name, len(records[0].Name))
 			}
-		}
-
-		for seqIdx, seq := range records {
-			fmt.Fprintf(out, "\n")
-			printOneSetLines(lineLength, setOfLinesIdx, (end-start)%lineLength, lineA, lineC, lineG, lineT, start, seq, out, sigFigs, records[seqIdx].Name, longestName)
+			_, err = fmt.Fprintf(out, "\n")
+			exception.PanicOnErr(err)
+			printOneSetLines(lineLength, setOfLinesIdx, (end-start)%lineLength, lineA, lineC, lineG, lineT, start, records[0], out, sigFigs, decimalPlaces, records[0].Name, len(records[0].Name))
 		}
 	} else {
+		// user can specify chrom if multiple entries
 		for desiredSeqIdx, desiredSeq := range records {
 			if desiredSeq.Name == seqName {
 				longestName := len(desiredSeq.Name)
 				for setOfLinesIdx = 0; setOfLinesIdx < (end-start)/lineLength; setOfLinesIdx++ {
-					fmt.Fprintf(out, "\n")
-					printOneSetLines(lineLength, setOfLinesIdx, lineLength, lineA, lineC, lineG, lineT, start, desiredSeq, out, sigFigs, records[desiredSeqIdx].Name, longestName)
+					_, err = fmt.Fprintf(out, "\n")
+					exception.PanicOnErr(err)
+					printOneSetLines(lineLength, setOfLinesIdx, lineLength, lineA, lineC, lineG, lineT, start, desiredSeq, out, sigFigs, decimalPlaces, records[desiredSeqIdx].Name, longestName)
 				}
-				fmt.Fprintf(out, "\n")
-				printOneSetLines(lineLength, setOfLinesIdx, (end-start)%lineLength, lineA, lineC, lineG, lineT, start, desiredSeq, out, sigFigs, records[desiredSeqIdx].Name, longestName)
+				_, err = fmt.Fprintf(out, "\n")
+				exception.PanicOnErr(err)
+				printOneSetLines(lineLength, setOfLinesIdx, (end-start)%lineLength, lineA, lineC, lineG, lineT, start, desiredSeq, out, sigFigs, decimalPlaces, records[desiredSeqIdx].Name, longestName)
 				break
 			}
 		}
 	}
-	err := out.Close()
+	err = out.Close()
 	exception.PanicOnErr(err)
 }
 
+//// make a helper function for lines 65-73
+
 // printOneSetLines prints from init_pos =(setOfLinesIdx*lineLength + start) in pFasta to (init_pos + numIters )
-func printOneSetLines(lineLength int, setOfLinesIdx int, numIters int, lineA []float32, lineC []float32, lineG []float32, lineT []float32, start int, record pFasta.PFasta, out *fileio.EasyWriter, sigFigs int, name string, longestName int) {
+func printOneSetLines(lineLength int, setOfLinesIdx int, numIters int, lineA []float32, lineC []float32, lineG []float32, lineT []float32, start int, record pFasta.PFasta, out *fileio.EasyWriter, sigFigs int, decimalPlaces int, name string, longestName int) {
 	recordIdx := setOfLinesIdx*lineLength + start
 	lineIdx := 0
-	fmt.Fprintf(out, "Position: %d\n", recordIdx)
-	for lineIdx = 0; lineIdx < numIters; lineIdx++ {
-		if sigFigs == 0 {
-			lineA[lineIdx], lineC[lineIdx], lineG[lineIdx], lineT[lineIdx] = record.Seq[recordIdx].A, record.Seq[recordIdx].C, record.Seq[recordIdx].G, record.Seq[recordIdx].T
-		} else {
-			lineA[lineIdx], lineC[lineIdx], lineG[lineIdx], lineT[lineIdx] = getBaseProbsAtPos(record.Seq[recordIdx], sigFigs)
+	var err error
+	_, err = fmt.Fprintf(out, "Position: %d\n", recordIdx)
+	exception.PanicOnErr(err)
+	if sigFigs == 0 {
+		for lineIdx = 0; lineIdx < numIters; lineIdx++ {
+			lineA[lineIdx], lineC[lineIdx], lineG[lineIdx], lineT[lineIdx] = record.Seq[recordIdx+lineIdx].A, record.Seq[recordIdx+lineIdx].C, record.Seq[recordIdx+lineIdx].G, record.Seq[recordIdx+lineIdx].T
 		}
-		recordIdx++
+		printOneBaseDigits(lineA[0:lineIdx], "A", out, longestName, record.Name, decimalPlaces)
+		printOneBaseDigits(lineC[0:lineIdx], "C", out, longestName, "", decimalPlaces)
+		printOneBaseDigits(lineG[0:lineIdx], "G", out, longestName, "", decimalPlaces)
+		printOneBaseDigits(lineT[0:lineIdx], "T", out, longestName, "", decimalPlaces)
+	} else {
+		for lineIdx = 0; lineIdx < numIters; lineIdx++ {
+			lineA[lineIdx], lineC[lineIdx], lineG[lineIdx], lineT[lineIdx] = getBaseProbsAtPos(record.Seq[recordIdx+lineIdx], sigFigs)
+		}
+		printOneBaseScientific(lineA[0:lineIdx], "A", out, longestName, record.Name, sigFigs)
+		printOneBaseScientific(lineC[0:lineIdx], "C", out, longestName, "", sigFigs)
+		printOneBaseScientific(lineG[0:lineIdx], "G", out, longestName, "", sigFigs)
+		printOneBaseScientific(lineT[0:lineIdx], "T", out, longestName, "", sigFigs)
 	}
-	fmt.Fprintf(out, ">%-*s\t|\tA\t|\t%v\n", longestName, record.Name, arrayToString(lineA[0:lineIdx], "\t"))
-	fmt.Fprintf(out, "|%-*s\t|\tC\t|\t%v\n", longestName, "", arrayToString(lineC[0:lineIdx], "\t"))
-	fmt.Fprintf(out, "|%-*s\t|\tG\t|\t%v\n", longestName, "", arrayToString(lineG[0:lineIdx], "\t"))
-	fmt.Fprintf(out, "|%-*s\t|\tT\t|\t%v\n", longestName, "", arrayToString(lineT[0:lineIdx], "\t"))
+}
+
+func printOneBaseScientific(line []float32, base string, out *fileio.EasyWriter, longestName int, name string, sigFigs int) {
+	var answer strings.Builder
+	for _, base := range line {
+		answer.WriteString(fmt.Sprintf("\t%.*e", sigFigs-1, base))
+	}
+	var err error
+	_, err = fmt.Fprintf(out, ">%-*s\t|\t%s\t|%s\n", longestName, name, base, answer.String())
+	exception.PanicOnErr(err)
+}
+
+func printOneBaseDigits(line []float32, base string, out *fileio.EasyWriter, longestName int, name string, decimalPlaces int) {
+	var answer strings.Builder
+	for _, base := range line {
+		answer.WriteString(fmt.Sprintf("\t%.*f", decimalPlaces, base))
+	}
+	var err error
+	_, err = fmt.Fprintf(out, ">%-*s\t|\t%s\t|%s\n", longestName, name, base, answer.String())
+	exception.PanicOnErr(err)
 }
 
 // getBaseProbsAtPos returns the four probabilities rounded to sigFigs for a specified base
@@ -103,10 +153,4 @@ func calculateLongestNamePFa(f []pFasta.PFasta) int {
 		}
 	}
 	return ans
-}
-
-// https://stackoverflow.com/questions/37532255/one-liner-to-transform-int-into-string
-// arrayToString converts an array of float32 to a string, separated by the given separator, and returns the string
-func arrayToString(nums []float32, sep string) string {
-	return strings.Trim(strings.Join(strings.Fields(fmt.Sprint(nums)), sep), "[]")
 }
