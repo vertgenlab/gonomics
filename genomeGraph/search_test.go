@@ -177,15 +177,11 @@ func BenchmarkGirafAlignment(b *testing.B) {
 		defer pprof.StopCPUProfile()
 	}
 
-	// var output string = "testdata/rabs_test.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
 	var numberOfReads int = 1
 	var readLength int = 150
 	var mutations int = 12
-	//var workerWaiter, writerWaiter sync.WaitGroup
-	//var numWorkers int = 6
-	//var scoreMatrix = align.HumanChimpTwoScoreMatrix
 
 	genome := Read("testdata/bigGenome.sg")
 	fqOne, fqTwo := "testdata/simReads_R1.fq", "testdata/simReads_R2.fq"
@@ -209,19 +205,19 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
 
-	var start, stop time.Time
+	start := time.Now()
 
 	for read := 0; read < len(fqs); read++ {
-		start = time.Now()
 		GraphSmithWatermanToGiraf(genome, fqs[read], tiles, tileSize, stepSize, memory, align.HumanChimpTwoScoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper)
-		stop = time.Now()
-
 	}
+
+	stop := time.Now()
 
 	duration := stop.Sub(start)
 	b.ReportAllocs()
+
 	b.Logf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads), duration, float64(len(simReads))/duration.Seconds())
-	//}
+
 	os.Remove(fqOne)
 
 	if *memprofile != "" {

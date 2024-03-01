@@ -219,39 +219,36 @@ func rightSeed(i int) int {
 	return 2*i + 2
 }
 
-func seedsHeapify(a []SeedDev, i int) []SeedDev {
+func seedsHeapify(a []SeedDev, n, i int) {
+	largest := i
 	l := leftSeed(i)
 	r := rightSeed(i)
-	var max int
-	if l < len(a) && l >= 0 && a[l].TotalLength < a[i].TotalLength {
-		max = l
-	} else {
-		max = i
+
+	if l < n && a[l].TotalLength < a[largest].TotalLength {
+		largest = l
 	}
-	if r < len(a) && r >= 0 && a[r].TotalLength < a[max].TotalLength {
-		max = r
+	if r < n && a[r].TotalLength < a[largest].TotalLength {
+		largest = r
 	}
-	if max != i {
-		a[i], a[max] = a[max], a[i]
-		a = seedsHeapify(a, max)
+	if largest != i {
+		a[i], a[largest] = a[largest], a[i]
+		seedsHeapify(a, n, largest)
 	}
-	return a
 }
 
-func buildSeedHeap(a []SeedDev) []SeedDev {
-	for i := len(a)/2 - 1; i >= 0; i-- {
-		a = seedsHeapify(a, i)
+func buildSeedHeap(a []SeedDev) {
+	n := len(a)
+	for i := n/2 - 1; i >= 0; i-- {
+		seedsHeapify(a, n, i)
 	}
-	return a
 }
 
 func heapSortSeeds(a []SeedDev) {
-	a = buildSeedHeap(a)
-	size := len(a)
-	for i := size - 1; i >= 1; i-- {
+	buildSeedHeap(a)
+	n := len(a)
+	for i := n - 1; i > 0; i-- {
 		a[0], a[i] = a[i], a[0]
-		size--
-		seedsHeapify(a[:size], 0)
+		seedsHeapify(a, i, 0)
 	}
 }
 

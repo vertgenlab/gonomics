@@ -2,10 +2,10 @@
 package genomeGraph
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
-	"strings"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
@@ -54,35 +54,35 @@ func Read(filename string) *GenomeGraph {
 
 	genome := EmptyGraph()
 	var weight float32
-	var line string
-	var words []string = make([]string, 0, 2)
+	var line []byte
+	var words [][]byte = make([][]byte, 0, 2)
 	var nodeId, homeNodeIdx, destNodeIdx uint32
 	var homeNode, destNode *Node
 	var i int
 
 	for reader, done := fileio.ReadLine(simpleReader); !done; reader, done = fileio.ReadLine(simpleReader) {
-		line = reader.String()
+		line = reader.Bytes()
 		switch true {
-		case line[0] == '>':
-			nodeId = parse.StringToUint32(line[1:])
+		case bytes.HasPrefix(line, []byte(">")):
+			nodeId = parse.StringToUint32(string(line[1:]))
 			AddNode(genome, &Node{Id: nodeId})
-		case strings.Contains(line, "\t"):
-			words = strings.Split(line, "\t")
-			homeNodeIdx = parse.StringToUint32(words[0])
+		case bytes.Contains(line, []byte("\t")):
+			words = bytes.Fields(line)
+			homeNodeIdx = parse.StringToUint32(string(words[0]))
 			homeNode = &genome.Nodes[homeNodeIdx]
 			if len(words) > 2 {
 				for i = 1; i < len(words); i += 2 {
-					weight = parse.StringToFloat32(words[i])
-					destNodeIdx = parse.StringToUint32(words[i+1])
+					weight = parse.StringToFloat32(string(words[i]))
+					destNodeIdx = parse.StringToUint32(string(words[i+1]))
 					destNode = &genome.Nodes[destNodeIdx]
 					AddEdge(homeNode, destNode, weight)
 				}
 			}
 		default:
-			genome.Nodes[nodeId].Seq = append(genome.Nodes[nodeId].Seq, dna.ByteSliceToDnaBases(reader.Bytes())...)
+			genome.Nodes[nodeId].Seq = append(genome.Nodes[nodeId].Seq, dna.ByteSliceToDnaBases(line)...)
 		}
 	}
-	for i = range genome.Nodes {
+	for i = range genome.Nodes { // Fixed the range loop syntax
 		if len(genome.Nodes[i].Seq) != 0 {
 			genome.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(genome.Nodes[i].Seq)
 		}

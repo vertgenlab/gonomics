@@ -11,6 +11,14 @@ import (
 	"github.com/vertgenlab/gonomics/giraf"
 )
 
+// func TestReadGenomeGraph(t *testing.T) {
+// 	genome := ReadBytes("testdata/mini.gg")
+// 	expected := Read("testdata/mini.gg")
+// 	if !AllAreEqual(genome.Nodes, expected.Nodes) {
+// 		t.Logf("Error: Reading genome file does not match expected %v != %v...", genome.Nodes, expected.Nodes)
+// 	}
+// }
+
 func TestWorkerWithWriting(t *testing.T) {
 	var output string = "testdata/pairedTest.giraf"
 	var tileSize int = 32
