@@ -1,49 +1,53 @@
 package genomeGraph
 
 import (
-	"flag"
 	"log"
-	"os"
-	"runtime"
-	"runtime/pprof"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
-var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+// var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+// var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 
 func BenchmarkGsw(b *testing.B) {
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal("could not create CPU profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatal("could not start CPU profile: ", err)
-		}
-		defer pprof.StopCPUProfile()
-	}
+	// if *cpuprofile != "" {
+	// 	f, err := os.Create(*cpuprofile)
+	// 	if err != nil {
+	// 		log.Fatal("could not create CPU profile: ", err)
+	// 	}
+	// 	defer f.Close() // error handling omitted for example
+	// 	if err := pprof.StartCPUProfile(f); err != nil {
+	// 		log.Fatal("could not start CPU profile: ", err)
+	// 	}
+	// 	defer pprof.StopCPUProfile()
+	// }
 	b.ReportAllocs()
 	//var output string = "/dev/stdout"
 	var output string = "testdata/rabs_test.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	//var numberOfReads int = 50000
-	//var readLength int = 150
-	//var mutations int = 1
+	var numberOfReads int = 1
+	var readLength int = 150
+	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 6
-	var scoreMatrix = HumanChimpTwoScoreMatrix
+	settings := &GraphSettings{
+		Scores:     align.DefaultScoreMatrix,
+		GapPenalty: -600,
+		TileSize:   tileSize,
+		StepSize:   stepSize,
+		Extension:  readLength,
+	}
+
 	b.ResetTimer()
-	genome := Read("testdata/rabsTHREEspine.fa")
+	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
 
@@ -51,11 +55,11 @@ func BenchmarkGsw(b *testing.B) {
 	girafPipe := make(chan giraf.GirafPair, 2408)
 
 	//log.Printf("Simulating reads...\n")
-	//simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
+	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
 	//os.Remove("testdata/simReads_R1.fq")
 	//os.Remove("testdata/simReads_R2.fq")
 
-	//fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
@@ -66,7 +70,7 @@ func BenchmarkGsw(b *testing.B) {
 	workerWaiter.Add(numWorkers)
 	start := time.Now()
 	for i := 0; i < numWorkers; i++ {
-		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
+		go RoutineFqPairToGiraf(genome, tiles, settings, fastqPipe, girafPipe, &workerWaiter)
 	}
 	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
 	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
@@ -79,18 +83,8 @@ func BenchmarkGsw(b *testing.B) {
 	stop := time.Now()
 	duration := stop.Sub(start)
 	//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", 50000*2, duration, float64(50000*2)/duration.Seconds())
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		runtime.GC()    // get up-to-date statistics
-		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
-		}
-	}
+	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+
 }
 
 func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {
