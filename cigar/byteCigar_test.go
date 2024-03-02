@@ -40,6 +40,53 @@ func TestToUint32(t *testing.T) {
 		}
 	}
 }
+
+func TestSoftClipBases(t *testing.T) {
+	cig := []ByteCigar{
+		{RunLen: 10, Op: 'M'},
+		{RunLen: 5, Op: 'D'},
+		{RunLen: 8, Op: 'M'},
+	}
+
+	// Test case 1: front = 2, lengthOfRead = 25
+	expected1 := []ByteCigar{
+		{RunLen: 2, Op: 'S'},
+		{RunLen: 10, Op: 'M'},
+		{RunLen: 5, Op: 'D'},
+		{RunLen: 8, Op: 'M'},
+		{RunLen: 5, Op: 'S'},
+	}
+	result1 := SoftClipBases(2, 25, cig)
+
+	if ByteCigarToString(result1) != ByteCigarToString(expected1) {
+		t.Errorf("Test case 1 failed. Expected %s, but got %s", ByteCigarToString(result1), ByteCigarToString(expected1))
+	}
+
+	// Test case 2: front = 0, lengthOfRead = 15
+	expected2 := []ByteCigar{
+		{RunLen: 10, Op: 'M'},
+		{RunLen: 5, Op: 'D'},
+		{RunLen: 8, Op: 'M'},
+	}
+	result2 := SoftClipBases(0, 15, cig)
+	if ByteCigarToString(result2) != ByteCigarToString(expected2) {
+		t.Errorf("Test case 2 failed. Expected %s, but got %s", ByteCigarToString(result2), ByteCigarToString(expected2))
+	}
+
+	// Test case 3: front = 5, lengthOfRead = 20
+	expected3 := []ByteCigar{
+		{RunLen: 5, Op: 'S'},
+		{RunLen: 10, Op: 'M'},
+		{RunLen: 5, Op: 'D'},
+		{RunLen: 8, Op: 'M'},
+	}
+	result3 := SoftClipBases(5, 20, cig)
+
+	if ByteCigarToString(result3) != ByteCigarToString(expected3) {
+		t.Errorf("Test case 3 failed. Expected %s, but got %s", ByteCigarToString(result3), ByteCigarToString(expected3))
+	}
+}
+
 func BenchmarkCigarBytesToString(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
