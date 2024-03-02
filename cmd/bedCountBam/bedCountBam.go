@@ -12,7 +12,7 @@ import (
 )
 
 type settings struct {
-	inSam   string
+	inBam   string
 	inBed   string
 	outFile string
 	norm    bool
@@ -31,8 +31,8 @@ func bedCountBam(s settings) {
 		fileio.WriteToFileHandle(o, "bedRegion\tcounts")
 	}
 	bd := bed.Read(s.inBed)
-	bm, _ := sam.OpenBam(s.inSam)
-	bai := sam.ReadBai(s.inSam + ".bai")
+	bm, _ := sam.OpenBam(s.inBam)
+	bai := sam.ReadBai(s.inBam + ".bai")
 
 	for i := range bd {
 		ans = sam.SeekBamRegion(bm, bai, bd[i].Chrom, uint32(bd[i].ChromStart), uint32(bd[i].ChromEnd))
@@ -47,7 +47,11 @@ func bedCountBam(s settings) {
 }
 
 func usage() {
-
+	fmt.Print("bedCountBam -- read counts for bed regions from a position sorted and indexed bam file.\n" +
+		"Bam file must be position sorted and indexed. Regions must have a unique identifier in the fourth field.\n" +
+		"Usage:\n" +
+		"bedCountBam [options] in.bam in.bed out.txt\n")
+	flag.PrintDefaults()
 }
 
 func main() {
@@ -62,7 +66,7 @@ func main() {
 		log.Fatalf("Expected %d arguments, got %d", expectedNumArgs, len(flag.Args()))
 	}
 	var s settings = settings{
-		inSam:   flag.Arg(0),
+		inBam:   flag.Arg(0),
 		inBed:   flag.Arg(1),
 		outFile: flag.Arg(2),
 		norm:    *norm,
