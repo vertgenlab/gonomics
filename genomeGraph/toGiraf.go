@@ -14,7 +14,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, memory *sync.Pool, scoreMatrix [][]int64, seedPool *sync.Pool, dnaPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper, seedBuildHelper *seedHelper) *giraf.Giraf {
+func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, settings *GraphSettings, seedPool *sync.Pool, sk scoreKeeper, seedBuildHelper *seedHelper, memory *sync.Pool) *giraf.Giraf {
 	var currBest giraf.Giraf = giraf.Giraf{
 		QName:     read.Name,
 		QStart:    0,
@@ -30,14 +30,14 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	}
 	resetScoreKeeper(sk)
 	currSeqLen := len(read.Seq)
-	sk.perfectScore = perfectMatchBig(read, scoreMatrix)
+	sk.perfectScore = perfectMatchBig(read, settings.scores)
 	sk.extension = int(sk.perfectScore/600) + currSeqLen
 	seeds := seedPool.Get().(*memoryPool)
 	defer seedPool.Put(seeds) // Use defer to ensure the seeds are put back into the pool
 
 	seeds.Hits = seeds.Hits[:0]
 	seeds.Worker = seeds.Worker[:0]
-	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, seedLen, seeds.Hits, seeds.Worker, seedBuildHelper)
+	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, settings.tileSize, seeds.Hits, seeds.Worker, seedBuildHelper)
 
 	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(currSeqLen), 100, 90, -196, -296); i++ {
 		sk.currSeed = seeds.Hits[i]
@@ -47,7 +47,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 		} else {
 			sk.currSeq = read.SeqRc
 		}
-		sk.seedScore = scoreSeedSeq(sk.currSeq, sk.currSeed.QueryStart, sk.tailSeed.QueryStart+sk.tailSeed.Length, scoreMatrix)
+		sk.seedScore = scoreSeedSeq(sk.currSeq, sk.currSeed.QueryStart, sk.tailSeed.QueryStart+sk.tailSeed.Length, settings.scores)
 		if int(sk.currSeed.TotalLength) == len(sk.currSeq) {
 			sk.targetStart = int(sk.currSeed.TargetStart)
 			sk.targetEnd = int(sk.tailSeed.TargetStart + sk.tailSeed.Length)
@@ -58,8 +58,10 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			sk.leftSeq = read.Seq[:sk.currSeed.QueryStart]                     // Subslice, no allocation
 			sk.rightSeq = read.Seq[sk.tailSeed.QueryStart+sk.tailSeed.Length:] // Subslice, no allocation
 
-			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = LeftAlignTraversal(&gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[:sk.currSeed.QueryStart], scoreMatrix, memory, sk, dynamicScore, dnaPool)
-			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = RightAlignTraversal(&gg.Nodes[sk.tailSeed.TargetId], sk.rightSeq, int(sk.tailSeed.TargetStart+sk.tailSeed.Length), sk.rightPath, sk.extension-int(sk.currSeed.TotalLength), sk.currSeq[sk.tailSeed.QueryStart+sk.tailSeed.Length:], scoreMatrix, memory, &sk, &dynamicScore, dnaPool)
+			settings.extension = sk.extension - int(sk.currSeed.TotalLength)
+
+			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = LeftAlignTraversal(&gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.currSeq[:sk.currSeed.QueryStart], settings, sk, memory)
+			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = RightAlignTraversal(&gg.Nodes[sk.tailSeed.TargetId], sk.rightSeq, int(sk.tailSeed.TargetStart+sk.tailSeed.Length), sk.rightPath, sk.currSeq[sk.tailSeed.QueryStart+sk.tailSeed.Length:], settings, &sk, memory)
 			sk.currScore = sk.leftScore + sk.seedScore + sk.rightScore
 		}
 		if sk.currScore > int64(currBest.AlnScore) {
@@ -108,10 +110,10 @@ func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 	return maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
 }
 
-func WrapPairGiraf(gg *GenomeGraph, fq fastq.PairedEndBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *sync.Pool, scoreMatrix [][]int64, seedPool *sync.Pool, dnaPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper, seedBuildHelper *seedHelper) giraf.GirafPair {
+func WrapPairGiraf(gg *GenomeGraph, fq fastq.PairedEndBig, seedHash map[uint64][]uint64, settings *GraphSettings, seedPool *sync.Pool, sk scoreKeeper, seedBuildHelper *seedHelper, memory *sync.Pool) giraf.GirafPair {
 	var mappedPair giraf.GirafPair = giraf.GirafPair{
-		Fwd: *GraphSmithWatermanToGiraf(gg, fq.Fwd, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, dnaPool, sk, dynamicScore, seedBuildHelper),
-		Rev: *GraphSmithWatermanToGiraf(gg, fq.Rev, seedHash, seedLen, stepSize, matrix, scoreMatrix, seedPool, dnaPool, sk, dynamicScore, seedBuildHelper),
+		Fwd: *GraphSmithWatermanToGiraf(gg, fq.Fwd, seedHash, settings, seedPool, sk, seedBuildHelper, memory),
+		Rev: *GraphSmithWatermanToGiraf(gg, fq.Rev, seedHash, settings, seedPool, sk, seedBuildHelper, memory),
 	}
 	setGirafFlags(&mappedPair)
 	return mappedPair

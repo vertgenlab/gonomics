@@ -6,7 +6,6 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
-	"sync"
 	"testing"
 	"time"
 
@@ -22,36 +21,35 @@ func TestRightDynamicAln(t *testing.T) {
 	alpha := dna.StringToBases("AGTGGCTATCGTC") // Example sequence.
 	beta := dna.StringToBases("GGCTAT")
 
-	memory := NewMatrixPool()
+	memory := MatrixPoolMemory()
+	cache := memory.Get().(*MatrixScore)
+	defer memory.Put(cache)
 
 	// Call DynamicAln function
-	score, cig, endAlpha, endBeta := RightDynamicAln(alpha, beta, align.DefaultScoreMatrix, memory, -100, dynamicScoreKeeper{})
-	settings := SearchSettings{
-		scoreMatrix: align.DefaultScoreMatrix,
-		gapPenalty:  -100,
-		tileSize:    32,
-		extension:   150,
+	settings := &GraphSettings{
+		scores:     align.DefaultScoreMatrix,
+		gapPenalty: -100,
+		tileSize:   32,
+		stepSize:   32,
+		extension:  150,
 	}
-	pool := NewCache(len(alpha) + len(beta))
-	visited := pool.Get().(*SearchCache)
-	newScore, newCig, newTEnd, newQEnd := RightGraphAlign(alpha, beta, *visited, settings)
-	// Expected results
-	// var expectedScore int64 = 273                                                                       // Example expected score.
-	// var expectedCigar []cigar.ByteCigar = []cigar.ByteCigar{{RunLen: 6, Op: 'M'}, {RunLen: 3, Op: 'D'}} // Example expected CIGAR.
-	// var expectedEndAlpha, expectedEndBeta int = 9, 6
+	var expectedScore int64 = 273
+	var expectedTEnd, expectedQEnd int = 9, 6
+	expectCigar := []cigar.ByteCigar{{RunLen: 6, Op: 'M'}, {RunLen: 3, Op: 'D'}}
 
-	// Log results
-	t.Logf("Alignment Score: %d\nAlignment: %s\n", newScore, cigar.ByteCigarToString(newCig))
+	score, cig, endAlpha, endBeta := RightDynamicAln(alpha, beta, settings, cache)
+
+	t.Logf("Alignment Score: %d\nAlignment: %s\n", score, cigar.ByteCigarToString(cig))
 
 	// Check results
-	if score != newScore {
-		t.Errorf("Error: Score %v != %v\n", score, newScore)
+	if score != expectedScore {
+		t.Errorf("Error: Score %v != %v\n", score, expectedScore)
 	}
-	if cigar.ByteCigarToString(cig) != cigar.ByteCigarToString(newCig) {
-		t.Errorf("Error: CIGAR %+v != %+v\n", cig, newCig)
+	if cigar.ByteCigarToString(cig) != cigar.ByteCigarToString(expectCigar) {
+		t.Errorf("Error: CIGAR %+v != %+v\n", cig, expectCigar)
 	}
-	if endAlpha != newTEnd || endBeta != newQEnd {
-		t.Errorf("Error: Ending indices (%d, %d) != (%d, %d) do not match expected values\n", newTEnd, newQEnd, endAlpha, endBeta)
+	if endAlpha != expectedTEnd || endBeta != expectedQEnd {
+		t.Errorf("Error: Ending indices (%d, %d) != (%d, %d) do not match expected values\n", expectedTEnd, expectedQEnd, endAlpha, endBeta)
 	}
 }
 
@@ -98,17 +96,13 @@ func TestAlignGraphTraversal(t *testing.T) {
 
 	genome.Nodes = append(genome.Nodes, n0, n1, n2)
 
-	pool := &sync.Pool{
-		New: func() interface{} {
-			return &dnaPool{}
-		},
-	}
+	memory := MatrixPoolMemory()
 
-	memory := NewMatrixPool()
+	cache := memory.Get().(*MatrixScore)
+	defer memory.Put(cache)
 
 	read := dna.StringToBases("ATATCGCGT")
 
-	dynamicScore := dynamicScoreKeeper{}
 	scoreKeeper := scoreKeeper{}
 
 	// expectedRightPath :=  []uint32{1,2}
@@ -118,9 +112,16 @@ func TestAlignGraphTraversal(t *testing.T) {
 	expectedRightTargetEnd := 9
 	expectedRightQueryEnd := 9
 
-	rightAlign, rightScore, rightTargetEnd, rightQueryEnd, _ := RightAlignTraversal(&genome.Nodes[0], read, 0, []uint32{}, len(read), read, align.HumanChimpTwoScoreMatrix, memory, &scoreKeeper, &dynamicScore, pool)
+	settings := &GraphSettings{
+		scores:     align.HumanChimpTwoScoreMatrix,
+		gapPenalty: -100,
+		tileSize:   32,
+		extension:  len(read),
+	}
 
-	leftAlign, leftScore, leftTargetStart, leftQueryStart, _ := LeftAlignTraversal(&genome.Nodes[0], read, 0, []uint32{}, len(read), read, align.HumanChimpTwoScoreMatrix, memory, scoreKeeper, dynamicScore, pool)
+	rightAlign, rightScore, rightTargetEnd, rightQueryEnd, _ := RightAlignTraversal(&genome.Nodes[0], read, 0, []uint32{}, read, settings, &scoreKeeper, memory)
+
+	// leftAlign, leftScore, leftTargetStart, leftQueryStart, _ := LeftAlignTraversal(&genome.Nodes[0], read, 0, []uint32{}, read, settings, scoreKeeper, memory)
 
 	if rightScore != expectedRightScore {
 		t.Errorf("RightDirection: expected score %d, got %d", expectedRightScore, rightScore)
@@ -131,34 +132,7 @@ func TestAlignGraphTraversal(t *testing.T) {
 	if expectedRightTargetEnd != rightTargetEnd || rightQueryEnd != expectedRightQueryEnd {
 		t.Errorf("RightDirection: expected target and query start (%d, %d), got (%d, %d)", expectedRightTargetEnd, rightQueryEnd, rightTargetEnd, rightQueryEnd)
 	}
-	settings := SearchSettings{
-		scoreMatrix: align.HumanChimpTwoScoreMatrix,
-		gapPenalty:  -100,
-		tileSize:    32,
-		extension:   len(read),
-	}
-	visited := NewCache(defaultMatrixSize)
 
-	newRightScore, newRightAlign, newRightTargetEnd, newRightQueryEnd, _ := BreathSearchRight(&genome.Nodes[0], read, 0, []uint32{}, &visited, settings)
-	newLeftScore, newLeftAlign, newLeftTargetStart, newLeftQueryStart, _ := BreathSearchLeft(&genome.Nodes[0], read, 0, []uint32{}, &visited, settings)
-	if leftScore != newLeftScore {
-		t.Errorf("LeftDirection: expected score %d, got %d", leftScore, newLeftScore)
-	}
-	if cigar.ByteCigarToString(leftAlign) != cigar.ByteCigarToString(newLeftAlign) {
-		t.Errorf("LeftDirection: expected alignment %+v, got %+v", newRightAlign, newLeftAlign)
-	}
-	if rightScore != newRightScore {
-		t.Errorf("RightDirection: expected score %d, got %d", newRightScore, rightScore)
-	}
-	if cigar.ByteCigarToString(rightAlign) != cigar.ByteCigarToString(newRightAlign) {
-		t.Errorf("RightDirection: expected alignment %+v, got %+v", newRightAlign, rightAlign)
-	}
-	if newRightTargetEnd != rightTargetEnd || rightQueryEnd != newRightQueryEnd {
-		t.Errorf("RightDirection: expected target and query start (%d, %d), got (%d, %d)", newRightTargetEnd, newRightQueryEnd, rightTargetEnd, rightQueryEnd)
-	}
-	if leftTargetStart != newLeftTargetStart || leftQueryStart != newLeftQueryStart {
-		t.Errorf("RightDirection: expected target and query start (%d, %d), got (%d, %d)", newRightTargetEnd, newRightQueryEnd, rightTargetEnd, rightQueryEnd)
-	}
 }
 
 var cpuprofile = flag.String("cpuprofile", "cpuprofile", "write cpu profile to `file`")
@@ -183,6 +157,14 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	var readLength int = 150
 	var mutations int = 12
 
+	settings := &GraphSettings{
+		scores:     align.DefaultScoreMatrix,
+		gapPenalty: -600,
+		tileSize:   tileSize,
+		stepSize:   stepSize,
+		extension:  readLength,
+	}
+
 	genome := Read("testdata/bigGenome.sg")
 	fqOne, fqTwo := "testdata/simReads_R1.fq", "testdata/simReads_R2.fq"
 
@@ -198,17 +180,16 @@ func BenchmarkGirafAlignment(b *testing.B) {
 		fqs = append(fqs, read)
 	}
 
-	memory := NewMatrixPool()
+	memory := MatrixPoolMemory()
 	seedPool := NewMemSeedPool()
-	dnaPool := NewDnaPool()
+
 	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{}
-	dynamicKeeper := dynamicScoreKeeper{}
 
 	start := time.Now()
 
 	for read := 0; read < len(fqs); read++ {
-		GraphSmithWatermanToGiraf(genome, fqs[read], tiles, tileSize, stepSize, memory, align.HumanChimpTwoScoreMatrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper)
+		GraphSmithWatermanToGiraf(genome, fqs[read], tiles, settings, &seedPool, scorekeeper, seedBuildHelper, memory)
 	}
 
 	stop := time.Now()

@@ -28,7 +28,15 @@ func TestWorkerWithWriting(t *testing.T) {
 	var mutations int = 10
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 6
-	var scoreMatrix = align.HumanChimpTwoScoreMatrix
+
+	settings := &GraphSettings{
+		scores:     align.DefaultScoreMatrix,
+		gapPenalty: -600,
+		tileSize:   tileSize,
+		stepSize:   stepSize,
+		extension:  readLength,
+	}
+
 	genome := Read("testdata/bigGenome.sg")
 
 	fastqPipe := make(chan fastq.PairedEndBig, numWorkers)
@@ -43,7 +51,7 @@ func TestWorkerWithWriting(t *testing.T) {
 
 	workerWaiter.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, samPipe, &workerWaiter)
+		go RoutineFqPairToGiraf(genome, tiles, settings, fastqPipe, samPipe, &workerWaiter)
 	}
 	go giraf.GirafPairChanToFile(output, samPipe, &writerWaiter)
 	writerWaiter.Add(1)

@@ -2,7 +2,6 @@ package genomeGraph
 
 import (
 	"log"
-	"math"
 	"sort"
 	"sync"
 
@@ -88,35 +87,6 @@ type scoreKeeper struct {
 	currSeed       SeedDev
 	leftAlignment  []cigar.ByteCigar
 	rightAlignment []cigar.ByteCigar
-}
-
-type dnaPool struct {
-	Seq         []dna.Base
-	Path        []uint32
-	route       []cigar.ByteCigar
-	queryStart  int
-	queryEnd    int
-	targetStart int
-	targetEnd   int
-	currScore   int64
-}
-
-func NewDnaPool() sync.Pool {
-	return sync.Pool{
-		New: func() interface{} {
-			dnaSeq := dnaPool{
-				Seq:         make([]dna.Base, 0, 150),
-				Path:        make([]uint32, 0, 10),
-				route:       make([]cigar.ByteCigar, 0, 3),
-				queryStart:  0,
-				targetStart: 0,
-				targetEnd:   0,
-				queryEnd:    0,
-				currScore:   math.MinInt64,
-			}
-			return &dnaSeq
-		},
-	}
 }
 
 func NewMemSeedPool() sync.Pool {

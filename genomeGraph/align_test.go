@@ -38,7 +38,14 @@ func BenchmarkGsw(b *testing.B) {
 	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 6
-	var scoreMatrix = align.HumanChimpTwoScoreMatrix
+	settings := &GraphSettings{
+		scores:     align.DefaultScoreMatrix,
+		gapPenalty: -600,
+		tileSize:   tileSize,
+		stepSize:   stepSize,
+		extension:  readLength,
+	}
+
 	b.ResetTimer()
 	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
@@ -63,7 +70,7 @@ func BenchmarkGsw(b *testing.B) {
 	workerWaiter.Add(numWorkers)
 	start := time.Now()
 	for i := 0; i < numWorkers; i++ {
-		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
+		go RoutineFqPairToGiraf(genome, tiles, settings, fastqPipe, girafPipe, &workerWaiter)
 	}
 	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
 	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
