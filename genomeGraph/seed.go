@@ -14,8 +14,8 @@ import (
 
 const (
 	defaultMatrixSize int  = 2480
-	leftTraversal     byte = 0
-	rightTraversal    byte = 1
+	left              byte = 0
+	right             byte = 1
 )
 
 type SeedDev struct {

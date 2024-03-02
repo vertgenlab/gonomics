@@ -296,31 +296,35 @@ func TestRightAlignGraphTraversal(t *testing.T) {
 	}
 }
 
-// func TestNodeSeqTraversal(t *testing.T) {
-// 	// Create a test node
-// 	node := Node{
-// 		Id:  0,
-// 		Seq: dna.StringToBases("ACGT"),
-// 	}
+func TestGetTargetBases(t *testing.T) {
+	// Test case 1: direction is left
+	n := &Node{
+		Seq: dna.StringToBases("ACGT"),
+	}
+	extension := len(n.Seq)
+	position := len(n.Seq) - 1
+	direction := left
 
-// 	// Test leftTraversal
-// 	extension := 2
-// 	position := 2
-// 	seq := dna.StringToBases("TT")
-// 	direction := leftTraversal
-// 	expectedResult := dna.StringToBases("ACTT")
-// 	result := nodeSeqTraversal(&node, extension, position, seq, []dna.Base{}, direction)
-// 	if !reflect.DeepEqual(result, expectedResult) {
-// 		t.Errorf("LeftTraversal: expected %v, got %v", expectedResult, result)
-// 	}
-// 	// Test rightTraversal
-// 	extension = 2
-// 	position = 1
-// 	seq = dna.StringToBases("TT")
-// 	direction = rightTraversal
-// 	expectedResult = dna.StringToBases("TTCG")
-// 	result = nodeSeqTraversal(&node, extension, position, seq, []dna.Base{}, direction)
-// 	if !reflect.DeepEqual(result, expectedResult) {
-// 		t.Errorf("RightTraversal: expected %v, got %v", expectedResult, result)
-// 	}
-// }
+	expected := "ACG"
+	result := dna.BasesToString(getTargetBases(n, extension, position, []dna.Base{}, []dna.Base{}, direction))
+
+	if result != expected {
+		t.Errorf("Test case 1 failed. Expected: %v, got: %v", expected, result)
+	}
+
+	// Test case 2: direction is right
+	n = &Node{
+		Seq: dna.StringToBases("ACGT"),
+	}
+	extension = 5
+	position = 0
+
+	direction = right
+
+	expected = "ACGT"
+	result = dna.BasesToString(getTargetBases(n, extension, position, []dna.Base{}, []dna.Base{}, direction))
+
+	if result != expected {
+		t.Errorf("Test case 2 failed. Expected: %v, got: %v", expected, result)
+	}
+}
