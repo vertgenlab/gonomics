@@ -9,6 +9,36 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
+// MatrixScore represents a scoring matrix used in local alignment, specifically for sync.Pool
+type MatrixScore struct {
+	i        int
+	j        int
+	routeIdx int
+
+	matrix [][]int64
+	trace  [][]byte
+
+	Seq         []dna.Base
+	Path        []uint32
+	route       []cigar.ByteCigar
+	queryStart  int
+	queryEnd    int
+	targetStart int
+	targetEnd   int
+
+	currMax   int64
+	currScore int64
+}
+
+// GraphSettings defines settings for a genome graph alignment to be passed through alignment helper functions.
+type GraphSettings struct {
+	scores     [][]int64
+	gapPenalty int64
+	tileSize   int
+	stepSize   int
+	extension  int
+}
+
 func reverseCigarPointer(alpha []cigar.Cigar) {
 	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
 		alpha[i], alpha[j] = alpha[j], alpha[i]
@@ -21,15 +51,6 @@ func initialZeroMatrix(m [][]int64, alphaLen int, betaLen int) {
 	}
 	for j := 0; j < betaLen+1; j++ {
 		m[0][j] = 0
-	}
-}
-
-func initialTraceMatrix(trace [][]rune, alphaLen int, betaLen int) {
-	for i := 1; i < alphaLen+1; i++ {
-		trace[i][0] = 'D'
-	}
-	for j := 1; j < betaLen+1; j++ {
-		trace[0][j] = 'I'
 	}
 }
 
@@ -105,34 +126,7 @@ func tripleMaxTrace(prev int64, a int64, b int64, c int64) (int64, rune) {
 	}
 }
 
-type MatrixScore struct {
-	i        int
-	j        int
-	routeIdx int
-
-	matrix [][]int64
-	trace  [][]byte
-
-	Seq         []dna.Base
-	Path        []uint32
-	route       []cigar.ByteCigar
-	queryStart  int
-	queryEnd    int
-	targetStart int
-	targetEnd   int
-
-	currMax   int64
-	currScore int64
-}
-
-type GraphSettings struct {
-	scores     [][]int64
-	gapPenalty int64
-	tileSize   int
-	stepSize   int
-	extension  int
-}
-
+// MatrixPoolMemory returns a sync.Pool that provides a pool of reusable MatrixScore objects to reduce memory allocation overhead
 func MatrixPoolMemory() *sync.Pool {
 	m := make([][]int64, defaultMatrixSize)
 	t := make([][]byte, defaultMatrixSize)
