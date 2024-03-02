@@ -28,11 +28,11 @@ func TestRightDynamicAln(t *testing.T) {
 
 	// Call DynamicAln function
 	settings := &GraphSettings{
-		scores:     align.DefaultScoreMatrix,
-		gapPenalty: -100,
-		tileSize:   32,
-		stepSize:   32,
-		extension:  150,
+		Scores:     align.DefaultScoreMatrix,
+		GapPenalty: -100,
+		TileSize:   32,
+		StepSize:   32,
+		Extension:  150,
 	}
 	var expectedScore int64 = 273
 	var expectedTEnd, expectedQEnd int = 9, 6
@@ -114,10 +114,10 @@ func TestAlignGraphTraversal(t *testing.T) {
 	expectedRightQueryEnd := 9
 
 	settings := &GraphSettings{
-		scores:     align.HumanChimpTwoScoreMatrix,
-		gapPenalty: -100,
-		tileSize:   32,
-		extension:  len(read),
+		Scores:     align.HumanChimpTwoScoreMatrix,
+		GapPenalty: -100,
+		TileSize:   32,
+		Extension:  len(read),
 	}
 
 	rightAlign, rightScore, rightTargetEnd, rightQueryEnd, _ := RightAlignTraversal(&genome.Nodes[0], read, 0, []uint32{}, read, settings, &scoreKeeper, memory)
@@ -159,11 +159,11 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	var mutations int = 12
 
 	settings := &GraphSettings{
-		scores:     align.DefaultScoreMatrix,
-		gapPenalty: -600,
-		tileSize:   tileSize,
-		stepSize:   stepSize,
-		extension:  readLength,
+		Scores:     align.DefaultScoreMatrix,
+		GapPenalty: -600,
+		TileSize:   tileSize,
+		StepSize:   stepSize,
+		Extension:  readLength,
 	}
 
 	genome := Read("testdata/bigGenome.sg")
@@ -263,11 +263,11 @@ func TestRightAlignGraphTraversal(t *testing.T) {
 
 	memory := MatrixPoolMemory()
 	settings := &GraphSettings{
-		scores:     align.HumanChimpTwoScoreMatrix,
-		gapPenalty: -100,
-		tileSize:   32,
-		stepSize:   32,
-		extension:  150,
+		Scores:     align.HumanChimpTwoScoreMatrix,
+		GapPenalty: -100,
+		TileSize:   32,
+		StepSize:   32,
+		Extension:  150,
 	}
 
 	expectedRightAlignment := []cigar.ByteCigar{{RunLen: 5, Op: 'M'}}

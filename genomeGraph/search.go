@@ -34,13 +34,13 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 	defer memory.Put(cache)
 
 	cache.Seq, cache.Path = cache.Seq[:0], cache.Path[:0]
-	cache.Seq = getTargetBases(n, settings.extension, refEnd, seq, cache.Seq, left)
+	cache.Seq = getTargetBases(n, settings.Extension, refEnd, seq, cache.Seq, left)
 	cache.Path = make([]uint32, len(currentPath))
 	copy(cache.Path, currentPath)
 	AddPath(cache.Path, n.Id)
 
 	currSeqLen := refEnd - len(cache.Seq) - len(seq)
-	if len(seq)+refEnd >= settings.extension || len(n.Prev) == 0 {
+	if len(seq)+refEnd >= settings.Extension || len(n.Prev) == 0 {
 		sk.leftScore, sk.leftAlignment, sk.targetStart, sk.queryStart = LeftDynamicAln(cache.Seq, read, settings, cache)
 		sk.targetStart = currSeqLen + sk.targetStart
 		sk.leftPath = cache.Path
@@ -89,7 +89,7 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, settings *GraphSettings, 
 
 	for matrix.i = 1; matrix.i < rows+1; matrix.i++ {
 		for matrix.j = 1; matrix.j < columns+1; matrix.j++ {
-			matrix.matrix[matrix.i][matrix.j], matrix.trace[matrix.i][matrix.j] = cigar.ByteMatrixTrace(matrix.matrix[matrix.i-1][matrix.j-1]+settings.scores[alpha[matrix.i-1]][beta[matrix.j-1]], matrix.matrix[matrix.i][matrix.j-1]+settings.gapPenalty, matrix.matrix[matrix.i-1][matrix.j]+settings.gapPenalty)
+			matrix.matrix[matrix.i][matrix.j], matrix.trace[matrix.i][matrix.j] = cigar.ByteMatrixTrace(matrix.matrix[matrix.i-1][matrix.j-1]+settings.Scores[alpha[matrix.i-1]][beta[matrix.j-1]], matrix.matrix[matrix.i][matrix.j-1]+settings.GapPenalty, matrix.matrix[matrix.i-1][matrix.j]+settings.GapPenalty)
 			if matrix.matrix[matrix.i][matrix.j] < 0 {
 				matrix.matrix[matrix.i][matrix.j] = 0
 			}
@@ -124,7 +124,7 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 	defer memory.Put(cache)
 
 	cache.Seq, cache.Path = cache.Seq[:0], cache.Path[:0]
-	cache.Seq = getTargetBases(n, settings.extension, start, seq, cache.Seq, right)
+	cache.Seq = getTargetBases(n, settings.Extension, start, seq, cache.Seq, right)
 
 	// Reuse the currentPath slice if possible
 	if cap(cache.Path) >= len(currentPath) {
@@ -134,7 +134,7 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 	}
 	copy(cache.Path, currentPath)
 
-	if len(seq)+len(n.Seq)-start >= settings.extension || len(n.Next) == 0 {
+	if len(seq)+len(n.Seq)-start >= settings.Extension || len(n.Next) == 0 {
 		sk.rightScore, sk.rightAlignment, sk.targetEnd, sk.queryEnd = RightDynamicAln(cache.Seq, read, settings, cache)
 		sk.rightPath = cache.Path
 
@@ -172,17 +172,17 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, settings *GraphSettings,
 	var maxI, maxJ int = 0, 0
 
 	for matrix.j = 0; matrix.j < columns; matrix.j++ {
-		matrix.matrix[0][matrix.j] = int64(matrix.j) * settings.gapPenalty
+		matrix.matrix[0][matrix.j] = int64(matrix.j) * settings.GapPenalty
 		matrix.trace[0][matrix.j] = cigar.Insertion
 	}
 	for matrix.i = 0; matrix.i < rows; matrix.i++ {
-		matrix.matrix[matrix.i][0] = int64(matrix.i) * settings.gapPenalty
+		matrix.matrix[matrix.i][0] = int64(matrix.i) * settings.GapPenalty
 		matrix.trace[matrix.i][0] = cigar.Deletion
 	}
 
 	for matrix.i = 1; matrix.i < rows; matrix.i++ {
 		for matrix.j = 1; matrix.j < columns; matrix.j++ {
-			matrix.matrix[matrix.i][matrix.j], matrix.trace[matrix.i][matrix.j] = cigar.ByteMatrixTrace(matrix.matrix[matrix.i-1][matrix.j-1]+settings.scores[alpha[matrix.i-1]][beta[matrix.j-1]], matrix.matrix[matrix.i][matrix.j-1]+settings.gapPenalty, matrix.matrix[matrix.i-1][matrix.j]+settings.gapPenalty)
+			matrix.matrix[matrix.i][matrix.j], matrix.trace[matrix.i][matrix.j] = cigar.ByteMatrixTrace(matrix.matrix[matrix.i-1][matrix.j-1]+settings.Scores[alpha[matrix.i-1]][beta[matrix.j-1]], matrix.matrix[matrix.i][matrix.j-1]+settings.GapPenalty, matrix.matrix[matrix.i-1][matrix.j]+settings.GapPenalty)
 			if matrix.matrix[matrix.i][matrix.j] > matrix.currMax {
 				matrix.currMax = matrix.matrix[matrix.i][matrix.j]
 				maxI = matrix.i

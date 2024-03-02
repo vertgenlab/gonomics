@@ -2,13 +2,14 @@ package main
 
 import (
 	"bytes"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/vertgenlab/gonomics/exception"
 
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -29,10 +30,18 @@ func GswToGiraf(ref *genomeGraph.GenomeGraph, readOne string, output string, thr
 	log.Printf("Scoring matrix used:\n%s\n", genomeGraph.ViewMatrix(scoreMatrix))
 	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	wgAlign.Add(threads)
+
+	settings := &genomeGraph.GraphSettings{
+		Scores:     scoreMatrix,
+		GapPenalty: int64(-600),
+		TileSize:   seedLen,
+		StepSize:   stepSize,
+	}
+
 	log.Printf("Aligning %s to genome graph...", strings.Split(filepath.Base(readOne), ".")[0])
 	start := time.Now()
 	for i := 0; i < threads; i++ {
-		go genomeGraph.RoutineFqToGiraf(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, girafPipe, &wgAlign)
+		go genomeGraph.RoutineFqToGiraf(ref, seedHash, settings, fastqPipe, girafPipe, &wgAlign)
 	}
 	wgWrite.Add(1)
 	go writeSingleGiraf(output, girafPipe, &wgWrite)
@@ -58,10 +67,17 @@ func GswToSam(ref *genomeGraph.GenomeGraph, readOne string, output string, threa
 	log.Printf("Scoring matrix used:\n%s\n", genomeGraph.ViewMatrix(scoreMatrix))
 	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	wgAlign.Add(threads)
+	settings := &genomeGraph.GraphSettings{
+		Scores:     scoreMatrix,
+		GapPenalty: int64(-600),
+		TileSize:   seedLen,
+		StepSize:   stepSize,
+	}
+
 	log.Printf("Aligning sequence to genome graph...")
 	start := time.Now()
 	for i := 0; i < threads; i++ {
-		go genomeGraph.RoutineGirafToSamSingle(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
+		go genomeGraph.RoutineGirafToSamSingle(ref, seedHash, settings, fastqPipe, samPipe, &wgAlign)
 	}
 	wgWrite.Add(1)
 	go sam.WriteFromChan(samPipe, output, header, &wgWrite)

@@ -32,11 +32,11 @@ type MatrixScore struct {
 
 // GraphSettings defines settings for a genome graph alignment to be passed through alignment helper functions.
 type GraphSettings struct {
-	scores     [][]int64
-	gapPenalty int64
-	tileSize   int
-	stepSize   int
-	extension  int
+	Scores     [][]int64
+	GapPenalty int64
+	TileSize   int
+	StepSize   int
+	Extension  int
 }
 
 func reverseCigarPointer(alpha []cigar.Cigar) {

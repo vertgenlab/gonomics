@@ -30,11 +30,11 @@ func TestWorkerWithWriting(t *testing.T) {
 	var numWorkers int = 6
 
 	settings := &GraphSettings{
-		scores:     align.DefaultScoreMatrix,
-		gapPenalty: -600,
-		tileSize:   tileSize,
-		stepSize:   stepSize,
-		extension:  readLength,
+		Scores:     align.DefaultScoreMatrix,
+		GapPenalty: -600,
+		TileSize:   tileSize,
+		StepSize:   stepSize,
+		Extension:  readLength,
 	}
 
 	genome := Read("testdata/bigGenome.sg")

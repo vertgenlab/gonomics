@@ -39,11 +39,11 @@ func BenchmarkGsw(b *testing.B) {
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 6
 	settings := &GraphSettings{
-		scores:     align.DefaultScoreMatrix,
-		gapPenalty: -600,
-		tileSize:   tileSize,
-		stepSize:   stepSize,
-		extension:  readLength,
+		Scores:     align.DefaultScoreMatrix,
+		GapPenalty: -600,
+		TileSize:   tileSize,
+		StepSize:   stepSize,
+		Extension:  readLength,
 	}
 
 	b.ResetTimer()

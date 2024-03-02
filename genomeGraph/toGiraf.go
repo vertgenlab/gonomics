@@ -30,14 +30,14 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	}
 	resetScoreKeeper(sk)
 	currSeqLen := len(read.Seq)
-	sk.perfectScore = perfectMatchBig(read, settings.scores)
+	sk.perfectScore = perfectMatchBig(read, settings.Scores)
 	sk.extension = int(sk.perfectScore/600) + currSeqLen
 	seeds := seedPool.Get().(*memoryPool)
 	defer seedPool.Put(seeds) // Use defer to ensure the seeds are put back into the pool
 
 	seeds.Hits = seeds.Hits[:0]
 	seeds.Worker = seeds.Worker[:0]
-	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, settings.tileSize, seeds.Hits, seeds.Worker, seedBuildHelper)
+	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, settings.TileSize, seeds.Hits, seeds.Worker, seedBuildHelper)
 
 	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(currSeqLen), 100, 90, -196, -296); i++ {
 		sk.currSeed = seeds.Hits[i]
@@ -47,7 +47,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 		} else {
 			sk.currSeq = read.SeqRc
 		}
-		sk.seedScore = scoreSeedSeq(sk.currSeq, sk.currSeed.QueryStart, sk.tailSeed.QueryStart+sk.tailSeed.Length, settings.scores)
+		sk.seedScore = scoreSeedSeq(sk.currSeq, sk.currSeed.QueryStart, sk.tailSeed.QueryStart+sk.tailSeed.Length, settings.Scores)
 		if int(sk.currSeed.TotalLength) == len(sk.currSeq) {
 			sk.targetStart = int(sk.currSeed.TargetStart)
 			sk.targetEnd = int(sk.tailSeed.TargetStart + sk.tailSeed.Length)
@@ -59,7 +59,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			sk.rightSeq = read.Seq[sk.tailSeed.QueryStart+sk.tailSeed.Length:] // Subslice, no allocation
 
 			// Calculate extention
-			settings.extension = sk.extension - int(sk.currSeed.TotalLength)
+			settings.Extension = sk.extension - int(sk.currSeed.TotalLength)
 
 			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = LeftAlignTraversal(&gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.currSeq[:sk.currSeed.QueryStart], settings, sk, memory)
 			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = RightAlignTraversal(&gg.Nodes[sk.tailSeed.TargetId], sk.rightSeq, int(sk.tailSeed.TargetStart+sk.tailSeed.Length), sk.rightPath, sk.currSeq[sk.tailSeed.QueryStart+sk.tailSeed.Length:], settings, &sk, memory)
