@@ -11,7 +11,6 @@ import (
 	"github.com/vertgenlab/gonomics/giraf"
 )
 
-
 func TestWorkerWithWriting(t *testing.T) {
 	var output string = "testdata/pairedTest.giraf"
 	var tileSize int = 32
