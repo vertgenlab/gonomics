@@ -58,14 +58,6 @@ type MatrixAln struct {
 	trace [][]byte
 }
 
-type dynamicScoreKeeper struct {
-	i        int
-	j        int
-	routeIdx int
-	currMax  int64
-	route    []cigar.ByteCigar
-}
-
 type scoreKeeper struct {
 	targetStart  int
 	targetEnd    int

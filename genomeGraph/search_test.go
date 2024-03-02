@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"reflect"
 	"runtime"
 	"runtime/pprof"
 	"testing"
@@ -214,87 +215,86 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	}
 }
 
-// func TestRightAlignGraphTraversal(t *testing.T) {
-// 	// Setup a simple genome graph for testing
-// 	genome := EmptyGraph()
+func TestRightAlignGraphTraversal(t *testing.T) {
+	// Setup a simple genome graph for testing
+	genome := EmptyGraph()
 
-// 	var n0, n1, n2 Node
-// 	var e0, e1 Edge
+	var n0, n1, n2 Node
+	var e0, e1 Edge
 
-// 	// Graph nodes: 	AAAAAT -> ATCG -> CGTTTTTT
-// 	// Input Read: 		ATATCGCGT
-// 	// Output Expected:	AT->ATCG->CGT
-// 	n0 = Node{
-// 		Id:  0,
-// 		Seq: dna.StringToBases("AAAAACATGTTTT"),
-// 	}
+	// Graph nodes: 	AAAAAT -> ATCG -> CGTTTTTT
+	// Input Read: 		ATATCGCGT
+	// Output Expected:	AT->ATCG->CGT
+	n0 = Node{
+		Id:  0,
+		Seq: dna.StringToBases("AAAAACATGTTTT"),
+	}
 
-// 	n1 = Node{
-// 		Id:  1,
-// 		Seq: dna.StringToBases("CAT"),
-// 	}
+	n1 = Node{
+		Id:  1,
+		Seq: dna.StringToBases("CAT"),
+	}
 
-// 	n2 = Node{
-// 		Id:  2,
-// 		Seq: dna.StringToBases("GTTTT"),
-// 	}
+	n2 = Node{
+		Id:  2,
+		Seq: dna.StringToBases("GTTTT"),
+	}
 
-// 	// Make Edges
-// 	e0 = Edge{
-// 		Dest: &n1,
-// 		Prob: 1,
-// 	}
+	// Make Edges
+	e0 = Edge{
+		Dest: &n1,
+		Prob: 1,
+	}
 
-// 	e1 = Edge{
-// 		Dest: &n2,
-// 		Prob: 1,
-// 	}
+	e1 = Edge{
+		Dest: &n2,
+		Prob: 1,
+	}
 
-// 	// Define Paths
-// 	n0.Next = append(n0.Next, e0)
-// 	n1.Next = append(n1.Next, e1)
-// 	n1.Prev = append(n1.Prev, Edge{Dest: &n0, Prob: 1})
-// 	n2.Prev = append(n2.Prev, Edge{Dest: &n1, Prob: 1})
+	// Define Paths
+	n0.Next = append(n0.Next, e0)
+	n1.Next = append(n1.Next, e1)
+	n1.Prev = append(n1.Prev, Edge{Dest: &n0, Prob: 1})
+	n2.Prev = append(n2.Prev, Edge{Dest: &n1, Prob: 1})
 
-// 	genome.Nodes = append(genome.Nodes, n0, n1, n2)
+	genome.Nodes = append(genome.Nodes, n0, n1, n2)
 
-// 	// Define the rest of the test setup...
-// 	pool := &sync.Pool{
-// 		New: func() interface{} {
-// 			return &dnaPool{}
-// 		},
-// 	}
+	read := dna.StringToBases("ATGTT")
 
-// 	read := dna.StringToBases("ATGTT")
-// 	matrix := NewSwMatrix(defaultMatrixSize)
+	memory := MatrixPoolMemory()
+	settings := &GraphSettings{
+		scores:     align.HumanChimpTwoScoreMatrix,
+		gapPenalty: -100,
+		tileSize:   32,
+		stepSize:   32,
+		extension:  150,
+	}
 
-// 	expectedRightAlignment := []cigar.ByteCigar{{RunLen: 6, Op: 'M'}}
-// 	expectedRightTargetStart := 3
-// 	expectedRightQueryStart := 6
-// 	expectedRightPath := []uint32{1,2}
+	expectedRightAlignment := []cigar.ByteCigar{{RunLen: 5, Op: 'M'}}
+	expectedRightTargetStart := 5
+	expectedRightQueryStart := 5
+	expectedRightPath := []uint32{}
 
-// 	scoreMatrix := align.HumanChimpTwoScoreMatrix // Assuming this is defined elsewhere
+	// Perform right traversal starting from the first node (n0)
+	rightAlign, rightScore, rightTargetStart, rightQueryStart, rightPath := RightAlignTraversal(&n1, read, 0, []uint32{}, read, settings, &scoreKeeper{}, memory)
 
-// 	// Perform right traversal starting from the first node (n0)
-// 	rightAlign, rightScore, rightTargetStart, rightQueryStart, rightPath := LocalDynamicAln(&n1, read, 0, []uint32{}, len(read), read, scoreMatrix, &matrix, scoreKeeper{},  dynamicScoreKeeper{}, pool)
+	// Expected results for RightDirection
+	expectedRightScore := int64(460) // Simplified expected score
 
-// 	// Expected results for RightDirection
-// 	expectedRightScore := int64(560) // Simplified expected score
-
-// 	// Assert RightDirection results
-// 	if rightScore != expectedRightScore {
-// 		t.Errorf("RightDirection: expected score %d, got %d", expectedRightScore, rightScore)
-// 	}
-// 	if !reflect.DeepEqual(cigar.ByteCigarToString(rightAlign), cigar.ByteCigarToString(expectedRightAlignment)) {
-// 		t.Errorf("RightDirection: expected alignment %+v, got %+v", expectedRightAlignment, rightAlign)
-// 	}
-// 	if rightTargetStart != expectedRightTargetStart || rightQueryStart != expectedRightQueryStart {
-// 		t.Errorf("RightDirection: expected target and query start (%d, %d), got (%d, %d)", expectedRightTargetStart, expectedRightQueryStart, rightTargetStart, rightQueryStart)
-// 	}
-// 	if PathToString(rightPath) != PathToString(expectedRightPath) {
-// 		t.Errorf("Expected path %+v, got %+v", expectedRightPath, rightPath)
-// 	}
-// }
+	// Assert RightDirection results
+	if rightScore != expectedRightScore {
+		t.Errorf("RightDirection: expected score %d, got %d", expectedRightScore, rightScore)
+	}
+	if !reflect.DeepEqual(cigar.ByteCigarToString(rightAlign), cigar.ByteCigarToString(expectedRightAlignment)) {
+		t.Errorf("RightDirection: expected alignment %+v, got %+v", expectedRightAlignment, rightAlign)
+	}
+	if rightTargetStart != expectedRightTargetStart || rightQueryStart != expectedRightQueryStart {
+		t.Errorf("RightDirection: expected target and query start (%d, %d), got (%d, %d)", expectedRightTargetStart, expectedRightQueryStart, rightTargetStart, rightQueryStart)
+	}
+	if PathToString(rightPath) != PathToString(expectedRightPath) {
+		t.Errorf("Expected path %+v, got %+v", expectedRightPath, rightPath)
+	}
+}
 
 // func TestNodeSeqTraversal(t *testing.T) {
 // 	// Create a test node

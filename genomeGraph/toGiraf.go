@@ -58,6 +58,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			sk.leftSeq = read.Seq[:sk.currSeed.QueryStart]                     // Subslice, no allocation
 			sk.rightSeq = read.Seq[sk.tailSeed.QueryStart+sk.tailSeed.Length:] // Subslice, no allocation
 
+			// Calculate extention
 			settings.extension = sk.extension - int(sk.currSeed.TotalLength)
 
 			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = LeftAlignTraversal(&gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.currSeq[:sk.currSeed.QueryStart], settings, sk, memory)

@@ -32,7 +32,7 @@ func isEqual(alpha *Node, beta *Node) bool {
 	}
 }
 
-func allEqual(alpha []Node, beta []Node, ignoreOrder bool) bool {
+func allEqual(alpha []*Node, beta []*Node, ignoreOrder bool) bool {
 	if len(alpha) != len(beta) {
 		return false
 	}
@@ -41,23 +41,23 @@ func allEqual(alpha []Node, beta []Node, ignoreOrder bool) bool {
 		SortById(beta)
 	}
 	for idx := range alpha {
-		if !isEqual(&alpha[idx], &beta[idx]) {
+		if !isEqual(alpha[idx], beta[idx]) {
 			return false
 		}
 	}
 	return true
 }
 
-func AllAreEqual(alpha []Node, beta []Node) bool {
+func AllAreEqual(alpha []*Node, beta []*Node) bool {
 	return allEqual(alpha, beta, false)
 }
 
-func AllAreEqualIgnoreOrder(alpha []Node, beta []Node) bool {
+func AllAreEqualIgnoreOrder(alpha []*Node, beta []*Node) bool {
 	return allEqual(alpha, beta, true)
 }
 
-func SortById(seqs []Node) {
-	sort.Slice(seqs, func(i, j int) bool { return compareId(&seqs[i], &seqs[j]) == -1 })
+func SortById(seqs []*Node) {
+	sort.Slice(seqs, func(i, j int) bool { return compareId(seqs[i], seqs[j]) == -1 })
 }
 
 func SortBySeq(seqs []*Node) {

@@ -15,16 +15,6 @@ func reverseCigarPointer(alpha []cigar.Cigar) {
 	}
 }
 
-func swMatrixSetup(size int64) ([][]int64, [][]rune) {
-	m := make([][]int64, size)
-	trace := make([][]rune, size)
-	for idx := range m {
-		m[idx] = make([]int64, size)
-		trace[idx] = make([]rune, size)
-	}
-	return m, trace
-}
-
 func initialZeroMatrix(m [][]int64, alphaLen int, betaLen int) {
 	for i := 0; i < alphaLen+1; i++ {
 		m[i][0] = 0
@@ -169,46 +159,6 @@ func MatrixPoolMemory() *sync.Pool {
 				currMax:     0,
 			}
 			return &memory
-		},
-	}
-}
-
-type SearchCache struct {
-	Seq  []dna.Base
-	Path []uint32
-
-	bestScore int64
-	route     []cigar.ByteCigar
-	matrix    [][]int64
-	trace     [][]byte
-
-	targetStart int
-	targetEnd   int
-	queryStart  int
-	queryEnd    int
-}
-
-func NewCache(size int) sync.Pool {
-	m := make([][]int64, size)
-	t := make([][]byte, size)
-	for idx := range m {
-		m[idx] = make([]int64, size)
-		t[idx] = make([]byte, size)
-	}
-	return sync.Pool{
-		New: func() interface{} {
-			visited := SearchCache{
-				Seq:         make([]dna.Base, 0, 150),
-				Path:        make([]uint32, 0, 10),
-				route:       make([]cigar.ByteCigar, 0, 10),
-				matrix:      m,
-				trace:       t,
-				targetStart: 0,
-				targetEnd:   0,
-				queryStart:  0,
-				queryEnd:    0,
-			}
-			return &visited
 		},
 	}
 }
