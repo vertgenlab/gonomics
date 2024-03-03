@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,6 +16,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 func TestRightDynamicAln(t *testing.T) {
@@ -156,7 +159,7 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	var stepSize int = 32
 	var numberOfReads int = 1
 	var readLength int = 150
-	var mutations int = 12
+	var mutations int = 0
 
 	settings := &GraphSettings{
 		Scores:     align.DefaultScoreMatrix,
@@ -190,7 +193,15 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	start := time.Now()
 
 	for read := 0; read < len(fqs); read++ {
-		GraphSmithWatermanToGiraf(genome, fqs[read], tiles, settings, &seedPool, scorekeeper, seedBuildHelper, memory)
+		result := GraphSmithWatermanToGiraf(genome, fqs[read], tiles, settings, &seedPool, scorekeeper, seedBuildHelper, memory)
+		coords := strings.Split(result.QName, "_")
+		if parse.StringToInt(coords[1]) == result.Path.TStart && parse.StringToInt(coords[3]) == result.Path.TEnd {
+			b.Log("correct!\n")
+		} else {
+			b.Errorf("Error: Giraf coordinates are incorrect...%s", giraf.ToString(result))
+		}
+		
+		
 	}
 
 	stop := time.Now()

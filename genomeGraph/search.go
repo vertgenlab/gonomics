@@ -66,7 +66,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 }
 
 func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, settings *GraphSettings, matrix *MatrixScore) (int64, []cigar.ByteCigar, int, int) {
-	rows, columns := len(alpha), len(beta)
+	rows, columns := len(alpha)+1, len(beta)+1
 	matrix.route = matrix.route[:0]
 	matrix.currMax = 0
 
@@ -87,8 +87,8 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, settings *GraphSettings, 
 		matrix.matrix[0][matrix.j] = 0
 	}
 
-	for matrix.i = 1; matrix.i < rows+1; matrix.i++ {
-		for matrix.j = 1; matrix.j < columns+1; matrix.j++ {
+	for matrix.i = 1; matrix.i < rows; matrix.i++ {
+		for matrix.j = 1; matrix.j < columns; matrix.j++ {
 			matrix.matrix[matrix.i][matrix.j], matrix.trace[matrix.i][matrix.j] = cigar.ByteMatrixTrace(matrix.matrix[matrix.i-1][matrix.j-1]+settings.Scores[alpha[matrix.i-1]][beta[matrix.j-1]], matrix.matrix[matrix.i][matrix.j-1]+settings.GapPenalty, matrix.matrix[matrix.i-1][matrix.j]+settings.GapPenalty)
 			if matrix.matrix[matrix.i][matrix.j] < 0 {
 				matrix.matrix[matrix.i][matrix.j] = 0
