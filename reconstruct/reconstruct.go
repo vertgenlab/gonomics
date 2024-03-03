@@ -60,7 +60,7 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 		return dna.N
 	}
 	if nonBiasBaseProb/total < nonBiasBaseThreshold {
-		if biasN && ((1 - nonBiasBaseProb/total) < nonBiasBaseThreshold) {
+		if biasN && ((1 - nonBiasBaseProb/total) < nonBiasBaseThreshold) { // if biasN mode mode, AND BiasBaseProb < ProbThreshold, then we cannot reconstruct base, return N (otherwise, we know with some certainty (ProbThreshold) that ancestor base is either the same as bias, or different from bias)
 			return dna.N
 		} else {
 			return biasBase
