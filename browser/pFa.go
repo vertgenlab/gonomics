@@ -16,22 +16,14 @@ import (
 // PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
 // Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
 // If 0 sig figs, returns full probability
-// if no decimal places given, defaults to 7 (in cmd, to implement)
-// If no start given, defaults 0 (in cmd, to implement)
 // There will be slight floating point errors in the last (or last two) places
 func PFaVisualizer(infile string, outfile string, start int, end int, endOfAlignment bool, sigFigs int, decimalPlaces int, lineLength int, seqName string) {
-	//add 'end' as input in cmd (look at multfavisualiser)
 	if !endOfAlignment && !(start < end) {
 		log.Fatalf("Error: Invalid arguments, start must be lower than end")
 	}
 
-	records := pFasta.Read(infile) // for now, assuming only 1 seq in pfasta, will rewrite for multiple
+	records := pFasta.Read(infile)
 	out := fileio.EasyCreate(outfile)
-	lineA := make([]float32, lineLength)
-	lineC := make([]float32, lineLength)
-	lineG := make([]float32, lineLength)
-	lineT := make([]float32, lineLength)
-	setOfLinesIdx := 0
 
 	var err error
 	var formatting string
@@ -59,28 +51,13 @@ func PFaVisualizer(infile string, outfile string, start int, end int, endOfAlign
 			log.Fatalf("Error: User must specify sequence name for pFasta file with more than 1 sequence.\n")
 		} else {
 			// pfa with 1 entry
-			for setOfLinesIdx = 0; setOfLinesIdx < (end-start)/lineLength; setOfLinesIdx++ {
-				_, err = fmt.Fprintf(out, "\n")
-				exception.PanicOnErr(err)
-				printOneSetLines(lineLength, setOfLinesIdx, lineLength, lineA, lineC, lineG, lineT, start, records[0], out, sigFigs, decimalPlaces, records[0].Name, len(records[0].Name))
-			}
-			_, err = fmt.Fprintf(out, "\n")
-			exception.PanicOnErr(err)
-			printOneSetLines(lineLength, setOfLinesIdx, (end-start)%lineLength, lineA, lineC, lineG, lineT, start, records[0], out, sigFigs, decimalPlaces, records[0].Name, len(records[0].Name))
+			printAllSets(out, err, records[0], start, end, lineLength, sigFigs, decimalPlaces)
 		}
 	} else {
 		// user can specify chrom if multiple entries
-		for desiredSeqIdx, desiredSeq := range records {
+		for _, desiredSeq := range records {
 			if desiredSeq.Name == seqName {
-				longestName := len(desiredSeq.Name)
-				for setOfLinesIdx = 0; setOfLinesIdx < (end-start)/lineLength; setOfLinesIdx++ {
-					_, err = fmt.Fprintf(out, "\n")
-					exception.PanicOnErr(err)
-					printOneSetLines(lineLength, setOfLinesIdx, lineLength, lineA, lineC, lineG, lineT, start, desiredSeq, out, sigFigs, decimalPlaces, records[desiredSeqIdx].Name, longestName)
-				}
-				_, err = fmt.Fprintf(out, "\n")
-				exception.PanicOnErr(err)
-				printOneSetLines(lineLength, setOfLinesIdx, (end-start)%lineLength, lineA, lineC, lineG, lineT, start, desiredSeq, out, sigFigs, decimalPlaces, records[desiredSeqIdx].Name, longestName)
+				printAllSets(out, err, desiredSeq, start, end, lineLength, sigFigs, decimalPlaces)
 				break
 			}
 		}
@@ -89,10 +66,26 @@ func PFaVisualizer(infile string, outfile string, start int, end int, endOfAlign
 	exception.PanicOnErr(err)
 }
 
-//// make a helper function for lines 65-73
+// printAllSets prints probability distribution of bases from pos start to pos end in record
+func printAllSets(out *fileio.EasyWriter, err error, record pFasta.PFasta, start int, end int, lineLength int, sigFigs int, decimalPlaces int) {
+	lineA := make([]float32, lineLength)
+	lineC := make([]float32, lineLength)
+	lineG := make([]float32, lineLength)
+	lineT := make([]float32, lineLength)
+	setOfLinesIdx := 0
 
-// printOneSetLines prints from init_pos =(setOfLinesIdx*lineLength + start) in pFasta to (init_pos + numIters )
-func printOneSetLines(lineLength int, setOfLinesIdx int, numIters int, lineA []float32, lineC []float32, lineG []float32, lineT []float32, start int, record pFasta.PFasta, out *fileio.EasyWriter, sigFigs int, decimalPlaces int, name string, longestName int) {
+	for setOfLinesIdx = 0; setOfLinesIdx < (end-start)/lineLength; setOfLinesIdx++ {
+		_, err = fmt.Fprintf(out, "\n")
+		exception.PanicOnErr(err)
+		printOneSetLines(lineLength, setOfLinesIdx, lineLength, lineA, lineC, lineG, lineT, start, record, out, sigFigs, decimalPlaces, len(record.Name))
+	}
+	_, err = fmt.Fprintf(out, "\n")
+	exception.PanicOnErr(err)
+	printOneSetLines(lineLength, setOfLinesIdx, (end-start)%lineLength, lineA, lineC, lineG, lineT, start, record, out, sigFigs, decimalPlaces, len(record.Name))
+}
+
+// printOneSetLines prints probability distribution of bases from init_pos =(setOfLinesIdx*lineLength + start) in record to (init_pos + numIters)
+func printOneSetLines(lineLength int, setOfLinesIdx int, numIters int, lineA []float32, lineC []float32, lineG []float32, lineT []float32, start int, record pFasta.PFasta, out *fileio.EasyWriter, sigFigs int, decimalPlaces int, longestName int) {
 	recordIdx := setOfLinesIdx*lineLength + start
 	lineIdx := 0
 	var err error
