@@ -1,0 +1,577 @@
+format-version: 1.2
+data-version: releases/2023-07-27
+subsetdef: chebi_ph7_3 "Rhea list of ChEBI terms representing the major species at pH 7.3."
+subsetdef: gocheck_do_not_annotate "Term not to be used for direct annotation"
+subsetdef: gocheck_do_not_manually_annotate "Term not to be used for direct manual annotation"
+subsetdef: goslim_agr "AGR slim"
+subsetdef: goslim_aspergillus "Aspergillus GO slim"
+subsetdef: goslim_candida "Candida GO slim"
+subsetdef: goslim_chembl "ChEMBL protein targets summary"
+subsetdef: goslim_drosophila "Drosophila GO slim"
+subsetdef: goslim_flybase_ribbon "FlyBase Drosophila GO ribbon slim"
+subsetdef: goslim_generic "Generic GO slim"
+subsetdef: goslim_metagenomics "Metagenomics GO slim"
+subsetdef: goslim_mouse "Mouse GO slim"
+subsetdef: goslim_pir "PIR GO slim"
+subsetdef: goslim_plant "Plant GO slim"
+subsetdef: goslim_pombe "Fission yeast GO slim"
+subsetdef: goslim_synapse "synapse GO slim"
+subsetdef: goslim_yeast "Yeast GO slim"
+subsetdef: prokaryote_subset "GO subset for prokaryotes"
+synonymtypedef: syngo_official_label "label approved by the SynGO project"
+synonymtypedef: systematic_synonym "Systematic synonym" EXACT
+default-namespace: gene_ontology
+ontology: go
+property_value: has_ontology_root_term GO:0003674
+property_value: has_ontology_root_term GO:0005575
+property_value: has_ontology_root_term GO:0008150
+property_value: http://purl.org/dc/elements/1.1/description "The Gene Ontology (GO) provides a framework and set of concepts for describing the functions of gene products from all organisms." xsd:string
+property_value: http://purl.org/dc/elements/1.1/title "Gene Ontology" xsd:string
+property_value: http://purl.org/dc/terms/license http://creativecommons.org/licenses/by/4.0/
+property_value: owl:versionInfo "2023-07-27" xsd:string
+
+[Term]
+id: GO:0000011
+name: vacuole inheritance
+namespace: biological_process
+def: "The distribution of vacuoles into daughter cells after mitosis or meiosis, mediated by interactions between vacuoles and the cytoskeleton." [GOC:mcc, PMID:10873824, PMID:14616069]
+is_a: GO:0007033 ! vacuole organization
+is_a: GO:0048308 ! organelle inheritance
+property_value: RO:0002161 NCBITaxon:4896
+
+[Term]
+id: GO:0000022
+name: mitotic spindle elongation
+namespace: biological_process
+def: "The cell cycle process in which the distance is lengthened between poles of the mitotic spindle. Mitotic spindle elongation begins during mitotic prophase and ends during mitotic anaphase B." [GOC:mtg_cell_cycle, GOC:vw, PMID:19686686]
+is_a: GO:0051231 ! spindle elongation
+is_a: GO:1903047 ! mitotic cell cycle process
+synonym: "microtubule sliding involved in mitotic spindle elongation" RELATED []
+synonym: "spindle elongation during mitosis" EXACT []
+alt_id: GO:1905121
+relationship: part_of GO:0000070 ! mitotic sister chromatid segregation
+relationship: part_of GO:0007052 ! mitotic spindle organization
+created_by: pr
+creation_date: 2016-04-08T15:06:14Z
+intersection_of: GO:0051231 ! spindle elongation
+intersection_of: part_of GO:0000278 ! mitotic cell cycle
+
+[Term]
+id: GO:0000023
+name: maltose metabolic process
+namespace: biological_process
+def: "The chemical reactions and pathways involving the disaccharide maltose (4-O-alpha-D-glucopyranosyl-D-glucopyranose), an intermediate in the catabolism of glycogen and starch." [GOC:jl, ISBN:0198506732]
+is_a: GO:0005984 ! disaccharide metabolic process
+synonym: "malt sugar metabolic process" EXACT []
+synonym: "malt sugar metabolism" EXACT []
+synonym: "maltose metabolism" EXACT []
+
+[Term]
+id: GO:0000032
+name: cell wall mannoprotein biosynthetic process
+namespace: biological_process
+def: "The chemical reactions and pathways resulting in the formation of cell wall mannoproteins, any cell wall protein that contains covalently bound mannose residues." [GOC:ai]
+is_a: GO:0006057 ! mannoprotein biosynthetic process
+is_a: GO:0031506 ! cell wall glycoprotein biosynthetic process
+synonym: "cell wall mannoprotein anabolism" EXACT []
+synonym: "cell wall mannoprotein biosynthesis" EXACT []
+synonym: "cell wall mannoprotein formation" EXACT []
+synonym: "cell wall mannoprotein synthesis" EXACT []
+
+[Term]
+id: GO:0000034
+name: adenine deaminase activity
+namespace: molecular_function
+def: "Catalysis of the reaction
+is_a: GO:0016814 ! hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds, in cyclic amidines
+is_a: GO:0019239 ! deaminase activity
+synonym: "ADase activity" RELATED [EC:3.5.4.2]
+synonym: "adenase activity" RELATED [EC:3.5.4.2]
+synonym: "adenine aminase activity" RELATED [EC:3.5.4.2]
+synonym: "adenine aminohydrolase activity" RELATED [EC:3.5.4.2]
+xref: EC:3.5.4.2
+xref: MetaCyc:ADENINE-DEAMINASE-RXN
+xref: RHEA:23688
+
+[Term]
+id: GO:0000001
+name: mitochondrion inheritance
+namespace: biological_process
+def: "The distribution of mitochondria, including the mitochondrial genome, into daughter cells after mitosis or meiosis, mediated by interactions between mitochondria and the cytoskeleton." [GOC:mcc, PMID:10873824, PMID:11389764]
+is_a: GO:0048308 ! organelle inheritance
+is_a: GO:0048311 ! mitochondrion distribution
+synonym: "mitochondrial inheritance" EXACT []
+
+[Term]
+id: GO:0000010
+name: trans-hexaprenyltranstransferase activity
+namespace: molecular_function
+def: "Catalysis of the reaction
+is_a: GO:0004659 ! prenyltransferase activity
+synonym: "all-trans-heptaprenyl-diphosphate synthase activity" RELATED [EC:2.5.1.30]
+synonym: "HepPP synthase activity" RELATED [EC:2.5.1.30]
+synonym: "heptaprenyl diphosphate synthase activity" RELATED []
+synonym: "heptaprenyl pyrophosphate synthase activity" RELATED [EC:2.5.1.30]
+synonym: "heptaprenyl pyrophosphate synthetase activity" RELATED [EC:2.5.1.30]
+xref: EC:2.5.1.30
+xref: MetaCyc:TRANS-HEXAPRENYLTRANSTRANSFERASE-RXN
+xref: RHEA:27794
+alt_id: GO:0036422
+property_value: term_tracker_item https://github.com/geneontology/go-ontology/issues/23472 xsd:anyURI
+created_by: bf
+creation_date: 2013-09-16T11:50:41Z
+
+[Term]
+id: GO:0000016
+name: lactase activity
+namespace: molecular_function
+def: "Catalysis of the reaction
+is_a: GO:0004553 ! hydrolase activity, hydrolyzing O-glycosyl compounds
+synonym: "lactose galactohydrolase activity" EXACT []
+xref: EC:3.2.1.108
+xref: MetaCyc:LACTASE-RXN
+xref: Reactome:R-HSA-189062 "lactose + H2O => D-glucose + D-galactose"
+xref: Reactome:R-HSA-5658001 "Defective LCT does not hydrolyze Lac"
+xref: RHEA:10076
+
+[Term]
+id: GO:0000025
+name: maltose catabolic process
+namespace: biological_process
+def: "The chemical reactions and pathways resulting in the breakdown of the disaccharide maltose (4-O-alpha-D-glucopyranosyl-D-glucopyranose)." [GOC:jl, ISBN:0198506732]
+is_a: GO:0000023 ! maltose metabolic process
+is_a: GO:0046352 ! disaccharide catabolic process
+synonym: "malt sugar catabolic process" EXACT []
+synonym: "malt sugar catabolism" EXACT []
+synonym: "maltose breakdown" EXACT []
+synonym: "maltose degradation" EXACT []
+synonym: "maltose hydrolysis" NARROW []
+xref: MetaCyc:MALTOSECAT-PWY
+
+[Term]
+id: GO:0000031
+name: mannosylphosphate transferase activity
+namespace: molecular_function
+def: "Catalysis of the transfer of a mannosylphosphate group from one compound to another." [GOC:jl]
+is_a: GO:0016758 ! hexosyltransferase activity
+
+[Term]
+id: GO:0000036
+name: acyl carrier activity
+namespace: molecular_function
+def: "Binding an acyl group and presenting it for processing or offloading to a cognate enzyme. Covalently binds the acyl group via a phosphopantetheine prosthetic group and mediates protein-protein interactions with the enzyme conferring specificity. The acyl carrier protein (ACP) presents substrates to enzymes involved in fatty acid biosynthesis or in polyketide secondary metabolite biosynthesis." [GOC:jl, GOC:vw]
+is_a: GO:0044620 ! ACP phosphopantetheine attachment site binding
+is_a: GO:0140414 ! phosphopantetheine-dependent carrier activity
+synonym: "ACP phosphopantetheine attachment site binding involved in fatty acid biosynthetic process" EXACT []
+relationship: part_of GO:0006633 ! fatty acid biosynthetic process
+intersection_of: GO:0140414 ! phosphopantetheine-dependent carrier activity
+intersection_of: part_of GO:0006633 ! fatty acid biosynthetic process
+
+[Term]
+id: GO:0000048
+name: peptidyltransferase activity
+namespace: molecular_function
+def: "Catalysis of the reaction
+is_a: GO:0016755 ! aminoacyltransferase activity
+is_a: GO:0140096 ! catalytic activity, acting on a protein
+is_a: GO:0140101 ! catalytic activity, acting on a tRNA
+xref: EC:2.3.2.12
+xref: MetaCyc:PEPTIDYLTRANSFERASE-RXN
+xref: Reactome:R-HSA-156912 "Peptide transfer from P-site tRNA to the A-site tRNA"
+property_value: term_tracker_item https://github.com/geneontology/go-ontology/issues/22192 xsd:anyURI
+property_value: term_tracker_item https://github.com/geneontology/go-ontology/issues/25493 xsd:anyURI
+
+[Term]
+id: GO:0000052
+name: citrulline metabolic process
+namespace: biological_process
+def: "The chemical reactions and pathways involving citrulline, N5-carbamoyl-L-ornithine, an alpha amino acid not found in proteins." [ISBN:0198506732]
+is_a: GO:1901605 ! alpha-amino acid metabolic process
+synonym: "citrulline metabolism" EXACT []
+
+[Term]
+id: GO:0000005
+name: obsolete ribosomal chaperone activity
+namespace: molecular_function
+def: "OBSOLETE. Assists in the correct assembly of ribosomes or ribosomal subunits in vivo, but is not a component of the assembled ribosome when performing its normal biological function." [GOC:jl, PMID:12150913]
+is_obsolete: true
+synonym: "ribosomal chaperone activity" EXACT []
+comment: This term was made obsolete because it refers to a class of gene products and a biological process rather than a molecular function.
+consider: GO:0042254
+consider: GO:0044183
+consider: GO:0051082
+
+[Term]
+id: GO:0000019
+name: regulation of mitotic recombination
+namespace: biological_process
+def: "Any process that modulates the frequency, rate or extent of DNA recombination during mitosis." [GOC:go_curators]
+is_a: GO:0000018 ! regulation of DNA recombination
+synonym: "regulation of recombination within rDNA repeats" NARROW []
+relationship: regulates GO:0006312 ! mitotic recombination
+intersection_of: GO:0065007 ! biological regulation
+intersection_of: regulates GO:0006312 ! mitotic recombination
+
+[Term]
+id: GO:0000027
+name: ribosomal large subunit assembly
+namespace: biological_process
+def: "The aggregation, arrangement and bonding together of constituent RNAs and proteins to form the large ribosomal subunit." [GOC:jl, PMID:30467428]
+is_a: GO:0022618 ! protein-RNA complex assembly
+synonym: "50S ribosomal subunit assembly" NARROW [GOC:mah]
+synonym: "60S ribosomal subunit assembly" NARROW [GOC:mah]
+relationship: part_of GO:0042255 ! ribosome assembly
+relationship: part_of GO:0042273 ! ribosomal large subunit biogenesis
+
+[Term]
+id: GO:0000039
+name: obsolete plasma membrane long-chain fatty acid transporter
+namespace: molecular_function
+def: "OBSOLETE. (Was not defined before being made obsolete)." [GOC:ai]
+is_obsolete: true
+synonym: "plasma membrane long-chain fatty acid transporter" EXACT []
+comment: This term was made obsolete because it describes a gene product and it contains component information.
+consider: GO:0005324
+consider: GO:0005886
+
+[Term]
+id: GO:0000055
+name: ribosomal large subunit export from nucleus
+namespace: biological_process
+def: "The directed movement of a ribosomal large subunit from the nucleus into the cytoplasm." [GOC:mah]
+is_a: GO:0000054 ! ribosomal subunit export from nucleus
+synonym: "50S ribosomal subunit export from nucleus" NARROW [GOC:mah]
+synonym: "60S ribosomal subunit export from nucleus" NARROW [GOC:mah]
+synonym: "ribosomal large subunit export from cell nucleus" EXACT []
+synonym: "ribosomal large subunit export out of nucleus" EXACT []
+synonym: "ribosomal large subunit transport from nucleus to cytoplasm" EXACT []
+synonym: "ribosomal large subunit-nucleus export" EXACT []
+alt_id: GO:0000057
+
+[Term]
+id: GO:0000007
+name: low-affinity zinc ion transmembrane transporter activity
+namespace: molecular_function
+def: "Enables the transfer of a solute or solutes from one side of a membrane to the other according to the reaction
+is_a: GO:0005385 ! zinc ion transmembrane transporter activity
+
+[Term]
+id: GO:0000008
+name: obsolete thioredoxin
+namespace: molecular_function
+def: "OBSOLETE. A small disulfide-containing redox protein that serves as a general protein disulfide oxidoreductase. Interacts with a broad range of proteins by a redox mechanism, based on the reversible oxidation of 2 cysteine thiol groups to a disulfide, accompanied by the transfer of 2 electrons and 2 protons. The net result is the covalent interconversion of a disulfide and a dithiol." [GOC:kd]
+is_obsolete: true
+synonym: "thioredoxin" EXACT []
+alt_id: GO:0000013
+comment: This term was made obsolete because it represents gene products.
+consider: GO:0003756
+consider: GO:0015036
+
+[Term]
+id: GO:0000041
+name: transition metal ion transport
+namespace: biological_process
+def: "The directed movement of transition metal ions into, out of or within a cell, or between cells, by means of some agent such as a transporter or pore. A transition metal is an element whose atom has an incomplete d-subshell of extranuclear electrons, or which gives rise to a cation or cations with an incomplete d-subshell. Transition metals often have more than one valency state. Biologically relevant transition metals include vanadium, manganese, iron, copper, cobalt, nickel, molybdenum and silver." [ISBN:0198506732]
+is_a: GO:0030001 ! metal ion transport
+synonym: "transition metal transport" EXACT []
+
+[Term]
+id: GO:0000059
+name: obsolete protein import into nucleus, docking
+namespace: biological_process
+def: "OBSOLETE. A protein complex assembly process that contributes to protein import into the nucleus, and that results in the association of a cargo protein, a carrier protein such as an importin alpha/beta heterodimer, and a nucleoporin located at the periphery of the nuclear pore complex." [GOC:isa_complete, GOC:mah, PMID:14570049, PMID:7878057, PMID:9126736]
+is_obsolete: true
+synonym: "protein docking during protein import into nucleus" EXACT []
+synonym: "protein docking during protein transport from cytoplasm to nucleus" EXACT []
+synonym: "protein docking during protein-nucleus import" EXACT []
+synonym: "protein transport from cytoplasm to nucleus, docking" EXACT []
+synonym: "protein-nucleus import, docking" EXACT []
+comment: This term was made obsolete because the transient assembly is better captured as a protein-protein association, if at all.
+
+[Term]
+id: GO:0000006
+name: high-affinity zinc transmembrane transporter activity
+namespace: molecular_function
+def: "Enables the transfer of zinc ions (Zn2+) from one side of a membrane to the other, probably powered by proton motive force. In high-affinity transport the transporter is able to bind the solute even if it is only present at very low concentrations." [TC:2.A.5.1.1]
+is_a: GO:0005385 ! zinc ion transmembrane transporter activity
+synonym: "high affinity zinc uptake transmembrane transporter activity" EXACT []
+synonym: "high-affinity zinc uptake transmembrane transporter activity" RELATED []
+
+[Term]
+id: GO:0000015
+name: phosphopyruvate hydratase complex
+namespace: cellular_component
+def: "A multimeric enzyme complex, usually a dimer or an octamer, that catalyzes the conversion of 2-phospho-D-glycerate to phosphoenolpyruvate and water." [GOC:jl, ISBN:0198506732]
+is_a: GO:1902494 ! catalytic complex
+synonym: "enolase complex" EXACT []
+relationship: part_of GO:0005829 ! cytosol
+subset: goslim_metagenomics
+
+[Term]
+id: GO:0000020
+name: obsolete negative regulation of recombination within rDNA repeats
+namespace: biological_process
+def: "OBSOLETE. Any process that stops, prevents, or reduces the frequency, rate or extent of genetic recombination within the DNA of the genes coding for ribosomal RNA." [GOC:go_curators, ISBN:0198506732]
+is_obsolete: true
+synonym: "negative regulation of recombination within rDNA repeats" EXACT []
+comment: This term was made obsolete because it describes a substrate-specific process.
+consider: GO:0045950
+
+[Term]
+id: GO:0000026
+name: alpha-1,2-mannosyltransferase activity
+namespace: molecular_function
+def: "Catalysis of the transfer of a mannose residue to an oligosaccharide, forming an alpha-(1->2) linkage." [GOC:mcc, PMID:10521541]
+is_a: GO:0000030 ! mannosyltransferase activity
+xref: Reactome:R-HSA-446187 "ALG11 transfers the fourth and fifth Man to the N-glycan precursor"
+xref: Reactome:R-HSA-446215 "ALG9 transfers Man to N-glycan precursor (GlcNAc)2 (Man)6 (PP-Dol)1"
+xref: Reactome:R-HSA-446216 "ALG9 transfers Man to N-glycan precursor (GlcNAc)2 (Man)8 (PP-Dol)1"
+xref: Reactome:R-HSA-4551297 "Defective ALG11 does not transfer Man to the N-glycan precursor"
+xref: Reactome:R-HSA-4720478 "Defective ALG9 does not add the seventh mannose to the N-glycan precursor"
+xref: Reactome:R-HSA-9035514 "Defective ALG9 does not add the last mannose to the N-glycan precursor"
+
+[Term]
+id: GO:0000030
+name: mannosyltransferase activity
+namespace: molecular_function
+def: "Catalysis of the transfer of a mannosyl group to an acceptor molecule, typically another carbohydrate or a lipid." [GOC:ai, GOC:cjm]
+is_a: GO:0016758 ! hexosyltransferase activity
+xref: Reactome:R-HSA-162797 "mannose (a1-2) mannose (a1-6) (ethanolamineP) mannose (a1-4) glucosaminyl-acyl-PI -> mannose (a1) mannose (a1-2) mannose (a1-6) (ethanolamineP) mannose (a1-4) glucosaminyl-acyl-PI"
+xref: Reactome:R-HSA-162830 "glucosaminyl-acyl-PI + dolichol phosphate D-mannose -> mannose(al1-4)glucosaminyl-acyl-PI + dolichol phosphate"
+xref: Reactome:R-HSA-446198 "ALG12 transfers Man to N-glycan precursor (GlcNAc)2 (Man)7 (PP-Dol)1"
+xref: Reactome:R-HSA-4720497 "Defective ALG12 does not add mannose to the N-glycan precursor"
+
+[Term]
+id: GO:0000049
+name: tRNA binding
+namespace: molecular_function
+def: "Binding to a transfer RNA." [GOC:ai]
+is_a: GO:0003723 ! RNA binding
+synonym: "base pairing with tRNA" NARROW []
+alt_id: GO:0000946
+
+[Term]
+id: GO:0000054
+name: ribosomal subunit export from nucleus
+namespace: biological_process
+def: "The directed movement of a ribosomal subunit from the nucleus into the cytoplasm." [GOC:ai]
+is_a: GO:0031503 ! protein-containing complex localization
+is_a: GO:0033750 ! ribosome localization
+is_a: GO:0051168 ! nuclear export
+is_a: GO:0051656 ! establishment of organelle localization
+synonym: "ribosomal subunit export from cell nucleus" EXACT [GOC:mah]
+synonym: "ribosomal subunit export out of nucleus" EXACT [GOC:mah]
+synonym: "ribosomal subunit transport from nucleus to cytoplasm" EXACT [GOC:mah]
+synonym: "ribosomal subunit-nucleus export" EXACT [GOC:mah]
+synonym: "ribosome export from nucleus" RELATED [GOC:mah, GOC:rb]
+relationship: part_of GO:0042254 ! ribosome biogenesis
+subset: goslim_yeast
+
+[Term]
+id: GO:0000003
+name: reproduction
+namespace: biological_process
+def: "The production of new individuals that contain some portion of genetic material inherited from one or more parent organisms." [GOC:go_curators, GOC:isa_complete, GOC:jl, ISBN:0198506732]
+is_a: GO:0008150 ! biological_process
+synonym: "reproductive physiological process" EXACT []
+xref: Wikipedia:Reproduction
+alt_id: GO:0019952
+alt_id: GO:0050876
+subset: goslim_agr
+subset: goslim_chembl
+subset: goslim_flybase_ribbon
+subset: goslim_pir
+subset: goslim_plant
+disjoint_from: GO:0044848 ! biological phase
+
+[Term]
+id: GO:0000044
+name: obsolete ascorbate stabilization
+namespace: biological_process
+def: "OBSOLETE. The reduction of the ascorbate free radical to a stable form." [GOC:ai, GOC:mtg_electron_transport]
+is_obsolete: true
+synonym: "ascorbate stabilization" EXACT []
+synonym: "vitamin C stabilization" EXACT []
+comment: This term was made obsolete because it is defined as a function term and is in the process ontology.
+
+[Term]
+id: GO:0000051
+name: obsolete urea cycle intermediate metabolic process
+namespace: biological_process
+def: "OBSOLETE. The chemical reactions and pathways involving any of the intermediate compounds involved in the urea cycle, a cyclic metabolic pathway that converts waste nitrogen in the form of ammonium to urea." [GOC:jl, ISBN:0198506732]
+is_obsolete: true
+synonym: "urea cycle intermediate metabolic process" EXACT []
+synonym: "urea cycle intermediate metabolism" EXACT []
+comment: This term was made obsolete because it is a grouping term that is not useful, but has caused true path violations.
+
+[Term]
+id: GO:0000009
+name: alpha-1,6-mannosyltransferase activity
+namespace: molecular_function
+def: "Catalysis of the transfer of a mannose residue to an oligosaccharide, forming an alpha-(1->6) linkage." [GOC:mcc, PMID:2644248]
+is_a: GO:0000030 ! mannosyltransferase activity
+synonym: "1,6-alpha-mannosyltransferase activity" EXACT []
+xref: Reactome:R-HSA-449718 "Addition of a third mannose to the N-glycan precursor by ALG2"
+property_value: term_tracker_item https://github.com/geneontology/go-ontology/issues/19075 xsd:anyURI
+
+[Term]
+id: GO:0000012
+name: single strand break repair
+namespace: biological_process
+def: "The repair of single strand breaks in DNA. Repair of such breaks is mediated by the same enzyme systems as are used in base excision repair." [PMID:18626472]
+is_a: GO:0006281 ! DNA repair
+
+[Term]
+id: GO:0000017
+name: alpha-glucoside transport
+namespace: biological_process
+def: "The directed movement of alpha-glucosides into, out of or within a cell, or between cells, by means of some agent such as a transporter or pore. Alpha-glucosides are glycosides in which the sugar group is a glucose residue, and the anomeric carbon of the bond is in an alpha configuration." [GOC:jl, ISBN:0198506732, PMID:9919658]
+is_a: GO:0042946 ! glucoside transport
+
+[Term]
+id: GO:0000018
+name: regulation of DNA recombination
+namespace: biological_process
+def: "Any process that modulates the frequency, rate or extent of DNA recombination, a DNA metabolic process in which a new genotype is formed by reassortment of genes resulting in gene combinations different from those that were present in the parents." [GOC:go_curators, ISBN:0198506732]
+is_a: GO:0051052 ! regulation of DNA metabolic process
+relationship: regulates GO:0006310 ! DNA recombination
+intersection_of: GO:0065007 ! biological regulation
+intersection_of: regulates GO:0006310 ! DNA recombination
+
+[Term]
+id: GO:0000024
+name: maltose biosynthetic process
+namespace: biological_process
+def: "The chemical reactions and pathways resulting in the formation of the disaccharide maltose (4-O-alpha-D-glucopyranosyl-D-glucopyranose)." [GOC:jl, ISBN:0198506732]
+is_a: GO:0000023 ! maltose metabolic process
+is_a: GO:0046351 ! disaccharide biosynthetic process
+synonym: "malt sugar biosynthesis" EXACT []
+synonym: "malt sugar biosynthetic process" EXACT []
+synonym: "maltose anabolism" EXACT []
+synonym: "maltose biosynthesis" EXACT []
+synonym: "maltose formation" EXACT []
+synonym: "maltose synthesis" EXACT []
+
+[Term]
+id: GO:0000028
+name: ribosomal small subunit assembly
+namespace: biological_process
+def: "The aggregation, arrangement and bonding together of constituent RNAs and proteins to form the small ribosomal subunit." [GOC:jl, PMID:30467428]
+is_a: GO:0022618 ! protein-RNA complex assembly
+synonym: "30S ribosomal subunit assembly" NARROW [GOC:mah]
+synonym: "40S ribosomal subunit assembly" NARROW [GOC:mah]
+relationship: part_of GO:0042255 ! ribosome assembly
+relationship: part_of GO:0042274 ! ribosomal small subunit biogenesis
+
+[Term]
+id: GO:0000033
+name: alpha-1,3-mannosyltransferase activity
+namespace: molecular_function
+def: "Catalysis of the transfer of a mannose residue to an oligosaccharide, forming an alpha-(1->3) linkage." [GOC:mcc, PMID:10521541]
+is_a: GO:0000030 ! mannosyltransferase activity
+xref: Reactome:R-HSA-446188 "ALG3 transfers Man to N-glycan precursor (GlcNAc)2 (Man)5 (PP-Dol)1"
+xref: Reactome:R-HSA-446208 "Addition of a second mannose to the N-glycan precursor by ALG2"
+xref: Reactome:R-HSA-4549368 "Defective ALG2 does not transfer a second Man to N-glycan precursor"
+xref: Reactome:R-HSA-4720473 "Defective ALG3 does not add mannose to the N-glycan precursor"
+
+[Term]
+id: GO:0000038
+name: very long-chain fatty acid metabolic process
+namespace: biological_process
+def: "The chemical reactions and pathways involving a very long chain fatty acid, a fatty acid with an aliphatic tail of 22 or more carbons." [GOC:hjd]
+is_a: GO:0006631 ! fatty acid metabolic process
+synonym: "very long chain fatty acid metabolic process" EXACT [GOC:bf]
+synonym: "very-long-chain fatty acid metabolic process" EXACT []
+synonym: "very-long-chain fatty acid metabolism" EXACT []
+
+[Term]
+id: GO:0000002
+name: mitochondrial genome maintenance
+namespace: biological_process
+def: "The maintenance of the structure and integrity of the mitochondrial genome; includes replication and segregation of the mitochondrial chromosome." [GOC:ai, GOC:vw]
+is_a: GO:0007005 ! mitochondrion organization
+
+[Term]
+id: GO:0000056
+name: ribosomal small subunit export from nucleus
+namespace: biological_process
+def: "The directed movement of a ribosomal small subunit from the nucleus into the cytoplasm." [GOC:mah]
+is_a: GO:0000054 ! ribosomal subunit export from nucleus
+synonym: "30S ribosomal subunit export from nucleus" NARROW [GOC:mah]
+synonym: "40S ribosomal subunit export from nucleus" NARROW [GOC:mah]
+synonym: "ribosomal small subunit export from cell nucleus" EXACT []
+synonym: "ribosomal small subunit export out of nucleus" EXACT []
+synonym: "ribosomal small subunit transport from nucleus to cytoplasm" EXACT []
+synonym: "ribosomal small subunit-nucleus export" EXACT []
+alt_id: GO:0000058
+
+[Term]
+id: GO:0000053
+name: argininosuccinate metabolic process
+namespace: biological_process
+def: "The chemical reactions and pathways involving argininosuccinate, 2-(N(omega)-arginino)succinate, an intermediate in the ornithine-urea cycle, where it is synthesized from citrulline and aspartate." [ISBN:0198506732]
+is_a: GO:0006575 ! cellular modified amino acid metabolic process
+is_a: GO:0072350 ! tricarboxylic acid metabolic process
+is_a: GO:1901605 ! alpha-amino acid metabolic process
+synonym: "argininosuccinate metabolism" EXACT []
+
+[Term]
+id: GO:0000035
+name: acyl binding
+namespace: molecular_function
+def: "Binding to an acyl group, any group formally derived by removal of the hydroxyl group from the acid function of a carboxylic acid." [GOC:curators, ISBN:0198506732]
+is_a: GO:0005488 ! binding
+synonym: "acyl-CoA or acyl binding" BROAD []
+
+[Term]
+id: GO:0000045
+name: autophagosome assembly
+namespace: biological_process
+def: "The formation of a double membrane-bounded structure, the autophagosome, that occurs when a specialized membrane sac, called the isolation membrane, starts to enclose a portion of the cytoplasm." [GOC:autophagy, PMID:9412464]
+is_a: GO:0070925 ! organelle assembly
+is_a: GO:1905037 ! autophagosome organization
+synonym: "autophagic vacuole assembly" EXACT [GOC:autophagy]
+synonym: "autophagic vacuole formation" RELATED [GOC:mah]
+synonym: "autophagosome biosynthesis" EXACT []
+synonym: "autophagosome formation" EXACT []
+synonym: "PAS formation" NARROW []
+relationship: has_part GO:0019778 ! Atg12 activating enzyme activity
+relationship: has_part GO:0019786 ! protein-phosphatidylethanolamide deconjugating activity
+relationship: has_part GO:0061651 ! Atg12 conjugating enzyme activity
+relationship: has_part GO:0061660 ! Atg12 ligase activity
+
+[Term]
+id: GO:0000047
+name: obsolete Rieske iron-sulfur protein
+namespace: molecular_function
+def: "OBSOLETE. (Was not defined before being made obsolete)." [GOC:ai]
+is_obsolete: true
+synonym: "Rieske iron-sulfur protein" EXACT []
+synonym: "Rieske iron-sulphur protein" EXACT []
+comment: This term was made obsolete because it represents a gene product.
+consider: GO:0009055
+
+[Term]
+id: GO:0000050
+name: urea cycle
+namespace: biological_process
+def: "The sequence of reactions by which arginine is synthesized from ornithine, then cleaved to yield urea and regenerate ornithine. The overall reaction equation is NH3 + CO2 + aspartate + 3 ATP + 2 H2O = urea + fumarate + 2 ADP + 2 phosphate + AMP + diphosphate." [GOC:pde, GOC:vw, ISBN:0198506732]
+is_a: GO:0019627 ! urea metabolic process
+is_a: GO:0043604 ! amide biosynthetic process
+is_a: GO:1901566 ! organonitrogen compound biosynthetic process
+synonym: "ornithine cycle" EXACT []
+synonym: "urea biosynthesis" EXACT []
+synonym: "urea biosynthetic process" EXACT []
+xref: Wikipedia:Urea_cycle
+alt_id: GO:0006594
+alt_id: GO:0006871
+
+[Term]
+id: GO:0000014
+name: single-stranded DNA endodeoxyribonuclease activity
+namespace: molecular_function
+def: "Catalysis of the hydrolysis of ester linkages within a single-stranded deoxyribonucleic acid molecule by creating internal breaks." [GOC:mah]
+is_a: GO:0004520 ! DNA endonuclease activity
+synonym: "single-stranded DNA specific endodeoxyribonuclease activity" RELATED []
+synonym: "ssDNA-specific endodeoxyribonuclease activity" RELATED [GOC:mah]
+

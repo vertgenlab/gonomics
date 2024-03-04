@@ -1,0 +1,10 @@
+For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.
+chr1New	5	rs100	T	A	100	PASS	NoSwap;ALLELE_B=1;ALLELE_A=0	GT	0|0	1|0	1|1
+For the following record, neither the Ref nor the Alt allele matched the bases in the corresponding destination fasta location.
+chr1New	7	rs101	T	C	100	PASS	InvertAndSwap;ALLELE_A=1;ALLELE_B=0	GT	0|1	0|0	1|1
+Record below was lifted, but the ref and alt alleles are inverted:
+chr1New	75	rs102	A	T	100	PASS	InvertAndPosChange	GT	0|0	0|0	1|1
+Record below has no ortholog in new assembly:
+chr1Old	200	rs103	A	T	100	PASS	DoesNotMap  GT	0|0	
+Record below fails minMatch with a proportion of 0.000000. Here's the corresponding chain: 5000.
+chr1Old	92	rs104	A	T	100	PASS	DoesNotMapInsertion	GT	0|0
