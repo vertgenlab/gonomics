@@ -405,7 +405,7 @@ var PFaVisualizerTests = []struct {
 	LineLength     int
 	SeqName        string
 	Expected       string
-}{{InFile: "testdata/pfa_PFavisualiser_input_toy_1.pfa",
+}{{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
 	OutFile:        "testdata/pfa_PFaVisualiser_output_toy_1.txt",
 	EndOfAlignment: false,
 	Start:          4,
