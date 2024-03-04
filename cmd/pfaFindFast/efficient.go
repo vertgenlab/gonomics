@@ -258,9 +258,16 @@ func windowDistToDiv(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Ba
 	var windowDistDiv = 0
 
 	for i := windowStart; i <= windowEnd; i++ {
-		baseDist = pDna.Dist(firstQuery[i], secondQuery[i])
-		if baseDist > baseDistToDivThreshold {
-			windowDistDiv++ // baseDistDiv is true, add 1 to the windowDistDiv count
+		fmt.Printf("new loop iteration. i: %v\n", i)                 //TODO: remove after checking that gap detection works, then repeat in windowDotToSubst
+		if pDna.IsGap(firstQuery[i]) || pDna.IsGap(secondQuery[i]) { // do not count gaps
+			fmt.Printf("found gap. firstQuery[i]: %v, secondQuery[i]: %v\n", firstQuery[i], secondQuery[i]) //TODO: remove after checking that gap detection works
+			continue
+		} else {
+			fmt.Printf("entering non-gap portion\n") //TODO: remove after checking that gap detection works
+			baseDist = pDna.Dist(firstQuery[i], secondQuery[i])
+			if baseDist > baseDistToDivThreshold {
+				windowDistDiv++ // baseDistDiv is true, add 1 to the windowDistDiv count
+			}
 		}
 	}
 
