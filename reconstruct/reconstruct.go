@@ -2,6 +2,7 @@
 package reconstruct
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/expandedTree"
@@ -74,6 +75,9 @@ func LikelihoodsToPdna(likelihoods []float64) pDna.Float32Base {
 	for _, v := range likelihoods {
 		total += v
 	}
+	// TODO: remove below chunk after debugging
+	fmt.Printf("'fix' likelihoods: %.9g, total: %.9g, A: %9.20f\n", likelihoods, total, float32(likelihoods[0]/total))
+
 	return pDna.Float32Base{
 		A: float32(likelihoods[0] / total),
 		C: float32(likelihoods[1] / total),
@@ -378,6 +382,7 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 				// for pFasta, range through pfaNames. If any of them is the same as current internalNode name, e.g. hca, write pDna
 				for _, v := range pfaNames {
 					if internalNodes[k].Fasta.Name == v {
+						fmt.Printf("name: %v\n", v) // TODO: remove after debugging. This is to print name of sequence
 						answerBasePdna = LikelihoodsToPdna(fix)
 					}
 				}
@@ -385,6 +390,7 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 				answerBase = LikelihoodsToBase(fix, 0, dna.N, highestProbThreshold) //unbiased estimate
 				for _, v := range pfaNames {
 					if internalNodes[k].Fasta.Name == v {
+						fmt.Printf("name: %v\n", v) // TODO: remove after debugging. This is to print name of sequence
 						answerBasePdna = LikelihoodsToPdna(fix)
 					}
 				}

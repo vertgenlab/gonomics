@@ -18,18 +18,18 @@ import (
 )
 
 type Settings struct {
-	NewickInput          string
-	FastaInput           string
-	OutFile              string
-	BiasLeafName         string
-	NonBiasProbThreshold float64
-	HighestProbThreshold float64
-	KeepAllSeq           bool
+	NewickInput            string
+	FastaInput             string
+	OutFile                string
+	BiasLeafName           string
+	NonBiasProbThreshold   float64
+	HighestProbThreshold   float64
+	KeepAllSeq             bool
 	SubMatrix              bool
 	UnitBranchLength       float64
 	SubstitutionMatrixFile string
-  OutPfaFile           string
-	PfaNames             []string
+	OutPfaFile             string
+	PfaNames               []string
 }
 
 func ReconstructSeq(s Settings) {
@@ -97,7 +97,8 @@ func ReconstructSeq(s Settings) {
 		//TODO: put the below as another function in pfa package to print human-readable (non-binary) pfa to terminal or remove/comment-out after debugging
 		outpfa := pFasta.Read(s.OutPfaFile)
 		for i, v := range outpfa {
-			fmt.Printf("%v: %v\n", i, v)
+			//fmt.Printf("%v: %v\n", i, v)
+			fmt.Printf("%v:%s\n%.9g\n", i, v.Name, v.Seq) // TODO: remove after debugging. This is to test if numbers add up to 1
 		}
 	}
 }
@@ -154,18 +155,18 @@ func main() {
 	outFile := flag.Arg(2)
 
 	s := Settings{
-		NewickInput:          newickInput,
-		FastaInput:           fastaInput,
-		OutFile:              outFile,
-		BiasLeafName:         *biasLeafName,
-		NonBiasProbThreshold: *nonBiasProbThreshold,
-		HighestProbThreshold: *highestProbThreshold,
-		KeepAllSeq:           *keepAllSeq,
+		NewickInput:            newickInput,
+		FastaInput:             fastaInput,
+		OutFile:                outFile,
+		BiasLeafName:           *biasLeafName,
+		NonBiasProbThreshold:   *nonBiasProbThreshold,
+		HighestProbThreshold:   *highestProbThreshold,
+		KeepAllSeq:             *keepAllSeq,
 		SubstitutionMatrixFile: *substitutionMatrixFile,
 		UnitBranchLength:       *unitBranchLength,
 		SubMatrix:              *subMatrix,
-    OutPfaFile:           *outPfaFile,
-		PfaNames:             pfaNamesSplit,
+		OutPfaFile:             *outPfaFile,
+		PfaNames:               pfaNamesSplit,
 	}
 
 	ReconstructSeq(s)
