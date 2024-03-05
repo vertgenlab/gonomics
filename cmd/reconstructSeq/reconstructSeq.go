@@ -97,8 +97,7 @@ func ReconstructSeq(s Settings) {
 		//TODO: put the below as another function in pfa package to print human-readable (non-binary) pfa to terminal or remove/comment-out after debugging
 		outpfa := pFasta.Read(s.OutPfaFile)
 		for i, v := range outpfa {
-			//fmt.Printf("%v: %v\n", i, v)
-			fmt.Printf("%v:%s\n%.9g\n", i, v.Name, v.Seq) // TODO: remove after debugging. This is to test if numbers add up to 1
+			fmt.Printf("%v: %v\n", i, v)
 		}
 	}
 }
