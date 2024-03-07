@@ -36,9 +36,9 @@ func IsGap(p Float32Base) bool {
 }
 
 // TODO: should I worry about precision here? Use EqualBase, with some standard precision?
-// IsN returns true if the DNA base's probability vector is the same (==0.25) at all 4 bases, indicating that the base is an N
+// IsN returns true if the DNA base's probability vector is the same but not 0 (==0.25) at all 4 bases, indicating that the base is an N
 func IsN(p Float32Base) bool {
-	if p.A == p.C && p.A == p.G && p.A == p.T {
+	if p.A != 0 && p.A == p.C && p.A == p.G && p.A == p.T {
 		fmt.Printf("found N. p: %v\n", p) // TODO: remove after debugging. Check isN works
 		return true
 	} else {
