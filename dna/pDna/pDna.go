@@ -35,6 +35,16 @@ func IsGap(p Float32Base) bool {
 	}
 }
 
+// TODO: log fatal instead of return false here? Update pFasta.go QC accordingly
+// IsNonGap returns true if the DNA base's probability vector adds up to 1, indicating that the base is a valid non-gap
+func IsNonGap(p Float32Base) bool {
+	if p.A+p.C+p.G+p.T == 1 {
+		return true
+	} else {
+		return false
+	}
+}
+
 // TODO: should I worry about precision here? Use EqualBase, with some standard precision?
 // IsN returns true if the DNA base's probability vector is the same but not 0 (==0.25) at all 4 bases, indicating that the base is an N
 func IsN(p Float32Base) bool {
@@ -113,4 +123,16 @@ func Dot(p Float32Base, q Float32Base) float64 {
 // Make sure input is probabilities not likelihoods
 func DotSubstProb(p Float32Base, q Float32Base) float64 {
 	return 1 - Dot(p, q)
+}
+
+// TODO: maybe replace LikelihoodsToPdna in reconstruct/reconstruct.go in branch reconstructSeq_nodeMods
+// MakeValidNonGap converts the likelihoods of each base at a position of a sequence into a pdna for that position
+func MakeValidNonGap(p Float32Base) Float32Base {
+	total := p.A + p.C + p.G + p.T
+	return Float32Base{
+		A: p.A / total,
+		C: p.C / total,
+		G: p.G / total,
+		T: p.T / total,
+	}
 }
