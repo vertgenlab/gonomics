@@ -12,16 +12,24 @@ import (
 )
 
 // PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
-// Can be written to a file or to standard out. Includes noMask and lineLength formatting options as bools.
-// If 0 sig figs, returns full probability
+// Can be written to a file or to standard out. Includes lineLength formatting option as int.
+// If 0 sig figs or 0 decimal places, returns full probability
 // There will be slight floating point errors in the last (or last two) places
-func PFaVisualizer(infile string, outfile string, start int, end int, endOfAlignment bool, sigFigs int, decimalPlaces int, lineLength int, seqName string) {
-	if !endOfAlignment && !(start < end) {
-		log.Fatalf("Error: Invalid arguments, start must be lower than end")
+func PFaVisualizer(infile string, outfile string, start int, end int, startOfAlignment bool, endOfAlignment bool, sigFigs int, decimalPlaces int, lineLength int, seqName string) {
+	if !startOfAlignment {
+		if !endOfAlignment && !(start < end) {
+			log.Fatalf("Error: Invalid arguments, start must be lower than end\n")
+		} else if start < 0 {
+			log.Fatalf("Error: Invalid arguments, start must be greater or equal to 0, or (case-insensitive) 'start'\n")
+		}
 	}
 
 	records := pFasta.Read(infile)
 	out := fileio.EasyCreate(outfile)
+
+	if len(records) > 1 && seqName == "" {
+		log.Fatalf("Error: Invalid arguments, must provide sequence name for file with multiple pFastas.\n")
+	}
 
 	var err error
 	var formatting string
@@ -33,13 +41,22 @@ func PFaVisualizer(infile string, outfile string, start int, end int, endOfAlign
 		formatting = "SigFigs"
 		formatNum = sigFigs
 	}
-	if !endOfAlignment {
-		_, err = fmt.Fprintf(out, "Start: %d. End: %d. %s: %d.", start, end, formatting, formatNum)
-		exception.PanicOnErr(err)
+
+	var startStr string
+	if startOfAlignment {
+		startStr = "0"
 	} else {
-		_, err = fmt.Fprintf(out, "Start: %d. End: to end. %s: %d.", start, formatting, formatNum)
-		exception.PanicOnErr(err)
+		startStr = fmt.Sprintf("%d", start)
 	}
+	var endStr string
+	if endOfAlignment {
+		endStr = "to end"
+	} else {
+		endStr = fmt.Sprintf("%d", end)
+	}
+	
+	_, err = fmt.Fprintf(out, "Start: %s. End: %s. %s: %d.", startStr, endStr, formatting, formatNum)
+	exception.PanicOnErr(err)
 
 	if seqName == "" {
 		// only accepts single pFa or a .pFa with multiple pFastas and a specified record name
@@ -66,6 +83,9 @@ func PFaVisualizer(infile string, outfile string, start int, end int, endOfAlign
 
 // printAllSets prints probability distribution of bases from pos start to pos end in record
 func printAllSets(out *fileio.EasyWriter, err error, record pFasta.PFasta, start int, end int, lineLength int, sigFigs int, decimalPlaces int) {
+	if end == -1 {
+		end = len(record.Seq)
+	}
 	lineA := make([]float32, lineLength)
 	lineC := make([]float32, lineLength)
 	lineG := make([]float32, lineLength)
