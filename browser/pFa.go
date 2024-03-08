@@ -7,10 +7,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
@@ -91,18 +89,15 @@ func printOneSetLines(lineLength int, setOfLinesIdx int, numIters int, lineA []f
 	var err error
 	_, err = fmt.Fprintf(out, "Position: %d\n", recordIdx)
 	exception.PanicOnErr(err)
+	for lineIdx = 0; lineIdx < numIters; lineIdx++ {
+		lineA[lineIdx], lineC[lineIdx], lineG[lineIdx], lineT[lineIdx] = record.Seq[recordIdx+lineIdx].A, record.Seq[recordIdx+lineIdx].C, record.Seq[recordIdx+lineIdx].G, record.Seq[recordIdx+lineIdx].T
+	}
 	if sigFigs == 0 {
-		for lineIdx = 0; lineIdx < numIters; lineIdx++ {
-			lineA[lineIdx], lineC[lineIdx], lineG[lineIdx], lineT[lineIdx] = record.Seq[recordIdx+lineIdx].A, record.Seq[recordIdx+lineIdx].C, record.Seq[recordIdx+lineIdx].G, record.Seq[recordIdx+lineIdx].T
-		}
 		printOneBaseDigits(lineA[0:lineIdx], "A", out, longestName, record.Name, decimalPlaces)
 		printOneBaseDigits(lineC[0:lineIdx], "C", out, longestName, "", decimalPlaces)
 		printOneBaseDigits(lineG[0:lineIdx], "G", out, longestName, "", decimalPlaces)
 		printOneBaseDigits(lineT[0:lineIdx], "T", out, longestName, "", decimalPlaces)
 	} else {
-		for lineIdx = 0; lineIdx < numIters; lineIdx++ {
-			lineA[lineIdx], lineC[lineIdx], lineG[lineIdx], lineT[lineIdx] = getBaseProbsAtPos(record.Seq[recordIdx+lineIdx], sigFigs)
-		}
 		printOneBaseScientific(lineA[0:lineIdx], "A", out, longestName, record.Name, sigFigs)
 		printOneBaseScientific(lineC[0:lineIdx], "C", out, longestName, "", sigFigs)
 		printOneBaseScientific(lineG[0:lineIdx], "G", out, longestName, "", sigFigs)
@@ -128,11 +123,6 @@ func printOneBaseDigits(line []float32, base string, out *fileio.EasyWriter, lon
 	var err error
 	_, err = fmt.Fprintf(out, ">%-*s\t|\t%s\t|%s\n", longestName, name, base, answer.String())
 	exception.PanicOnErr(err)
-}
-
-// getBaseProbsAtPos returns the four probabilities rounded to sigFigs for a specified base
-func getBaseProbsAtPos(base pDna.Float32Base, sigFigs int) (float32, float32, float32, float32) {
-	return numbers.RoundSigFigs(float64(base.A), sigFigs), numbers.RoundSigFigs(float64(base.C), sigFigs), numbers.RoundSigFigs(float64(base.G), sigFigs), numbers.RoundSigFigs(float64(base.T), sigFigs)
 }
 
 // calculateLongestName is a helper function of MultiFaVisualizer that returns the length of the longest name in a slice of fasta.Fasta structs.

@@ -8,50 +8,6 @@ import (
 	"testing"
 )
 
-var getBaseProbsAtPosTests = []struct {
-	Base     pDna.Float32Base
-	SigFigs  int
-	Expected []float32
-}{
-	{Base: pDna.Float32Base{
-		A: 0.246,
-		C: 0.355,
-		G: 0.371,
-		T: 0.028,
-	},
-		SigFigs:  2,
-		Expected: []float32{0.25, 0.35, 0.37, 0.028}, // want this to be .36
-	},
-	{Base: pDna.Float32Base{
-		A: 0.246,
-		C: 0.355,
-		G: 0.371,
-		T: 0.028,
-	},
-		SigFigs:  1,
-		Expected: []float32{0.2, 0.4, 0.4, 0.03},
-	},
-	{Base: pDna.Float32Base{
-		A: 0.24694837,
-		C: 0.3,
-		G: 0.371,
-		T: 0.02838856,
-	},
-		SigFigs:  4,
-		Expected: []float32{0.2469, 0.3, 0.371, 0.02839},
-	},
-}
-
-func TestGetBaseProbsAtPos(t *testing.T) {
-	for _, testCase := range getBaseProbsAtPosTests {
-		resA, resC, resG, resT := getBaseProbsAtPos(testCase.Base, testCase.SigFigs)
-
-		if resA != testCase.Expected[0] || resC != testCase.Expected[1] || resG != testCase.Expected[2] || resT != testCase.Expected[3] {
-			t.Errorf("Error: in browser. getBaseProbsAtPos test not as expected.")
-		}
-	}
-}
-
 var PrintOneSetLinesTests = []struct {
 	LineLength    int
 	SetOfLinesIdx int
