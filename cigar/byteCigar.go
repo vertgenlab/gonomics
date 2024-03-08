@@ -1,11 +1,12 @@
 package cigar
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // ByteCigar struct encodes sequence comparison operations and includes run length info.
@@ -233,6 +234,24 @@ func ByteCigarToUint32(cigar []ByteCigar) []uint32 {
 	var answer []uint32 = make([]uint32, len(cigar))
 	for i := 0; i < len(cigar); i++ {
 		answer[i] = lookUpUint32(cigar[i].Op) | uint32(cigar[i].RunLen)<<4
+	}
+	return answer
+}
+
+func SoftClipBases(front int, lengthOfRead int, cig []ByteCigar) []ByteCigar {
+	var runLen int = QueryRunLen(cig)
+	if runLen >= lengthOfRead {
+		return cig
+	}
+	answer := make([]ByteCigar, 0, len(cig)+2)
+	if front > 0 {
+		answer = append(answer, ByteCigar{RunLen: uint16(front), Op: 'S'})
+	}
+	answer = append(answer, cig...)
+	// Calculate the remaining unaligned portion at the end and add soft clipping if necessary
+	remaining := lengthOfRead - (front + runLen)
+	if remaining > 0 {
+		answer = append(answer, ByteCigar{RunLen: uint16(remaining), Op: 'S'})
 	}
 	return answer
 }

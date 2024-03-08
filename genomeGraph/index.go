@@ -8,31 +8,20 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-type SeedDev struct {
-	TargetId    uint32
-	TargetStart uint32
-	QueryStart  uint32
-	Length      uint32
-	PosStrand   bool
-	TotalLength uint32
-	NextPart    *SeedDev
-}
-
 func IndexGenomeIntoMap(genome []Node, seedLen int, seedStep int) map[uint64][]uint64 {
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
 	}
 	answer := make(map[uint64][]uint64)
 	var seqCode, locationCode uint64
-	var nodeIdx, pos int
-	for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
-		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
+	for nodeIdx := 0; nodeIdx < len(genome); nodeIdx++ {
+		for pos := 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
 			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
 				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
 				answer[seqCode] = append(answer[seqCode], ChromAndPosToNumber(nodeIdx, pos))
 			}
 		}
-		for ; pos < len(genome[nodeIdx].Seq); pos += seedStep {
+		for pos := 0; pos < len(genome[nodeIdx].Seq); pos += seedStep {
 			locationCode = ChromAndPosToNumber(nodeIdx, pos)
 			for edgeIdx := 0; edgeIdx < len(genome[nodeIdx].Next); edgeIdx++ {
 				indexGenomeIntoMapHelper(genome[nodeIdx].Seq[pos:], genome[nodeIdx].Next[edgeIdx].Dest, locationCode, seedLen, answer)
