@@ -52,23 +52,23 @@ func Pearson(a []float64, b []float64) float64 {
 // BenjaminiHochberg takes in a []float64 that contains sorted pValues from smallest to largest. It returns
 // Benjamini-Hochberg adjusted pValues according to the formula pAdj = p (n/k) where p is the unadjusted pValue,
 // k is the pValue's rank and n is the total number of p values in the slice. If pValues are not sorted, the program will log Fatal
-func BenjaminiHochberg(pVals []float64) []float64 {
-	var adjP []float64
+func BenjaminiHochberg(pVals [][]float64) [][]float64 {
+	var adjP [][]float64
 	var newP float64
 	n := len(pVals)
-	prevP := pVals[len(pVals)-1]
+	prevP := pVals[len(pVals)-1][1]
 	for i := len(pVals) - 1; i >= 0; i-- {
 		if i > 0 {
-			if pVals[i] < pVals[i-1] {
+			if pVals[i][1] < pVals[i-1][1] {
 				log.Fatalf("input pValues must be sorted from smallest to largest")
 			}
 		}
-		newP = pVals[i] * (float64(n) / float64(i+1))
-		if newP <= prevP {
-			adjP = append([]float64{newP}, adjP...)
-			prevP = newP
+		newP = pVals[i][1] * (float64(n) / float64(i+1))
+		if newP >= prevP {
+			adjP = append([][]float64{{pVals[i][0], prevP}}, adjP...)
 		} else {
-			adjP = append([]float64{prevP}, adjP...)
+			adjP = append([][]float64{{pVals[i][0], newP}}, adjP...)
+			prevP = newP
 		}
 	}
 	return adjP

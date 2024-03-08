@@ -66,15 +66,18 @@ func TestPearson(t *testing.T) {
 
 func TestBenjaminiHochberg(t *testing.T) {
 	var fail bool = false
-	var input []float64 = []float64{0.005, 0.009, 0.019, 0.022, 0.051, 0.101, 0.361, 0.387}
-	var exp []float64 = []float64{0.036, 0.036, 0.044, 0.044, 0.0816, 0.135, 0.387, 0.387}
+	var input [][]float64 = [][]float64{{0, 0.005}, {1, 0.009}, {2, 0.019}, {3, 0.022}, {4, 0.051}, {5, 0.101}, {6, 0.361}, {7, 0.387}}
+	var exp [][]float64 = [][]float64{{0, 0.036}, {1, 0.036}, {2, 0.044}, {3, 0.044}, {4, 0.0816}, {5, 0.135}, {6, 0.387}, {7, 0.387}}
 	out := BenjaminiHochberg(input)
 	for i := range out {
-		if math.Abs(exp[i]-out[i]) > 0.01 {
+		if exp[i][0] != out[i][0] {
+			fail = true
+		}
+		if math.Abs(exp[i][1]-out[i][1]) > 0.01 {
 			fail = true
 		}
 	}
 	if fail {
-		t.Errorf("error in BenjaminiHochberg. Expected pValues: %v. Observed pValues: %v", exp, out)
+		t.Errorf("error in BenjaminiHochberg. Expected pValues: %v\nObserved pValues: %v", exp, out)
 	}
 }

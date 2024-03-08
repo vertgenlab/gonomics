@@ -117,7 +117,7 @@ func buildMhicPrior(s settings) {
 	//genomeWideBins, maxPossDist, possIntraInRange, possInterAllCount, interChromProb, baselineIntraChromProb := populateBinData(s, bins)
 	x, y := calculateProbabilities(s, bins, total) // x = avg distance, y = avg contacts
 	writeBins(s, bins)
-	splineFit(x, y, s, mp)
+	splineFit(x, y, s, mp, total)
 }
 
 func populateBinData(s settings, bins []bin) (int, int, int, int, float64, float64) {
@@ -209,7 +209,7 @@ func calculateProbabilities(s settings, bins []bin, total int) (avgDistance, avg
 	return avgDistance, avgContacts
 }
 
-func splineFit(x, y []float64, s settings, mp map[int]int) {
+func splineFit(x, y []float64, s settings, mp map[int]int, total int) {
 	var vals, spVals []float64
 	o := fileio.EasyCreate(fmt.Sprintf("%s/splineVals.txt", s.outDir))
 	fileio.WriteToFileHandle(o, "dist\tsplineVal")
@@ -219,22 +219,24 @@ func splineFit(x, y []float64, s settings, mp map[int]int) {
 		}
 	}
 	sort.Float64s(vals)
-	fmt.Println(vals)
 	sp := gospline.NewCubicSpline(x, y)
 	for i := range vals {
 		spVals = append(spVals, sp.At(vals[i]))
 	}
-	pValues(s, x)
+	pValues(s, vals, spVals, x, total)
 }
 
-func pValues(s settings, avgDist []float64) {
-	var b1, b2, dist float64
+func pValues(s settings, splineX []float64, splineY []float64, avgDist []float64, total int) {
+	var b1, b2, dist, priorP, p, place float64
+	var pVals [][]float64
+	var idx int
 	var min, max float64 = minFloatSlice(avgDist), maxFloatSlice(avgDist)
 	ch := goReadContactsToChan(s.inFile)
 	for i := range ch {
 		b1 = s.bias[i.chrom][i.bin1]
 		b2 = s.bias[i.chrom][i.bin2]
-		if b1 < 0 || b2 < 0 {
+		if b1 <= 0 || b2 <= 0 {
+			place++
 			continue
 		}
 		if float64(i.dist) < min {
@@ -244,7 +246,61 @@ func pValues(s settings, avgDist []float64) {
 		} else {
 			dist = float64(i.dist)
 		}
+		idx = numbers.Min(bisectLeft(splineX, dist), len(avgDist)-1)
+		priorP = splineY[idx] * b1 * b2
+		p = numbers.BinomialLeftSummation(total, i.score-1, priorP, false)
+		if i.chrom == "chr13" && i.bin1 == 1250000 && i.bin2 == 1230000 {
+			fmt.Println(total, i.score-1, priorP, 1-p)
+		}
+		pVals = append(pVals, []float64{place, 1 - p})
+		place++
 	}
+	sortPValsRank(pVals)
+	pValsBH := numbers.BenjaminiHochberg(pVals)
+	sortPValsIndex(pValsBH)
+	sortPValsIndex(pVals)
+	o := fileio.EasyCreate(s.outDir + "uniContactsWithPVals.txt")
+	ch = goReadContactsToChan(s.inFile)
+	var c int
+	idx = 0
+	for i := range ch {
+		if c > len(pVals)-1 {
+			fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%d\t%d\t%d\tnan\tnan", i.chrom, i.bin1, i.bin2, i.score))
+			continue
+		}
+		if float64(idx) == pVals[c][0] {
+			fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%d\t%d\t%d\t%.12f\t%.12f", i.chrom, i.bin1, i.bin2, i.score, pVals[c][1], pValsBH[c][1]))
+			c++
+		} else {
+			fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%d\t%d\t%d\tnan\tnan", i.chrom, i.bin1, i.bin2, i.score))
+		}
+		idx++
+	}
+	err := o.Close()
+	exception.PanicOnErr(err)
+}
+
+func sortPValsRank(pVals [][]float64) {
+	sort.Slice(pVals, func(i, j int) bool {
+		return pVals[i][1] < pVals[j][1]
+	})
+}
+
+func sortPValsIndex(pVals [][]float64) {
+	sort.Slice(pVals, func(i, j int) bool {
+		return pVals[i][0] < pVals[j][0]
+	})
+}
+
+func bisectLeft(slc []float64, val float64) int {
+	for i := range slc {
+		if slc[i] < val {
+			continue
+		} else {
+			return i
+		}
+	}
+	return len(slc)
 }
 
 func minFloatSlice(s []float64) float64 {
@@ -273,7 +329,7 @@ func main() {
 		chromSizes: "/Users/sethweaver/Downloads/gonomicsMHIC/testdata/ref/plasmodium.chrom.sizes",
 		nBins:      100,
 		resolution: 10000,
-		outDir:     "/Users/sethweaver/Downloads/gonomicsMHIC/testdata/output",
+		outDir:     "/Users/sethweaver/Downloads/gonomicsMHIC/testdata/output/",
 		bias:       mHiC.ReadBias("/Users/sethweaver/Downloads/gonomicsMHIC/testdata/output/biasFile.txt"),
 	}
 	buildMhicPrior(s)
