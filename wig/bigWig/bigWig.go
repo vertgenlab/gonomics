@@ -14,8 +14,10 @@ import (
 //datasets. (2010) Bioinformatics, 26(17) 2204-2207.
 
 // this is the magic number for bigWig files
-const bigWigMagic = 2291137574
+const bigWigMagic = 2291137574         // little endian
+const bigWigMagicBigEndian = 654086024 // big endian, not supported by this package
 
+// Header represents the bbi header of the bigWig data file and contains metadata and offset values for file navigation.
 type Header struct {
 	Magic                uint32 // magic bytes at the beginning of file. Must match constant above to be a valid bigWig.
 	Version              uint16 // Specifies the wig version. This package was built following specs for bigWig version 3.
@@ -31,10 +33,14 @@ type Header struct {
 	Reserved             uint64 //Unused values, reserved for future expansion. Should always be zero in a valid bigWig.
 }
 
+// We currently support only reading bbi headers in LittleEndian.
 func readHeader(file *fileio.EasyReader) Header {
 	var header = Header{}
 	err := binary.Read(file, binary.LittleEndian, &header.Magic)
 	exception.PanicOnErr(err)
+	if header.Magic == bigWigMagicBigEndian {
+		log.Fatalf("Error: bigWig file appears to be in big endian. Current functionality only supports little endian bigWig files.\n")
+	}
 	if header.Magic != bigWigMagic {
 		log.Fatalf("Error: bigWig magic was not as expected. Found: %v. Expected: %v.\n", header.Magic, bigWigMagic)
 	}
