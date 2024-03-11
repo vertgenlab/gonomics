@@ -160,6 +160,7 @@ var PFaVisualizerTests = []struct {
 	OutFile        string
 	Start          int
 	End            int
+	StartOfAlignment bool
 	EndOfAlignment bool
 	SigFigs        int
 	DecimalPlaces  int
@@ -168,9 +169,10 @@ var PFaVisualizerTests = []struct {
 	Expected       string
 }{{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
 	OutFile:        "testdata/pfa_PFaVisualiser_output_toy_1.txt",
-	EndOfAlignment: false,
 	Start:          4,
 	End:            21,
+	StartOfAlignment: false,
+	EndOfAlignment: false,
 	SigFigs:        4,
 	DecimalPlaces:  7,
 	LineLength:     5,
@@ -179,9 +181,10 @@ var PFaVisualizerTests = []struct {
 },
 	{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
 		OutFile:        "testdata/pfa_PFaVisualiser_output_toy_2.txt",
-		EndOfAlignment: false,
 		Start:          4,
 		End:            21,
+		StartOfAlignment: false,
+		EndOfAlignment: false,
 		SigFigs:        0,
 		DecimalPlaces:  7,
 		LineLength:     5,
@@ -190,9 +193,10 @@ var PFaVisualizerTests = []struct {
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
 		OutFile:        "testdata/pfa_PFaVisualiser_output_toy_3.txt",
-		EndOfAlignment: false,
 		Start:          4,
 		End:            21,
+		StartOfAlignment: false,
+		EndOfAlignment: false,
 		SigFigs:        0,
 		DecimalPlaces:  4,
 		LineLength:     5,
@@ -201,9 +205,10 @@ var PFaVisualizerTests = []struct {
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_1.pfa",
 		OutFile:        "testdata/pfa_PFaVisualiser_normalised_output_toy_1.txt",
-		EndOfAlignment: false,
 		Start:          6,
 		End:            13,
+		StartOfAlignment: false,
+		EndOfAlignment: false,
 		SigFigs:        2,
 		DecimalPlaces:  5,
 		LineLength:     4,
@@ -212,9 +217,10 @@ var PFaVisualizerTests = []struct {
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_1.pfa",
 		OutFile:        "testdata/pfa_PFaVisualiser_normalised_output_toy_2.txt",
-		EndOfAlignment: false,
 		Start:          6,
 		End:            13,
+		StartOfAlignment: false,
+		EndOfAlignment: false,
 		SigFigs:        0,
 		DecimalPlaces:  5,
 		LineLength:     4,
@@ -225,7 +231,7 @@ var PFaVisualizerTests = []struct {
 
 func TestPFaVisualizer(t *testing.T) {
 	for _, testCase := range PFaVisualizerTests {
-		PFaVisualizer(testCase.InFile, testCase.OutFile, testCase.Start, testCase.End, testCase.EndOfAlignment, testCase.SigFigs, testCase.DecimalPlaces, testCase.LineLength, testCase.SeqName)
+		PFaVisualizer(testCase.InFile, testCase.OutFile, testCase.Start, testCase.End, testCase.StartOfAlignment, testCase.EndOfAlignment, testCase.SigFigs, testCase.DecimalPlaces, testCase.LineLength, testCase.SeqName)
 		if !fileio.AreEqual(testCase.OutFile, testCase.Expected) {
 			t.Errorf("Error: in browser. PFaVisualiser test not as expected.")
 		}
