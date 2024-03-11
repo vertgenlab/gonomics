@@ -2,10 +2,14 @@
 package reconstruct
 
 import (
+	"log"
+	// "fmt"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/dna/pDna"
 )
 
 // WriteTreeToFasta writes assigned sequences at all nodes to a fasta file.
@@ -46,14 +50,14 @@ func mutationProbability(a int, b int, t float64) float64 {
 func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, biasN bool, highestProbThreshold float64) dna.Base {
 	var highestProb, nonBiasBaseProb, total float64 = 0, 0, 0
 	var answer dna.Base = biasBase
-	for p, v := range likelihoods {
-		total += v
-		if dna.Base(p) != biasBase {
-			nonBiasBaseProb += v
+	for baseIdx, baseProb := range likelihoods {
+		total += baseProb
+		if dna.Base(baseIdx) != biasBase {
+			nonBiasBaseProb += baseProb
 		}
-		if v > highestProb {
-			highestProb = v
-			answer = dna.Base(p)
+		if baseProb > highestProb {
+			highestProb = baseProb
+			answer = dna.Base(baseIdx)
 		}
 	}
 	if highestProb/total < highestProbThreshold {
@@ -66,6 +70,24 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 			return biasBase
 		}
 	}
+	return answer
+}
+
+func LikelihoodsToPBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, highestProbThreshold float64) pDna.Float32Base {
+	if len(likelihoods) < 4 {
+		log.Fatalf("Error: Expected four bases, received less.")
+	}
+
+	var total float64 = 0
+	for _, v := range likelihoods {
+		total += v
+	}
+	var answer pDna.Float32Base
+	answer.A = float32(likelihoods[0]/ total) 
+	answer.C = float32(likelihoods[1]/ total)
+	answer.G = float32(likelihoods[2]/ total)
+	answer.T = float32(likelihoods[3]/ total)
+
 	return answer
 }
 
@@ -291,7 +313,7 @@ func descendentBaseExists(node *expandedTree.ETree, pos int) {
 // The user may also specify a 'highestProbThreshold'. If the program is uncertain about ancestral reconstruction for a particular
 // node, this option will allow LoopNodes to return an 'N' for that node instead.
 // if subMatrix is true, mutation probabilities will be calculated from the tree's substitution matrix instead of from the branch length
-func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, biasN bool, highestProbThreshold float64, subMatrix bool) {
+func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, biasN bool, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaRecords []pFasta.PFasta) {
 	var fix []float64
 	var biasBase, answerBase dna.Base
 	var biasParentName string
@@ -313,16 +335,30 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 	BaseExistsAtNodes(root, position)
 	for k := range internalNodes {
 		fix = FixFc(root, internalNodes[k], subMatrix)
-
+		// fmt.Print("before basePresent\n")
 		if internalNodes[k].BasePresent {
+			// fmt.Print("inside basePresent\n")
+			// fmt.Printf("%s, %s\n", biasParentName, internalNodes[k].Name)
 			if biasParentName != "" && internalNodes[k].Name == biasParentName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, biasN, highestProbThreshold) //biased estimate
+				// fmt.Print("check node \n")
+				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
+					// fmt.Print("HIhihihihiHIHIHIHIHIHIHIHIHIH\n")
+					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold))
+				}
 			} else {
 				answerBase = LikelihoodsToBase(fix, 0, dna.N, biasN, highestProbThreshold) //unbiased estimate
+				// fmt.Printf("%s, %s\n", pDnaNode, internalNodes[k].Name)
+				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
+					// fmt.Print("check node no bias \n")
+					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold))
+				}
+				
 			}
 		} else {
 			answerBase = dna.Gap
+			// don't add anything to pDnaOutfile
 		}
 
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)

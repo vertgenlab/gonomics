@@ -1,12 +1,15 @@
 package reconstruct
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
-	"testing"
+	"github.com/vertgenlab/gonomics/dna/pDna"
 )
 
 var ReconstructTests = []struct {
@@ -23,6 +26,8 @@ var ReconstructTests = []struct {
 	NonBiasProbThreshold float64
 	HighestProbThreshold float64
 	SubMatrix            bool
+	PDnaNode			 string
+	PDnaOutFile			 string
 }{
 	{NewickFileName: "testdata/newickLongBranches.txt",
 		GenePredFile:         "testdata/genePred.gp",
@@ -37,6 +42,8 @@ var ReconstructTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
 		SubMatrix:            false,
+		PDnaNode:			  "C",
+		PDnaOutFile:		  "testdata/C.pfa",
 	},
 }
 
@@ -48,6 +55,7 @@ func TestReconstruct(t *testing.T) {
 	var baseAccuracy map[string][]float64
 	var baseAccData []float64
 	var foundInMap bool
+	var outPFasta []pFasta.PFasta
 
 	for _, v := range ReconstructTests {
 		tree, err = expandedTree.ReadNewick(v.NewickFileName)
@@ -60,10 +68,19 @@ func TestReconstruct(t *testing.T) {
 		tree, err = expandedTree.ReadTree(v.NewickFileName, v.LeavesFile)
 		exception.FatalOnErr(err)
 		leaves = expandedTree.GetLeaves(tree)
+
+		if v.PDnaNode != "" {
+			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+		}
+
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
-			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, false, v.HighestProbThreshold, v.SubMatrix)
+			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, false, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
 		}
 		WriteTreeToFasta(tree, v.ReconOutFile)
+		
+		if v.PDnaNode != "" {
+			pFasta.Write(v.PDnaOutFile, outPFasta)
+		}
 
 		accuracyData, baseAccuracy = ReconAccuracy(v.SimTree, v.ReconOutFile, v.LeavesFile, v.GenePredFile, true)
 		for name, acc := range accuracyData {

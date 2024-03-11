@@ -20,6 +20,9 @@ var ReconstructSeqTests = []struct {
 	HighestProbThreshold float64
 	KeepAllSeq           bool
 	SubMatrix            bool
+	PDnaNode			 string
+	PDnaOutFile			 string
+	ExpectedPFile		 string
 }{
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -31,6 +34,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:			  "hca",
+		PDnaOutFile:	      "hca.pfa",
+		ExpectedPFile:		  "testdata/out.AllPossibleOneHuman.hca_test.pfa",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -42,6 +48,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:			  "",
+		PDnaOutFile:	      "",
+		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -53,6 +62,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:			  "",
+		PDnaOutFile:	      "",
+		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -64,6 +76,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0.99,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:			  "",
+		PDnaOutFile:	      "",
+		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
@@ -75,6 +90,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:			  "",
+		PDnaOutFile:	      "",
+		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
@@ -86,6 +104,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
 		SubMatrix:            false,
+		PDnaNode:			  "",
+		PDnaOutFile:	      "",
+		ExpectedPFile:		  "",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqsRef.fa",
@@ -106,6 +127,9 @@ var ReconstructSeqTests = []struct {
 		BiasN:                true,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
+		PDnaNode:			  "",
+		PDnaOutFile:	      "",
+		ExpectedPFile:		  "",
 	},
 }
 
@@ -153,6 +177,8 @@ func TestReconstructSeq(t *testing.T) {
 			HighestProbThreshold: v.HighestProbThreshold,
 			KeepAllSeq:           v.KeepAllSeq,
 			SubMatrix:            v.SubMatrix,
+			PDnaNode:			  v.PDnaNode,
+			PDnaOutFile:		  v.PDnaOutFile,
 		}
 		ReconstructSeq(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
@@ -161,5 +187,16 @@ func TestReconstructSeq(t *testing.T) {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)
 		}
+
+		if v.PDnaNode != "" {
+			if !fileio.AreEqual(v.PDnaOutFile, v.ExpectedPFile) {
+				t.Errorf("Error: pfasta output not as expected.")
+			} else {
+				err = os.Remove(v.PDnaOutFile)
+			exception.PanicOnErr(err)
+			}
+		}
 	}
 }
+
+// maake 20 bases of regular fasta, read against 
