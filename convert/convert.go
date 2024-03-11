@@ -200,7 +200,7 @@ func bedMidpoint(b bed.Bed) int {
 // entry as the reference and the last two fasta entries as the alt alleles.
 // This is done by chromosome since a multiFa contains only one chromosome per file.
 // This function only checks for substitutions, not indels.
-func ThreeWayFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substitutionOnly bool, retainN bool) {
+func ThreeWayFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter) {
 	var currRefPos, currAlnPos int = 0, 0
 
 	if len(f) != 3 {
@@ -243,7 +243,7 @@ func ThreeWayFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter, substi
 						FormatData: []string{"1/1"},
 					},
 				}
-			} else if f[0].Seq[i] != f[1].Seq[i] && f[0].Seq[i] != f[2].Seq[i] && f[1].Seq[i] != f[2].Seq[i] { // 1/2; substitution at both allele1 and allele2, same alt
+			} else if f[0].Seq[i] != f[1].Seq[i] && f[0].Seq[i] != f[2].Seq[i] && f[1].Seq[i] != f[2].Seq[i] { // 1/2; substitution at both allele1 and allele2, different alt
 				altAllele = []string{dna.BaseToString(f[1].Seq[i]), dna.BaseToString(f[2].Seq[i])}
 				samples = []vcf.Sample{
 					{

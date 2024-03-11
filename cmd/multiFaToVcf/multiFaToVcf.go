@@ -23,7 +23,7 @@ func multiFaToVcf(inFile string, chr string, outFile string, substitutionsOnly b
 	if len(f) == 2 {
 		convert.PairwiseFaToVcf(f, chr, out, substitutionsOnly, retainN)
 	} else if len(f) == 3 {
-		convert.ThreeWayFaToVcf(f, chr, out, substitutionsOnly, retainN)
+		convert.ThreeWayFaToVcf(f, chr, out)
 	} else {
 		log.Fatalf("Error: expecting 2 or 3 sequences in the input FASTA.\n")
 	}

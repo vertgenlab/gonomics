@@ -81,12 +81,11 @@ var ThreeWayFaToVcfTests = []struct {
 
 func TestThreeWayFaToVcf(t *testing.T) {
 	var err error
+	var out *fileio.EasyWriter
 	for _, v := range ThreeWayFaToVcfTests {
-		out := fileio.EasyCreate(v.OutFile)
-		threewayInputFa := fasta.Read(v.InFile)
-		ThreeWayFaToVcf(threewayInputFa, v.Chrom, out, false, false)
-		err = out.Close()
-		exception.PanicOnErr(err)
+		threeWayInputFa := fasta.Read(v.InFile)
+		out = fileio.EasyCreate(v.OutFile)
+		ThreeWayFaToVcf(threeWayInputFa, v.Chrom, out)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Threeway VCF results do not match.")
 		} else {
