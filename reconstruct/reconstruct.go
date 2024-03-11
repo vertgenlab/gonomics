@@ -8,6 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"log"
+	"math"
 )
 
 // WriteTreeToFasta writes assigned sequences at all nodes to a fasta file.
@@ -72,7 +73,14 @@ func LikelihoodsToPdna(likelihoods []float64) pDna.Float32Base {
 	// TODO: I am assuming that the order is A,C,G,T, but I am not sure
 	var total float64 = 0
 	for _, v := range likelihoods {
+		if math.IsNaN(v) {
+			log.Fatalf("likelihood component NaN\n") //TODO: remove after debugging. I don't expect to hit this
+		}
 		total += v
+	}
+
+	if math.IsNaN(total) {
+		log.Fatalf("likelihood total NaN\n") // TODO: remove after debugging
 	}
 
 	if total == 0 {
@@ -414,6 +422,11 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 		}
 
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)
+
+		// TODO: remove after debugging. Check answerBasePdna for NaN
+		if math.IsNaN(float64(answerBasePdna.A)) || math.IsNaN(float64(answerBasePdna.C)) || math.IsNaN(float64(answerBasePdna.G)) || math.IsNaN(float64(answerBasePdna.T)) {
+			log.Fatalf("Pre-answerPfa[i].Seq append, NaN base: %v\n", answerBasePdna)
+		}
 
 		// append pdna to the correct pFasta in []pFasta
 		for i, v := range pfaNames {

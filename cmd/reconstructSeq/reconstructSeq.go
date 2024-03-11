@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/simulate"
 	"log"
+	"math"
 	"strings"
 
 	"github.com/vertgenlab/gonomics/exception"
@@ -96,8 +97,13 @@ func ReconstructSeq(s Settings) {
 		pFasta.Write(s.OutPfaFile, answerPfa)
 		//TODO: put the below as another function in pfa package to print human-readable (non-binary) pfa to terminal or remove/comment-out after debugging
 		outpfa := pFasta.Read(s.OutPfaFile)
-		for i, v := range outpfa {
-			fmt.Printf("%v: %v\n", i, v)
+		for _, v := range outpfa { // instead of printing whole pfa, which creates large file that can't be read properly, just QC each base
+			for i := range v.Seq {
+				if math.IsNaN(float64(v.Seq[i].A)) || math.IsNaN(float64(v.Seq[i].C)) || math.IsNaN(float64(v.Seq[i].G)) || math.IsNaN(float64(v.Seq[i].T)) {
+					log.Fatalf("Read pFasta and found NaN base: %v at position $v\n", v.Seq[i], i)
+				}
+			}
+			//fmt.Printf("%v: %v\n", i, v)
 		}
 	}
 }
