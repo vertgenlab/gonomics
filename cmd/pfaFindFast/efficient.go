@@ -244,6 +244,9 @@ func distWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, w
 
 	for i := windowStart; i <= windowEnd; i++ {
 		baseDist = pDna.Dist(firstQuery[i], secondQuery[i])
+		if math.IsNaN(baseDist) {
+			log.Fatalf("Error: distWindow NaN. The 2 bases are: %v, %v\n", firstQuery[i], secondQuery[i])
+		}
 		windowDist = append(windowDist, baseDist) // appending each baseDist instead of defining windowDist size first
 		windowDistTotal += baseDist
 	}
@@ -277,6 +280,9 @@ func dotWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, wi
 
 	for i := windowStart; i <= windowEnd; i++ {
 		baseDot = pDna.DotSubstProb(firstQuery[i], secondQuery[i])
+		if math.IsNaN(baseDot) {
+			log.Fatalf("Error: dotWindow NaN. The 2 bases are: %v, %v\n", firstQuery[i], secondQuery[i])
+		}
 		windowDot = append(windowDot, baseDot) // appending each baseDist instead of defining windowDist size first
 		windowDotTotal += baseDot
 	}

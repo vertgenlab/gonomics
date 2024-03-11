@@ -1,8 +1,6 @@
 package pDna
 
 import (
-	"fmt"
-	"log"
 	"math"
 )
 
@@ -28,7 +26,7 @@ type Float64Diff struct {
 // IsGap returns true if the DNA base's probability vector is 0 at all 4 bases, indicating that the base is a gap
 func IsGap(p Float32Base) bool {
 	if p.A == 0 && p.C == 0 && p.G == 0 && p.T == 0 {
-		fmt.Printf("found gap. p: %v\n", p) // TODO: remove after debugging. Check isGap works
+		//fmt.Printf("found gap. p: %v\n", p) // TODO: remove after debugging. Check isGap works
 		return true
 	} else {
 		return false
@@ -49,7 +47,7 @@ func IsNonGap(p Float32Base) bool {
 // IsN returns true if the DNA base's probability vector is the same but not 0 (==0.25) at all 4 bases, indicating that the base is an N
 func IsN(p Float32Base) bool {
 	if p.A != 0 && p.A == p.C && p.A == p.G && p.A == p.T {
-		fmt.Printf("found N. p: %v\n", p) // TODO: remove after debugging. Check isN works
+		//fmt.Printf("found N. p: %v\n", p) // TODO: remove after debugging. Check isN works
 		return true
 	} else {
 		return false
@@ -113,9 +111,9 @@ func Dist(p Float32Base, q Float32Base) float64 {
 // Dot
 func Dot(p Float32Base, q Float32Base) float64 {
 	// TODO: remove the below if loop after debugging? Should have already checked in pfaFindFast/efficient.go for gap, so this is not gap
-	if (p.A+p.C+p.G+p.T != 1) || (q.A+q.C+q.G+q.T != 1) {
-		log.Fatalf("p or q sum not 1. p:%v, sum: %v, q: %v, sum: %v\n")
-	}
+	//if (p.A+p.C+p.G+p.T != 1) || (q.A+q.C+q.G+q.T != 1) {
+	//	log.Fatalf("p or q sum not 1. p:%v, sum: %v, q: %v, sum: %v\n", p, p.A+p.C+p.G+p.T, q, q.A+q.C+q.G+q.T)
+	//}
 	return float64(p.A*q.A + p.C*q.C + p.G*q.G + p.T*q.T)
 }
 
@@ -126,13 +124,26 @@ func DotSubstProb(p Float32Base, q Float32Base) float64 {
 }
 
 // TODO: maybe replace LikelihoodsToPdna in reconstruct/reconstruct.go in branch reconstructSeq_nodeMods
-// MakeValidNonGap converts the likelihoods of each base at a position of a sequence into a pdna for that position
-func MakeValidNonGap(p Float32Base) Float32Base {
+// MakeValid converts the likelihoods of each base at a position of a sequence into a pdna for that position
+func MakeValid(p Float32Base) Float32Base {
 	total := p.A + p.C + p.G + p.T
-	return Float32Base{
-		A: p.A / total,
-		C: p.C / total,
-		G: p.G / total,
-		T: p.T / total,
+	//fmt.Printf("raw ACGT: %g, %g, %g, %g\n", p.A, p.C, p.G, p.T)
+	//fmt.Printf("raw total: %g\n", total)
+	//fmt.Printf("normalized ACGT: %g, %g, %g, %g\n", p.A/total, p.C/total, p.G/total, p.T/total)
+	//fmt.Printf("normalized total: %g\n", p.A/total+p.C/total+p.G/total+p.T/total)
+	if total == 0 {
+		return Float32Base{
+			A: 0,
+			C: 0,
+			G: 0,
+			T: 0,
+		}
+	} else {
+		return Float32Base{
+			A: p.A / total,
+			C: p.C / total,
+			G: p.G / total,
+			T: p.T / total,
+		}
 	}
 }

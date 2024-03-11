@@ -166,7 +166,7 @@ func MakeValid(pfaIn []pDna.Float32Base) []pDna.Float32Base {
 		} else if pDna.IsNonGap(pfaIn[i]) {
 			pfaOut[i] = pfaIn[i]
 		} else { // already checked that the base is not gap, so convert it to valid non-gap
-			pfaOut[i] = pDna.MakeValidNonGap(pfaIn[i])
+			pfaOut[i] = pDna.MakeValid(pfaIn[i])
 		}
 	}
 	return pfaOut

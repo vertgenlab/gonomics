@@ -72,10 +72,11 @@ func pfaFindFast(s Settings) {
 	secondQuery = pFasta.MakeValid(secondQuery)
 
 	// QC firstQuery and secondQuery sequences. TODO: remove after debugging?
-	pFasta.QC(firstQuery)
-	pFasta.QC(secondQuery)
+	//pFasta.QC(firstQuery)
+	//pFasta.QC(secondQuery)
 	fmt.Printf("QC complete\n")
-
+	//fmt.Printf("firstQuery: %v\n", firstQuery)
+	//fmt.Printf("secondQuery: %v\n", secondQuery)
 	speedyWindowDifference(reference, firstQuery, secondQuery, s)
 }
 
