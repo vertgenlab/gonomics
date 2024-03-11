@@ -23,7 +23,7 @@ var readHeaderTests = []struct {
 			AutoSqlOffset:        0, //this value is unused in bigWigs as well.
 			TotalSummaryOffset:   112,
 			UncompressBufferSize: 32768,
-			Reserved:             0, // this value should be zero in a valid bigWig.
+			ExtensionOffset:      0,
 		}},
 }
 
@@ -66,8 +66,8 @@ func TestReadHeader(t *testing.T) {
 		if header.UncompressBufferSize != v.ExpectedHeader.UncompressBufferSize {
 			t.Errorf("Error: header UncompressBufferSize field was not as expected.\n")
 		}
-		if header.Reserved != v.ExpectedHeader.Reserved {
-			t.Errorf("Error: heaader reserved field was not as expected.\n")
+		if header.ExtensionOffset != v.ExpectedHeader.ExtensionOffset {
+			t.Errorf("Error: heaader ExtensionOffset field was not as expected.\n")
 		}
 	}
 

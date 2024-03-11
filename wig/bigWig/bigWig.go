@@ -13,6 +13,8 @@ import (
 // Kent, W.J., et al. BigWig and BigBed: enabling browsing of large distributed
 //datasets. (2010) Bioinformatics, 26(17) 2204-2207.
 
+// specs for version 4 are found in this file: https://github.com/ucscGenomeBrowser/kent/blob/master/src/inc/bbiFile.h
+
 // this is the magic number for bigWig files
 const bigWigMagic = 2291137574         // little endian
 const bigWigMagicBigEndian = 654086024 // big endian, not supported by this package
@@ -20,7 +22,7 @@ const bigWigMagicBigEndian = 654086024 // big endian, not supported by this pack
 // Header represents the bbi header of the bigWig data file and contains metadata and offset values for file navigation.
 type Header struct {
 	Magic                uint32 // magic bytes at the beginning of file. Must match constant above to be a valid bigWig.
-	Version              uint16 // Specifies the wig version. This package was built following specs for bigWig version 3.
+	Version              uint16 // Specifies the wig version. This package was built following specs for bigWig version 4.
 	ZoomLevels           uint16 // Number of zoom levels built into the file.
 	ChromosomeTreeOffset uint64 // Offset in file to chromosome B+ tree index.
 	FullDataOffset       uint64 // Offset to the main dta. Points to the dataCount.
@@ -30,7 +32,7 @@ type Header struct {
 	AutoSqlOffset        uint64 // From specs: Offset to zero-terminated string with .as spec. Used for bigBig, not used in bigWig.
 	TotalSummaryOffset   uint64 // Offset to overall file summary data block.
 	UncompressBufferSize uint32 // Maximum size of decompression buffer needed (nonzero on compressed files).
-	Reserved             uint64 //Unused values, reserved for future expansion. Should always be zero in a valid bigWig.
+	ExtensionOffset      uint64 // Offset to header extension 0 if no such extension.
 }
 
 // We currently support only reading bbi headers in LittleEndian.
@@ -70,10 +72,7 @@ func readHeader(file *fileio.EasyReader) Header {
 	exception.PanicOnErr(err)
 	err = binary.Read(file, binary.LittleEndian, &header.UncompressBufferSize)
 	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &header.Reserved)
+	err = binary.Read(file, binary.LittleEndian, &header.ExtensionOffset)
 	exception.PanicOnErr(err)
-	if header.Reserved != 0 {
-		log.Fatalf("Error: bigWig header reserved field must be zero. Found: %v.\n", header.Reserved)
-	}
 	return header
 }
