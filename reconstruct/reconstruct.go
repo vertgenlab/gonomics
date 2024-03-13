@@ -404,6 +404,10 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 						if fix[0] < 0 || fix[1] < 0 || fix[2] < 0 || fix[3] < 0 || math.IsNaN(fix[0]) || math.IsNaN(fix[1]) || math.IsNaN(fix[2]) || math.IsNaN(fix[3]) {
 							log.Fatalf("invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 						}
+						// check for downstream problematic indices. TODO: remove after debugging
+						if k == 5102 || k == 5120 {
+							log.Fatalf("downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
+						}
 						answerBasePdna = LikelihoodsToPdna(fix)
 					}
 				}
@@ -414,6 +418,10 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 						// check if likelihoods are valid. TODO: remove after debugging
 						if fix[0] < 0 || fix[1] < 0 || fix[2] < 0 || fix[3] < 0 || math.IsNaN(fix[0]) || math.IsNaN(fix[1]) || math.IsNaN(fix[2]) || math.IsNaN(fix[3]) {
 							log.Fatalf("invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
+						}
+						// check for downstream problematic indices. TODO: remove after debugging
+						if k == 5102 || k == 5120 {
+							log.Fatalf("downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 						}
 						answerBasePdna = LikelihoodsToPdna(fix)
 					}
@@ -426,6 +434,10 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 					// check if likelihoods are valid. TODO: remove after debugging
 					if fix[0] < 0 || fix[1] < 0 || fix[2] < 0 || fix[3] < 0 || math.IsNaN(fix[0]) || math.IsNaN(fix[1]) || math.IsNaN(fix[2]) || math.IsNaN(fix[3]) {
 						log.Fatalf("invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
+					}
+					// check for downstream problematic indices. TODO: remove after debugging
+					if k == 5102 || k == 5120 {
+						log.Fatalf("downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 					}
 					answerBasePdna = pDna.Float32Base{
 						A: 0,
@@ -445,6 +457,10 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 				// TODO: remove after debugging. Check answerBasePdna validitiy before appending
 				if math.IsNaN(float64(answerBasePdna.A)) || math.IsNaN(float64(answerBasePdna.C)) || math.IsNaN(float64(answerBasePdna.G)) || math.IsNaN(float64(answerBasePdna.T)) || answerBasePdna.A < 0 || answerBasePdna.C < 0 || answerBasePdna.G < 0 || answerBasePdna.T < 0 {
 					log.Fatalf("Pre-answerPfa[i].Seq append, <0 or NaN base: %v, species: %v, k: %v, internalNodes[k]: %v\n", answerBasePdna, v, k, internalNodes[k])
+				}
+				// check for downstream problematic indices. TODO: remove after debugging
+				if k == 5102 || k == 5120 {
+					log.Fatalf("downstream pFasta.Read has invalid. Pre-answerPfa[i].Seq append, <0 or NaN base: %v, species: %v, k: %v, internalNodes[k]: %v\n", answerBasePdna, v, k, internalNodes[k])
 				}
 				answerPfa[i].Seq = append(answerPfa[i].Seq, answerBasePdna)
 			}
