@@ -15,6 +15,23 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
+// new outline for Nikitha
+func samCoverage(samFileName string, chromSizesFile string, outFile string) {
+	// first read sam to chan (sam.GoReadToChan)
+	// read chromsizes (the chromInfo package is what handles this)
+	// call sam.Pileup (it's called like go pileup or something like this)
+	// [a: 12, C; 15, G: 20 , T: 12]
+	// iterate through each pile (samAssembler does this so you can look there to see how this is accomplished)
+	// get total depth (sum of counts for all bases)
+	// add this to histogram.
+	// Histogram can be represented with this data structure: []int. You can always increase the length of the slice dynamically
+	// to avoid index out of range errors.
+	// Once the whole histogram is made, we'll want to write it out to a file in a way we can load into R to make figures
+	// For fitting a distribution, we can use the numbers/fit package in Gonomics.
+	// We'll fit using the file numbers/fit/ztnb.go
+	// Finally, add the R and P estimates from the NB distribution to something that can be written to an output file.
+}
+
 func totalAlignedBases(filename string) int {
 	samFile := fileio.EasyOpen(filename)
 	var done bool = false
