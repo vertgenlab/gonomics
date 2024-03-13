@@ -63,10 +63,6 @@ func ReconstructSeq(s Settings) {
 
 	for i := range leaves[0].Fasta.Seq {
 		if s.OutPfaFile != "" {
-			// print tree before reconstruct.LoopNodesPfa. TODO: remove after debugging
-			if i == 10 {
-				fmt.Printf("i: %v, tree: %v\n", i, tree)
-			}
 			answerPfa = reconstruct.LoopNodesPfa(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, answerPfa, s.PfaNames)
 		} else {
 			reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix)
@@ -103,12 +99,12 @@ func ReconstructSeq(s Settings) {
 		outpfa := pFasta.Read(s.OutPfaFile)
 		for _, v := range outpfa { // instead of printing whole pfa, which creates large file that can't be read properly, just QC each base
 			for i := range v.Seq {
+				// TODO: check invalid base when reading pFastsa. Remove after debugging
 				if math.IsNaN(float64(v.Seq[i].A)) || math.IsNaN(float64(v.Seq[i].C)) || math.IsNaN(float64(v.Seq[i].G)) || math.IsNaN(float64(v.Seq[i].T)) || v.Seq[i].A < 0 || v.Seq[i].C < 0 || v.Seq[i].G < 0 || v.Seq[i].T < 0 {
 					log.Fatalf("Read pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
 				}
-				// print to test local. TODO: remove after debugging
-				if i == 10 {
-					fmt.Printf("Read pFasta. base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
+				if i == 10 || i == 5000 || i == 5102 || i == 5120 {
+					fmt.Printf("Read pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
 				}
 			}
 			//fmt.Printf("%v: %v\n", i, v)

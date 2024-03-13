@@ -406,8 +406,8 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 							log.Fatalf("invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 						}
 						// check for downstream problematic indices. TODO: remove after debugging
-						if k == 5102 || k == 5120 {
-							log.Fatalf("downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
+						if position == 10 || position == 5000 || position == 5102 || position == 5120 {
+							fmt.Printf("downstream pFasta.Read has invalid likelihoods: %v, for species: %v, k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 						}
 						answerBasePdna = LikelihoodsToPdna(fix)
 					}
@@ -420,13 +420,9 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 						if fix[0] < 0 || fix[1] < 0 || fix[2] < 0 || fix[3] < 0 || math.IsNaN(fix[0]) || math.IsNaN(fix[1]) || math.IsNaN(fix[2]) || math.IsNaN(fix[3]) {
 							log.Fatalf("invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 						}
-						// check for downstream problematic indices. TODO: remove after debugging
-						if k == 5102 || k == 5120 {
-							log.Fatalf("downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
-						}
-						// print to test local. TODO: remove after debugging
-						if position == 10 {
-							fmt.Printf("show likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
+						// check for downstream problematic indices. TODO: remove after debugging. Did not print internalNodes[k].Fasta.Seq here because does not have Seq[position] (length ends right before this position) and trying to print will give index out of range
+						if position == 10 || position == 5000 || position == 5102 || position == 5120 {
+							fmt.Printf("downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 						}
 						answerBasePdna = LikelihoodsToPdna(fix)
 					}
@@ -441,12 +437,8 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 						log.Fatalf("invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 					}
 					// check for downstream problematic indices. TODO: remove after debugging
-					if k == 5102 || k == 5120 {
-						log.Fatalf("downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
-					}
-					// print to test local. TODO: remove after debugging
-					if position == 10 {
-						fmt.Printf("show likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
+					if position == 10 || position == 5000 || position == 5102 || position == 5120 {
+						fmt.Printf("show likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v, internalNodes[k].Fasta.Seq[position]: %v\n", fix, v, k, internalNodes[k], internalNodes[k].Fasta.Seq[position])
 					}
 					answerBasePdna = pDna.Float32Base{
 						A: 0,
@@ -468,12 +460,8 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 					log.Fatalf("Pre-answerPfa[i].Seq append, <0 or NaN base: %v, species: %v, k: %v, internalNodes[k]: %v\n", answerBasePdna, v, k, internalNodes[k])
 				}
 				// check for downstream problematic indices. TODO: remove after debugging
-				if k == 5102 || k == 5120 {
-					log.Fatalf("downstream pFasta.Read has invalid. Pre-answerPfa[i].Seq append, <0 or NaN base: %v, species: %v, k: %v, internalNodes[k]: %v\n", answerBasePdna, v, k, internalNodes[k])
-				}
-				// print to test local. TODO: remove after debugging
-				if position == 10 {
-					fmt.Printf("Pre-answerPfa[i].Seq append, <0 or NaN base: %v, species: %v, k: %v, internalNodes[k]: %v\n", answerBasePdna, v, k, internalNodes[k])
+				if position == 10 || position == 5000 || position == 5102 || position == 5120 {
+					fmt.Printf("Pre-answerPfa[i].Seq append, Check base: %v, species: %v, k: %v, internalNodes[k]: %v, internalNodes[k].Fasta.Seq[position]: %v\n", answerBasePdna, v, k, internalNodes[k], internalNodes[k].Fasta.Seq[position])
 				}
 				answerPfa[i].Seq = append(answerPfa[i].Seq, answerBasePdna)
 			}
