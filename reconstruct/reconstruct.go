@@ -2,6 +2,7 @@
 package reconstruct
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/expandedTree"
@@ -423,6 +424,10 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 						if k == 5102 || k == 5120 {
 							log.Fatalf("downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 						}
+						// print to test local. TODO: remove after debugging
+						if position == 10 {
+							fmt.Printf("show likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
+						}
 						answerBasePdna = LikelihoodsToPdna(fix)
 					}
 				}
@@ -438,6 +443,10 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 					// check for downstream problematic indices. TODO: remove after debugging
 					if k == 5102 || k == 5120 {
 						log.Fatalf("downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
+					}
+					// print to test local. TODO: remove after debugging
+					if position == 10 {
+						fmt.Printf("show likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 					}
 					answerBasePdna = pDna.Float32Base{
 						A: 0,
@@ -461,6 +470,10 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 				// check for downstream problematic indices. TODO: remove after debugging
 				if k == 5102 || k == 5120 {
 					log.Fatalf("downstream pFasta.Read has invalid. Pre-answerPfa[i].Seq append, <0 or NaN base: %v, species: %v, k: %v, internalNodes[k]: %v\n", answerBasePdna, v, k, internalNodes[k])
+				}
+				// print to test local. TODO: remove after debugging
+				if position == 10 {
+					fmt.Printf("Pre-answerPfa[i].Seq append, <0 or NaN base: %v, species: %v, k: %v, internalNodes[k]: %v\n", answerBasePdna, v, k, internalNodes[k])
 				}
 				answerPfa[i].Seq = append(answerPfa[i].Seq, answerBasePdna)
 			}
