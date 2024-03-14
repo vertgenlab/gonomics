@@ -69,3 +69,29 @@ func Sample(input PFasta) fasta.Fasta {
 
 	return answer
 }
+
+// PAlnPosToRefPos is AlnPosToRefPos in fasta/multiFa.go but for pFasta
+// Consider using pAlnPosToRefPosCounter instead if tracking refStart and alnStart will be beneficial, e.g. when working through entire chromosomes
+func PAlnPosToRefPos(record PFasta, AlnPos int) int {
+	return PAlnPosToRefPosCounter(record, AlnPos, 0, 0)
+}
+
+// PAlnPosToRefPosCounter is AlnPosToRefPosCounter in fasta/multiFa.go but for pFasta
+func PAlnPosToRefPosCounter(record PFasta, AlnPos int, refStart int, alnStart int) int {
+	return PAlnPosToRefPosCounterSeq(record.Seq, AlnPos, refStart, alnStart)
+}
+
+// PAlnPosToRefPosCounterSeq is AlnPosToRefPosCounterSeq in fasta/multiFa.go but for pFasta
+func PAlnPosToRefPosCounterSeq(record []pDna.Float32Base, AlnPos int, refStart int, alnStart int) int {
+	if alnStart > AlnPos {
+		refStart, alnStart = 0, 0 //in case the alnStart was improperly set (greater than the desired position, we reset the counters to 0.
+	}
+	for t := alnStart; t < AlnPos; t++ {
+		if t == len(record) {
+			log.Fatalf("Ran out of chromosome.")
+		} else if !pDna.IsGap(record[t]) {
+			refStart++
+		}
+	}
+	return refStart
+}
