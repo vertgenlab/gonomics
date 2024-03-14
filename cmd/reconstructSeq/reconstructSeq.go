@@ -104,9 +104,9 @@ func ReconstructSeq(s Settings) {
 					log.Fatalf("Read pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
 				}
 				// no if print all on short example
-				//if i == 10 || i == 5000 || i == 5102 || i == 5120 {
-				fmt.Printf("Read pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				//}
+				if i == 10 || i == 5000 || i == 5102 || i == 5120 {
+					fmt.Printf("Read pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
+				}
 			}
 			//fmt.Printf("%v: %v\n", i, v)
 		}
