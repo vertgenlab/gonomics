@@ -94,6 +94,19 @@ func ReconstructSeq(s Settings) {
 	fasta.Write(s.OutFile, treeFastas)
 
 	if s.OutPfaFile != "" {
+		for _, v := range answerPfa { // instead of printing whole pfa, which creates large file that can't be read properly, just QC each base
+			for i := range v.Seq {
+				// TODO: check invalid base before writing pFastsa. Remove after debugging
+				if math.IsNaN(float64(v.Seq[i].A)) || math.IsNaN(float64(v.Seq[i].C)) || math.IsNaN(float64(v.Seq[i].G)) || math.IsNaN(float64(v.Seq[i].T)) || v.Seq[i].A < 0 || v.Seq[i].C < 0 || v.Seq[i].G < 0 || v.Seq[i].T < 0 {
+					log.Fatalf("Before writing pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
+				}
+				// no if print all on short example
+				if i == 10 || i == 5000 || i == 5102 || i == 5120 {
+					fmt.Printf("Before writing pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
+				}
+			}
+			//fmt.Printf("%v: %v\n", i, v)
+		}
 		pFasta.Write(s.OutPfaFile, answerPfa)
 		//TODO: put the below as another function in pfa package to print human-readable (non-binary) pfa to terminal or remove/comment-out after debugging
 		outpfa := pFasta.Read(s.OutPfaFile)
