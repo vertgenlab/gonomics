@@ -2,13 +2,12 @@ package browser
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"strings"
 	"unicode/utf8"
-
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
@@ -58,11 +57,12 @@ func PFaVisualizer(infile string, outfile string, start int, end int, startOfAli
 	_, err = fmt.Fprintf(out, "Start: %s. End: %s. %s: %d.", startStr, endStr, formatting, formatNum)
 	exception.PanicOnErr(err)
 
+	if len(records) == 0 {
+		log.Fatalf("Error: User provided empty pfasta file.\n")
+	}
 	if seqName == "" {
 		// only accepts single pFa or a .pFa with multiple pFastas and a specified record name
-		if len(records) > 0 {
-			log.Fatalf("Error: User provided empty fasta file.\n")
-		} else if len(records) > 1 {
+		if len(records) > 1 {
 			log.Fatalf("Error: User must specify sequence name for pFasta file with more than 1 sequence.\n")
 		} else {
 			// pfa with 1 entry
@@ -70,11 +70,16 @@ func PFaVisualizer(infile string, outfile string, start int, end int, startOfAli
 		}
 	} else {
 		// user can specify chrom if multiple entries
+		seqPrinted := false
 		for _, desiredSeq := range records {
 			if desiredSeq.Name == seqName {
+				seqPrinted = true
 				printAllSets(out, err, desiredSeq, start, end, lineLength, sigFigs, decimalPlaces)
 				break
 			}
+		}
+		if !seqPrinted {
+			log.Fatalf("Error: User specified sequence not in input pfasta file.")
 		}
 	}
 	err = out.Close()

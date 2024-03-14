@@ -1,0 +1,12 @@
+Start: 6. End: 13. SigFigs: 2.
+Position: 6
+>chr1butlikerealllllllllllllylong	|	A	|	8.2e-03	4.9e-01	2.1e-01	3.3e-01
+>                                	|	C	|	3.8e-01	2.4e-01	1.2e-01	1.1e-01
+>                                	|	G	|	3.6e-01	1.7e-01	4.9e-01	4.7e-01
+>                                	|	T	|	2.5e-01	9.6e-02	1.9e-01	9.0e-02
+
+Position: 10
+>chr1butlikerealllllllllllllylong	|	A	|	2.0e-01	1.1e-01	5.8e-02
+>                                	|	C	|	2.5e-01	4.2e-01	4.4e-01
+>                                	|	G	|	3.5e-01	4.2e-01	5.8e-02
+>                                	|	T	|	2.0e-01	5.8e-02	4.4e-01

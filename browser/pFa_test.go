@@ -153,6 +153,124 @@ func TestPrintAllSets(t *testing.T) {
 			t.Errorf("Error: in browser. PrintAllSets test not as expected.")
 		}
 	}
+
+	pFaInputnorm := "testdata/pfa_PFaVisualiser_normalised_input_toy_2.pfa"
+	Recordsnorm := []pFasta.PFasta{
+		pFasta.PFasta{Name: "chr2",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.1,
+					C: 0.2,
+					G: 0.3,
+					T: 0.4}}},
+		pFasta.PFasta{Name: "chr1butlikerealllllllllllllylong",
+			Seq: []pDna.Float32Base{
+				pDna.Float32Base{
+					A: 0.20564,
+					C: 0.2865,
+					G: 0.38760,
+					T: 0.120224,
+				},
+				pDna.Float32Base{
+					A: 0.323,
+					C: 0.42701,
+					G: 0.13029,
+					T: 0.1197,
+				},
+				pDna.Float32Base{
+					A: 0.179326,
+					C: 0.278674,
+					G: 0.1535,
+					T: 0.3885,
+				},
+				pDna.Float32Base{
+					A: 0.267992,
+					C: 0.13088,
+					G: 0.300928,
+					T: 0.3002,
+				},
+				pDna.Float32Base{
+					A: 0.481059,
+					C: 0.124,
+					G: 0.091041,
+					T: 0.3039,
+				},
+				pDna.Float32Base{
+					A: 0.26229,
+					C: 0.0668,
+					G: 0.13778,
+					T: 0.53313,
+				},
+				pDna.Float32Base{
+					A: 0.00819,
+					C: 0.3783,
+					G: 0.36011,
+					T: 0.2534,
+				},
+				pDna.Float32Base{
+					A: 0.4939,
+					C: 0.24142,
+					G: 0.1682,
+					T: 0.09648,
+				},
+				pDna.Float32Base{
+					A: 0.20926,
+					C: 0.1164,
+					G: 0.486,
+					T: 0.18834,
+				},
+				pDna.Float32Base{
+					A: 0.32963,
+					C: 0.11237,
+					G: 0.468,
+					T: 0.09,
+				},
+				pDna.Float32Base{
+					A: 0.2,
+					C: 0.25104,
+					G: 0.35296,
+					T: 0.196,
+				},
+				pDna.Float32Base{
+					A: 0.1074,
+					C: 0.41734,
+					G: 0.41726,
+					T: 0.058,
+				},
+				pDna.Float32Base{
+					A: 0.05832,
+					C: 0.4439,
+					G: 0.05822,
+					T: 0.43956,
+				},
+				pDna.Float32Base{
+					A: 0.339,
+					C: 0.1657,
+					G: 0.20771,
+					T: 0.28759,
+				},
+				pDna.Float32Base{
+					A: 0.1182634,
+					C: 0.225737,
+					G: 0.172,
+					T: 0.484,
+				},
+				pDna.Float32Base{
+					A: 0.13294,
+					C: 0.25065,
+					G: 0.36341,
+					T: 0.253,
+				},
+				pDna.Float32Base{
+					A: 0.44,
+					C: 0.29766,
+					G: 0.1069,
+					T: 0.15544,
+				},
+			},
+		},
+	}
+	pFasta.Write(pFaInputnorm, Recordsnorm)
 }
 
 var PFaVisualizerTests = []struct {
@@ -226,6 +344,18 @@ var PFaVisualizerTests = []struct {
 		LineLength:     4,
 		SeqName:        "chr1",
 		Expected:       "testdata/pfa_PFaVisualiser_normalised_expected_toy_2.txt",
+	},
+	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_2.pfa",
+		OutFile:        "testdata/pfa_PFaVisualiser_normalised_output_toy_3.txt",
+		Start:          6,
+		End:            13,
+		StartOfAlignment: false,
+		EndOfAlignment: false,
+		SigFigs:        2,
+		DecimalPlaces:  5,
+		LineLength:     4,
+		SeqName:        "chr1butlikerealllllllllllllylong",
+		Expected:       "testdata/pfa_PFaVisualiser_normalised_expected_toy_3.txt",
 	},
 }
 
