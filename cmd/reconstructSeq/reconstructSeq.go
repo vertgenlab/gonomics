@@ -107,6 +107,9 @@ func ReconstructSeq(s Settings) {
 			}
 			//fmt.Printf("%v: %v\n", i, v)
 		}
+
+		// bypass writing/reading pFasta file. TODO: better to fix writing/reading and have separate reconstructSeq and pFafindfast cmd
+
 		pFasta.Write(s.OutPfaFile, answerPfa)
 		//TODO: put the below as another function in pfa package to print human-readable (non-binary) pfa to terminal or remove/comment-out after debugging
 		outpfa := pFasta.Read(s.OutPfaFile)
