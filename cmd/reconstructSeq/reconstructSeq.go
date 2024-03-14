@@ -103,9 +103,10 @@ func ReconstructSeq(s Settings) {
 				if math.IsNaN(float64(v.Seq[i].A)) || math.IsNaN(float64(v.Seq[i].C)) || math.IsNaN(float64(v.Seq[i].G)) || math.IsNaN(float64(v.Seq[i].T)) || v.Seq[i].A < 0 || v.Seq[i].C < 0 || v.Seq[i].G < 0 || v.Seq[i].T < 0 {
 					log.Fatalf("Read pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
 				}
-				if i == 10 || i == 5000 || i == 5102 || i == 5120 {
-					fmt.Printf("Read pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				}
+				// now print all on short example
+				//if i == 10 || i == 5000 || i == 5102 || i == 5120 {
+				fmt.Printf("Read pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
+				//}
 			}
 			//fmt.Printf("%v: %v\n", i, v)
 		}
