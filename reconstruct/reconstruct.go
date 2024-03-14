@@ -406,9 +406,9 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 							log.Fatalf("invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 						}
 						// check for downstream problematic indices. No if print all if short input. TODO: remove after debugging
-						if position == 10 || position == 5000 || position == 5102 || position == 5120 {
-							fmt.Printf("position: %v, downstream pFasta.Read has invalid likelihoods: %v, for species: %v, k: %v, internalNodes[k]: %v\n", position, fix, v, k, internalNodes[k])
-						}
+						//if position == 10 || position == 5000 || position == 5102 || position == 5120 {
+						fmt.Printf("position: %v, downstream pFasta.Read has invalid likelihoods: %v, for species: %v, k: %v, internalNodes[k]: %v\n", position, fix, v, k, internalNodes[k])
+						//}
 						answerBasePdna = LikelihoodsToPdna(fix)
 					}
 				}
@@ -421,9 +421,9 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 							log.Fatalf("invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 						}
 						// check for downstream problematic indices. no if print all if short input TODO: remove after debugging. Did not print internalNodes[k].Fasta.Seq here because does not have Seq[position] (length ends right before this position) and trying to print will give index out of range
-						if position == 10 || position == 5000 || position == 5102 || position == 5120 {
-							fmt.Printf("position: %v, downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", position, fix, v, k, internalNodes[k])
-						}
+						//if position == 10 || position == 5000 || position == 5102 || position == 5120 {
+						fmt.Printf("position: %v, downstream pFasta.Read has invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", position, fix, v, k, internalNodes[k])
+						//}
 						answerBasePdna = LikelihoodsToPdna(fix)
 					}
 				}
@@ -437,9 +437,9 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 						log.Fatalf("invalid likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", fix, v, k, internalNodes[k])
 					}
 					// check for downstream problematic indices. NO if print all if short input TODO: remove after debugging
-					if position == 10 || position == 5000 || position == 5102 || position == 5120 {
-						fmt.Printf("position: %v, show likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", position, fix, v, k, internalNodes[k])
-					}
+					//if position == 10 || position == 5000 || position == 5102 || position == 5120 {
+					fmt.Printf("position: %v, show likelihoods: %v, for species: %v, at tree's internalNodes[k], where k: %v, internalNodes[k]: %v\n", position, fix, v, k, internalNodes[k])
+					//}
 					answerBasePdna = pDna.Float32Base{
 						A: 0,
 						C: 0,
@@ -460,9 +460,9 @@ func LoopNodesPfa(root *expandedTree.ETree, position int, biasLeafName string, n
 					log.Fatalf("Pre-answerPfa[i].Seq append, <0 or NaN base: %v, species: %v, k: %v, internalNodes[k]: %v\n", answerBasePdna, v, k, internalNodes[k])
 				}
 				// check for downstream problematic indices. No-if print-all if short input TODO: remove after debugging
-				if position == 10 || position == 5000 || position == 5102 || position == 5120 {
-					fmt.Printf("position: %v, Pre-answerPfa[i].Seq append, Check base: %v, species: %v, k: %v, internalNodes[k]: %v, internalNodes[k].Fasta.Seq[position]: %v, tree root.Fasta.Seq[position]: %v\n", position, answerBasePdna, v, k, internalNodes[k], internalNodes[k].Fasta.Seq[position], root.Fasta.Seq[position])
-				}
+				//if position == 10 || position == 5000 || position == 5102 || position == 5120 {
+				fmt.Printf("position: %v, Pre-answerPfa[i].Seq append, Check base: %v, species: %v, k: %v, internalNodes[k]: %v, internalNodes[k].Fasta.Seq[position]: %v, tree root.Fasta.Seq[position]: %v\n", position, answerBasePdna, v, k, internalNodes[k], internalNodes[k].Fasta.Seq[position], root.Fasta.Seq[position])
+				//}
 				answerPfa[i].Seq = append(answerPfa[i].Seq, answerBasePdna)
 			}
 		}

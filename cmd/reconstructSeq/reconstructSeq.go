@@ -64,10 +64,6 @@ func ReconstructSeq(s Settings) {
 	for i := range leaves[0].Fasta.Seq {
 		if s.OutPfaFile != "" {
 			answerPfa = reconstruct.LoopNodesPfa(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, answerPfa, s.PfaNames)
-			// to convert alnPos to refPos for multiFaExtract. TODO: remove after debugging
-			if i == 10 || i == 5000 || i == 5102 || i == 5120 {
-				fmt.Printf("alnPos: %v, refPos:%v\n", i, fasta.AlnPosToRefPos(*leaves[0].Fasta, i))
-			}
 		} else {
 			reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.HighestProbThreshold, s.SubMatrix)
 		}
@@ -108,9 +104,9 @@ func ReconstructSeq(s Settings) {
 					log.Fatalf("Read pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
 				}
 				// no if print all on short example
-				if i == 10 || i == 5000 || i == 5102 || i == 5120 {
-					fmt.Printf("Read pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				}
+				//if i == 10 || i == 5000 || i == 5102 || i == 5120 {
+				fmt.Printf("Read pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
+				//}
 			}
 			//fmt.Printf("%v: %v\n", i, v)
 		}
