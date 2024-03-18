@@ -5,10 +5,12 @@ import (
 )
 
 var readHeaderTests = []struct {
-	InFile               string
-	ExpectedBbiHeader    BbiHeader
-	ExpectedZoomHeaders  []ZoomHeader
-	ExpectedTotalSummary TotalSummaryBlock
+	InFile                  string
+	ExpectedBbiHeader       BbiHeader
+	ExpectedZoomHeaders     []ZoomHeader
+	ExpectedTotalSummary    TotalSummaryBlock
+	ExpectedChromTreeHeader ChromTreeHeader
+	ExpectedChromTreeNodes  []ChromTreeNode
 }{
 	{InFile: "testdata/test.bw",
 		ExpectedBbiHeader: BbiHeader{
@@ -36,6 +38,27 @@ var readHeaderTests = []struct {
 			SumData:      208,
 			SumSquares:   4144,
 		},
+		ExpectedChromTreeHeader: ChromTreeHeader{
+			Magic:     2026540177,
+			BlockSize: 1,
+			KeySize:   4,
+			ValSize:   8,
+			ItemCount: 1,
+			Reserved:  0,
+		},
+		ExpectedChromTreeNodes: []ChromTreeNode{
+			{IsLeaf: true,
+				Reserved: 0,
+				Count:    1,
+				Items: []ChromTreeItem{
+					{Key: []byte{99, 104, 114, 49}, // this spells "chr1" in ASCII.
+						ChromId:     0,
+						ChromSize:   20,
+						ChildOffset: 0,
+					},
+				},
+			},
+		},
 	},
 }
 
@@ -49,6 +72,10 @@ func TestRead(t *testing.T) {
 			testZoomHeaders(answer.ZoomHeaders[currZoomHeader], v.ExpectedZoomHeaders[currZoomHeader], t)
 		}
 		testTotalSummary(answer.TotalSummaryBlock, v.ExpectedTotalSummary, t)
+		testChromTreeHeader(answer.ChromTreeHeader, v.ExpectedChromTreeHeader, t)
+		for currNodeIdx := range answer.ChromTreeNodes {
+			testChromTreeNode(answer.ChromTreeNodes[currNodeIdx], v.ExpectedChromTreeNodes[currNodeIdx], t)
+		}
 	}
 }
 
@@ -118,5 +145,64 @@ func testTotalSummary(a TotalSummaryBlock, b TotalSummaryBlock, t *testing.T) {
 	}
 	if a.SumSquares != b.SumSquares {
 		t.Errorf("Error: TotalSummaryBlock SumSquares field was not as expected.\n")
+	}
+}
+
+func testChromTreeHeader(a ChromTreeHeader, b ChromTreeHeader, t *testing.T) {
+	if a.Magic != b.Magic {
+		t.Errorf("Error: ChromTreeHeader Magic field was not as expected.\n")
+	}
+	if a.BlockSize != b.BlockSize {
+		t.Errorf("Error: ChromTreeHeader BlockSize field was not as expected.\n")
+	}
+	if a.KeySize != b.KeySize {
+		t.Errorf("Error: ChromTreeHeader KeySize field was not as expected.\n")
+	}
+	if a.ValSize != b.ValSize {
+		t.Errorf("Error: ChromTreeHeader ValSize field was not as expected.\n")
+	}
+	if a.ItemCount != b.ItemCount {
+		t.Errorf("Error: ChromTreeHeader ItemCount field was not as expected.\n")
+	}
+	if a.Reserved != b.Reserved {
+		t.Errorf("Error: ChromTreeHeader Reserved field was not as expected.\n")
+	}
+}
+
+func testChromTreeNode(a ChromTreeNode, b ChromTreeNode, t *testing.T) {
+	if a.IsLeaf != b.IsLeaf {
+		t.Errorf("Error: ChromTreeNode IsLeaf field is not as expected.\n")
+	}
+	if a.Reserved != b.Reserved {
+		t.Errorf("Error: ChromTreeNode Reserved field is not as expected.\n")
+	}
+	if a.Count != b.Count {
+		t.Errorf("Error: ChromTreeNode Count field is not as expected.\n")
+	}
+	if len(a.Items) != len(b.Items) {
+		t.Errorf("Error: ChromTreeNode does not have the expected number of items.\n")
+	}
+	for currItemIdx := range a.Items {
+		testChromTreeItem(a.Items[currItemIdx], b.Items[currItemIdx], t)
+	}
+}
+
+func testChromTreeItem(a ChromTreeItem, b ChromTreeItem, t *testing.T) {
+	if len(a.Key) != len(b.Key) {
+		t.Errorf("Error: ChromTreeItem Key length is not as expected.\n")
+	}
+	for currKeyPos := range a.Key {
+		if a.Key[currKeyPos] != b.Key[currKeyPos] {
+			t.Errorf("Error: CurrTreeItem Key entry is not as expected.\n")
+		}
+		if a.ChromId != b.ChromId {
+			t.Errorf("Error: CurrTreeItem ChromId entry is not as expected.\n")
+		}
+		if a.ChromSize != b.ChromSize {
+			t.Errorf("Error: CurrTreeItem ChromSize entry is not as expected.\n")
+		}
+		if a.ChildOffset != b.ChildOffset {
+			t.Errorf("Error: CurrTreeItem ChildOffset entry is not as expected.\n")
+		}
 	}
 }
