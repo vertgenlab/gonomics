@@ -73,6 +73,15 @@ func gtfFilter(s FilterSettings) {
 	records := gtf.Read(s.InFile)
 	for currGene := range records {
 		pass = true
+		//if s.Coding {
+		for _, currTranscript := range records[currGene].Transcripts {
+			for _, currExon := range currTranscript.Exons {
+				if currExon.Cds != nil {
+					fmt.Printf("found CDS.\n")
+				}
+			}
+		}
+		//}
 		if s.GeneNameList != "" && s.ChromFilter == "" {
 			if _, foundInMap = geneNameMap[records[currGene].GeneName]; !foundInMap {
 				pass = false
