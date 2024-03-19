@@ -75,9 +75,14 @@ func gtfFilter(s FilterSettings) {
 		pass = true
 		//if s.Coding {
 		for _, currTranscript := range records[currGene].Transcripts {
-			for _, currExon := range currTranscript.Exons {
-				if currExon.Cds != nil {
-					fmt.Printf("found CDS.\n")
+			fmt.Printf("Transcript: %v\n", currTranscript)
+			if len(currTranscript.Exons) == 0 {
+				fmt.Printf("empty Exons field\n")
+			} else {
+				for _, currExon := range currTranscript.Exons {
+					if currExon.Cds == nil {
+						fmt.Printf("nil CDS field\n")
+					}
 				}
 			}
 		}
