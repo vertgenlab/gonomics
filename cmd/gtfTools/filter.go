@@ -12,10 +12,11 @@ import (
 
 // FilterSettings defines the usage settings for the gtfTools filter subcommand.
 type FilterSettings struct {
-	InFile       string
-	OutFile      string
-	GeneNameList string
-	ChromFilter  string
+	InFile           string
+	OutFile          string
+	GeneNameList     string
+	ChromFilter      string
+	CodingTranscript bool
 }
 
 func filterUsage(filterFlags *flag.FlagSet) {
@@ -34,6 +35,7 @@ func parseFilterArgs() {
 	filterFlags := flag.NewFlagSet("filter", flag.ExitOnError)
 	var geneNameList *string = filterFlags.String("geneNameList", "", "Specify a new-line delimited file containing the geneNames for records to be retained.\n")
 	var chromFilter *string = filterFlags.String("chromFilter", "", "Specify a chromosome for which all transcript records will be in the output. All transcripts must be on the filtering chromosome in order to pass the filter. Can be used in combination with Gene Name Filter option, all records for a gene must be on the filtering chromosome.")
+	var codingTranscript *bool = filterFlags.Bool("codingTranscript", false, "In -codingTranscript mode, only transcripts that are coding, i.e. have 1 or more CDS, are retained.\n")
 	err = filterFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	filterFlags.Usage = func() { filterUsage(filterFlags) }
@@ -48,10 +50,11 @@ func parseFilterArgs() {
 	outFile := filterFlags.Arg(1)
 
 	s := FilterSettings{
-		InFile:       inFile,
-		OutFile:      outFile,
-		GeneNameList: *geneNameList,
-		ChromFilter:  *chromFilter,
+		InFile:           inFile,
+		OutFile:          outFile,
+		GeneNameList:     *geneNameList,
+		ChromFilter:      *chromFilter,
+		CodingTranscript: *codingTranscript,
 	}
 	gtfFilter(s)
 }
@@ -74,29 +77,26 @@ func gtfFilter(s FilterSettings) {
 	for currGene := range records { // for each gene
 		pass = true
 
-		//if s.Coding { // TODO: write cmd option. Coding transcript
-		for _, currTranscript := range records[currGene].Transcripts { // for each transcript
-			fmt.Printf("Transcript: %v\n", currTranscript)
-			if len(currTranscript.Exons) == 0 { // if transcript has no exon, then transcript is non-coding
-				fmt.Printf("empty Exons field. Transcript noncoding\n")
-				pass = false
-			} else { // if transcript has exon(s)
-				// if we find at least 1 exon that has 1 CDS, then transcript is coding
-				foundCDS := false
-				for _, currExon := range currTranscript.Exons { // for each exon
-					if currExon.Cds != nil { // if exon has CDS, then found "at least 1 exon that has 1 CDS", transcript is coding
-						fmt.Printf("non-nil CDS field. Transcript coding\n")
-						foundCDS = true
-						break
-					}
-				}
-				if !foundCDS { // after checking each exon, if no CDS, then transcript is non-coding
-					fmt.Printf("no CDS. Transcript noncoding\n")
+		if s.CodingTranscript { // option to detect coding transcript
+			for _, currTranscript := range records[currGene].Transcripts { // for each transcript
+				if len(currTranscript.Exons) == 0 { // if transcript has no exon, then transcript is non-coding
 					pass = false
+				} else { // if transcript has exon(s)
+					// if we find at least 1 exon that has 1 CDS, then transcript is coding
+					foundCDS := false
+					for _, currExon := range currTranscript.Exons { // for each exon
+						if currExon.Cds != nil { // if exon has CDS, then found "at least 1 exon that has 1 CDS", transcript is coding
+							foundCDS = true
+							break
+						}
+					}
+					if !foundCDS { // after checking each exon, if no CDS, then transcript is non-coding
+						pass = false
+					}
 				}
 			}
 		}
-		//}
+
 		if s.GeneNameList != "" && s.ChromFilter == "" {
 			if _, foundInMap = geneNameMap[records[currGene].GeneName]; !foundInMap {
 				pass = false
