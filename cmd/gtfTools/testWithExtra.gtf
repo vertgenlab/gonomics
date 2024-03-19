@@ -5,6 +5,6 @@ chr1	refGene	CDS	173477398	173477492	.	+	0	gene_id "PRDX6"; transcript_id "NM_00
 chr1	refGene	exon	173487735	173488815	.	+	.	gene_id "PRDX6"; transcript_id "NM_004905"; exon_number "5"; exon_id "NM_004905.5"; gene_name "PRDX6";
 chr1	refGene	CDS	173487735	173487860	.	+	0	gene_id "PRDX6"; transcript_id "NM_004905"; exon_number "5"; exon_id "NM_004905.5"; gene_name "PRDX6";
 chr1	refGene	3UTR	173487864	173488815	.	+	.	gene_id "PRDX6"; transcript_id "NM_004905"; exon_number "5"; exon_id "NM_004905.5"; gene_name "PRDX6";
+chrX	ncbiRefSeq.2023-05-29	transcript	154252395	154254921	.	-	.	gene_id "DDX11L16"; transcript_id "NR_110561.1_2";  gene_name "DDX11L16";
 chrY	ncbiRefSeq.2023-05-29	transcript	62449384	62451910	.	-	.	gene_id "DDX11L16"; transcript_id "NR_110561.1";  gene_name "DDX11L16";
 chrY	ncbiRefSeq.2023-05-29	exon	62451063	62451171	.	-	.	gene_id "DDX11L16"; transcript_id "NR_110561.1"; exon_number "2"; exon_id "NR_110561.1.2"; gene_name "DDX11L16";
-chrX	ncbiRefSeq.2023-05-29	transcript	154252395	154254921	.	-	.	gene_id "DDX11L16"; transcript_id "NR_110561.1_2";  gene_name "DDX11L16";

@@ -71,18 +71,28 @@ func gtfFilter(s FilterSettings) {
 	}
 
 	records := gtf.Read(s.InFile)
-	for currGene := range records {
+	for currGene := range records { // for each gene
 		pass = true
-		//if s.Coding {
-		for _, currTranscript := range records[currGene].Transcripts {
+
+		//if s.Coding { // TODO: write cmd option. Coding transcript
+		for _, currTranscript := range records[currGene].Transcripts { // for each transcript
 			fmt.Printf("Transcript: %v\n", currTranscript)
-			if len(currTranscript.Exons) == 0 {
-				fmt.Printf("empty Exons field\n")
-			} else {
-				for _, currExon := range currTranscript.Exons {
-					if currExon.Cds == nil {
-						fmt.Printf("nil CDS field\n")
+			if len(currTranscript.Exons) == 0 { // if transcript has no exon, then transcript is non-coding
+				fmt.Printf("empty Exons field. Transcript noncoding\n")
+				pass = false
+			} else { // if transcript has exon(s)
+				// if we find at least 1 exon that has 1 CDS, then transcript is coding
+				foundCDS := false
+				for _, currExon := range currTranscript.Exons { // for each exon
+					if currExon.Cds != nil { // if exon has CDS, then found "at least 1 exon that has 1 CDS", transcript is coding
+						fmt.Printf("non-nil CDS field. Transcript coding\n")
+						foundCDS = true
+						break
 					}
+				}
+				if !foundCDS { // after checking each exon, if no CDS, then transcript is non-coding
+					fmt.Printf("no CDS. Transcript noncoding\n")
+					pass = false
 				}
 			}
 		}
