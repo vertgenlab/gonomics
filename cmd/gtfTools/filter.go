@@ -34,7 +34,7 @@ func parseFilterArgs() {
 	var err error
 	filterFlags := flag.NewFlagSet("filter", flag.ExitOnError)
 	var geneNameList *string = filterFlags.String("geneNameList", "", "Specify a new-line delimited file containing the geneNames for records to be retained.\n")
-	var chromFilter *string = filterFlags.String("chromFilter", "", "Specify a chromosome for which all transcript records will be in the output. All transcripts must be on the filtering chromosome in order to pass the filter. Can be used in combination with Gene Name Filter option, all records for a gene must be on the filtering chromosome.")
+	var chromFilter *string = filterFlags.String("chromFilter", "", "Specify a chromosome for which all transcript records will be in the output. All transcripts must be on the filtering chromosome in order to pass the filter. Can be used in combination with Gene Name Filter option, all records for a gene must be on the filtering chromosome.\n")
 	var codingTranscript *bool = filterFlags.Bool("codingTranscript", false, "In -codingTranscript mode, only transcripts that are coding, i.e. have 1 or more CDS, are retained.\n")
 	err = filterFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
