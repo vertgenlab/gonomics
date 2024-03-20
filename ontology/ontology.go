@@ -49,8 +49,8 @@ func OboToOntology(records map[string]*obo.Obo) map[string]*Ontology {
 	return answer
 }
 
-// geneAssignmentsFromGaf translates a slice of gaf structs into a map where the string value is a GO term id and the key is an ontology struct
-func geneAssignmentsFromGaf(records []gaf.Gaf, terms map[string]*Ontology) {
+// GeneAssignmentsFromGaf translates a slice of gaf structs into a map where the string value is a GO term id and the key is an ontology struct
+func GeneAssignmentsFromGaf(records []gaf.Gaf, terms map[string]*Ontology) {
 	records = gaf.RemoveDuplicates(records)
 	for i := range records {
 		// TODO: what if records[i].GoId not found in map
@@ -58,10 +58,10 @@ func geneAssignmentsFromGaf(records []gaf.Gaf, terms map[string]*Ontology) {
 	}
 }
 
-// genesToOntologies converts a map of GoIds to pointers to Ontology structs to
+// GenesToOntologies converts a map of GoIds to pointers to Ontology structs to
 // a map[string][]*Ontology, where string is a gene or protein name and the []*Ontology is
 // the set of gene-associated ontological terms.
-func genesToOntologies(terms map[string]*Ontology) map[string][]*Ontology {
+func GenesToOntologies(terms map[string]*Ontology) map[string][]*Ontology {
 	var j int
 	var foundInMap bool
 	var answer = make(map[string][]*Ontology)
@@ -141,8 +141,8 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	fmt.Printf("Filled space. Len(filledSpace): %v.\n", len(filledSpace))
 	ontologies := OboToOntology(oboMap)
 	fmt.Printf("Made ontologies. Len(ontologies: %v.\n", len(ontologies))
-	geneAssignmentsFromGaf(annotations, ontologies)
-	geneOntologies := genesToOntologies(ontologies)
+	GeneAssignmentsFromGaf(annotations, ontologies)
+	geneOntologies := GenesToOntologies(ontologies)
 	fmt.Printf("Made genesToOntologies. Len(genesToOntologies): %v.\n", len(geneOntologies))
 
 	if out3dOntology != "" {
