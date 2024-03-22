@@ -36,7 +36,7 @@ func parseExtractBedArgs() {
 	var err error
 	extractBedFlags := flag.NewFlagSet("extractBed", flag.ExitOnError)
 	var takeCoords *bool = extractBedFlags.Bool("takeCoords", false, "Specify if bed coordinate fields should be used to differentiate regions in FASTA. Defaults to false.")
-	err = extractBedFlags.Parse(os.Args[4:])
+	err = extractBedFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	extractBedFlags.Usage = func() { extractBedUsage(extractBedFlags) }
 

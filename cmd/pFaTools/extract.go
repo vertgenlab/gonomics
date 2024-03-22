@@ -37,7 +37,7 @@ func parseExtractArgs() {
 	var err error
 	extractFlags := flag.NewFlagSet("extract", flag.ExitOnError)
 	var outName *string = extractFlags.String("outName", "", "Specify name of the out file. If none is provided, output name will be the same as the input name.")
-	err = extractFlags.Parse(os.Args[5:])
+	err = extractFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	extractFlags.Usage = func() { extractUsage(extractFlags) }
 
