@@ -42,7 +42,7 @@ func parseVisualizeArgs() {
 	var err error
 	VisualizeFlags := flag.NewFlagSet("Visualize", flag.ExitOnError)
 	var sigFigs *int = flag.Int("sigFigs", 0, "Specify the number of significant figures to round to. Leave as 0 if decimal rounding desired.")
-	var decimalPlaces *int = flag.Int("decimal", 7, "Specify the number of decimal places to round to.")
+	var decimalPlaces *int = flag.Int("decimal", 5, "Specify the number of decimal places to round to. Should be between 1 and 15. Note that decimal places more to the right will accrue larger floating point error.")
 	var lineLength *int = flag.Int("lineLength", 50, "Sets length of each alignment line.")
 	var chrom *string = flag.String("chrom", "", "Specify the name of the sequence to display. Can be empty if only one sequence in input pfasta.")
 	var startOfAlignment bool = false
