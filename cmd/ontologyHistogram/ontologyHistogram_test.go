@@ -22,7 +22,7 @@ var HistTests = []struct {
 
 func TestOboHistogram(t *testing.T) {
 	for _, h := range HistTests {
-		oboHistogram(h.OboFile, h.GafNamesFile, h.OutFile)
+		ontologyHistogram(h.OboFile, h.GafNamesFile, h.OutFile)
 		if !fileio.AreEqual(h.ExpectedFile, h.OutFile) {
 			t.Errorf("Error in output file for oboHistogram")
 		} else {

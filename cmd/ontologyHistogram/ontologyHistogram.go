@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-func oboHistogram(oboFile string, gafFilesIndex string, outTable string) {
+func ontologyHistogram(oboFile string, gafFilesIndex string, outTable string) {
 	gafFileNames := fileio.Read(gafFilesIndex)
 	oboRecord, _ := obo.Read(oboFile, false)
 	var thisGaf []gaf.Gaf
@@ -23,6 +23,7 @@ func oboHistogram(oboFile string, gafFilesIndex string, outTable string) {
 	var answer []int
 
 	ont = ontology.OboToOntology(oboRecord)
+
 	for _, gafFile := range gafFileNames {
 		thisGaf, _ = gaf.Read(gafFile)
 		ontology.GeneAssignmentsFromGaf(thisGaf, ont)
@@ -48,11 +49,11 @@ func oboHistogram(oboFile string, gafFilesIndex string, outTable string) {
 
 func usage() {
 	fmt.Print(
-		"oboHistogram takes an obo file and a file containing a list of gaf files of interest with one file name on " +
+		"ontologyHistogram takes an obo file and a file containing a list of gaf files of interest with one file name on " +
 			"each line and outputs the number of genes for each ontology in a single column with the intention of making a histogram of the " +
 			"distribution of the number of genes assigned to each GO term\n" +
 			"Usage:\n" +
-			"oboHistogram input.obo gafFiles.txt output.tsv\n" +
+			"ontologyHistogram input.obo gafFiles.txt output.tsv\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -73,5 +74,5 @@ func main() {
 	gafFileIndex := flag.Arg(1)
 	outTable := flag.Arg(2)
 
-	oboHistogram(oboFile, gafFileIndex, outTable)
+	ontologyHistogram(oboFile, gafFileIndex, outTable)
 }
