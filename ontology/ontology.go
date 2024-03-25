@@ -81,10 +81,6 @@ func GenesToOntologies(terms map[string]*Ontology) map[string][]*Ontology {
 	return answer
 }
 
-func OntologyStats(gaf []gaf.Gaf, ontol map[string]*Ontology) {
-
-}
-
 // geneProportionOfGenome returns the proportion of genome occupied by each gene.
 // answer is of form map[string]float64, where the key string is the gene name and the value is the proportion
 func geneProportionOfGenome(filledSpace []bed.Bed) map[string]float64 {
