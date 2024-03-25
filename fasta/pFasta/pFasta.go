@@ -132,3 +132,42 @@ func Read(inFile string) []PFasta {
 	exception.PanicOnErr(err)
 	return records
 }
+
+// ToMap converts a slice of pFasta records (e.g. the output of the Read function)
+// to a map of sequences keyed to the sequences name.
+func ToMap(ref []PFasta) map[string][]pDna.Float32Base {
+	m := make(map[string][]pDna.Float32Base)
+	for i := range ref {
+		_, ok := m[ref[i].Name]
+		if !ok {
+			m[ref[i].Name] = ref[i].Seq
+		} else {
+			log.Panicf("%s used for multiple pFasta records. record names must be unique.", ref[i].Name)
+		}
+	}
+	return m
+}
+
+// QC tests if each base in a single pFasta sequence is valid. Valid means either gap {0 0 0 0} or non-gap (bases' probabilities add up to 1)
+func QC(pfa []pDna.Float32Base) {
+	for i := range pfa {
+		if !pDna.IsGap(pfa[i]) && !pDna.IsNonGap(pfa[i]) {
+			log.Fatalf("Error: pFasta QC failed. Position %v has invalid base: %v\n", i, pfa[i])
+		}
+	}
+}
+
+// MakeValid makes each base in a single pFasta sequence valid
+func MakeValid(pfaIn []pDna.Float32Base) []pDna.Float32Base {
+	pfaOut := make([]pDna.Float32Base, len(pfaIn))
+	for i := range pfaIn {
+		if pDna.IsGap(pfaIn[i]) {
+			pfaOut[i] = pfaIn[i]
+		} else if pDna.IsNonGap(pfaIn[i]) {
+			pfaOut[i] = pfaIn[i]
+		} else { // already checked that the base is not gap, so convert it to valid non-gap
+			pfaOut[i] = pDna.MakeValid(pfaIn[i])
+		}
+	}
+	return pfaOut
+}
