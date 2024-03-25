@@ -2,13 +2,12 @@ package browser
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"strings"
 	"unicode/utf8"
-
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
@@ -42,39 +41,49 @@ func PFaVisualizer(infile string, outfile string, start int, end int, startOfAli
 		formatNum = sigFigs
 	}
 
-	var startStr string
 	if startOfAlignment {
-		startStr = "0"
-	} else {
-		startStr = fmt.Sprintf("%d", start)
+		start = 0
 	}
-	var endStr string
-	if endOfAlignment {
-		endStr = "to end"
-	} else {
-		endStr = fmt.Sprintf("%d", end)
-	}
-	
-	_, err = fmt.Fprintf(out, "Start: %s. End: %s. %s: %d.", startStr, endStr, formatting, formatNum)
-	exception.PanicOnErr(err)
 
+	if len(records) == 0 {
+		log.Fatalf("Error: User provided empty pfasta file.\n")
+	}
 	if seqName == "" {
 		// only accepts single pFa or a .pFa with multiple pFastas and a specified record name
-		if len(records) > 0 {
-			log.Fatalf("Error: User provided empty fasta file.\n")
-		} else if len(records) > 1 {
+		if len(records) > 1 {
 			log.Fatalf("Error: User must specify sequence name for pFasta file with more than 1 sequence.\n")
 		} else {
 			// pfa with 1 entry
+
+			if endOfAlignment {
+				end = len(records[0].Seq)
+			} 
+
+			_, err = fmt.Fprintf(out, "Start: %d. End: %d. %s: %d.", start, end, formatting, formatNum)
+			exception.PanicOnErr(err)
+
 			printAllSets(out, err, records[0], start, end, lineLength, sigFigs, decimalPlaces)
 		}
 	} else {
 		// user can specify chrom if multiple entries
-		for _, desiredSeq := range records {
+		seqPrinted := false
+		for desiredSeqIdx, desiredSeq := range records {
 			if desiredSeq.Name == seqName {
+				seqPrinted = true
+
+				if endOfAlignment {
+					end = len(records[desiredSeqIdx].Seq)
+				} 
+	
+				_, err = fmt.Fprintf(out, "Start: %d. End: %d. %s: %d.", start, end, formatting, formatNum)
+				exception.PanicOnErr(err)
+
 				printAllSets(out, err, desiredSeq, start, end, lineLength, sigFigs, decimalPlaces)
 				break
 			}
+		}
+		if !seqPrinted {
+			log.Fatalf("Error: User specified sequence not in input pfasta file.")
 		}
 	}
 	err = out.Close()
