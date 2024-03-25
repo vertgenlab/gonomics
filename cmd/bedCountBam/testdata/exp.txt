@@ -1,0 +1,7 @@
+bedRegion	counts
+A	4
+B	4
+C	2
+D	2
+E	1
+F	1
