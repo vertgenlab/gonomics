@@ -1,0 +1,50 @@
+UniProtKB	A0A0A0MQ47	SMYD2	involved_in	GO:0006338	GO_REF:0000108	IEA	GO:0140999	P	[histone H3]-lysine(4) N-trimethyltransferase	SMYD2	protein	taxon:9031	20231124	GOC		
+UniProtKB	A0A0A0MQ47	SMYD2	involved_in	GO:0008285	GO_REF:0000107	IEA	UniProtKB:Q8R5A0|ensembl:ENSMUSP00000027897	P	[histone H3]-lysine(4) N-trimethyltransferase	SMYD2	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0A0MQ47	SMYD2	involved_in	GO:0043516	GO_REF:0000107	IEA	UniProtKB:Q9NRG4|ensembl:ENSP00000355924	P	[histone H3]-lysine(4) N-trimethyltransferase	SMYD2	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0A0MQ47	SMYD2	located_in	GO:0005829	GO_REF:0000044	IEA	UniProtKB-SubCell:SL-0091	C	[histone H3]-lysine(4) N-trimethyltransferase	SMYD2	protein	taxon:9031	20231122	UniProt		
+UniProtKB	A0A0A0MQ60	MTNR1B	enables	GO:0008502	GO_REF:0000002	IEA	InterPro:IPR000025|InterPro:IPR002278	F	G-protein coupled receptors family 1 profile domain-containing protein	MTNR1B	protein	taxon:9031	20231122	InterPro		
+UniProtKB	A0A0A0MQ60	MTNR1B	involved_in	GO:0042593	GO_REF:0000107	IEA	UniProtKB:P49286|ensembl:ENSP00000257068	P	G-protein coupled receptors family 1 profile domain-containing protein	MTNR1B	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0A0MQ60	MTNR1B	involved_in	GO:0050796	GO_REF:0000107	IEA	UniProtKB:P49286|ensembl:ENSP00000257068	P	G-protein coupled receptors family 1 profile domain-containing protein	MTNR1B	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C4JZ93	NPFF	enables	GO:0005184	GO_REF:0000002	IEA	InterPro:IPR008065	F	Neuropeptide FF-amide peptide	NPFF	protein	taxon:9031	20231122	InterPro		
+UniProtKB	A0A0C4JZ93	NPFF	involved_in	GO:0007218	GO_REF:0000043	IEA	UniProtKB-KW:KW-0527	P	Neuropeptide FF-amide peptide	NPFF	protein	taxon:9031	20231122	UniProt		
+UniProtKB	A0A0C6E596	Atoh1	enables	GO:0000978	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	F	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	enables	GO:0001228	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	F	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	enables	GO:0031490	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	F	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	enables	GO:0046983	GO_REF:0000002	IEA	InterPro:IPR011598|InterPro:IPR036638	F	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	InterPro		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0001764	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0006366	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0007219	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0007411	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0014014	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0042472	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0042667	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0042668	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0045609	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0045944	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:0097402	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:1904019	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	involved_in	GO:1904036	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	P	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0C6E596	Atoh1	located_in	GO:0005634	GO_REF:0000107	IEA	UniProtKB:P48985|ensembl:ENSMUSP00000098903	C	BHLH domain-containing protein	Atoh1|ATOH1	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	enables	GO:0071837	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	F	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0001525	GO_REF:0000107	IEA	UniProtKB:O43365|ensembl:ENSP00000484411	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0001974	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0010159	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0010467	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0021615	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0030878	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0048538	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0048645	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0051216	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0060017	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:0072089	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	involved_in	GO:2000648	GO_REF:0000107	IEA	UniProtKB:P02831|ensembl:ENSMUSP00000110077	P	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A0D9SEG7	HOXA3	located_in	GO:0005654	GO_REF:0000107	IEA	UniProtKB:O43365|ensembl:ENSP00000484411	C	Homeobox A3	HOXA3	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A125RM76	IFIT5	involved_in	GO:0051707	GO_REF:0000117	IEA	ARBA:ARBA00029118	P	Interferon-induced protein with tetratricopeptide repeats 5	IFIT5	protein	taxon:9031	20231122	UniProt		
+UniProtKB	A0A140B2F4	MRAP2	enables	GO:0030545	GO_REF:0000107	IEA	UniProtKB:D3Z1Q2|ensembl:ENSMUSP00000108774	F	Melanocortin-2 receptor accessory protein 2	MRAP2	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A140B2F4	MRAP2	enables	GO:0031780	GO_REF:0000107	IEA	UniProtKB:Q96G30|ensembl:ENSP00000257776	F	Melanocortin-2 receptor accessory protein 2	MRAP2	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A140B2F4	MRAP2	enables	GO:0031781	GO_REF:0000107	IEA	UniProtKB:Q96G30|ensembl:ENSP00000257776	F	Melanocortin-2 receptor accessory protein 2	MRAP2	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A140B2F4	MRAP2	enables	GO:0031782	GO_REF:0000107	IEA	UniProtKB:D3Z1Q2|ensembl:ENSMUSP00000108774	F	Melanocortin-2 receptor accessory protein 2	MRAP2	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A140B2F4	MRAP2	enables	GO:0031782	GO_REF:0000107	IEA	UniProtKB:Q96G30|ensembl:ENSP00000257776	F	Melanocortin-2 receptor accessory protein 2	MRAP2	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A140B2F4	MRAP2	enables	GO:0031783	GO_REF:0000107	IEA	UniProtKB:Q96G30|ensembl:ENSP00000257776	F	Melanocortin-2 receptor accessory protein 2	MRAP2	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A140B2F4	MRAP2	enables	GO:0042802	GO_REF:0000107	IEA	UniProtKB:Q96G30|ensembl:ENSP00000257776	F	Melanocortin-2 receptor accessory protein 2	MRAP2	protein	taxon:9031	20231122	Ensembl		
+UniProtKB	A0A140B2F4	MRAP2	enables	GO:0070996	GO_REF:0000107	IEA	UniProtKB:Q96G30|ensembl:ENSP00000257776	F	Melanocortin-2 receptor accessory protein 2	MRAP2	protein	taxon:9031	20231122	Ensembl		

@@ -25,7 +25,14 @@ func Trim(b Bed, trimLeft int, trimRight int) Bed {
 	return b
 }
 
-// ToMidpoint edits an input bed struct so that its coordinates correspond to its midpoint.
+// AllToMidpoint edits all input Bed structs in an input slice so that its coordinates correspond to its midpoint.
+func AllToMidpoint(b []Bed) {
+	for i := range b {
+		b[i] = ToMidpoint(b[i])
+	}
+}
+
+// ToMidpoint edits an input Bed struct so that its coordinates correspond to its midpoint.
 func ToMidpoint(b Bed) Bed {
 	midpoint := (b.ChromStart + b.ChromEnd) / 2
 	b.ChromStart = midpoint
@@ -33,7 +40,7 @@ func ToMidpoint(b Bed) Bed {
 	return b
 }
 
-// ToTss edits an input bed struct so that its coordinates corresponds to the start position, strand-sensitive.
+// ToTss edits an input Bed struct so that its coordinates corresponds to the start position, strand-sensitive.
 func ToTss(b Bed) Bed {
 	switch b.Strand {
 	case Positive:
