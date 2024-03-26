@@ -3,16 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/ontology"
 	"github.com/vertgenlab/gonomics/ontology/gaf"
 	"github.com/vertgenlab/gonomics/ontology/obo"
 	"log"
 	"sort"
-	"strconv"
 )
 
 func ontologyHistogram(oboFile string, gafFilesIndex string, outTable string) {
+	out := fileio.EasyCreate(outTable)
 	gafFileNames := fileio.Read(gafFilesIndex)
 	oboRecord, _ := obo.Read(oboFile, false)
 	var thisGaf []gaf.Gaf
@@ -21,6 +22,7 @@ func ontologyHistogram(oboFile string, gafFilesIndex string, outTable string) {
 	var id string
 	var ids []string
 	var answer []int
+	var err error
 
 	ont = ontology.OboToOntology(oboRecord)
 
@@ -34,24 +36,25 @@ func ontologyHistogram(oboFile string, gafFilesIndex string, outTable string) {
 			ids = append(ids, id)
 		}
 	}
+
 	sort.Strings(ids)
 	for i := 0; i < len(ids); i++ {
 		genes = len(ont[ids[i]].Genes)
 		answer = append(answer, genes)
 	}
 
-	var answerString []string
 	for a := 0; a < len(answer); a++ {
-		answerString = append(answerString, strconv.Itoa(answer[a]))
+		_, err = fmt.Fprintf(out, "%s\t%v\n", ids[a], answer[a])
+		exception.PanicOnErr(err)
 	}
-	fileio.Write(outTable, answerString)
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
 	fmt.Print(
 		"ontologyHistogram takes an obo file and a file containing a list of gaf files of interest with one file name on " +
-			"each line and outputs the number of genes for each ontology in a single column with the intention of making a histogram of the " +
-			"distribution of the number of genes assigned to each GO term\n" +
+			"each line and outputs the number of genes for each ontology \n" +
 			"Usage:\n" +
 			"ontologyHistogram input.obo gafFiles.txt output.tsv\n" +
 			"options:\n")
