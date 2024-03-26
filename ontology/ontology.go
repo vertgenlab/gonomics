@@ -138,22 +138,19 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	var ontologiesForCurrGene []*Ontology
 
 	tssBed := gtf.GenesToTssBed(genes, chromSizes, true)
-	fmt.Printf("Starting filledSpace.\n")
 	filledSpace = Fill3dSpace(contacts, tssBed, chromSizes)
-	fmt.Printf("Filled space. Len(filledSpace): %v.\n", len(filledSpace))
 	ontologies := OboToOntology(oboMap)
-	fmt.Printf("Made ontologies. Len(ontologies: %v.\n", len(ontologies))
 	GeneAssignmentsFromGaf(annotations, ontologies)
 	geneOntologies := GenesToOntologies(ontologies)
-	fmt.Printf("Made genesToOntologies. Len(genesToOntologies): %v.\n", len(geneOntologies))
+
+	//TODO: filtering out genes without ontology annotations? as an option?
 
 	if out3dOntology != "" {
 		write3dOntologies(out3dOntology, geneOntologies, filledSpace)
-		log.Print("Wrote 3d ontology file.")
 	}
 
 	proportionsForGenes := geneProportionOfGenome(filledSpace)
-	geneOut := fileio.EasyCreate("proportionsForGenes.txt")
+	geneOut := fileio.EasyCreate("testdata/proportionsForGenes.txt")
 	_, err = fmt.Fprintf(geneOut, "Gene\tProportion\n")
 	exception.PanicOnErr(err)
 	for i := range proportionsForGenes {
@@ -165,7 +162,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 
 	proportionsForTerms := termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
 
-	termOut := fileio.EasyCreate("proportionsForTerms.txt")
+	termOut := fileio.EasyCreate("testdata/proportionsForTerms.txt")
 	_, err = fmt.Fprintf(termOut, "Term\tName\tProportion\n")
 	exception.PanicOnErr(err)
 	for i := range proportionsForTerms {
@@ -184,11 +181,11 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	for i := range queries {
 		queryOverlaps = interval.Query(tree, queries[i], "any")
 		if len(queryOverlaps) != 1 {
+			log.Print(len(queryOverlaps))
 			log.Fatalf("Why did this happen?!?")
 		}
 		currOverlapGene = queryOverlaps[0].(bed.Bed).Name // type assert as bed and extract name of gene assigned to query
 		ontologiesForCurrGene = geneOntologies[currOverlapGene]
-		//fmt.Printf("Len(ontologiesForrCurrGene: %v.\n", len(ontologiesForCurrGene))
 		for currOntologyIndex = range ontologiesForCurrGene {
 			currOntologyName = ontologiesForCurrGene[currOntologyIndex].Id
 			kCache[currOntologyName] += 1
@@ -197,10 +194,8 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 
 	var enrichment float64
 
-	out := fileio.EasyCreate("testOut.txt")
+	out := fileio.EasyCreate("testdata/testOut.txt")
 	for i := range proportionsForTerms {
-		//fmt.Printf("i (the ontology name): %v.\n", i)
-		//fmt.Printf("ProportionsForTerms[i]: %v.\n", proportionsForTerms[i])
 		enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], false)
 		_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
 		exception.PanicOnErr(err)
@@ -220,15 +215,10 @@ func write3dOntologies(filename string, geneToOnt map[string][]*Ontology, filled
 		filledSpace[i].FieldsInitialized += len(onts)
 		filledSpace[i].Score = filledSpace[i].Score + 0 //just to make sure it isn't empty, or overwritten
 		filledSpace[i].Strand = '.'
-		log.Print(onts)
 		filledSpace[i].Annotation = append(filledSpace[i].Annotation, onts...)
-		log.Print(filledSpace[i].Annotation)
-		log.Print(filledSpace[i])
 	}
 	bed.Write(filename, filledSpace)
 }
-
-//TODO: annotations field not getting filled in output
 
 // ontologiesToStrings take a slice of pointers to Ontology structs and stores their name field in a slice of strings
 func ontologiesToStrings(onts []*Ontology) []string {
@@ -244,7 +234,7 @@ func ontologiesToStrings(onts []*Ontology) []string {
 // BIG TODO LIST
 /*
 1. Filter obsolete Obos and filter "Not" Gaf entries.
-2 1/2: Potentially assigning genes to parent nodes in ontology tree.
+2. Potentially assigning genes to parent nodes in ontology tree.
 8. Return p value for each Ontology
 
 CACHING

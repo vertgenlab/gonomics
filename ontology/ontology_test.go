@@ -1,13 +1,15 @@
 package ontology
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/ontology/gaf"
 	"github.com/vertgenlab/gonomics/ontology/obo"
+	"log"
+	"os"
 	"testing"
 )
 
@@ -22,29 +24,24 @@ var ThreeDGreatTests = []struct {
 	//	outFile         string
 	Force bool
 }{
-	{QueryFile: "testdata/haqer.bed",
-		ChromSizesFile: "testdata/hg38.chrom.sizes",
-		GeneFile:       "testdata/gencode.v43.annotation.gtf.gz",
-		ContactsFile:   "testdata/GSE162819_GM12878_MAPS_chromatin_interactions_5kb.bedpe.gz",
-		//ContactsFile:    "testdata/GSE162819_H1_MAPS_chromatin_interactions_5kb.bedpe",
-		AnnotationsFile: "testdata/goa_human.gaf",
+	{QueryFile: "testdata/test.bed",
+		ChromSizesFile:  "testdata/hg38.chrom.sizes",
+		GeneFile:        "testdata/test.gtf",
+		ContactsFile:    "testdata/test.bedpe",
+		AnnotationsFile: "testdata/test.gaf",
 		OboFile:         "testdata/go.obo",
 		OntOutFile:      "testdata/3dOntologies.bed",
-		//	outFile:         "testdata/testContactsOut.txt",
-		Force: false,
+		Force:           false,
 	},
-	//{QueryFile: "testdata/haqer.bed",
-	//	ChromSizesFile: "testdata/hg38.chrom.sizes",
-	//	GeneFile:       "testdata/gencode.v43.annotation.gtf.gz",
-	//	//ContactsFile:   "testdata/GSE162819_GM12878_MAPS_chromatin_interactions_5kb.bedpe",
-	//	//ContactsFile:    "testdata/GSE162819_H1_MAPS_chromatin_interactions_5kb.bedpe",
-	//	ContactsFile:    "",
-	//	AnnotationsFile: "testdata/goa_human.gaf",
-	//	OboFile:         "testdata/go.obo",
-	//	OntOutFile:      "testdata/OntologiesProximity.bed",
-	//	//	outFile:         "testdata/testNoContactsOut.txt",
-	//	Force: false,
-	//},
+	{QueryFile: "testdata/test.bed",
+		ChromSizesFile:  "testdata/hg38.chrom.sizes",
+		GeneFile:        "testdata/test.gtf",
+		ContactsFile:    "",
+		AnnotationsFile: "testdata/test.gaf",
+		OboFile:         "testdata/go.obo",
+		OntOutFile:      "testdata/OntologiesProximity.bed",
+		Force:           false,
+	},
 }
 
 func TestThreeDGreat(t *testing.T) {
@@ -55,20 +52,26 @@ func TestThreeDGreat(t *testing.T) {
 	var annotations []gaf.Gaf
 	var obos map[string]*obo.Obo
 	for _, v := range ThreeDGreatTests {
-		fmt.Printf("Reading bed.\n")
 		queries = bed.Read(v.QueryFile)
-		fmt.Printf("Reading chromSize.\n")
 		sizes = chromInfo.ReadToMap(v.ChromSizesFile)
-		fmt.Printf("Reading genes.\n")
 		genes = gtf.Read(v.GeneFile)
-		fmt.Printf("Reading contacts.\n")
 		if v.ContactsFile != "" {
 			contacts = bedpe.Read(v.ContactsFile)
 		}
-		fmt.Printf("Reading annotations.\n")
 		annotations, _ = gaf.Read(v.AnnotationsFile)
-		fmt.Printf("Reading obos.\n")
 		obos, _ = obo.Read(v.OboFile, v.Force)
 		ThreeDGreat(queries, sizes, genes, contacts, annotations, obos, v.OntOutFile)
+	}
+	if bed.AllAreEqual(bed.Read("testdata/3dOntologies.bed"), bed.Read("testdata/expected.3dOntologies.bed")) {
+		err := os.Remove("testdata/3dOntologies.bed")
+		exception.PanicOnErr(err)
+	} else {
+		log.Fatal("expected file was not a match for the output #1")
+	}
+	if bed.AllAreEqual(bed.Read("testdata/OntologiesProximity.bed"), bed.Read("testdata/expected.OntologiesProximity.bed")) {
+		err := os.Remove("testdata/OntologiesProximity.bed")
+		exception.PanicOnErr(err)
+	} else {
+		log.Fatal("expected file was not a match for the output #2")
 	}
 }
