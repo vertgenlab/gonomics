@@ -6,11 +6,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"math"
 
 	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/wig"
 )
@@ -20,27 +21,21 @@ func bedValueWig(s Settings) {
 		log.Fatalf("Cannot select both min and average in the same operation.")
 	}
 
-	var records []bed.Bed = bed.Read(s.Infile)
-	var wigData []wig.Wig = wig.Read(s.WigFile)
-	var sizes []chromInfo.ChromInfo = chromInfo.ReadToSlice(s.SizesFile)
-	var outList []bed.Bed
-	var currentBed bed.Bed = records[0]
+	recordChan := bed.GoReadToChan(s.Infile)
+	out := fileio.EasyCreate(s.OutFile)
+	var wigData = wig.Read(s.WigFile, s.SizesFile, s.NoDataValue)
 	var currValue, chromValueMultiplyByStep float64
-	var chromIndex int
-	var i int
-	var wigTotal float64 = 0
-
-	if s.TrimLeft > 0 || s.TrimRight > 0 {
-		bed.Trim(records, s.TrimLeft, s.TrimRight)
-	}
+	var foundInMap bool
+	var currKey string
+	var wigTotal, wigCounterByChrom float64
+	var err error
 
 	if s.NormFlag {
-		var wigCounterByChrom float64
-		for i := range wigData { //Goal here is to cycle through all the "chromosomes" of the wig: wig[0], wig[1], etc.
+		for currKey = range wigData {
 			wigCounterByChrom = 0
-			for k := range wigData[i].Values { //Cycle through each value in the float64[]
-				if wigData[i].Values[k] != s.NoDataValue {
-					chromValueMultiplyByStep = float64(wigData[i].Step) * wigData[i].Values[k] // multiply each value by the step for that chrom
+			for k := range wigData[currKey].Values { //Cycle through each value in the float64[]
+				if wigData[currKey].Values[k] != s.NoDataValue {
+					chromValueMultiplyByStep = float64(wigData[currKey].Step) * wigData[currKey].Values[k]
 					wigCounterByChrom = wigCounterByChrom + chromValueMultiplyByStep
 				}
 			}
@@ -48,42 +43,31 @@ func bedValueWig(s Settings) {
 		}
 	}
 
-	for i = 0; i < len(sizes); i++ {
-		chromIndex = getWigIndex(wigData, sizes[i].Name)
-		for k := 0; k < len(records); k++ {
-			if records[k].Chrom == sizes[i].Name {
-				currentBed = records[k]
-				if currentBed.FieldsInitialized < 7 {
-					currentBed.FieldsInitialized = 7
-				}
-				if s.MinFlag {
-					currValue = bedRangeMin(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd, s.NoDataValue)
-				} else if s.AverageFlag {
-					currValue = bedRangeAverage(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd, s.NoDataValue)
-				} else {
-					currValue = bedRangeMax(wigData[chromIndex].Values, records[k].ChromStart, records[k].ChromEnd, s.NoDataValue)
-				}
-				if s.NormFlag {
-					currValue = currValue / wigTotal
-				}
-				currentBed.Annotation = append(currentBed.Annotation, fmt.Sprintf("%g", currValue)) // %g will
-				// print %e for large exponents, %f otherwise.
-				// Precision for %g; it is the smallest number of digits necessary to identify the value uniquely.
-				outList = append(outList, currentBed)
-			}
+	for currBed := range recordChan {
+		if s.TrimLeft > 0 || s.TrimRight > 0 {
+			bed.Trim(currBed, s.TrimLeft, s.TrimRight)
 		}
-	}
-	bed.Write(s.OutFile, outList)
-}
-
-func getWigIndex(w []wig.Wig, chrom string) int {
-	for i, v := range w {
-		if v.Chrom == chrom {
-			return i
+		if _, foundInMap = wigData[currBed.Chrom]; !foundInMap {
+			log.Fatalf("Error: Chromosome for bed entry: %v, not found in reference genome specified by chrom sizes file.\n", currBed.Chrom)
 		}
+		if currBed.FieldsInitialized < 7 {
+			currBed.FieldsInitialized = 7
+		}
+		if s.MinFlag {
+			currValue = bedRangeMin(wigData[currBed.Chrom].Values, currBed.ChromStart, currBed.ChromEnd, s.NoDataValue)
+		} else if s.AverageFlag {
+			currValue = bedRangeAverage(wigData[currBed.Chrom].Values, currBed.ChromStart, currBed.ChromEnd, s.NoDataValue)
+		} else {
+			currValue = bedRangeMax(wigData[currBed.Chrom].Values, currBed.ChromStart, currBed.ChromEnd, s.NoDataValue)
+		}
+		if s.NormFlag {
+			currValue = currValue / wigTotal
+		}
+		currBed.Annotation = append(currBed.Annotation, fmt.Sprintf("%g", currValue))
+		bed.WriteToFileHandle(out, currBed)
 	}
-	log.Fatalf("Chromosome with name: %v not found in wig.", chrom)
-	return -1
+	err = out.Close()
+	exception.PanicOnErr(err)
 }
 
 func bedRangeAverage(w []float64, start int, end int, noDataValue float64) float64 {

@@ -3,7 +3,6 @@ package motif
 import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
 )
@@ -21,6 +20,7 @@ var MatchCompTests = []struct {
 	Pseudocounts       float64
 	ExpectedFile       string
 	EnforceStrandMatch bool
+	GcContent          float64
 }{
 	{MotifFile: "testdata/myMotifFile.txt",
 		MotifType:          "Frequency",
@@ -34,6 +34,7 @@ var MatchCompTests = []struct {
 		Pseudocounts:       0.1,
 		ExpectedFile:       "testdata/expected.myAln.bed",
 		EnforceStrandMatch: false,
+		GcContent:          0.5,
 	},
 	{MotifFile: "testdata/myMotifFile.txt",
 		MotifType:          "Frequency",
@@ -47,6 +48,7 @@ var MatchCompTests = []struct {
 		Pseudocounts:       5,
 		ExpectedFile:       "testdata/expected.myAln.highPseudo.bed",
 		EnforceStrandMatch: false,
+		GcContent:          0.5,
 	},
 	{MotifFile: "testdata/myMotifFile.txt",
 		MotifType:          "Frequency",
@@ -60,6 +62,7 @@ var MatchCompTests = []struct {
 		Pseudocounts:       0.1,
 		ExpectedFile:       "testdata/expected.myAln.enforceStrand.bed",
 		EnforceStrandMatch: true,
+		GcContent:          0.5,
 	},
 	{MotifFile: "testdata/myMotifFile.txt",
 		MotifType:          "Frequency",
@@ -73,6 +76,7 @@ var MatchCompTests = []struct {
 		Pseudocounts:       0.1,
 		ExpectedFile:       "testdata/expected.myAln.highPropMatch.bed",
 		EnforceStrandMatch: false,
+		GcContent:          0.5,
 	},
 	{MotifFile: "testdata/myMotifFile.txt",
 		MotifType:          "Frequency",
@@ -86,6 +90,7 @@ var MatchCompTests = []struct {
 		Pseudocounts:       0.1,
 		ExpectedFile:       "testdata/expected.myAln.wideResidual.bed",
 		EnforceStrandMatch: false,
+		GcContent:          0.5,
 	},
 }
 
@@ -93,6 +98,7 @@ func TestMatchComp(t *testing.T) {
 	var err error
 	var records []fasta.Fasta
 	var s MatchCompSettings
+	var epsilon float64 = 1e-6
 	for _, v := range MatchCompTests {
 		records = fasta.Read(v.FastaFile)
 		fasta.AllToUpper(records)
@@ -108,10 +114,11 @@ func TestMatchComp(t *testing.T) {
 			ResidualWindowSize: v.ResidualWindowSize,
 			OutputAsProportion: v.OutputAsProportion,
 			EnforceStrandMatch: v.EnforceStrandMatch,
+			GcContent:          v.GcContent,
 		}
 		MatchComp(s)
-		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-			t.Errorf("Error: MatchComp output was not as expected.")
+		if !ApproxEquals(v.ExpectedFile, v.OutFile, epsilon) {
+			t.Errorf("Error: Motif are not equal within a tolorance %v...", epsilon)
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)

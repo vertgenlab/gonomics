@@ -103,7 +103,7 @@ func TestBuildKmerHash(t *testing.T) {
 	for _, v := range BuildKmerHashTests {
 		motifs = ReadJaspar(v.PwmFile, "Weight")
 		for i := range motifs {
-			answer = buildKmerHash(motifs[i], v.ThresholdProportion)
+			answer = BuildKmerHash(motifs[i], v.ThresholdProportion)
 			if len(answer) != v.ExpectedLengths[i] {
 				t.Errorf("Error in buildKmerHash. Expected Hash Size: %d. Found: %d.", len(answer), v.ExpectedLengths[i])
 			}

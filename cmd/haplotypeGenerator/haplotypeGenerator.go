@@ -20,6 +20,7 @@ type Settings struct {
 	ReferenceGenomeFile string
 	VcfFile             string
 	RegionBedFile       string
+	IncludeRef          bool
 	OutDir              string
 	Verbose             int
 	LineLength          int
@@ -48,6 +49,10 @@ func haplotypeGenerator(s Settings) {
 		refHaplotype := fasta.Extract(genome[currIndex], regions[i].ChromStart, regions[i].ChromEnd, regions[i].Chrom)
 		outputFilename := fmt.Sprintf("%s/%s.%v.%v.fa", s.OutDir, regions[i].Chrom, regions[i].ChromStart, regions[i].ChromEnd)
 		out := fileio.EasyCreate(outputFilename)
+
+		if s.IncludeRef {
+			fasta.WriteFasta(out, refHaplotype, s.LineLength)
+		}
 
 		if s.Verbose > 0 {
 			fmt.Printf("output filename: %s\n", outputFilename)
@@ -90,7 +95,7 @@ func haplotypeGenerator(s Settings) {
 	}
 }
 
-// Helper function returns a map connecting chromosome names to their index in a fasta slice.
+// helperFastaIndex is a helper function that returns a map connecting chromosome names to their index in a fasta slice.
 func helperFastaIndex(genome []fasta.Fasta) map[string]int {
 	var answer = make(map[string]int)
 	for i := range genome {
@@ -111,8 +116,9 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 4
-	var lineLength *int = flag.Int("lineLength", 50, "Specify the number of bases per line in the output fasta.")
-	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints.")
+	var lineLength *int = flag.Int("lineLength", 50, "Specify the number of bases per line in the output fasta.\n")
+	var includeRef *bool = flag.Bool("includeRef", false, "If set, the program will also write out the reference haplotype as the first result. Note that as only substitutions are considered, this renders the output file a valid multiFa.\n")
+	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints.\n")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -134,6 +140,7 @@ func main() {
 		VcfFile:             snpFile,
 		RegionBedFile:       regionFile,
 		OutDir:              outDir,
+		IncludeRef:          *includeRef,
 		LineLength:          *lineLength,
 		Verbose:             *verbose,
 	}

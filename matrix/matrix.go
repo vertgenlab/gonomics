@@ -261,7 +261,7 @@ func GetColumn(mat Matrix, idx int) []float64 {
 	return col
 }
 
-// returns rows x columns
+// Shape returns rows x columns
 func Shape(m Matrix) (int, int) {
 	return len(m), len(m[0])
 }

@@ -14,7 +14,10 @@ var TrimTests = []struct {
 	TrimLeft     int
 	TrimRight    int
 }{
-	{"testdata/testTrim.bed", "testdata/expectedTrim.bed", 10, 10},
+	{InFile: "testdata/testTrim.bed",
+		ExpectedFile: "testdata/expectedTrim.bed",
+		TrimLeft:     10,
+		TrimRight:    10},
 }
 
 func TestTrim(t *testing.T) {
@@ -22,7 +25,7 @@ func TestTrim(t *testing.T) {
 	for _, v := range TrimTests {
 		b = Read(v.InFile)
 		expected = Read(v.ExpectedFile)
-		Trim(b, v.TrimLeft, v.TrimRight)
+		TrimSlice(b, v.TrimLeft, v.TrimRight)
 		if !AllAreEqual(b, expected) {
 			t.Errorf("Error in Trim.")
 		}

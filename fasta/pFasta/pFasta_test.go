@@ -7,21 +7,21 @@ import (
 
 var WriteTests = []struct {
 	OutFile      string
-	Records      []pFasta
+	Records      []PFasta
 	Precision    float32
 	ExpectedFile string
 }{
 	{OutFile: "testdata/out.test.pFa",
-		Records: []pFasta{
-			pFasta{Name: "chr1",
+		Records: []PFasta{
+			{Name: "chr1",
 				Seq: []pDna.Float32Base{
-					pDna.Float32Base{
+					{
 						A: 0.3,
 						C: 0.5,
 						G: 0.2,
 						T: 0,
 					},
-					pDna.Float32Base{
+					{
 						A: 0,
 						C: 0.99,
 						G: 0.01,
@@ -29,21 +29,21 @@ var WriteTests = []struct {
 					},
 				},
 			},
-			pFasta{Name: "chr2",
+			{Name: "chr2",
 				Seq: []pDna.Float32Base{
-					pDna.Float32Base{ //gap base
+					{ //gap base
 						A: 0,
 						C: 0,
 						G: 0,
 						T: 0,
 					},
-					pDna.Float32Base{
+					{
 						A: 0,
 						C: 0,
 						G: 0.2,
 						T: 0.8,
 					},
-					pDna.Float32Base{
+					{
 						A: 0.25,
 						C: 0.25,
 						G: 0.25,
@@ -58,7 +58,7 @@ var WriteTests = []struct {
 }
 
 func TestWriteAndRead(t *testing.T) {
-	var records []pFasta
+	var records []PFasta
 	for _, v := range WriteTests {
 		Write(v.OutFile, v.Records)
 		records = Read(v.OutFile)

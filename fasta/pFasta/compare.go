@@ -12,23 +12,23 @@ import (
 // at the corresponding index in 'b'. See the documentation for 'Equal' for a
 // complete definition of the criterion for pFasta struct equality.
 // Note that pFasta equality is parameterized by a user-specified relative 'precision'.
-func AllAreEqual(a []pFasta, b []pFasta, precision float32) bool {
+func AllAreEqual(a []PFasta, b []PFasta, precision float32) bool {
 	if len(a) != len(b) {
 		return false
 	}
 	for i := range a {
-		if !Equal(a[i], b[i], precision) {
+		if !IsEqual(a[i], b[i], precision) {
 			return false
 		}
 	}
 	return true
 }
 
-// Equal returns true if two input pFasta structs are 'equal', false otherwise.
+// IsEqual returns true if two input pFasta structs are 'equal', false otherwise.
 // Two input pFasta structs are said to be equal if they have the same name,
 // have the same number of bases in their sequence, and for each base, the
 // base probabilities are equal within a user-specified level of relative precision.
-func Equal(a pFasta, b pFasta, precision float32) bool {
+func IsEqual(a PFasta, b PFasta, precision float32) bool {
 	if strings.Compare(a.Name, b.Name) != 0 {
 		return false
 	}

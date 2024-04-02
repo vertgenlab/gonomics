@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/mHiC"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
+	"gonum.org/v1/gonum/stat/distuv"
 	"sort"
 	"strings"
 	"sync"
@@ -117,7 +118,17 @@ func buildMhicPrior(s settings) {
 	//genomeWideBins, maxPossDist, possIntraInRange, possInterAllCount, interChromProb, baselineIntraChromProb := populateBinData(s, bins)
 	x, y := calculateProbabilities(s, bins, total) // x = avg distance, y = avg contacts
 	writeBins(s, bins)
-	splineFit(x, y, s, mp, total)
+	splineX, splineY := splineFit(x, y, s, mp, total)
+	writePrior(splineX, splineY, s)
+}
+
+func writePrior(splineX, splineY []float64, s settings) {
+	o := fileio.EasyCreate(s.outDir + "prior.goMHIC")
+	for x := range splineX {
+		fileio.WriteToFileHandle(o, fmt.Sprintf("%d\t%.15f", int(splineX[x]), splineY[x]))
+	}
+	err := o.Close()
+	exception.PanicOnErr(err)
 }
 
 func populateBinData(s settings, bins []bin) (int, int, int, int, float64, float64) {
@@ -209,7 +220,7 @@ func calculateProbabilities(s settings, bins []bin, total int) (avgDistance, avg
 	return avgDistance, avgContacts
 }
 
-func splineFit(x, y []float64, s settings, mp map[int]int, total int) {
+func splineFit(x, y []float64, s settings, mp map[int]int, total int) ([]float64, []float64) {
 	var vals, spVals []float64
 	o := fileio.EasyCreate(fmt.Sprintf("%s/splineVals.txt", s.outDir))
 	fileio.WriteToFileHandle(o, "dist\tsplineVal")
@@ -224,6 +235,7 @@ func splineFit(x, y []float64, s settings, mp map[int]int, total int) {
 		spVals = append(spVals, sp.At(vals[i]))
 	}
 	pValues(s, vals, spVals, x, total)
+	return vals, spVals
 }
 
 func pValues(s settings, splineX []float64, splineY []float64, avgDist []float64, total int) {
@@ -231,6 +243,7 @@ func pValues(s settings, splineX []float64, splineY []float64, avgDist []float64
 	var pVals [][]float64
 	var idx int
 	var min, max float64 = minFloatSlice(avgDist), maxFloatSlice(avgDist)
+	var bd distuv.Binomial
 	ch := goReadContactsToChan(s.inFile)
 	for i := range ch {
 		b1 = s.bias[i.chrom][i.bin1]
@@ -248,15 +261,14 @@ func pValues(s settings, splineX []float64, splineY []float64, avgDist []float64
 		}
 		idx = numbers.Min(bisectLeft(splineX, dist), len(avgDist)-1)
 		priorP = splineY[idx] * b1 * b2
-		p = numbers.BinomialLeftSummation(total, i.score-1, priorP, false)
-		if i.chrom == "chr13" && i.bin1 == 1250000 && i.bin2 == 1230000 {
-			fmt.Println(total, i.score-1, priorP, 1-p)
-		}
+		bd = distuv.Binomial{N: float64(total), P: priorP}
+		p = bd.CDF(float64(i.score - 1))
 		pVals = append(pVals, []float64{place, 1 - p})
 		place++
 	}
 	sortPValsRank(pVals)
 	pValsBH := numbers.BenjaminiHochberg(pVals)
+	plotQVals(pValsBH, s)
 	sortPValsIndex(pValsBH)
 	sortPValsIndex(pVals)
 	o := fileio.EasyCreate(s.outDir + "uniContactsWithPVals.txt")
@@ -278,6 +290,24 @@ func pValues(s settings, splineX []float64, splineY []float64, avgDist []float64
 	}
 	err := o.Close()
 	exception.PanicOnErr(err)
+}
+
+func plotQVals(qVals [][]float64, s settings) {
+	var count int
+	var df []string = []string{"FDRthreshold\tcount"}
+	var threshold float64
+	for i := range qVals {
+		if threshold > 0.05 {
+			df = append(df, fmt.Sprintf("%f\t%d", threshold, count))
+			break
+		}
+		if qVals[i][1] > threshold {
+			df = append(df, fmt.Sprintf("%f\t%d", threshold, count))
+			threshold += 5e-4
+		}
+		count++
+	}
+	fileio.Write(s.outDir+"qVals.txt", df)
 }
 
 func sortPValsRank(pVals [][]float64) {
@@ -330,7 +360,7 @@ func main() {
 		nBins:      100,
 		resolution: 10000,
 		outDir:     "/Users/sethweaver/Downloads/gonomicsMHIC/testdata/output/",
-		bias:       mHiC.ReadBias("/Users/sethweaver/Downloads/gonomicsMHIC/testdata/output/biasFile.txt"),
+		bias:       mHiC.ReadBias("/Users/sethweaver/Downloads/gonomicsMHIC/testdata/output/biasFileNoNaN.txt"),
 	}
 	buildMhicPrior(s)
 }

@@ -82,6 +82,7 @@ func krNorm(rawMat matrix.Matrix) matrix.Matrix {
 		for rhoKm1 > innertol {
 			k++
 			if k == 1 {
+				//this happens first
 				Z = matrix.Combine(rk, v, '/')
 				p = Z
 				rhoKm1 = matrix.DotProduct(matrix.Transpose(rk), Z)[0][0]
@@ -139,7 +140,11 @@ func oneDividedByMatrix(m matrix.Matrix) matrix.Matrix {
 	o := matrix.Initilize(matrix.Shape(m))
 	for i := range m {
 		for j = range m[i] {
-			o[i][j] = 1.0 / m[i][j]
+			if m[i][j] == 0 {
+				o[i][j] = 0
+			} else {
+				o[i][j] = 1.0 / m[i][j]
+			}
 		}
 	}
 	return o
@@ -165,36 +170,34 @@ func sortIdx(m matrix.Matrix) {
 	})
 }
 
-func removeRows(m matrix.Matrix, percent int) matrix.Matrix {
+func zeroRows(m matrix.Matrix) matrix.Matrix {
 	var n matrix.Matrix
 	//get the indexes of the rows/columns to remove
 	sums := matrix.AllSums(m)
-	rowSums := enumerate(sums[0])
-	sortSums(rowSums)
-
-	proportion := float64(percent) / 100
-	numToRemove := proportion * float64(len(rowSums))
-	dropIdx := rowSums[0:int(math.Round(numToRemove))]
-
-	keepIdx := rowSums[int(math.Round(numToRemove)):]
-
-	sortIdx(rowSums)
-	for i := range keepIdx {
-		n = append(n, m[int(keepIdx[i][0])])
+	for i := range sums[0] {
+		if sums[0][i] == 0 {
+			continue
+		}
+		n = append(n, m[i])
 	}
-	n2 := dropCols(n, dropIdx)
+	n2 := dropCols(n, sums[1])
 	return n2
 }
 
-func dropCols(m matrix.Matrix, di matrix.Matrix) matrix.Matrix {
+func dropCols(m matrix.Matrix, colSums []float64) matrix.Matrix {
 	var n matrix.Matrix = make([][]float64, len(m))
 	var dropIdx []int
-	for i := range di {
-		dropIdx = append(dropIdx, int(di[i][0]))
+	for i := range colSums {
+		if colSums[i] != 0 {
+			continue
+		}
+		dropIdx = append(dropIdx, i)
 	}
-
+	if len(dropIdx) == 0 {
+		return m
+	}
 	for j := range m {
-		for i := 0; i < len(dropIdx); i++ {
+		for i := range dropIdx {
 			switch {
 			case i == 0:
 				n[j] = append(n[j], m[j][0:dropIdx[i]]...)
@@ -210,6 +213,7 @@ func dropCols(m matrix.Matrix, di matrix.Matrix) matrix.Matrix {
 func computeBiasVector(s settings, m matrix.Matrix, chrom string, biasOut *fileio.EasyWriter) {
 	x := oneDividedByMatrix(m)
 	avg := matrix.Average(x)
+	fmt.Println(chrom, avg)
 	biasVec := matrix.Scale(x, avg, '/')
 	for i := range biasVec {
 		fileio.WriteToFileHandle(biasOut, fmt.Sprintf("%s\t%d\t%f", chrom, i*s.resolution, biasVec[i][0]))
@@ -241,11 +245,12 @@ func writeUniContactsFile(chrom string, m matrix.Matrix, o *fileio.EasyWriter, s
 }
 
 func krNormalizeMatrix(s settings, m matrix.Matrix, chrom string, biasOut *fileio.EasyWriter) {
-	result := krNorm(m)
+	n := zeroRows(m)
+	result := krNorm(n)
 	computeBiasVector(s, result, chrom, biasOut)
 	x := matrix.Diags(matrix.Flatten(result)[0])
-	normMat := matrix.DotProduct(x, matrix.DotProduct(m, x))
-	finalMatrix := scaleMatrixBySum(normMat, matrix.Sum(m))
+	normMat := matrix.DotProduct(x, matrix.DotProduct(n, x))
+	finalMatrix := scaleMatrixBySum(normMat, matrix.Sum(n))
 
 	o := fileio.EasyCreate(fmt.Sprintf("%s/%s.krNormMulti.txt", s.outDir, chrom))
 	matrix.Write(o, finalMatrix, "\t")
@@ -267,7 +272,7 @@ func makeMhicMatrix(s settings) {
 		if i.Chrom1 != currChrom {
 			if currChrom != "" {
 				writeMatrix(currChrom, "multiRaw", matMulti, s)
-				krNormalizeMatrix(s, matMulti, currChrom, biasOut)
+				krNormalizeMatrix(s, matUni, currChrom, biasOut)
 				writeMatrix(currChrom, "uniRaw", matUni, s)
 				writeUniContactsFile(currChrom, matUni, uniContactsOut, s)
 			}

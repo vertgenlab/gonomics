@@ -11,6 +11,8 @@ import (
 type Interaction struct {
 	Chrom1     string
 	Chrom2     string
+	Start1     int
+	Start2     int
 	Bin1       int
 	Bin2       int
 	InterChrom bool
@@ -19,7 +21,28 @@ type Interaction struct {
 	Full       string
 }
 
+type BinContact struct {
+	Chrom1 string
+	Chrom2 string
+	Bin1   int
+	Bin2   int
+	Count  int
+	Key    string
+}
 type Bias map[string]map[int]float64
+
+type Prior map[int]float64
+
+func ReadPrior(inFile string) Prior {
+	var slc []string
+	mp := make(map[int]float64)
+	in := fileio.Read(inFile)
+	for i := range in {
+		slc = strings.Split(in[i], "\t")
+		mp[parse.StringToInt(slc[0])] = parse.StringToFloat64(slc[1])
+	}
+	return mp
+}
 
 func ReadBias(in string) Bias {
 	var val float64
@@ -83,7 +106,9 @@ func processInteraction(line string) Interaction {
 	columns := strings.Split(line, "\t")
 	i.ReadName = columns[0]
 	i.Chrom1 = columns[1]
+	i.Start1 = parse.StringToInt(columns[2])
 	i.Chrom2 = columns[6]
+	i.Start2 = parse.StringToInt(columns[7])
 	i.Bin1 = binToInt(columns[5])
 	i.Bin2 = binToInt(columns[10])
 	if columns[12] == "UNI" {
@@ -102,4 +127,51 @@ func processInteraction(line string) Interaction {
 func binToInt(bin string) int {
 	columns := strings.Split(bin, "_")
 	return parse.StringToInt(columns[1])
+}
+
+func GoReadBinContactToChan(inFile string) <-chan BinContact {
+	var wg sync.WaitGroup
+	data := make(chan BinContact, 1000)
+	wg.Add(1)
+	go readBinContactToChan(inFile, data, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data
+}
+
+func readBinContactToChan(inFile string, data chan<- BinContact, wg *sync.WaitGroup) {
+	var line BinContact
+	var done bool
+	in := fileio.EasyOpen(inFile)
+
+	for line, done = nextBinContact(in); !done; line, done = nextBinContact(in) {
+		data <- line
+	}
+	err := in.Close()
+	exception.PanicOnErr(err)
+	wg.Done()
+}
+
+func nextBinContact(reader *fileio.EasyReader) (BinContact, bool) {
+	line, done := fileio.EasyNextRealLine(reader)
+	if done {
+		return BinContact{}, true
+	}
+	return processBinContact(line), false
+}
+
+func processBinContact(line string) BinContact {
+	var bc BinContact
+	slc := strings.Split(line, "\t")
+	bc.Chrom1 = slc[0]
+	bc.Bin1 = parse.StringToInt(slc[1])
+	bc.Chrom2 = slc[2]
+	bc.Bin2 = parse.StringToInt(slc[3])
+	bc.Count = parse.StringToInt(slc[4])
+	bc.Key = strings.Join(slc[0:4], "_")
+	return bc
 }
