@@ -87,6 +87,9 @@ func bedFormat(s Settings) {
 
 	for v := range ch {
 		if s.CoordName {
+			if v.FieldsInitialized == 3 {
+				v.FieldsInitialized = 4
+			}
 			v.Name = fmt.Sprintf("%s.%v.%v", v.Chrom, v.ChromStart, v.ChromEnd)
 		}
 		if s.ToMidpoint {
