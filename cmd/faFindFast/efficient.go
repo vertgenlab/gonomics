@@ -45,6 +45,7 @@ func incrementWindowEdge(firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOr
 		// 2. gapOpenClosedFirstQuery
 		if secondQuery[alnIdx] != dna.Gap {
 			gapOpenCloseFirstQuery = 1 // Rationale: if the for loop is executed, this means there is a gap in the firstQuery, and if secondQuery does not have a gap, then it is indeed a firstQuery gap compared to secondQuery
+			fmt.Printf("found gapOpenClosedFirstQuery. alnIdx: %v. firstQuery[alnIdx]: %v. secondQuery[alnIdx]: %v\n", alnIdx, firstQuery[alnIdx], secondQuery[alnIdx])
 		}
 	}
 
@@ -64,15 +65,18 @@ func incrementWindowEdge(firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOr
 	// 8. numSubst: is this a substitution?
 	if firstQuery[alnIdx] != secondQuery[alnIdx] && dna.DefineBase(firstQuery[alnIdx]) && dna.DefineBase(secondQuery[alnIdx]) {
 		numSubst++
+		fmt.Printf("found substitution. alnIdx: %v. firstQuery[alnIdx]: %v. secondQuery[alnIdx]: %v\n", alnIdx, firstQuery[alnIdx], secondQuery[alnIdx])
 	}
 	// 3. gapOpenedSecondQuery: did we open a gap in the secondQuery sequence when moving the window edge?
 	if ((alnIdxOrig != -1 && secondQuery[alnIdxOrig] != dna.Gap) || alnIdxOrig == -1) && secondQuery[alnIdx] == dna.Gap {
 		gapOpenedSecondQuery++
+		fmt.Printf("found gapOpenedSecondQuery. alnIdx: %v. firstQuery[alnIdx]: %v. secondQuery[alnIdx]: %v\n", alnIdx, firstQuery[alnIdx], secondQuery[alnIdx])
 	}
 	// 4. gapClosedSecondQuery: id we close a gap in the secondQuery when moving the window edge?
 	if alnIdxOrig != -1 && secondQuery[alnIdxOrig] == dna.Gap && secondQuery[alnIdx] != dna.Gap {
 		//if seqTwo[alnIdx] == dna.Gap && (alnIdx+1==len(seqOne) || seqTwo[alnIdx+1] != dna.Gap) {
 		gapClosedSecondQuery++
+		fmt.Printf("found gapClosedSecondQuery. alnIdx: %v. firstQuery[alnIdx]: %v. secondQuery[alnIdx]: %v\n", alnIdx, firstQuery[alnIdx], secondQuery[alnIdx])
 	}
 
 	return
@@ -181,6 +185,7 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 				prevLastAlnIdxOfWindowPlusOne = lastAlnIdxOfWindow + 1
 
 				// print output
+				fmt.Printf("about to print output. divergence=totalSubst+totalGaps. divergence: %v. totalSubst: %v. totalGaps: %v\n", totalSubst+totalGaps, totalSubst, totalGaps)
 				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
 				if !s.RemoveN || totalNs == 0 {
 					if s.LongOutput && !s.OutputAlnPos {
