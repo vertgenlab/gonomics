@@ -170,18 +170,20 @@ func sortIdx(m matrix.Matrix) {
 	})
 }
 
-func zeroRows(m matrix.Matrix) matrix.Matrix {
+func zeroRows(m matrix.Matrix) (matrix.Matrix, []int) {
 	var n matrix.Matrix
+	var removeIdx []int
 	//get the indexes of the rows/columns to remove
 	sums := matrix.AllSums(m)
 	for i := range sums[0] {
 		if sums[0][i] == 0 {
+			removeIdx = append(removeIdx, i)
 			continue
 		}
 		n = append(n, m[i])
 	}
 	n2 := dropCols(n, sums[1])
-	return n2
+	return n2, removeIdx
 }
 
 func dropCols(m matrix.Matrix, colSums []float64) matrix.Matrix {
@@ -210,14 +212,45 @@ func dropCols(m matrix.Matrix, colSums []float64) matrix.Matrix {
 	return n
 }
 
-func computeBiasVector(s settings, m matrix.Matrix, chrom string, biasOut *fileio.EasyWriter) {
+func computeBiasVector(s settings, m matrix.Matrix, chrom string, removeIdx []int, biasOut *fileio.EasyWriter) {
 	x := oneDividedByMatrix(m)
 	avg := matrix.Average(x)
 	fmt.Println(chrom, avg)
 	biasVec := matrix.Scale(x, avg, '/')
-	for i := range biasVec {
-		fileio.WriteToFileHandle(biasOut, fmt.Sprintf("%s\t%d\t%f", chrom, i*s.resolution, biasVec[i][0]))
+	bias := addZerosBias(biasVec, removeIdx)
+	for i := range bias {
+		fileio.WriteToFileHandle(biasOut, fmt.Sprintf("%s\t%d\t%f", chrom, i*s.resolution, bias[i]))
 	}
+}
+func addZerosBias(m matrix.Matrix, removeIdx []int) []float64 {
+	var c, t int
+	var n []float64
+	var done bool = false
+	if len(removeIdx) == 0 {
+		return m[0]
+	}
+	var i int = 0
+	for i < len(m) {
+		if !done {
+			if t == removeIdx[c] {
+				n = append(n, -1)
+				c++
+				t++
+				if len(removeIdx) == c {
+					done = true
+				}
+				continue
+			}
+		}
+		n = append(n, m[i][0])
+		i++
+		t++
+	}
+	for c < len(removeIdx) {
+		n = append(n, -1)
+		c++
+	}
+	return n
 }
 
 func initializeChromMatix(chromSizes map[string]chromInfo.ChromInfo, chrom string, resolution int) matrix.Matrix {
@@ -245,9 +278,9 @@ func writeUniContactsFile(chrom string, m matrix.Matrix, o *fileio.EasyWriter, s
 }
 
 func krNormalizeMatrix(s settings, m matrix.Matrix, chrom string, biasOut *fileio.EasyWriter) {
-	n := zeroRows(m)
+	n, removeIdx := zeroRows(m)
 	result := krNorm(n)
-	computeBiasVector(s, result, chrom, biasOut)
+	computeBiasVector(s, result, chrom, removeIdx, biasOut)
 	x := matrix.Diags(matrix.Flatten(result)[0])
 	normMat := matrix.DotProduct(x, matrix.DotProduct(n, x))
 	finalMatrix := scaleMatrixBySum(normMat, matrix.Sum(n))
