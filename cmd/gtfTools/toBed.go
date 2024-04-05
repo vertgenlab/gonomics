@@ -16,11 +16,12 @@ import (
 
 // ToBedSettings defines the usage settings for the gtfTools toBed subcommand.
 type ToBedSettings struct {
-	InFile        string
-	OutFile       string
-	Tss           bool
-	ChromSizeFile string
-	Merge         bool
+	InFile             string
+	OutFile            string
+	Tss                bool
+	FirstTwoCodonBases bool
+	ChromSizeFile      string
+	Merge              bool
 }
 
 // toBedUsage defines the usage statement for the gtfTools toBed subcommand.
@@ -39,6 +40,7 @@ func parseToBedArgs() {
 	var err error
 	toBedFlags := flag.NewFlagSet("toBed", flag.ExitOnError)
 	var tss *bool = toBedFlags.Bool("tss", false, "Return a bed of tss positions annotated only with the geneName. Must provide chrom sizes file.")
+	var firstTwoCodonBases *bool = toBedFlags.Bool("firstTwoCodonBases", false, "Return a bed of the first two positions of each coding exon.")
 	var chromSizeFile *string = toBedFlags.String("chromSizeFile", "", "Specifies the name of a chrom.sizes file.")
 	var merge *bool = toBedFlags.Bool("merge", false, "Merge overlapping entries after converting all records to beds. Available with tss only.")
 	err = toBedFlags.Parse(os.Args[2:])
@@ -52,11 +54,12 @@ func parseToBedArgs() {
 	inFile := toBedFlags.Arg(0)
 	outFile := toBedFlags.Arg(1)
 	s := ToBedSettings{
-		InFile:        inFile,
-		OutFile:       outFile,
-		Tss:           *tss,
-		ChromSizeFile: *chromSizeFile,
-		Merge:         *merge,
+		InFile:             inFile,
+		OutFile:            outFile,
+		Tss:                *tss,
+		ChromSizeFile:      *chromSizeFile,
+		Merge:              *merge,
+		FirstTwoCodonBases: *firstTwoCodonBases,
 	}
 
 	toBed(s)
@@ -69,6 +72,11 @@ func toBed(s ToBedSettings) {
 	var nameString string
 	var currBed bed.Bed
 	var err error
+
+	if s.Tss && s.FirstTwoCodonBases {
+		log.Fatalf("Error: user cannot specify both tss and firstTwoBasesOfCodons.")
+	}
+
 	if s.Tss && s.ChromSizeFile == "" {
 		log.Fatalf("Error: user must specify a chromSizes file to convert to a Tss bed.\n")
 	}
@@ -77,6 +85,10 @@ func toBed(s ToBedSettings) {
 		records := gtf.Read(s.InFile)
 		sizes := chromInfo.ReadToMap(s.ChromSizeFile)
 		beds := gtf.GenesToTssBed(records, sizes, s.Merge)
+		bed.Write(s.OutFile, beds)
+	} else if s.FirstTwoCodonBases {
+		records := gtf.Read(s.InFile)
+		beds := gtf.GenesToBedFirstTwoCodonBases(records)
 		bed.Write(s.OutFile, beds)
 	} else {
 		file := fileio.EasyOpen(s.InFile)

@@ -1,11 +1,12 @@
 package convert
 
 import (
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/sam"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/sam"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -66,6 +67,31 @@ func TestPairwiseFaToVcf(t *testing.T) { //this test is for the default settings
 	err = os.Remove("tmp.txt")
 	if err != nil {
 		exception.PanicOnErr(err)
+	}
+}
+
+var ThreeWayFaToVcfTests = []struct {
+	InFile       string
+	OutFile      string
+	ExpectedFile string
+	Chrom        string
+}{
+	{InFile: "testdata/threeWayFaToVcf/input.fa", OutFile: "tmp.threeWayFaToVcf.txt", ExpectedFile: "testdata/threeWayFaToVcf/expected.vcf", Chrom: "chr1"},
+}
+
+func TestThreeWayFaToVcf(t *testing.T) {
+	var err error
+	var out *fileio.EasyWriter
+	for _, v := range ThreeWayFaToVcfTests {
+		threeWayInputFa := fasta.Read(v.InFile)
+		out = fileio.EasyCreate(v.OutFile)
+		ThreeWayFaToVcf(threeWayInputFa, v.Chrom, out)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Threeway VCF results do not match.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
 	}
 }
 

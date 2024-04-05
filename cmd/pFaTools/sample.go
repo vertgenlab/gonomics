@@ -40,7 +40,7 @@ func parseSampleArgs() {
 	sampleFlags := flag.NewFlagSet("sample", flag.ExitOnError)
 	var numSamples *int = sampleFlags.Int("numSamples", 1, "Specify the number of samples desired.")
 	var setSeed *int64 = sampleFlags.Int64("setseed", 0, "Specify the seed of the random number generator.")
-	err = sampleFlags.Parse(os.Args[3:])
+	err = sampleFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	sampleFlags.Usage = func() { sampleUsage(sampleFlags) }
 

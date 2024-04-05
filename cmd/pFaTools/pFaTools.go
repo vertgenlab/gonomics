@@ -18,6 +18,8 @@ func usage() {
 			"\tpFaTools extractBed in.pfa regions.bed outDir.pFa\n" +
 			"\tOR\n" +
 			"\tpFaTools sample in.pfa outDir.Fa\n" +
+			"\tOR\n" +
+			"\tPFaTools visualize in.pfa start end outDir.txt\n" +
 			"Enter a subcommand to view options.\n")
 }
 
@@ -38,6 +40,8 @@ func main() {
 		parseExtractBedArgs()
 	case "sample":
 		parseSampleArgs()
+	case "visualize":
+		parseVisualizeArgs()
 	default:
 		flag.Usage()
 		log.Fatalf("Error: unrecognized subcommand: %v.\n", flag.Arg(0))

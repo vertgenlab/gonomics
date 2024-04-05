@@ -8,26 +8,37 @@ import (
 )
 
 var ToBedTests = []struct {
-	InFile         string
-	OutFile        string
-	ExpectedFile   string
-	Tss            bool
-	ChromSizesFile string
-	Merge          bool
+	InFile             string
+	OutFile            string
+	ExpectedFile       string
+	Tss                bool
+	FirstTwoCodonBases bool
+	ChromSizesFile     string
+	Merge              bool
 }{
 	{InFile: "testdata/test.gtf",
-		OutFile:        "testdata/tmp.bed",
-		ExpectedFile:   "testdata/testOut.bed",
-		Tss:            false,
-		ChromSizesFile: "",
-		Merge:          false,
+		OutFile:            "testdata/tmp.bed",
+		ExpectedFile:       "testdata/testOut.bed",
+		Tss:                false,
+		FirstTwoCodonBases: false,
+		ChromSizesFile:     "",
+		Merge:              false,
 	},
 	{InFile: "testdata/test.gtf",
-		OutFile:        "testdata/tmp.tss.bed",
-		ExpectedFile:   "testdata/expected.tss.bed",
-		Tss:            true,
-		ChromSizesFile: "testdata/chr1.chrom.sizes",
-		Merge:          false,
+		OutFile:            "testdata/tmp.tss.bed",
+		ExpectedFile:       "testdata/expected.tss.bed",
+		Tss:                true,
+		FirstTwoCodonBases: false,
+		ChromSizesFile:     "testdata/chr1.chrom.sizes",
+		Merge:              false,
+	},
+	{InFile: "testdata/test.gtf",
+		OutFile:            "testdata/tmp.firstTwoCodonBases.bed",
+		ExpectedFile:       "testdata/expected.firstTwoCodonBases.bed",
+		Tss:                false,
+		FirstTwoCodonBases: true,
+		ChromSizesFile:     "",
+		Merge:              false,
 	},
 }
 
@@ -36,11 +47,12 @@ func TestToBed(t *testing.T) {
 	var s ToBedSettings
 	for _, v := range ToBedTests {
 		s = ToBedSettings{
-			InFile:        v.InFile,
-			OutFile:       v.OutFile,
-			Tss:           v.Tss,
-			ChromSizeFile: v.ChromSizesFile,
-			Merge:         v.Merge,
+			InFile:             v.InFile,
+			OutFile:            v.OutFile,
+			Tss:                v.Tss,
+			ChromSizeFile:      v.ChromSizesFile,
+			Merge:              v.Merge,
+			FirstTwoCodonBases: v.FirstTwoCodonBases,
 		}
 		toBed(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
@@ -57,11 +69,23 @@ var FilterTests = []struct {
 	OutFile      string
 	ExpectedFile string
 	GeneNameList string
+	ChromFilter  string
 }{
 	{InFile: "../../gtf/testdata/test.gtf",
 		OutFile:      "testdata/tmp.filter.gtf",
 		ExpectedFile: "testdata/expected.filter.gtf",
-		GeneNameList: "testdata/geneList.txt"},
+		GeneNameList: "testdata/geneList.txt",
+		ChromFilter:  ""},
+	{InFile: "testdata/chromFilter.gtf",
+		OutFile:      "testdata/tmp.filter.gtf",
+		ExpectedFile: "testdata/expected.chromFilter.gtf",
+		GeneNameList: "",
+		ChromFilter:  "chrM"},
+	{InFile: "testdata/chromFilter.gtf",
+		OutFile:      "testdata/tmp.filter.gtf",
+		ExpectedFile: "testdata/expected.chromFilterGeneFilter.gtf",
+		GeneNameList: "testdata/geneListForChromFilter.txt",
+		ChromFilter:  "chr1"},
 }
 
 func TestFilter(t *testing.T) {
@@ -72,6 +96,7 @@ func TestFilter(t *testing.T) {
 			InFile:       v.InFile,
 			OutFile:      v.OutFile,
 			GeneNameList: v.GeneNameList,
+			ChromFilter:  v.ChromFilter,
 		}
 		gtfFilter(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
