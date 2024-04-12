@@ -73,9 +73,9 @@ func pfaFindFast(s Settings2) {
 		log.Fatalf("Error: Reference, first query, and second query sequences are not all of equal length.\n")
 	}
 
-	// Conversion to valid sequences. TODO: remove after debugging?
-	firstQuery = pFasta.MakeValid(firstQuery)
-	secondQuery = pFasta.MakeValid(secondQuery)
+	// Conversion to valid sequences. TODO: remove after debugging? Change MakeValid for logspace? Uncomment after trying logspace?
+	//firstQuery = pFasta.MakeValid(firstQuery)
+	//secondQuery = pFasta.MakeValid(secondQuery)
 
 	// QC firstQuery and secondQuery sequences. TODO: remove after debugging?
 	//pFasta.QC(firstQuery)
@@ -168,36 +168,38 @@ func ReconstructSeq(s Settings, s2 Settings2) {
 		s2.InPfasta = answerPfa
 		pfaFindFast(s2)
 
-		for _, v := range answerPfa { // instead of printing whole pfa, which creates large file that can't be read properly, just QC each base
-			for i := range v.Seq {
-				// TODO: check invalid base before writing pFastsa. Remove after debugging
-				if math.IsNaN(float64(v.Seq[i].A)) || math.IsNaN(float64(v.Seq[i].C)) || math.IsNaN(float64(v.Seq[i].G)) || math.IsNaN(float64(v.Seq[i].T)) || v.Seq[i].A < 0 || v.Seq[i].C < 0 || v.Seq[i].G < 0 || v.Seq[i].T < 0 {
-					log.Fatalf("Before writing pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				}
-				// no if print all on short example
-				if i == 10 || i == 5000 || i == 5102 || i == 5120 {
-					fmt.Printf("Before writing pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				}
-			}
-			//fmt.Printf("%v: %v\n", i, v)
-		}
+		// TODO: Uncomment after trying logspace
+		//for _, v := range answerPfa { // instead of printing whole pfa, which creates large file that can't be read properly, just QC each base
+		//	for i := range v.Seq {
+		// TODO: check invalid base before writing pFastsa. Remove after debugging.
+		//if math.IsNaN(float64(v.Seq[i].A)) || math.IsNaN(float64(v.Seq[i].C)) || math.IsNaN(float64(v.Seq[i].G)) || math.IsNaN(float64(v.Seq[i].T)) || v.Seq[i].A < 0 || v.Seq[i].C < 0 || v.Seq[i].G < 0 || v.Seq[i].T < 0 {
+		//	log.Fatalf("Before writing pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
+		//}
+		// no if print all on short example
+		//if i == 10 || i == 5000 || i == 5102 || i == 5120 {
+		//	fmt.Printf("Before writing pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
+		//}
+		//}
+		//fmt.Printf("%v: %v\n", i, v)
+		//}
 
 		pFasta.Write(s.OutPfaFile, answerPfa)
+		//TODO: uncomment after trying logspace
 		//TODO: put the below as another function in pfa package to print human-readable (non-binary) pfa to terminal or remove/comment-out after debugging
-		outpfa := pFasta.Read(s.OutPfaFile)
-		for _, v := range outpfa { // instead of printing whole pfa, which creates large file that can't be read properly, just QC each base
-			for i := range v.Seq {
-				// TODO: check invalid base when reading pFastsa. Remove after debugging
-				if math.IsNaN(float64(v.Seq[i].A)) || math.IsNaN(float64(v.Seq[i].C)) || math.IsNaN(float64(v.Seq[i].G)) || math.IsNaN(float64(v.Seq[i].T)) || v.Seq[i].A < 0 || v.Seq[i].C < 0 || v.Seq[i].G < 0 || v.Seq[i].T < 0 {
-					log.Fatalf("Read pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				}
-				// no if print all on short example
-				if i == 10 || i == 5000 || i == 5102 || i == 5120 {
-					fmt.Printf("Read pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				}
-			}
-			//fmt.Printf("%v: %v\n", i, v)
-		}
+		//outpfa := pFasta.Read(s.OutPfaFile)
+		//for _, v := range outpfa { // instead of printing whole pfa, which creates large file that can't be read properly, just QC each base
+		//for i := range v.Seq {
+		// TODO: check invalid base when reading pFastsa. Remove after debugging. Uncomment after trying logspace
+		//if math.IsNaN(float64(v.Seq[i].A)) || math.IsNaN(float64(v.Seq[i].C)) || math.IsNaN(float64(v.Seq[i].G)) || math.IsNaN(float64(v.Seq[i].T)) || v.Seq[i].A < 0 || v.Seq[i].C < 0 || v.Seq[i].G < 0 || v.Seq[i].T < 0 {
+		//	log.Fatalf("Read pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
+		//}
+		// no if print all on short example
+		//if i == 10 || i == 5000 || i == 5102 || i == 5120 {
+		//	fmt.Printf("Read pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
+		//}
+		//}
+		//fmt.Printf("%v: %v\n", i, v)
+		//}
 	}
 }
 
