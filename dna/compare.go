@@ -163,3 +163,21 @@ func min(a int, b int) int {
 	}
 	return b
 }
+
+// SeqsAreSimilar returns true if the two input sequences have less than or equal mismatches to the user-specified threshold
+// if two sequences of different length, the function will return false. Comparison is case-insensitive.
+func SeqsAreSimilar(a, b []Base, numAllowedMismatch int) bool {
+	var c int = 0
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if compareBases(a[i], b[i], true) != 0 {
+			c++
+			if c > numAllowedMismatch {
+				return false
+			}
+		}
+	}
+	return true
+}
