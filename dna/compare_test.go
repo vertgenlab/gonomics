@@ -45,4 +45,18 @@ func TestCompare(t *testing.T) {
 	}
 }
 
+func TestCompareSimilarSeqs(t *testing.T) {
+	var ans bool
+	a := []string{"ACTGACTG", "ACTGACTG", "ACTGACTG", "ACTGACTG", "ACTGACTG"}
+	b := []string{"ACTGACTG", "ACCGACCG", "ACCGACCG", "ACC-ACCG", "ACC-ACCG"}
+	exp := []bool{true, true, false, true, false}
+	numMistmatch := []int{1, 2, 1, 3, 2}
+	for i := range a {
+		ans = CompareSimilarSeqs(StringToBases(a[i]), StringToBases(b[i]), numMistmatch[i])
+		if exp[i] != ans {
+			t.Errorf("Error in CompareSimilarSeqs when comparing %s and %s. Threshold: %d", a[i], b[i], numMistmatch[i])
+		}
+	}
+}
+
 //TODO Compare2DSeqsTests
