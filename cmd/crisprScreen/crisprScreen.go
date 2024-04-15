@@ -3,10 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/sam"
 	"strings"
 )
 
@@ -107,12 +109,70 @@ func charGuides(r1, r2, guidesFile, outDir string) {
 	analyze(mp, outDir)
 }
 
+func analyzeBamMap(mp map[string][]string) {
+	cellOut := fileio.EasyCreate("guidesPerCell.txt")
+	for i := range mp {
+		fileio.WriteToFileHandle(cellOut, fmt.Sprintf("%s\t%d\t%s", i, len(mp[i]), strings.Join(mp[i], ",")))
+	}
+	err := cellOut.Close()
+	exception.PanicOnErr(err)
+}
+
+func getBx(s sam.Sam) string {
+	fields := strings.Split(s.QName, ":")
+	bxUmi := fields[7]
+	return bxUmi[0:12]
+}
+
+func updateMap(mp map[string][]string, bx string, gRNA string) {
+	var redundant bool = false
+	_, found := mp[bx]
+	if !found {
+		mp[bx] = []string{gRNA}
+		return
+	} else {
+		for i := range mp[bx] {
+			if mp[bx][i] == gRNA {
+				redundant = true
+				break
+			}
+		}
+	}
+	if redundant == false {
+		mp[bx] = append(mp[bx], gRNA)
+	}
+}
+
+func guidesFromSam(bamFile, bedFile string) {
+	var ans []sam.Sam
+	var j int
+	var bx string
+
+	beds := bed.Read(bedFile)
+	bamRead, _ := sam.OpenBam(bamFile)
+	bai := sam.ReadBai(bamFile + ".bai")
+
+	mp := make(map[string][]string)
+
+	for i := range beds {
+		ans = sam.SeekBamRegion(bamRead, bai, beds[i].Chrom, uint32(beds[i].ChromStart), uint32(beds[i].ChromEnd))
+		for j = range ans {
+			bx = getBx(ans[j])
+			updateMap(mp, bx, beds[i].Name)
+		}
+	}
+	analyzeBamMap(mp)
+}
+
 func main() {
 	flag.Parse()
-	r1 := flag.Arg(0)
-	r2 := flag.Arg(1)
-	guidesFile := flag.Arg(2)
-	outDir := flag.Arg(3)
+	//r1 := flag.Arg(0)
+	//r2 := flag.Arg(1)
+	bamFile := flag.Arg(0)
+	bedFile := flag.Arg(1)
+	//guidesFile := flag.Arg(2)
+	//outDir := flag.Arg(3)
 
-	charGuides(r1, r2, guidesFile, outDir)
+	//charGuides(r1, r2, guidesFile, outDir)
+	guidesFromSam(bamFile, bedFile)
 }
