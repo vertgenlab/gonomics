@@ -105,33 +105,7 @@ func Mag(d Float64Diff) float64 {
 // The distance score is the magnitude of the vector that is the difference between the 2 pDNA bases' probability vectors
 // The distance score is a float64
 func Dist(p Float32Base, q Float32Base) float64 {
-	//return Mag(Diff(p, q)) // regular version
-
-	// logspace version
-	// p and q are log10() numbers
-	// convert to regular numbers with math.Pow
-	pUnlog := []float64{
-		math.Pow(10, float64(p.A)),
-		math.Pow(10, float64(p.C)),
-		math.Pow(10, float64(p.G)),
-		math.Pow(10, float64(p.T)),
-	}
-	qUnlog := []float64{
-		math.Pow(10, float64(q.A)),
-		math.Pow(10, float64(q.C)),
-		math.Pow(10, float64(q.G)),
-		math.Pow(10, float64(q.T)),
-	}
-	// calculate diff
-	diff := []float64{
-		pUnlog[0] - qUnlog[0],
-		pUnlog[1] - qUnlog[1],
-		pUnlog[2] - qUnlog[2],
-		pUnlog[3] - qUnlog[3],
-	}
-	// calculate mag
-	mag := math.Sqrt(math.Pow(diff[0], 2) + math.Pow(diff[1], 2) + math.Pow(diff[2], 2) + math.Pow(diff[3], 2))
-	return mag
+	return Mag(Diff(p, q))
 }
 
 // Dot
@@ -146,25 +120,7 @@ func Dot(p Float32Base, q Float32Base) float64 {
 // DotSubstProb
 // Make sure input is probabilities not likelihoods
 func DotSubstProb(p Float32Base, q Float32Base) float64 {
-	//return 1 - Dot(p, q) // regular version
-
-	// logspace version
-	// p and q are log10() numbers
-	// convert to regular numbers with math.Pow
-	pUnlog := []float64{
-		math.Pow(10, float64(p.A)),
-		math.Pow(10, float64(p.C)),
-		math.Pow(10, float64(p.G)),
-		math.Pow(10, float64(p.T)),
-	}
-	qUnlog := []float64{
-		math.Pow(10, float64(q.A)),
-		math.Pow(10, float64(q.C)),
-		math.Pow(10, float64(q.G)),
-		math.Pow(10, float64(q.T)),
-	}
-	dot := pUnlog[0]*qUnlog[0] + pUnlog[1]*qUnlog[1] + pUnlog[2]*qUnlog[2] + pUnlog[3]*qUnlog[3]
-	return 1 - dot
+	return 1 - Dot(p, q)
 }
 
 // TODO: maybe replace LikelihoodsToPdna in reconstruct/reconstruct.go in branch reconstructSeq_nodeMods
