@@ -64,6 +64,9 @@ func gtfFilter(s FilterSettings) {
 	var err error
 	var geneNameMap = make(map[string]bool)
 	var currTranscripts []*gtf.Transcript
+	var transcriptCoding = false
+	var currTranscript *gtf.Transcript
+	var currExon *gtf.Exon
 	out := fileio.EasyCreate(s.OutFile)
 
 	if s.GeneNameList != "" {
@@ -78,11 +81,11 @@ func gtfFilter(s FilterSettings) {
 		pass = true
 
 		if s.CodingTranscript { // option to detect coding transcript
-			transcriptCoding := false                                      // in each gene, for each transcript, transcript is non-coding unless an exon with CDS is found later
-			for _, currTranscript := range records[currGene].Transcripts { // for each transcript
+			transcriptCoding = false                                      // in each gene, for each transcript, transcript is non-coding unless an exon with CDS is found later
+			for _, currTranscript = range records[currGene].Transcripts { // for each transcript
 				if len(currTranscript.Exons) != 0 { // if transcript has no exon, then transcript is non-coding. if transcript has exon(s),
 					// if we find at least 1 exon that has 1 CDS, then transcript is coding
-					for _, currExon := range currTranscript.Exons { // for each exon
+					for _, currExon = range currTranscript.Exons { // for each exon
 						if currExon.Cds != nil { // if exon has CDS, then found "at least 1 exon that has 1 CDS", transcript is coding
 							transcriptCoding = true
 							break
