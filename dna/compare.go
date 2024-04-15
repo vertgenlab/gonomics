@@ -167,14 +167,7 @@ func min(a int, b int) int {
 // CompareSimilarSeqs returns true if the two input sequences have less than or equal mismatches to the user-specified threshold
 // if two sequences of different length, the function will return false. Comparison is case-insensitive.
 func CompareSimilarSeqs(a, b []Base, numAllowedMismatch int) bool {
-	var c int
-	if numAllowedMismatch == 0 {
-		if CompareSeqsIgnoreCase(a, b) != 0 {
-			return false
-		} else {
-			return true
-		}
-	}
+	var c int = 0
 	if len(a) != len(b) {
 		return false
 	}
