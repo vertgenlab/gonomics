@@ -101,7 +101,7 @@ func updateAlnIdxBeforeWindow(firstQuery []pDna.Float32Base, alnIdxOrig int) (al
 // speedyWindowDifference is a helper function of faFindFast that calculates the divergence between two input sequences (firstQuery, secondQuery sequences) using a sliding window, and then reports the divergence in terms of reference positions (positions in the reference sequence).
 // optional arguments longOutput and divergenceRate allow the user to report a -log10pValue corresponding to the p value of observing a level of divergence for a given
 // window under a null binomial model of neutral evolution.
-func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, s Settings2) {
+func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, s Settings) {
 	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                                                 // these are the two edges of the sliding window in "alignment positions"
 	var alnIdxBeforeWindowForRef int = -1                                                                                                   // this is to generate the alnIdx intermediate for translating firstQueryIdxBeforeWindow+1 to refIdxWindowStart
 	var firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow int = -1, -1                                                                   // these are the two edges of the sliding window in "firstQuery (no gaps) positions"
