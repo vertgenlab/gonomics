@@ -121,7 +121,8 @@ func analyzeBamMap(mp map[string][]string) {
 func getBx(s sam.Sam) string {
 	fields := strings.Split(s.QName, ":")
 	bxUmi := fields[7]
-	return bxUmi[0:12]
+	fmt.Println(bxUmi[0:16])
+	return bxUmi[0:16]
 }
 
 func updateMap(mp map[string][]string, bx string, gRNA string) {
