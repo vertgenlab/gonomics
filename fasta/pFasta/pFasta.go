@@ -3,6 +3,7 @@ package pFasta
 import (
 	"bufio"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"github.com/vertgenlab/gonomics/dna/pDna"
@@ -128,8 +129,9 @@ func Read(inFile string) []PFasta {
 		}
 	}
 	// check to make sure we are at the end of the file
+	currBase = currBase[0:1]
 	_, err = io.ReadFull(file.BuffReader, currBase)
-	if err != io.EOF {
+	if !errors.Is(err, io.EOF) {
 		log.Fatalf("Error: %s has more sequence than expected from the header\n", inFile)
 	}
 
