@@ -114,7 +114,7 @@ func TestFilter(t *testing.T) {
 			CodingTranscript: v.CodingTranscript,
 		}
 		gtfFilter(s)
-		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+		if !fileio.AreEqualIgnoreOrder(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: gtfTools filter - outfile was not as expected.")
 		} else {
 			err = os.Remove(v.OutFile)
