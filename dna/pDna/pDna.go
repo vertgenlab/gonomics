@@ -124,7 +124,7 @@ func Dot(p Float32Base, q Float32Base) float64 {
 // DotSubstProb
 // Make sure input is probabilities not likelihoods
 func DotSubstProb(p Float32Base, q Float32Base) float64 {
-	if Dot(p, q) < 0 || Dot(p, q) > 1 { // TODO: check Dot validity. remove after debugging
+	if Dot(p, q) < 0 { // TODO: check Dot validity. remove after debugging
 		log.Fatalf("Invalid Dot. p: %v, q: %v, Dot=%v\n", p, q, Dot(p, q))
 	}
 	return 1 - Dot(p, q)
