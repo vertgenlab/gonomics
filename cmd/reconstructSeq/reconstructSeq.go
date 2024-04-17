@@ -58,11 +58,15 @@ func ReconstructSeq(s Settings) {
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
 	
+	//initialise pfasta for pdna node
 	pDnaRecords := []pFasta.PFasta{{Name: s.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+
+	fmt.Println(len(pDnaRecords[0].Seq))
 
 	for i := range leaves[0].Fasta.Seq {
 		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.BiasN, s.HighestProbThreshold, s.SubMatrix, s.PDnaNode, pDnaRecords)
 	}
+
 	for j := range leaves {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
 	}
@@ -91,8 +95,13 @@ func ReconstructSeq(s Settings) {
 
 	if s.PDnaNode != "" {
 		pFasta.Write(s.PDnaOutFile, pDnaRecords)
-		
+		// pFasta.Write32Bit(s.PDnaOutFile, pDnaRecords)
+		newRecords := pFasta.Read(s.PDnaOutFile)
+		fmt.Println(newRecords[0].Seq[500:520])
+		fmt.Println()
 	}
+
+	fmt.Println(pDnaRecords[0].Seq[500:520])
 }
 
 // func writePfastaHeader(out *fileio.EasyWriter, name string, seqLength int) {

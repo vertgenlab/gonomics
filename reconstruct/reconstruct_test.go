@@ -42,7 +42,7 @@ var ReconstructTests = []struct {
 		NonBiasProbThreshold: 0,
 		HighestProbThreshold: 0,
 		SubMatrix:            false,
-		PDnaNode:			  "C",
+		PDnaNode:			  "C", 
 		PDnaOutFile:		  "testdata/C.pfa",
 	},
 }
