@@ -3,12 +3,14 @@ package pFasta
 import (
 	"bufio"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/x448/float16"
+	"io"
 	"log"
 	"strings"
 )
@@ -112,26 +114,31 @@ func ReadPfaHeader(reader *bufio.Reader) []string {
 func Read(inFile string) []PFasta {
 	var err error
 	file := fileio.EasyOpen(inFile)
-	reader := bufio.NewReader(file)
-	records := makeEmptyRecords(reader)
+	records := makeEmptyRecords(file.BuffReader)
 	var currBase = make([]byte, 2) //8 bytes, or 64 bit slice. Enough for one pDna base probability.
 	var currSeq, currPos int
 
 	for currSeq = range records {
 		for currPos = range records[currSeq].Seq {
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(file.BuffReader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].A = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(file.BuffReader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].C = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(file.BuffReader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].G = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(file.BuffReader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].T = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
 		}
+	}
+	// check to make sure we are at the end of the file
+	currBase = currBase[0:1]
+	_, err = io.ReadFull(file.BuffReader, currBase)
+	if !errors.Is(err, io.EOF) {
+		log.Fatalf("Error: %s has more sequence than expected from the header\n", inFile)
 	}
 
 	err = file.Close()

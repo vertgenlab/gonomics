@@ -1,8 +1,8 @@
 package pFasta
 
 import (
-	"log"
 	"fmt"
+	"log"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"

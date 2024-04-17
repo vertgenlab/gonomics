@@ -2,14 +2,33 @@ package pFasta
 
 import (
 	"github.com/vertgenlab/gonomics/dna/pDna"
+	"math/rand"
 	"testing"
 )
 
+func randSeq(length int) PFasta {
+	var one, two, three, four, total float32
+	var answer PFasta = PFasta{}
+	answer.Name = "randSeq"
+	answer.Seq = make([]pDna.Float32Base, length)
+	for i := 0; i < length; i++ {
+		one = rand.Float32()
+		two = rand.Float32()
+		three = rand.Float32()
+		four = rand.Float32()
+		total = one + two + three + four
+		answer.Seq[i].A = one / total
+		answer.Seq[i].C = two / total
+		answer.Seq[i].G = three / total
+		answer.Seq[i].T = four / total
+	}
+	return answer
+}
+
 var WriteTests = []struct {
-	OutFile      string
-	Records      []PFasta
-	Precision    float32
-	ExpectedFile string
+	OutFile   string
+	Records   []PFasta
+	Precision float32
 }{
 	{OutFile: "testdata/out.test.pFa",
 		Records: []PFasta{
@@ -52,8 +71,12 @@ var WriteTests = []struct {
 				},
 			},
 		},
-		Precision:    1e-3, // float16 for writing is quite inaccurate, this fails at 1e-4
-		ExpectedFile: "testdata/expected.test.pFa",
+		Precision: 1e-3, // float16 for writing is quite inaccurate, this fails at 1e-4
+	},
+	{
+		OutFile:   "testdata/out.test.pFa",
+		Records:   []PFasta{randSeq(100000)},
+		Precision: 1e-2,
 	},
 }
 
