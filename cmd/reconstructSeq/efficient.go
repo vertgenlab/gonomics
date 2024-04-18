@@ -184,12 +184,12 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 				// window edges in AlnPos [closed, open) for bed: alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow+1
 				// window edges in RefPos [closed, open) for bed: refIdxWindowStart, lastRefIdxOfWindowPlusOne
 				// window edges in AlnPos [closed, closed] for distance scores: alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow
-				windowDist, windowDistMean = distWindow(firstQuery, secondQuery, s.WindowSize, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
-				baseDistToDivThreshold := 0.8
-				baseDotToSubstThreshold := 0.8
+				windowDist, windowDistMean = distWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
+				baseDistToDivThreshold := 0.079e-02
+				baseDotToSubstThreshold := 0.079e-02
 				windowDistDiv = windowDistToDiv(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, baseDistToDivThreshold)
 				windowDotSubst = windowDotToSubst(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, baseDotToSubstThreshold)
-				windowDot, windowDotMean = dotWindow(firstQuery, secondQuery, s.WindowSize, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
+				windowDot, windowDotMean = dotWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
 				// TODO: make baseDistToDivThreshold and baseDotToSubstThreshold user-input variables, from pfaFindFst, feed into speedyWindowDifference function in efficient.go
 
 				// print output
@@ -238,7 +238,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 	exception.PanicOnErr(err)
 }
 
-func distWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, windowSize int, windowStart int, windowEnd int) (windowDist []float64, windowDistMean float64) {
+func distWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, windowStart int, windowEnd int) (windowDist []float64, windowDistMean float64) {
 	var baseDist float64
 	var windowDistTotal = 0.0
 
@@ -251,7 +251,7 @@ func distWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, w
 		windowDistTotal += baseDist
 	}
 
-	windowDistMean = windowDistTotal / float64(windowSize)
+	windowDistMean = windowDistTotal / float64(windowEnd-windowStart+1) // divide by actual windowSize in reference, not input windowSize in query sequences
 
 	return windowDist, windowDistMean
 }
@@ -274,7 +274,7 @@ func windowDistToDiv(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Ba
 	return windowDistDiv
 }
 
-func dotWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, windowSize int, windowStart int, windowEnd int) (windowDot []float64, windowDotMean float64) {
+func dotWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, windowStart int, windowEnd int) (windowDot []float64, windowDotMean float64) {
 	var baseDot float64
 	var windowDotTotal = 0.0
 
@@ -287,7 +287,7 @@ func dotWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, wi
 		windowDotTotal += baseDot
 	}
 
-	windowDotMean = windowDotTotal / float64(windowSize)
+	windowDotMean = windowDotTotal / float64(windowEnd-windowStart+1) // divide by actual windowSize in reference, not input windowSize in query sequences
 
 	return windowDot, windowDotMean
 }
