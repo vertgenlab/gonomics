@@ -1,9 +1,8 @@
 package pFasta
 
 import (
-	"log"
-
 	"golang.org/x/exp/rand"
+	"log"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
@@ -94,4 +93,17 @@ func PAlnPosToRefPosCounterSeq(record []pDna.Float32Base, AlnPos int, refStart i
 		}
 	}
 	return refStart
+}
+
+func FaToPfa(fa fasta.Fasta) PFasta {
+	var pfa PFasta
+	var pbase pDna.Float32Base
+
+	pfa.Name = fa.Name
+	for i := range fa.Seq {
+		pbase = pDna.DnaToPdna(fa.Seq[i])
+		pfa.Seq = append(pfa.Seq, pbase)
+	}
+
+	return pfa
 }

@@ -1,6 +1,7 @@
 package pDna
 
 import (
+	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"math"
 )
@@ -153,4 +154,43 @@ func MakeValid(p Float32Base) Float32Base {
 			T: p.T / total,
 		}
 	}
+}
+
+func DnaToPdna(base dna.Base) Float32Base {
+	var pbase Float32Base
+	switch base {
+	case 0: // A
+		pbase.A = 1
+		pbase.C = 0
+		pbase.G = 0
+		pbase.T = 0
+	case 1: // C
+		pbase.A = 0
+		pbase.C = 1
+		pbase.G = 0
+		pbase.T = 0
+	case 2: // G
+		pbase.A = 0
+		pbase.C = 0
+		pbase.G = 1
+		pbase.T = 0
+	case 3: // T
+		pbase.A = 0
+		pbase.C = 0
+		pbase.G = 0
+		pbase.T = 1
+	case 4: // N
+		pbase.A = 0.25
+		pbase.C = 0.25
+		pbase.G = 0.25
+		pbase.T = 0.25
+	case 10: // Gap
+		pbase.A = 0
+		pbase.C = 0
+		pbase.G = 0
+		pbase.T = 0
+	default:
+		log.Fatalf("pDna.DnaToPdna encountered an inconvertible base.\n")
+	}
+	return pbase
 }

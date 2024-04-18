@@ -161,6 +161,11 @@ func ReconstructSeq(s Settings, s2 Settings2) {
 		}
 	}
 
+	// keepAllSeq for pFasta too
+	//fmt.Printf("I think this is reference sequence: leaves[0].Fasta.Name: %v\n", leaves[0].Fasta.Name) // confirmed humanT2T is reference sequence
+	refPfa := pFasta.FaToPfa(*leaves[0].Fasta) // convert records[0] aka leaves[0].Fasta from Fasta to Pfasta? Is this necessary?
+	answerPfa = append([]pFasta.PFasta{refPfa}, answerPfa...)
+
 	fasta.Write(s.OutFile, treeFastas)
 
 	if s.OutPfaFile != "" {
