@@ -107,9 +107,9 @@ func Mag(d Float64Diff) float64 {
 // The distance score is the magnitude of the vector that is the difference between the 2 pDNA bases' probability vectors
 // The distance score is a float64
 func Dist(p Float32Base, q Float32Base) float64 {
-	if Mag(Diff(p, q)) < 0 { // TODO: check Dist validity. remove after debugging
-		log.Fatalf("Invalid Dist. p: %v, q: %v, Diff: %v, Dist=Mag(Diff)=%v\n", p, q, Diff(p, q), Mag(Diff(p, q)))
-	}
+	//if Mag(Diff(p, q)) < 0 { // TODO: check Dist validity. remove after debugging
+	//	log.Fatalf("Invalid Dist. p: %v, q: %v, Diff: %v, Dist=Mag(Diff)=%v\n", p, q, Diff(p, q), Mag(Diff(p, q)))
+	//}
 	return Mag(Diff(p, q))
 }
 
@@ -125,9 +125,9 @@ func Dot(p Float32Base, q Float32Base) float64 {
 // DotSubstProb
 // Make sure input is probabilities not likelihoods
 func DotSubstProb(p Float32Base, q Float32Base) float64 {
-	if Dot(p, q) < 0 || Dot(p, q) > 1 { // TODO: check Dot validity. remove after debugging
-		log.Fatalf("Invalid Dot. p: %v, q: %v, Dot=%v\n", p, q, Dot(p, q))
-	}
+	//if Dot(p, q) < 0 || Dot(p, q) > 1 { // TODO: check Dot validity. remove after debugging
+	//	log.Fatalf("Invalid Dot. p: %v, q: %v, Dot=%v\n", p, q, Dot(p, q))
+	//}
 	return 1 - Dot(p, q)
 }
 
