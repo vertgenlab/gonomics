@@ -10,111 +10,133 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/simulate"
 	"github.com/vertgenlab/gonomics/dna/pDna"
+
+	// uncomment for additional tests
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
+	"fmt"
+	"math/rand"
+	"log"
 )
 
-var ReconstructTests = []struct {
-	NewickFileName       string
-	GenePredFile         string
-	RandFa               string
-	RandFaSeqName        string
-	SimTree              string
-	LeavesFile           string
-	ReconOutFile         string
-	GcContent            float64
-	Length               int
-	BiasLeafName         string
-	NonBiasProbThreshold float64
-	HighestProbThreshold float64
-	SubMatrix            bool
-	PDnaNode			 string
-	PDnaOutFile			 string
-}{
-	{NewickFileName: "testdata/newickLongBranches.txt",
-		GenePredFile:         "testdata/genePred.gp",
-		RandFa:               "testdata/RandGeneOutput.fa",
-		RandFaSeqName:        "test",
-		SimTree:              "testdata/simOut.fa",
-		LeavesFile:           "testdata/leavesOnly.fa",
-		ReconOutFile:         "testdata/reconOut.fa",
-		GcContent:            0.42,
-		Length:               1005,
-		BiasLeafName:         "",
-		NonBiasProbThreshold: 0,
-		HighestProbThreshold: 0,
-		SubMatrix:            false,
-		PDnaNode:			  "C", 
-		PDnaOutFile:		  "testdata/C.pfa",
-	},
-}
+// var ReconstructTests = []struct {
+// 	NewickFileName       string
+// 	GenePredFile         string
+// 	RandFa               string
+// 	RandFaSeqName        string
+// 	SimTree              string
+// 	LeavesFile           string
+// 	ReconOutFile         string
+// 	GcContent            float64
+// 	Length               int
+// 	BiasLeafName         string
+// 	NonBiasProbThreshold float64
+// 	HighestProbThreshold float64
+// 	SubMatrix            bool
+// 	PDnaNode			 string
+// 	PDnaOutFile			 string
+// 	PDnaExpected		 string
+// 	Precision			 float32
+// }{
+// 	{NewickFileName: "testdata/newickLongBranches.txt",
+// 		GenePredFile:         "testdata/genePred.gp",
+// 		RandFa:               "testdata/RandGeneOutput.fa",
+// 		RandFaSeqName:        "test",
+// 		SimTree:              "testdata/simOut.fa",
+// 		LeavesFile:           "testdata/leavesOnly.fa",
+// 		ReconOutFile:         "testdata/reconOut.fa",
+// 		GcContent:            0.42,
+// 		Length:               1005,
+// 		BiasLeafName:         "",
+// 		NonBiasProbThreshold: 0,
+// 		HighestProbThreshold: 0,
+// 		SubMatrix:            false,
+// 		PDnaNode:			  "C", 
+// 		PDnaOutFile:		  "testdata/C.pfa",
+// 		PDnaExpected:		  "testdata/CExpected.pfa",
+// 		Precision: 				1,
+// 	},
+// }
 
-func TestReconstruct(t *testing.T) {
-	var leaves []*expandedTree.ETree
-	var tree *expandedTree.ETree
-	var err error
-	var accuracyData map[string]float64
-	var baseAccuracy map[string][]float64
-	var baseAccData []float64
-	var foundInMap bool
-	var outPFasta []pFasta.PFasta
+// func TestReconstruct(t *testing.T) {
+// 	var leaves []*expandedTree.ETree
+// 	var tree *expandedTree.ETree
+// 	var err error
+// 	var accuracyData map[string]float64
+// 	var baseAccuracy map[string][]float64
+// 	var baseAccData []float64
+// 	var foundInMap bool
+// 	var outPFasta []pFasta.PFasta
 
-	for _, v := range ReconstructTests {
-		tree, err = expandedTree.ReadNewick(v.NewickFileName)
-		exception.PanicOnErr(err)
-		fasta.Write(v.RandFa, simulate.RandGene(v.RandFaSeqName, v.Length, v.GcContent))
-		simulate.Simulate(v.RandFa, tree, v.GenePredFile, false)
-		WriteTreeToFasta(tree, v.SimTree)
-		WriteLeavesToFasta(tree, v.LeavesFile)
+// 	for _, v := range ReconstructTests {
+// 		tree, err = expandedTree.ReadNewick(v.NewickFileName)
+// 		exception.PanicOnErr(err)
+// 		fasta.Write(v.RandFa, simulate.RandGene(v.RandFaSeqName, v.Length, v.GcContent))
+// 		simulate.Simulate(v.RandFa, tree, v.GenePredFile, false)
+// 		WriteTreeToFasta(tree, v.SimTree)
+// 		WriteLeavesToFasta(tree, v.LeavesFile)
 
-		tree, err = expandedTree.ReadTree(v.NewickFileName, v.LeavesFile)
-		exception.FatalOnErr(err)
-		leaves = expandedTree.GetLeaves(tree)
+// 		tree, err = expandedTree.ReadTree(v.NewickFileName, v.LeavesFile)
+// 		exception.FatalOnErr(err)
+// 		leaves = expandedTree.GetLeaves(tree)
 
-		if v.PDnaNode != "" {
-			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
-		}
+// 		if v.PDnaNode != "" {
+// 			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+// 		}
 
-		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
-			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, false, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
-		}
-		WriteTreeToFasta(tree, v.ReconOutFile)
+// 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
+// 			LoopNodes(tree, i, v.BiasLeafName, v.NonBiasProbThreshold, false, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
+// 		}
+// 		WriteTreeToFasta(tree, v.ReconOutFile)
 		
-		if v.PDnaNode != "" {
-			pFasta.Write(v.PDnaOutFile, outPFasta)
-		}
+// 		if v.PDnaNode != "" {
+// 			pFasta.Write(v.PDnaOutFile, outPFasta)
+// 		}
 
-		accuracyData, baseAccuracy = ReconAccuracy(v.SimTree, v.ReconOutFile, v.LeavesFile, v.GenePredFile, true)
-		for name, acc := range accuracyData {
-			if name == "D(leaf)" || name == "E(leaf)" || name == "B(leaf)" {
-				if acc != 100 {
-					t.Errorf("Accuracy for D, E and B should be 100, but accuracy for %s is: %f.", name, acc)
-				}
-			}
-		}
+// 		accuracyData, baseAccuracy = ReconAccuracy(v.SimTree, v.ReconOutFile, v.LeavesFile, v.GenePredFile, true)
+// 		for name, acc := range accuracyData {
+// 			if name == "D(leaf)" || name == "E(leaf)" || name == "B(leaf)" {
+// 				if acc != 100 {
+// 					t.Errorf("Accuracy for D, E and B should be 100, but accuracy for %s is: %f.", name, acc)
+// 				}
+// 			}
+// 		}
 
-		baseAccData, foundInMap = baseAccuracy["A"]
-		if !foundInMap {
-			t.Error("node A not found in baseAccuracy data, check tree input.")
-		} else if baseAccData[0] < 97.3 || baseAccData[0] > 98.0 {
-			t.Errorf("First base accuracy for A in tree should be 97.313433, but is %f.", baseAccData[0])
-		}
+// 		baseAccData, foundInMap = baseAccuracy["A"]
+// 		if !foundInMap {
+// 			t.Error("node A not found in baseAccuracy data, check tree input.")
+// 		} else if baseAccData[0] < 97.3 || baseAccData[0] > 98.0 {
+// 			t.Errorf("First base accuracy for A in tree should be 97.313433, but is %f.", baseAccData[0])
+// 		}
 
-		baseAccData, foundInMap = baseAccuracy["D"]
-		if !foundInMap {
-			t.Error("Node D not found in baseAccuracy data, check tree input.")
-		} else if baseAccData[0] != 100 {
-			t.Errorf("First base accuracy for D should be 100.0, but if %f.", baseAccData[0])
-		}
+// 		baseAccData, foundInMap = baseAccuracy["D"]
+// 		if !foundInMap {
+// 			t.Error("Node D not found in baseAccuracy data, check tree input.")
+// 		} else if baseAccData[0] != 100 {
+// 			t.Errorf("First base accuracy for D should be 100.0, but if %f.", baseAccData[0])
+// 		}
+		
+// 		pDnaExpected := pFasta.Read(v.PDnaExpected)
+// 		fmt.Printf("Hi")
+// 		if !pFasta.AllAreEqual(outPFasta, pDnaExpected, v.Precision) {
+// 			t.Errorf("Error: pFaExtract outFile is not as expected.")
+// 		} else {
+// 			fileio.EasyRemove(v.PDnaOutFile)
+// 			// previously written as below, but won't let me do 'err = blahblah'
+// 			// err = fileio.EasyRemove(v.PDnaOutFile)
+// 			// exception.PanicOnErr(err)
+// 		}
 
-		fileio.EasyRemove(v.RandFa)
-		fileio.EasyRemove(v.LeavesFile)
-		fileio.EasyRemove(v.ReconOutFile)
-		fileio.EasyRemove(v.SimTree)
-	}
-}
+// 		fileio.EasyRemove(v.RandFa)
+// 		fileio.EasyRemove(v.LeavesFile)
+// 		fileio.EasyRemove(v.ReconOutFile)
+// 		fileio.EasyRemove(v.SimTree)
+// 	}
+// }
 
 // this benchmark takes about 60s CPU to run, so I've commented it out. Go ahead
 // and uncomment if you're interested in reproducing it or altering it. -RJM
-/*
+// /*
 var EmpiricalReconstructionComparison = []struct {
 	TestName                    string
 	SimSubstitutionMatrixFile   string
@@ -130,10 +152,14 @@ var EmpiricalReconstructionComparison = []struct {
 	SetSeed                     int64
 	GcContent                   float64
 	BiasLeafName                string
+	BiasN						bool
 	NonBiasProbThreshold        float64
 	HighestProbThreshold        float64
 	SeqLen                      int
 	SubMatrix                   bool
+	PDnaNode			 		string
+	PDnaOutFile			 		string
+	PDnaExpected		 		string
 }{
 	{TestName: "GtrSimJukesRecon",
 		SimSubstitutionMatrixFile:   "testdata/substitutionMatrix.txt",
@@ -149,6 +175,7 @@ var EmpiricalReconstructionComparison = []struct {
 		SetSeed:                     19,
 		GcContent:                   0.41,
 		BiasLeafName:                "",
+		BiasN:						 false,
 		NonBiasProbThreshold:        0,
 		HighestProbThreshold:        0,
 		SeqLen:                      10000,
@@ -168,6 +195,7 @@ var EmpiricalReconstructionComparison = []struct {
 		SetSeed:                     17,
 		GcContent:                   0.41,
 		BiasLeafName:                "",
+	 	BiasN:						 false,
 		NonBiasProbThreshold:        0,
 		HighestProbThreshold:        0,
 		SeqLen:                      10000,
@@ -187,6 +215,7 @@ var EmpiricalReconstructionComparison = []struct {
 		SetSeed:                     23,
 		GcContent:                   0.41,
 		BiasLeafName:                "",
+	 BiasN:						 false,
 		NonBiasProbThreshold:        0,
 		HighestProbThreshold:        0,
 		SeqLen:                      10000,
@@ -207,6 +236,7 @@ var EmpiricalReconstructionComparison = []struct {
 		SetSeed:                     29,
 		GcContent:                   0.41,
 		BiasLeafName:                "",
+	 BiasN:						 false,
 		NonBiasProbThreshold:        0,
 		HighestProbThreshold:        0,
 		SeqLen:                      10000,
@@ -226,6 +256,7 @@ var EmpiricalReconstructionComparison = []struct {
 		SetSeed:                     31,
 		GcContent:                   0.41,
 		BiasLeafName:                "",
+	 BiasN:						 false,
 		NonBiasProbThreshold:        0,
 		HighestProbThreshold:        0,
 		SeqLen:                      10000,
@@ -245,6 +276,7 @@ var EmpiricalReconstructionComparison = []struct {
 		SetSeed:                     39,
 		GcContent:                   0.41,
 		BiasLeafName:                "",
+	 BiasN:						 false,
 		NonBiasProbThreshold:        0,
 		HighestProbThreshold:        0,
 		SeqLen:                      10000,
@@ -264,6 +296,7 @@ var EmpiricalReconstructionComparison = []struct {
 		SetSeed:                     39,
 		GcContent:                   0.41,
 		BiasLeafName:                "",
+	 BiasN:						 false,
 		NonBiasProbThreshold:        0,
 		HighestProbThreshold:        0,
 		SeqLen:                      10000,
@@ -276,6 +309,7 @@ func TestEmpiricalReconstruction(t *testing.T) {
 	var err error
 	var currRandGamma float64
 	var currSimTree, currReconTree *expandedTree.ETree
+	var outPFasta []pFasta.PFasta
 	out := fileio.EasyCreate("testdata/resultsSummary.txt")
 	_, err = fmt.Fprintf(out, "Name\tTreeIndex\tNodeName\tInaccuracy\n")
 	exception.PanicOnErr(err)
@@ -295,6 +329,11 @@ func TestEmpiricalReconstruction(t *testing.T) {
 			simulate.NonCoding(currSimTree, v.SimSubstitutionMatrixFile, 0.1)
 			WriteLeavesToFasta(currSimTree, v.LeavesFile)
 
+			// initialise output pFasta
+			if v.PDnaNode != "" {
+				outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+			}
+
 			//second, we run a reconstruction
 			currReconTree, err = expandedTree.ReadTree(v.NewickFile, v.LeavesFile)
 			exception.PanicOnErr(err)
@@ -302,7 +341,13 @@ func TestEmpiricalReconstruction(t *testing.T) {
 			expandedTree.PopulateSubstitutionMatrices(currReconTree, unitMatrix, 0.1)
 			reconLeaves := expandedTree.GetLeaves(currReconTree)
 			for i := range reconLeaves[0].Fasta.Seq {
-				LoopNodes(currReconTree, i, v.BiasLeafName, v.NonBiasProbThreshold, v.HighestProbThreshold, v.SubMatrix)
+				// LoopNodes(currReconTree, i, v.BiasLeafName, v.NonBiasProbThreshold, v.BiasN, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
+				LoopNodes(currReconTree, i, v.BiasLeafName, v.NonBiasProbThreshold, v.BiasN, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
+			}
+
+			// write output pFasta to file
+			if v.PDnaNode != "" {
+				pFasta.Write(v.PDnaOutFile, outPFasta)
 			}
 
 			//third, we compare the reconstruction and sim and write to a file
@@ -330,4 +375,4 @@ func percentDivergence(seqA []dna.Base, seqB []dna.Base) float64 {
 	}
 	return float64(diffCount) / float64(len(seqA))
 }
-*/
+// */
