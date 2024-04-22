@@ -301,7 +301,8 @@ func windowDotToSubst(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32B
 		} else {
 			baseDot = pDna.DotSubstProb(firstQuery[i], secondQuery[i])
 			if baseDot > baseDotToSubstThreshold {
-				windowDotSubst++ // baseDistDiv is true, add 1 to the windowDistDiv count
+				fmt.Printf("windowDotToSubst. firstQuery[i]: %v, secondQuery[i]: %v, baseDot: %v, i: %v\n", firstQuery[i], secondQuery[i], baseDot, i) // TODO: remove after debugging
+				windowDotSubst++                                                                                                                       // baseDistDiv is true, add 1 to the windowDistDiv count
 			}
 		}
 	}
