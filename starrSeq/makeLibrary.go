@@ -36,7 +36,6 @@ func MakeLibrary(upHA string, testSeqs string, downHA string, captSeq string, um
 		construct.Seq = append(construct.Seq, down[0].Seq...)
 		constructs = append(constructs, construct)
 	}
-	fasta.Write(outFile, constructs)
 
 	for i := range constructs {
 		mid = len(constructs[i].Seq) / 2
@@ -47,5 +46,5 @@ func MakeLibrary(upHA string, testSeqs string, downHA string, captSeq string, um
 		oligo.Seq = dna.ReverseComplementAndCopy(constructs[i].Seq[mid-10:])
 		oligos = append(oligos, oligo)
 	}
-	fasta.Write("testOutOligos.fa", oligos)
+	fasta.Write(outFile, oligos)
 }
