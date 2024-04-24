@@ -185,8 +185,8 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 				// window edges in RefPos [closed, open) for bed: refIdxWindowStart, lastRefIdxOfWindowPlusOne
 				// window edges in AlnPos [closed, closed] for distance scores: alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow
 				windowDist, windowDistMean = distWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
-				baseDistToDivThreshold := 0.4
-				baseDotToSubstThreshold := 0.4
+				baseDistToDivThreshold := 0.7
+				baseDotToSubstThreshold := 0.8
 				windowDistDiv = windowDistToDiv(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, baseDistToDivThreshold)
 				windowDotSubst = windowDotToSubst(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, baseDotToSubstThreshold)
 				windowDot, windowDotMean = dotWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
