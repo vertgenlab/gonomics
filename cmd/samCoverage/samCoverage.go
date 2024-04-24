@@ -8,61 +8,58 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/cigar"
-	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/fit"
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-// new outline for Nikitha
-func samCoverage(samFileName string, chromSizesFile string, outFile string) {
-	// first read sam to chan (sam.GoReadToChan)
-	// read chromsizes (the chromInfo package is what handles this)
-	// call sam.Pileup (it's called like go pileup or something like this)
-	// [a: 12, C; 15, G: 20 , T: 12]
-	// iterate through each pile (samAssembler does this so you can look there to see how this is accomplished)
-	// get total depth (sum of counts for all bases)
-	// add this to histogram.
-	// Histogram can be represented with this data structure: []int. You can always increase the length of the slice dynamically
-	// to avoid index out of range errors.
-	// Once the whole histogram is made, we'll want to write it out to a file in a way we can load into R to make figures
-	// For fitting a distribution, we can use the numbers/fit package in Gonomics.
-	// We'll fit using the file numbers/fit/ztnb.go
-	// Finally, add the R and P estimates from the NB distribution to something that can be written to an output file.
-}
+func samCoverage(samFileName string, outFile string, countNinDepth bool) {
+	out := fileio.EasyCreate(outFile)
+	fmt.Fprintf(out, "Coverage\tPileups\tGroup\n")
+	data, header := sam.GoReadToChan(samFileName)
+	piles := sam.GoPileup(data, header, false, nil, nil)
+	histogram := make([]float64, 30)
+	observations := make([]float64, 1000)
+	totalCount := 0
 
-func totalAlignedBases(filename string) int {
-	samFile := fileio.EasyOpen(filename)
-	var done bool = false
-	var aln sam.Sam
-	var alignedBases int
-
-	sam.ReadHeader(samFile)
-
-	for aln, done = sam.ReadNext(samFile); !done; aln, done = sam.ReadNext(samFile) {
-		if aln.Cigar[0].Op != '*' {
-			alignedBases += cigar.MatchLength(aln.Cigar)
+	for p := range piles {
+		//if else structure to calculate pile depth
+		depth := TotalDepth(p, countNinDepth)
+		if depth >= len(histogram) {
+			// extend histogram to the length of depth
+			histogramBuffer := make([]float64, depth+10) // this is a slice of 0s used to extend histogram when required
+			copy(histogramBuffer, histogram)
+			histogram = histogramBuffer
 		}
+		if totalCount >= len(observations) {
+			observationsBuffer := make([]float64, len(observations)+1000)
+			copy(observationsBuffer, observations)
+			observations = observationsBuffer
+		}
+		histogram[depth]++
+		observations[totalCount] = float64(depth)
+		totalCount++
 	}
 
-	err := samFile.Close()
-	exception.PanicOnErr(err)
-	return alignedBases
+	lambda := fit.Poisson(observations)
+	for i, pileups := range histogram {
+		fmt.Fprintf(out, "%v\t%v\tEmpirical\n", i, pileups)
+		y := numbers.PoissonDist(i, lambda)
+		fmt.Println(y)
+		fmt.Fprintf(out, "%v\t%v\tExpected\n", i, y*float64(totalCount))
+	}
+	fmt.Printf("lambda:%v\n", lambda)
+	out.Close()
 }
 
-func samCoverage(samFileName string, noGapFileName string, outFile string) {
-	noGap := bed.Read(noGapFileName)
-	genomeSize := bed.TotalSize(noGap)
-	alignedBases := totalAlignedBases(samFileName)
-
-	coverage := (float64(alignedBases) / float64(genomeSize))
-	out := fileio.EasyCreate(outFile)
-	defer out.Close()
-
-	fmt.Fprintf(out, "Aligned Bases: %d\n", alignedBases)
-	fmt.Fprintf(out, "Genome Length: %d\n", genomeSize)
-	fmt.Fprintf(out, "Coverage: %v\n", coverage)
+func TotalDepth(p sam.Pile, countNinDepth bool) int {
+	depth := p.CountF[dna.A] + p.CountF[dna.C] + p.CountF[dna.G] + p.CountF[dna.T] + p.CountR[dna.A] + p.CountR[dna.C] + p.CountR[dna.G] + p.CountR[dna.T]
+	if countNinDepth {
+		depth += p.CountF[dna.N] + p.CountR[dna.N]
+	}
+	return depth
 }
 
 func usage() {
@@ -75,6 +72,7 @@ func usage() {
 }
 
 func main() {
+	var countNinDepth *bool = flag.Bool("countNinDepth", true, "If true, count 'N' reads towards total depth of pileups.")
 	var expectedNumArgs int = 3
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -87,8 +85,7 @@ func main() {
 	}
 
 	samFileName := flag.Arg(0)
-	noGapFileName := flag.Arg(1)
-	outFile := flag.Arg(2)
+	outFile := flag.Arg(1)
 
-	samCoverage(samFileName, noGapFileName, outFile)
+	samCoverage(samFileName, outFile, *countNinDepth)
 }
