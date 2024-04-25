@@ -33,8 +33,8 @@ var nnTable = map[string][]float64{
 // R is the universal gas constant (Cal/degrees C*Mol)
 var R float64 = 1.987
 
-// k is related to the concentration. Assumes both the piece of DNA and what it's annealing to are both at 50 nM
-var k float64 = (25 - (25 / 2)) * 1e-9
+// k is related to the concentration. Assumes both the piece of DNA and what it's annealing to are at a combined concentration of 500 nM
+var k float64 = (250 - (250 / 2)) * 1e-9
 
 // identity is a helper function for MeltingTemp. It takes in a base and slice of int with length 2. The function iterates
 // the value in slice[0] if the base is an A/T or iterates slice[1] if the base is a C/G. Log fatal if non-ACTG bases are provided
@@ -58,8 +58,8 @@ func getEnds(seq []Base) []int {
 	return ans
 }
 
-// MeltingTemp calculates the melting temp of slice of Base in Celsius with the nearest-neighbor algorithm. Assumes 50nM of
-// both oligo and template and 50 mM Na+.
+// MeltingTemp calculates the melting temp of slice of Base in Celsius with the nearest-neighbor algorithm. Assumes 500 nM of
+// both oligo + template and 50 mM Na+.
 func MeltingTemp(seq []Base) float64 {
 	var selfComp bool
 	var deltaS, deltaH float64
@@ -98,9 +98,11 @@ func MeltingTemp(seq []Base) float64 {
 
 	//salt concentration correction
 	deltaS += 0.368 * float64(len(seq)-1) * math.Log(50*1e-3)
+	fmt.Println("corr: ", 0.368*float64(len(seq)-1)*math.Log(50*1e-3))
 
 	fmt.Println("deltaH: ", deltaH)
 	fmt.Println("deltaS: ", deltaS)
 	//full melting temp formula with all the parts. (-273.15 is the K to C conversion)
+	fmt.Println("logK: ", math.Log(k))
 	return (1000*deltaH)/(deltaS+(R*math.Log(k))) - 273.15
 }
