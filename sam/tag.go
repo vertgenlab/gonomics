@@ -276,7 +276,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(fmt.Sprintf("%s:B:f,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]float32) {
-					vals = append(vals, strconv.FormatFloat(float64(val), 'f', -1, 32))
+					vals = append(vals, strconv.FormatFloat(float64(val), 'f', -1, 32)) // FormatFloat call is to match samtools formatting
 				}
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
@@ -312,7 +312,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(fmt.Sprintf("%s:i:%d\t", r.parsedExtraTags[i], r.parsedExtra[i].(uint32)))
 
 			case 'f':
-				s.WriteString(fmt.Sprintf("%s:f:%s\t", r.parsedExtraTags[i], strconv.FormatFloat(float64(r.parsedExtra[i].(float32)), 'f', -1, 32)))
+				s.WriteString(fmt.Sprintf("%s:f:%s\t", r.parsedExtraTags[i], strconv.FormatFloat(float64(r.parsedExtra[i].(float32)), 'f', -1, 32))) // FormatFloat call is to match samtools formatting
 
 			case 'Z':
 				s.WriteString(fmt.Sprintf("%s:Z:%s\t", r.parsedExtraTags[i], r.parsedExtra[i].(string)))
