@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strconv"
 	"strings"
 )
 
@@ -224,7 +225,7 @@ func parsedExtraToString(r *Sam) string {
 		if r.parsedExtraTypes[i][0] == 'B' {
 			switch r.parsedExtraTypes[i][1] {
 			case 'c':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:c,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]int8) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -232,7 +233,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'C':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:C,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]uint8) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -240,7 +241,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 's':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:s,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]int16) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -248,7 +249,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'S':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:S,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]uint16) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -256,7 +257,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'i':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:i,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]int32) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -264,7 +265,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'I':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:I,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]uint32) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -272,18 +273,18 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'f':
-				s.WriteString(fmt.Sprintf("%s:B:f:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:f,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]float32) {
-					vals = append(vals, fmt.Sprintf("%f", val))
+					vals = append(vals, strconv.FormatFloat(float64(val), 'f', -1, 32))
 				}
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'Z':
-				s.WriteString(fmt.Sprintf("%s:B:Z:%s\t", r.parsedExtraTags[i], strings.Join(r.parsedExtra[i].([]string), ",")))
+				s.WriteString(fmt.Sprintf("%s:B:Z,%s\t", r.parsedExtraTags[i], strings.Join(r.parsedExtra[i].([]string), ",")))
 
 			case 'H':
-				s.WriteString(fmt.Sprintf("%s:B:H:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:H,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([][]byte) {
 					vals = append(vals, hex.EncodeToString(val))
@@ -311,7 +312,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(fmt.Sprintf("%s:i:%d\t", r.parsedExtraTags[i], r.parsedExtra[i].(uint32)))
 
 			case 'f':
-				s.WriteString(fmt.Sprintf("%s:f:%f\t", r.parsedExtraTags[i], r.parsedExtra[i].(float32)))
+				s.WriteString(fmt.Sprintf("%s:f:%s\t", r.parsedExtraTags[i], strconv.FormatFloat(float64(r.parsedExtra[i].(float32)), 'f', -1, 32)))
 
 			case 'Z':
 				s.WriteString(fmt.Sprintf("%s:Z:%s\t", r.parsedExtraTags[i], r.parsedExtra[i].(string)))
