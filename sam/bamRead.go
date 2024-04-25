@@ -161,7 +161,7 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	}
 	blkSize := int(le.Uint32(blkSizeBytes)) // le is an alias for binary.LittleEndian
 	refIdx := int32(le.Uint32(r.next(4)))
-	if refIdx != -1 {
+	if refIdx != -1 && len(r.refs) > 0 { // check len of refs to make sure RName is encoded as '*' in unmapped bam files
 		s.RName = r.refs[refIdx].Name
 	} else {
 		s.RName = "*"
