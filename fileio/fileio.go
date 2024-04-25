@@ -171,6 +171,7 @@ func AreEqualIgnoreComments(a string, b string) bool {
 }
 
 // AreEqual returns true if input files are equal.
+// Expects files to end with a newline character.
 func AreEqual(a string, b string) bool {
 	return equal(a, b, true)
 }

@@ -110,7 +110,7 @@ func sampleToString(s Sample) string {
 			answer += fmt.Sprintf("%s%d", PhasedToString(s.Phase[i]), s.Alleles[i])
 		}
 	}
-	if len(s.FormatData) > 0 {
+	if len(s.FormatData) > 1 {
 		answer = answer + strings.Join(s.FormatData, ":")
 	}
 

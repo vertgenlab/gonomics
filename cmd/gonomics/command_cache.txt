@@ -79,6 +79,7 @@
 ##CmdName:multiFaToVcf
 ##CmdName:oboTools
 ##CmdName:overlapEnrichments
+##CmdName:pFaTools
 ##CmdName:pileup
 ##CmdName:plotFunctions
 ##CmdName:prcompFormat
@@ -186,6 +187,7 @@
      [32mmultFaVisualizer[0m              [36mProvides human-readable multiple alignment from a given multiFa.[0m
      [32mmultiFaExtract[0m                [36mPull sub-sequence from multiple Fasta alignment for each entry. Uses reference indices, treating the first sequence as the reference.[0m
      [32mmultiFaReduce[0m                 [36mmfaReduce removes all columns in a multi fasta alignment that are not variable[0m
+     [32mpFaTools[0m                      [36m[0m
                                             
 [31mFASTQ Tools[0m                            
      [32mfastqFilter[0m                   [36mReturns a filtered fastq based on option parameters.[0m
