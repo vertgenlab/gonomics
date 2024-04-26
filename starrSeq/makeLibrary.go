@@ -46,7 +46,7 @@ func extendOverlap(bestMid int, minTemp float64, maxOligoSize int, construct fas
 	up, down = bestMid+10, bestMid-10
 	var oob bool = false
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 10; i++ {
 		up++
 		if up > maxOligoSize {
 			up--
@@ -59,13 +59,13 @@ func extendOverlap(bestMid int, minTemp float64, maxOligoSize int, construct fas
 		}
 	}
 	if oob {
-		for i := 0; i < 5; i++ {
+		for i := 0; i < 10; i++ {
 			down--
 			if down < len(construct.Seq)-maxOligoSize {
 				down++
 				break
 			}
-			if up-down >= 25 {
+			if up-down >= 30 {
 				break
 			}
 			Tm = dna.MeltingTemp(construct.Seq[down:up])
