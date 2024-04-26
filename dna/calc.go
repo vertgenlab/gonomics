@@ -1,7 +1,6 @@
 package dna
 
 import (
-	"fmt"
 	"log"
 	"math"
 )
@@ -99,8 +98,6 @@ func MeltingTemp(seq []Base) float64 {
 	//salt concentration correction
 	deltaS += 0.368 * float64(len(seq)-1) * math.Log(50*1e-3)
 
-	fmt.Println("deltaH: ", deltaH)
-	fmt.Println("deltaS: ", deltaS)
 	//full melting temp formula with all the parts. (-273.15 is the K to C conversion)
 	return (1000*deltaH)/(deltaS+(R*math.Log(k))) - 273.15
 }
