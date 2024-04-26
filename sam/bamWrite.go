@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"io"
 	"log"
+	"math"
 	"strconv"
 	"strings"
 
@@ -275,6 +276,10 @@ func writeExtra(bw *BamWriter, s Sam) {
 // retrieveTriplet splits a tag string into type, number, and value.
 func retrieveTriplet(tag string) []string {
 	comp := strings.Split(tag, ":")
+	if comp[1] == "B" {
+		comp[1] = comp[1] + comp[2][0:1] // the B case has another value as part of the array that needs to be stored in the second part of the triplet
+		comp[2] = comp[2][2:]            // remove the character that goes to the second part of the triplet and the subsequent comma
+	}
 	if len(comp) == 3 {
 		return comp
 	}
@@ -307,16 +312,19 @@ func writeTriplet(bw *BamWriter, triplet []string) {
 
 	typ := triplet[1]
 	values := strings.Split(triplet[2], ",")
+	realTyp := typ
 	if typ[0] == 'B' { // 'B' is array of values
 		bw.recordBuf.WriteByte(typ[0])
-		// if typ is B, then the true data type is encoded
-		// as the first entry in values and can be cCsSiIf
-		typ = values[0]
-		values = values[1:] // remove first value
+		// if typ is B, then the true data type is encoded as the second byte in typ
+		realTyp = typ[1:2]
+		bw.recordBuf.WriteByte(realTyp[0])
+		le.PutUint32(bw.u32[:], uint32(len(values)))
+		bw.recordBuf.Write(bw.u32[:])
+	} else {
+		bw.recordBuf.WriteByte(realTyp[0])
 	}
-	bw.recordBuf.WriteByte(typ[0])
 
-	switch typ[0] {
+	switch realTyp[0] {
 	case 'A': // single character
 		bw.recordBuf.WriteByte(values[0][0])
 
@@ -355,7 +363,7 @@ func writeTriplet(bw *BamWriter, triplet []string) {
 		for i := range values {
 			val, err = strconv.ParseFloat(values[i], 32)
 			exception.PanicOnErr(err)
-			le.PutUint32(bw.u32[:4], uint32(val))
+			le.PutUint32(bw.u32[:4], math.Float32bits(float32(val)))
 			bw.recordBuf.Write(bw.u32[:4])
 		}
 
