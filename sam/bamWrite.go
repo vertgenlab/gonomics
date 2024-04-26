@@ -312,6 +312,9 @@ func writeTriplet(bw *BamWriter, triplet []string) {
 
 	typ := triplet[1]
 	values := strings.Split(triplet[2], ",")
+	if len(values) == 1 && values[0] == "" {
+		values = nil
+	}
 	realTyp := typ
 	if typ[0] == 'B' { // 'B' is array of values
 		bw.recordBuf.WriteByte(typ[0])
