@@ -49,3 +49,43 @@ func TestEqualBase(t *testing.T) {
 		}
 	}
 }
+
+var EntropyTests = []struct {
+	Base     Float32Base
+	Expected float64
+}{
+	{Base: Float32Base{
+		A: 1,
+		C: 0,
+		G: 0,
+		T: 0,
+	},
+		Expected: 0,
+	},
+	{Base: Float32Base{
+		A: 0.25,
+		C: 0.25,
+		G: 0.25,
+		T: 0.25,
+	},
+		Expected: 2,
+	},
+	{Base: Float32Base{
+		A: 0.5,
+		C: 0.25,
+		G: 0.25,
+		T: 0,
+	},
+		Expected: 1.5,
+	},
+}
+
+func TestEntropy(t *testing.T) {
+	var observed float64
+	for _, v := range EntropyTests {
+		observed = Entropy(v.Base)
+		if observed != v.Expected {
+			t.Errorf("Error: pDna base entropy is not as expected. Observed: %v. Expected: %v.\n", observed, v.Expected)
+		}
+	}
+}
