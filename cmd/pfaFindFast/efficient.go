@@ -291,8 +291,8 @@ func windowDotToSubst(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32B
 		} else {
 			baseDot = pDna.DotSubstProb(firstQuery[i], secondQuery[i])
 			if baseDot > baseDotToSubstThreshold {
-				fmt.Printf("windowDotToSubst. firstQuery[i]: %v, secondQuery[i]: %v, baseDot: %v, i: %v\n", firstQuery[i], secondQuery[i], baseDot, i) // TODO: remove after debugging
-				windowDotSubst++                                                                                                                       // baseDistDiv is true, add 1 to the windowDistDiv count
+				//fmt.Printf("windowDotToSubst. firstQuery[i]: %v, secondQuery[i]: %v, baseDot: %v, i: %v\n", firstQuery[i], secondQuery[i], baseDot, i) // uncomment this line and run pfaFindFast on short sequence (not whole chr) to see pFasta calculations
+				windowDotSubst++ // baseDistDiv is true, add 1 to the windowDistDiv count
 			}
 		}
 	}
