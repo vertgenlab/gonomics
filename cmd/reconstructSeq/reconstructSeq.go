@@ -19,7 +19,7 @@ import (
 	"github.com/vertgenlab/gonomics/reconstruct"
 )
 
-// this part is from pfaFindFast.go
+// this type block is from pfaFindFast.go
 type Settings2 struct {
 	InPfasta        []pFasta.PFasta
 	OutFile         string
@@ -33,6 +33,7 @@ type Settings2 struct {
 	OutputAlnPos    bool
 }
 
+// this func block is from pfaFindFast.go
 func pfaFindFast(s Settings2) {
 	var reference, firstQuery, secondQuery []pDna.Float32Base
 	var found bool
@@ -73,20 +74,8 @@ func pfaFindFast(s Settings2) {
 		log.Fatalf("Error: Reference, first query, and second query sequences are not all of equal length.\n")
 	}
 
-	// Conversion to valid sequences. TODO: remove after debugging?
-	firstQuery = pFasta.MakeValid(firstQuery)
-	secondQuery = pFasta.MakeValid(secondQuery)
-
-	// QC firstQuery and secondQuery sequences. TODO: remove after debugging?
-	//pFasta.QC(firstQuery)
-	//pFasta.QC(secondQuery)
-	fmt.Printf("QC complete\n")
-	//fmt.Printf("firstQuery: %v\n", firstQuery)
-	//fmt.Printf("secondQuery: %v\n", secondQuery)
 	speedyWindowDifference(reference, firstQuery, secondQuery, s)
 }
-
-// part from pfaFindFast.go ended
 
 type Settings struct {
 	NewickInput            string
@@ -105,8 +94,6 @@ type Settings struct {
 
 func ReconstructSeq(s Settings, s2 Settings2) {
 	var treeFastas []fasta.Fasta
-	// TODO: a better way may be to separate ReconstructSeq and ReconstructSeqPfa into sub-functions?
-	// min requires go 1.21
 	var answerPfa = make([]pFasta.PFasta, max(len(s.PfaNames), 1))
 
 	if s.NonBiasProbThreshold < 0 || s.NonBiasProbThreshold > 1 {
@@ -161,48 +148,20 @@ func ReconstructSeq(s Settings, s2 Settings2) {
 		}
 	}
 
-	// keepAllSeq for pFasta too
-	//fmt.Printf("I think this is reference sequence: leaves[0].Fasta.Name: %v\n", leaves[0].Fasta.Name) // confirmed humanT2T is reference sequence
-	refPfa := pFasta.FaToPfa(*leaves[0].Fasta) // convert records[0] aka leaves[0].Fasta from Fasta to Pfasta? Is this necessary?
-	answerPfa = append([]pFasta.PFasta{refPfa}, answerPfa...)
+	if s.OutPfaFile != "" {
+		// must have reference as Pfasta first sequence
+		refPfa := pFasta.FaToPfa(*leaves[0].Fasta) // convert records[0] aka leaves[0].Fasta from Fasta to Pfasta
+		answerPfa = append([]pFasta.PFasta{refPfa}, answerPfa...)
+	}
 
 	fasta.Write(s.OutFile, treeFastas)
 
 	if s.OutPfaFile != "" {
-		// bypass writing/reading pFasta file. TODO: better to fix writing/reading and have separate reconstructSeq and pFafindfast cmd
+		pFasta.Write(s.OutPfaFile, answerPfa)
+
+		// these 2 lines bypass writing and reading pFasta file, directly pipe reconstructSeq into pfaFindFast
 		s2.InPfasta = answerPfa
 		pfaFindFast(s2)
-
-		for _, v := range answerPfa { // instead of printing whole pfa, which creates large file that can't be read properly, just QC each base
-			for i := range v.Seq {
-				// TODO: check invalid base before writing pFastsa. Remove after debugging
-				if math.IsNaN(float64(v.Seq[i].A)) || math.IsNaN(float64(v.Seq[i].C)) || math.IsNaN(float64(v.Seq[i].G)) || math.IsNaN(float64(v.Seq[i].T)) || v.Seq[i].A < 0 || v.Seq[i].C < 0 || v.Seq[i].G < 0 || v.Seq[i].T < 0 {
-					log.Fatalf("Before writing pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				}
-				// no if print all on short example
-				if i == 10 || i == 5000 || i == 5102 || i == 5120 {
-					fmt.Printf("Before writing pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				}
-			}
-			//fmt.Printf("%v: %v\n", i, v)
-		}
-
-		pFasta.Write(s.OutPfaFile, answerPfa)
-		//TODO: put the below as another function in pfa package to print human-readable (non-binary) pfa to terminal or remove/comment-out after debugging
-		outpfa := pFasta.Read(s.OutPfaFile)
-		for _, v := range outpfa { // instead of printing whole pfa, which creates large file that can't be read properly, just QC each base
-			for i := range v.Seq {
-				// TODO: check invalid base when reading pFastsa. Remove after debugging
-				if math.IsNaN(float64(v.Seq[i].A)) || math.IsNaN(float64(v.Seq[i].C)) || math.IsNaN(float64(v.Seq[i].G)) || math.IsNaN(float64(v.Seq[i].T)) || v.Seq[i].A < 0 || v.Seq[i].C < 0 || v.Seq[i].G < 0 || v.Seq[i].T < 0 {
-					log.Fatalf("Read pFasta and found invalid base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				}
-				// no if print all on short example
-				if i == 10 || i == 5000 || i == 5102 || i == 5120 {
-					fmt.Printf("Read pFasta, Check base: %v at position %v, and fasta name is: %v\n", v.Seq[i], i, v.Name)
-				}
-			}
-			//fmt.Printf("%v: %v\n", i, v)
-		}
 	}
 }
 
@@ -225,9 +184,9 @@ func main() {
 	var substitutionMatrixFile *string = flag.String("substitutionMatrixFile", "", "Set a file to define a substitution matrix.")
 	var unitBranchLength *float64 = flag.Float64("unitBranchLength", -1, "If using a substitution matrix, specify the branch length over which the substitution matrix was derived.")
 	var subMatrix *bool = flag.Bool("subMatrix", false, "Use a substitution matrix instead of the default model. If no substitution matrix file is provided, the Jukes-Cantor model will be used.")
-	var outPfaFile *string = flag.String("outPfaFile", "", "Write a pFasta file for the inferred ancestral nodes specified by name in the -pfaNames option.")
-	var pfaNames *string = flag.String("pfaNames", "", "A comma-delimited list of the names of inferred ancestral nodes to write a pFasta file for, e.g. -pfaNames=hca,hoa.")
-	// this part is from pfaFindFast.go
+	var outPfaFile *string = flag.String("outPfaFile", "", "Write one pFasta file for the inferred ancestral nodes specified by name in the -pfaNames option. Input multiFa alignment's reference sequence (aka sequence index 0, first sequence) will be converted from fasta to pFasta and become the reference sequence in the output pFasta.")
+	var pfaNames *string = flag.String("pfaNames", "", "A comma-delimited list of the names of inferred ancestral nodes to write a pFasta file for, e.g. -pfaNames=hca,hoa. Input multiFa alignment's reference sequence (aka sequence index 0, first sequence) will be converted from fasta to pFasta and become the reference sequence in the output pFasta.")
+	// this part (below lines of var declaration) is from pfaFindFast.go
 	var pfafindfastOutfile *string = flag.String("pfafindfastOutfile", "pfafindfastOutfile.bed", "Specify output of pfafindfast.")
 	var firstQueryName *string = flag.String("firstQueryName", "", "Specify the name of the first query sequence")
 	var secondQueryName *string = flag.String("secondQueryName", "", "Specify the name of the second query sequence")
@@ -237,7 +196,6 @@ func main() {
 	var longOutput *bool = flag.Bool("longOutput", false, "Print percent diverged and raw -Log10PValue in output. Requires the 'divergenceRate' argument.")
 	var divergenceRate *float64 = flag.Float64("divergenceRate", math.MaxFloat64, "Set the null divergence rate for p value calculations with 'longOutput'.")
 	var outputAlnPos *bool = flag.Bool("outputAlnPos", false, "Print the alignment position of the window's start in output as the last column.")
-	// part from pfaFindFast.go ended
 
 	var expectedNumArgs = 3
 
@@ -264,17 +222,17 @@ func main() {
 		log.Fatalf("Error: -outPfaFile was not specified, but -pfaNames was not empty\n")
 	} // else is -outPfaFile and -pfaNames were both empty, aka mode without pFa
 
-	// part from pfafindfast.go
+	// this if check is from pfaFindFast.go
 	if *longOutput && *divergenceRate == math.MaxFloat64 {
 		log.Fatalf("Error: must set a 'divergenceRate' if using the 'longOutput' option.\n")
 	}
 
+	// this if check is from pfaFindFast.go
 	if *divergenceRate != math.MaxFloat64 {
 		if *divergenceRate < 0 || *divergenceRate > 1 {
 			log.Fatalf("Error: divergence rate must be a value between 0 and 1.\n")
 		}
 	}
-	// part from pfafindfast.go ended
 
 	newickInput := flag.Arg(0)
 	fastaInput := flag.Arg(1)
@@ -295,7 +253,7 @@ func main() {
 		PfaNames:               pfaNamesSplit,
 	}
 
-	// part from pfafindfast.go
+	// this var declaration block is from pfaFindFast.go
 	s2 := Settings2{
 		InPfasta:        []pFasta.PFasta{},
 		OutFile:         *pfafindfastOutfile,
@@ -308,7 +266,6 @@ func main() {
 		DivergenceRate:  *divergenceRate,
 		OutputAlnPos:    *outputAlnPos,
 	}
-	// part from pfafindfast.go ended
 
 	ReconstructSeq(s, s2)
 }

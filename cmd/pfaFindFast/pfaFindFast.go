@@ -67,24 +67,12 @@ func pfaFindFast(s Settings) {
 		log.Fatalf("Error: Reference, first query, and second query sequences are not all of equal length.\n")
 	}
 
-	// Conversion to valid sequences. TODO: remove after debugging?
-	firstQuery = pFasta.MakeValid(firstQuery)
-	secondQuery = pFasta.MakeValid(secondQuery)
-
-	// QC firstQuery and secondQuery sequences. TODO: remove after debugging?
-	//pFasta.QC(firstQuery)
-	//pFasta.QC(secondQuery)
-	fmt.Printf("QC complete\n")
-	//fmt.Printf("firstQuery: %v\n", firstQuery)
-	//fmt.Printf("secondQuery: %v\n", secondQuery)
 	speedyWindowDifference(reference, firstQuery, secondQuery, s)
 }
 
-// TODO: cmd for faToPfa?
-// TODO: modify usage and flags as needed
 func usage() {
 	fmt.Print(
-		"pfaFindFast - For two pFasta sequences, calculate a score at each base for the distance that separates the two pDNA bases, and return the average over a given window size\n" +
+		"pfaFindFast - For two pFasta sequences, calculate scores at each base for the divergence that separates the two pDNA bases, and return a bed file with calculations.\n" +
 			"Usage:\n" +
 			" pfaFindFast input.fa output.bed\n" +
 			"options:\n")

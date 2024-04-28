@@ -137,7 +137,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 		lastFirstQueryIdxOfWindow++
 		totalGaps += gapOpenCloseFirstQuery + gapOpenedSecondQuery
 		totalNs += numFirstQueryNs + numSecondQueryNsGap + numSecondQueryNsMatch
-		// TODO: removed numSubst variable. Calculate totalSubst a different way
+		// Note: removed numSubst variable. Calculate totalSubst a different way
 
 		// usually increment the baseBeforeWindow,
 		// but not at the beginning when we have not yet incremented the end enough to have a full "windowSize" of bases in the window
@@ -179,18 +179,16 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 				prevLastRefIdxOfWindowPlusOne = lastRefIdxOfWindowPlusOne
 				prevLastAlnIdxOfWindowPlusOne = lastAlnIdxOfWindow + 1
 
-				// TODO: now that window edges are found, calculate distance score for each position and the average of the window
-				// TODO: instead, calculate divergence score, both from dist and from dot
+				// now that window edges are found, calculate divergence score (distance or dot product) for each position, the average of the window, and conversion to substitution
 				// window edges in AlnPos [closed, open) for bed: alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow+1
 				// window edges in RefPos [closed, open) for bed: refIdxWindowStart, lastRefIdxOfWindowPlusOne
 				// window edges in AlnPos [closed, closed] for distance scores: alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow
-				windowDist, windowDistMean = distWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
 				baseDistToDivThreshold := 0.7
 				baseDotToSubstThreshold := 0.8
-				windowDistDiv = windowDistToDiv(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, baseDistToDivThreshold)
 				windowDotSubst = windowDotToSubst(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, baseDotToSubstThreshold)
+				windowDistDiv = windowDistToDiv(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, baseDistToDivThreshold)
 				windowDot, windowDotMean = dotWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
-				// TODO: make baseDistToDivThreshold and baseDotToSubstThreshold user-input variables, from pfaFindFst, feed into speedyWindowDifference function in efficient.go
+				windowDist, windowDistMean = distWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
 
 				// print output
 				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
@@ -214,14 +212,11 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 						percentDiverged = 100 * (float64(windowDotSubst+totalGaps) / float64(s.WindowSize))
 						//percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
 						//if totalSubst+totalGaps > s.WindowSize {
-						// TODO: uncomment "total number of mutations exceeds windowSize" error reporting after debugging
-						/*
-								if windowDotSubst+totalGaps > s.WindowSize {
-								log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
-							}
-						*/
-						rawPValue = scorePValueCache[windowDotSubst+totalGaps]
+						if windowDotSubst+totalGaps > s.WindowSize {
+							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
+						}
 						//rawPValue = scorePValueCache[totalSubst+totalGaps]
+						rawPValue = scorePValueCache[windowDotSubst+totalGaps]
 						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\t%d\t%e\t%e\t%d\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, windowDotSubst+totalGaps, "+", percentDiverged, rawPValue, alnIdxBeforeWindow+1, windowDotSubst, windowDotMean, windowDot, windowDistDiv, windowDistMean, windowDist)
 						exception.PanicOnErr(err)
 					} else {
@@ -244,9 +239,6 @@ func distWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, w
 
 	for i := windowStart; i <= windowEnd; i++ {
 		baseDist = pDna.Dist(firstQuery[i], secondQuery[i])
-		if math.IsNaN(baseDist) {
-			log.Fatalf("Error: distWindow NaN. The 2 bases are: %v, %v\n", firstQuery[i], secondQuery[i])
-		}
 		windowDist = append(windowDist, baseDist) // appending each baseDist instead of defining windowDist size first
 		windowDistTotal += baseDist
 	}
@@ -280,9 +272,6 @@ func dotWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, wi
 
 	for i := windowStart; i <= windowEnd; i++ {
 		baseDot = pDna.DotSubstProb(firstQuery[i], secondQuery[i])
-		if math.IsNaN(baseDot) {
-			log.Fatalf("Error: dotWindow NaN. The 2 bases are: %v, %v. The position is: %v\n", firstQuery[i], secondQuery[i], i)
-		}
 		windowDot = append(windowDot, baseDot) // appending each baseDist instead of defining windowDist size first
 		windowDotTotal += baseDot
 	}
