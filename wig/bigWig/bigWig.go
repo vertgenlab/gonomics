@@ -250,7 +250,7 @@ func readChromTreeNodes(file *fileio.EasyReader, header ChromTreeHeader) []Chrom
 			}
 			currNode.Items = append(currNode.Items, currItem)
 		}
-		
+
 		answer = append(answer, currNode)
 	}
 	return answer

@@ -60,6 +60,63 @@ var readHeaderTests = []struct {
 			},
 		},
 	},
+	{InFile: "testdata/wholeGenome.bw",
+		ExpectedBbiHeader: BbiHeader{
+			Magic:                bigWigMagic,
+			Version:              4,
+			ZoomLevels:           2,
+			ChromosomeTreeOffset: 152,
+			FullDataOffset:       212,
+			FullIndexOffset:      322,
+			FieldCount:           0, // this value must always be zero for valid bigWigs.
+			DefinedFieldCount:    0, // this value must be zero for valid bigWigs.
+			AutoSqlOffset:        0, //this value is unused in bigWigs as well.
+			TotalSummaryOffset:   112,
+			UncompressBufferSize: 32768,
+			ExtensionOffset:      0,
+		},
+		ExpectedZoomHeaders: []ZoomHeader{
+			{ReductionLevel: 30, Reserved: 0, DataOffset: 6542, IndexOffset: 6613},
+			{ReductionLevel: 120, Reserved: 0, DataOffset: 12817, IndexOffset: 12870},
+		},
+		ExpectedTotalSummary: TotalSummaryBlock{
+			BasesCovered: 17,
+			MinVal:       2,
+			MaxVal:       12,
+			SumData:      104,
+			SumSquares:   830,
+		},
+		ExpectedChromTreeHeader: ChromTreeHeader{
+			Magic:     2026540177,
+			BlockSize: 2,
+			KeySize:   4,
+			ValSize:   8,
+			ItemCount: 2,
+			Reserved:  0,
+		},
+		ExpectedChromTreeNodes: []ChromTreeNode{
+			{IsLeaf: true,
+				Reserved: 0,
+				Count:    2,
+				Items: []ChromTreeItem{
+					{Key: []byte{99, 104, 114, 65}, // this spells "chrA" in ASCII.
+						ChromId:     0,
+						ChromSize:   50,
+						ChildOffset: 0,
+					},
+					{Key: []byte{99, 104, 114, 66}, // this spells "chrB" in ASCII.
+						ChromId:     1,
+						ChromSize:   20,
+						ChildOffset: 0,
+					},
+				},
+			},
+			{IsLeaf: true,
+				Reserved: 0,
+				Count:    0,
+			},
+		},
+	},
 }
 
 func TestRead(t *testing.T) {
@@ -94,6 +151,9 @@ func testBbiHeaders(a BbiHeader, b BbiHeader, t *testing.T) {
 	}
 	if a.FullDataOffset != b.FullDataOffset {
 		t.Errorf("Error: header full data offset not as expected.\n")
+	}
+	if a.FullIndexOffset != b.FullIndexOffset {
+		t.Errorf("Error: header full index offset not as expected.\n")
 	}
 	if a.FieldCount != b.FieldCount {
 		t.Errorf("Error: header field count was not as expected.\n")
