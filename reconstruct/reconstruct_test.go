@@ -117,14 +117,10 @@ func TestReconstruct(t *testing.T) {
 		}
 		
 		pDnaExpected := pFasta.Read(v.PDnaExpected)
-		fmt.Printf("Hi")
 		if !pFasta.AllAreEqual(outPFasta, pDnaExpected, v.Precision) {
 			t.Errorf("Error: pFaExtract outFile is not as expected.")
 		} else {
 			fileio.EasyRemove(v.PDnaOutFile)
-			// previously written as below, but won't let me do 'err = blahblah'
-			// err = fileio.EasyRemove(v.PDnaOutFile)
-			// exception.PanicOnErr(err)
 		}
 
 		fileio.EasyRemove(v.RandFa)
@@ -555,8 +551,8 @@ var EmpiricalReconstructionComparisonPDna = []struct {
 		SeqLen:                      10000,
 		SubMatrix:                   true,
 		PDnaNode:					 "Child_5",
-		PDnaOutFile:				 "TransitionSimTrsansitionReconChild5.pfa",
-		PDnaExpected:				 "TransitionSimTransitionExpectedChild5.pfa",
+		PDnaOutFile:				 "testdata/TransitionSimTransitionReconChild5.pfa",
+		PDnaExpected:				 "testdata/TransitionSimTransitionExpectedChild5.pfa",
 		Precision:		1e-3,
 	},
 }
@@ -600,29 +596,23 @@ func TestEmpiricalReconstruction(t *testing.T) {
 				LoopNodes(currReconTree, i, v.BiasLeafName, v.NonBiasProbThreshold, v.BiasN, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
 			}
 
-			
-
 			//third, we compare the reconstruction and sim and write to a file
 			currSimBranches := expandedTree.GetBranch(currSimTree)
 			reconMap := expandedTree.ToMap(currReconTree)
-			// var currPDnaNode int
 			for currNode := range currSimBranches {
 				_, err = fmt.Fprintf(out, "%v\t%v\t%v\n", v.TestName, currSimBranches[currNode].Name, percentDivergence(currSimBranches[currNode].Fasta.Seq, reconMap[currSimBranches[currNode].Name].Fasta.Seq))
-				// if (currSimBranches[currNode].Name == v.PDnaNode) {
-				// 	currPDnaNode = currNode
-				// }
 				exception.PanicOnErr(err)
 			}
 
 			// fourth, compare the reconstructed pfasta and write to file
-			
 			if v.PDnaNode != "" {
 				pFasta.Write(v.PDnaOutFile, outPFasta)
-				// expectedPfa := pFasta.Read(v.PDnaExpected)
-				// if (!pFasta.AllAreEqual(expectedPfa, outPFasta, v.Precision)) {
-				// 	_, err = fmt.Fprintf(out, "%v\t%v\t%v\n", v.TestName, v.PDnaNode, percentDivergence(currSimBranches[currPDnaNode].Fasta.Seq, reconMap[v.PDnaNode].Fasta.Seq))
-				// 	exception.PanicOnErr(err)
-				// }
+				expectedPfa := pFasta.Read(v.PDnaExpected)
+				if (!pFasta.AllAreEqual(expectedPfa, outPFasta, v.Precision)) {
+					fmt.Fprintf(out, "%v\t%v\n", v.TestName, v.PDnaNode)
+				} else {
+					fileio.EasyRemove(v.PDnaOutFile)
+				}
 			}
 		}
 	err = out.Close()
