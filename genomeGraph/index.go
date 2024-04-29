@@ -4,6 +4,7 @@ import (
 	//	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"sort"
+	"sync"
 
 	"github.com/vertgenlab/gonomics/dna"
 )
@@ -12,23 +13,40 @@ func IndexGenomeIntoMap(genome []Node, seedLen int, seedStep int) map[uint64][]u
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
 	}
+	var wg sync.WaitGroup
 	answer := make(map[uint64][]uint64)
-	var seqCode, locationCode uint64
-	var nodeIdx, pos int
-	for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
-		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
-			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
-				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
-				answer[seqCode] = append(answer[seqCode], ChromAndPosToNumber(nodeIdx, pos))
+	var mu sync.Mutex
+
+	for nodeIdx := range genome {
+		wg.Add(1)
+		go func(nodeIdx int) {
+			defer wg.Done()
+			localMap := make(map[uint64][]uint64)
+			var seqCode, locationCode uint64
+			var pos int
+			for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
+				if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
+					seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
+					localMap[seqCode] = append(localMap[seqCode], ChromAndPosToNumber(nodeIdx, pos))
+				}
 			}
-		}
-		for ; pos < len(genome[nodeIdx].Seq); pos += seedStep {
-			locationCode = ChromAndPosToNumber(nodeIdx, pos)
-			for edgeIdx := 0; edgeIdx < len(genome[nodeIdx].Next); edgeIdx++ {
-				indexGenomeIntoMapHelper(genome[nodeIdx].Seq[pos:], genome[nodeIdx].Next[edgeIdx].Dest, locationCode, seedLen, answer)
+			for ; pos < len(genome[nodeIdx].Seq); pos += seedStep {
+				locationCode = ChromAndPosToNumber(nodeIdx, pos)
+				for edgeIdx := 0; edgeIdx < len(genome[nodeIdx].Next); edgeIdx++ {
+					indexGenomeIntoMapHelper(genome[nodeIdx].Seq[pos:], genome[nodeIdx].Next[edgeIdx].Dest, locationCode, seedLen, localMap)
+				}
 			}
-		}
+
+			// Synchronize map update
+			mu.Lock()
+			for k, v := range localMap {
+				answer[k] = append(answer[k], v...)
+			}
+			mu.Unlock()
+		}(nodeIdx)
 	}
+
+	wg.Wait()
 	return answer
 }
 

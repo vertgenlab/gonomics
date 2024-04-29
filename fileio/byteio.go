@@ -20,8 +20,13 @@ const (
 )
 
 // ByteReader wraps bufio.Reader for efficient byte-level file parsing.
-// ByteWriter is a buffered writer with optional gzip compression.
-
+type ByteReader struct {
+	*bufio.Reader
+	File         *os.File
+	internalGzip *pgzip.Reader
+	line         []byte
+	Buffer       *bytes.Buffer
+}
 
 // Read implements io.Reader, reading data into b from the file or gzip stream.
 func (reader *ByteReader) Read(b []byte) (n int, err error) {
@@ -31,45 +36,22 @@ func (reader *ByteReader) Read(b []byte) (n int, err error) {
 	return reader.Reader.Read(b)
 }
 
-// Write implements io.Writer, buffering data, and then writing to the file or gzip stream.
-func (writer *ByteWriter) Write(b []byte) (n int, err error) {
-	if writer.internalGzip != nil {
-		return writer.internalGzip.Write(b)
-	}
-	return writer.Writer.Write(b)
-}
-
 // NewByteReader initializes a ByteReader for given filename, supporting p/gzip.
 func NewByteReader(filename string) *ByteReader {
-	file := MustOpen(filename)
 	reader := &ByteReader{
-		File:   file,
+		File:   MustOpen(filename),
 		Buffer: &bytes.Buffer{},
 	}
-	if strings.HasSuffix(filename, ".gz") {
-		gzReader, err := pgzip.NewReader(file)
+	if IsGzip(reader.File) {
+		var err error
+		reader.internalGzip, err = pgzip.NewReader(reader.File)
 		exception.PanicOnErr(err)
-
-		reader.internalGzip = gzReader
-		reader.Reader = bufio.NewReader(gzReader)
+		reader.Reader = bufio.NewReader(reader.internalGzip)
 	} else {
-		reader.Reader = bufio.NewReader(file)
+		reader.Reader = bufio.NewReader(reader.File)
 	}
 	return reader
 }
-
-
-// NewByteWriter initializes a ByteWriter for given filename, supporting p/gzip.
-type ByteWriter struct {
-    *bufio.Writer // Use a bufio.Writer for buffered I/O
-    File            *os.File
-    internalGzip    *pgzip.Writer
-    Buffer          *strings.Builder
-}
-
-// NewByteWriter initializes a ByteWriter for given filename, supporting p/gzip.
-
-
 
 // ReadLine reads a line into Buffer, indicating if more lines are available.
 func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
@@ -100,33 +82,6 @@ func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
 		}
 	}
 	return reader.Buffer, false
-}
-
-// // Flush writes the buffered content to the underlying writer (file or gzip stream).
-// func (writer *ByteWriter) Flush() error {
-//     // Write buffered data to the underlying writer 
-//     _, err := writer.Writer.Write(writer.Buffer.Bytes())
-//     if err != nil {
-//         return err
-//     }
-//     writer.Buffer.Reset() // Reset the buffer
-
-//     // Flush the internalGzip writer if initialized
-//     if writer.internalGzip != nil {
-//         return writer.internalGzip.Flush()
-//     }
-//     return nil
-// }
-
-// Close closes the file or gzip stream.
-func (writer *ByteWriter) Close() error {
-    if writer.internalGzip != nil {
-        err := writer.internalGzip.Close()
-        if err != nil {
-            return err
-        }
-    }
-    return writer.Close()
 }
 
 // CatchErrThrowEOF handles EOF errors silently and panics on others.
@@ -161,6 +116,7 @@ func (br *ByteReader) Close() error {
 	} else {
 		return errors.New("no file found")
 	}
+
 	switch { // Handle error returns. Priority is gzErr > fileErr
 	case gzErr != nil:
 		return gzErr
