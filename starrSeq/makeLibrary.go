@@ -86,7 +86,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 
 	if summaryFile != "" {
 		o = fileio.EasyCreate(summaryFile)
-		fileio.WriteToFileHandle(o, "construct\tTm\toverlapBases\toligoSizeF\toligoSizeR\twithinRange\toverlapSize\tconstructSize")
+		fileio.WriteToFileHandle(o, "construct\tTm\toverlapBases\toligoSizeF\toligoSizeR\twithinRange\toverlapSize\tconstructSize\tGC%")
 	}
 
 	for i := range constructs {
@@ -96,7 +96,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 		if inRange {
 			oligos = append(oligos, createOligos(constructs[i], mid+10, mid-10)...)
 			if summaryFile != "" {
-				fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\ttrue\t20\t%d", constructs[i].Name, Tm, mid-10, mid+10, mid+10, len(constructs[i].Seq)-mid+10, len(constructs[i].Seq)))
+				fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\ttrue\t20\t%d\t%f", constructs[i].Name, Tm, mid-10, mid+10, mid+10, len(constructs[i].Seq)-mid+10, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[mid-10:mid+10])))
 			}
 			continue
 		}
@@ -126,7 +126,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 						}
 						oligos = append(oligos, createOligos(constructs[i], up, down)...)
 						if summaryFile != "" {
-							fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\t%t\t%d\t%d", constructs[i].Name, newTm, down, up, up, len(constructs[i].Seq)-down, inRange, up-down, len(constructs[i].Seq)))
+							fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\t%t\t%d\t%d\t%f", constructs[i].Name, newTm, down, up, up, len(constructs[i].Seq)-down, inRange, up-down, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[down:up])))
 						}
 						break
 					}
@@ -134,7 +134,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 				fmt.Println("couldn't find an ideal mid. using this instead: ", bestMid, bestDeltaTm, constructs[i].Name)
 				oligos = append(oligos, createOligos(constructs[i], bestMid+10, bestMid-10)...)
 				if summaryFile != "" {
-					fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\tfalse\t20\t%d", constructs[i].Name, bestDeltaTm, bestMid-10, bestMid+10, bestMid+10, len(constructs[i].Seq)-bestMid+10, len(constructs[i].Seq)))
+					fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\tfalse\t20\t%d\t%f", constructs[i].Name, bestDeltaTm, bestMid-10, bestMid+10, bestMid+10, len(constructs[i].Seq)-bestMid+10, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[bestMid-10:bestMid+10])))
 				}
 				break
 			}
@@ -142,7 +142,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 			if inRange {
 				oligos = append(oligos, createOligos(constructs[i], mid+10, mid-10)...)
 				if summaryFile != "" {
-					fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\ttrue\t20\t%d", constructs[i].Name, Tm, mid-10, mid+10, mid+10, len(constructs[i].Seq)-mid+10, len(constructs[i].Seq)))
+					fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\ttrue\t20\t%d\t%f", constructs[i].Name, Tm, mid-10, mid+10, mid+10, len(constructs[i].Seq)-mid+10, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[mid-10:mid+10])))
 				}
 				pass = true
 				continue
