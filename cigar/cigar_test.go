@@ -34,7 +34,3 @@ func TestToString(t *testing.T) {
 		t.Errorf("Error with ToString")
 	}
 }
-
-func isEqual(a Cigar, b Cigar) bool {
-	return (a.RunLength == b.RunLength && a.Op == b.Op)
-}

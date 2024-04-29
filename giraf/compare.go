@@ -7,7 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-func isEqual(a *Giraf, b *Giraf) bool {
+func IsEqual(a *Giraf, b *Giraf) bool {
 	if strings.Compare(a.QName, b.QName) != 0 {
 		return false
 	}
@@ -48,7 +48,7 @@ func AllEqual(a []*Giraf, b []*Giraf) bool {
 		return false
 	}
 	for i := 0; i < len(a); i++ {
-		if !isEqual(a[i], b[i]) {
+		if !IsEqual(a[i], b[i]) {
 			return false
 		}
 	}

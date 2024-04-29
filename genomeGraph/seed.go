@@ -7,6 +7,16 @@ import (
 	"github.com/vertgenlab/gonomics/fastq"
 )
 
+type SeedDev struct {
+	TargetId    uint32
+	TargetStart uint32
+	QueryStart  uint32
+	Length      uint32
+	PosStrand   bool
+	TotalLength uint32
+	NextPart    *SeedDev
+}
+
 func extendCurrSeed(seed *SeedDev, gg *GenomeGraph, read fastq.Fastq, left bool, right bool) {
 	var newTStart, newQStart, newTEnd, newQEnd int32 = int32(seed.TargetStart) - 1, int32(seed.QueryStart) - 1, int32(seed.TargetStart + seed.Length), int32(seed.QueryStart + seed.Length)
 	//check to see if beginning is at index zero, if so do something like SeedDev.Prev

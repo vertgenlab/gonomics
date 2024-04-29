@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/sam"
 )
 
@@ -28,7 +29,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	var currSeq []dna.Base
 	var currSeed *SeedDev
 
-	for i := 0; i < len(seeds) && seedCouldBeBetter(int64(seeds[i].TotalLength), bestScore, perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+	for i := 0; i < len(seeds); i++ {
 		currSeed = seeds[i]
 		tailSeed = getLastPart(currSeed)
 		if currSeed.PosStrand {
@@ -70,30 +71,10 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 }
 
 // TODO: what about neg strand?
-func perfectMatchBig(read fastq.FastqBig, scoreMatrix [][]int64) int64 {
-	var perfectScore int64 = 0
-	for i := 0; i < len(read.Seq); i++ {
-		perfectScore += scoreMatrix[read.Seq[i]][read.Seq[i]]
-	}
-	return perfectScore
-}
-
 func scoreSeedSeq(seq []dna.Base, start uint32, end uint32, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
 	for i := start; i < end; i++ {
 		score += scoreMatrix[seq[i]][seq[i]]
-	}
-	return score
-}
-
-func scoreSeedFastqBig(seed *SeedDev, read fastq.FastqBig, scoreMatrix [][]int64) int64 {
-	var score int64 = 0
-	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
-		if seed.PosStrand {
-			score += scoreMatrix[read.Seq[i]][read.Seq[i]]
-		} else {
-			score += scoreMatrix[read.SeqRc[i]][read.SeqRc[i]]
-		}
 	}
 	return score
 }
@@ -114,14 +95,6 @@ func scoreSeed(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	return score
 }
 
-var HumanChimpTwoScoreMatrix = [][]int64{
-	{90, -330, -236, -356, -208},
-	{-330, 100, -318, -236, -196},
-	{-236, -318, 100, -330, -196},
-	{-356, -236, -330, 90, -208},
-	{-208, -196, -196, -208, -202},
-}
-
 func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
 	var runLen int = cigar.QueryLength(cig)
 	if runLen < lengthOfRead {
@@ -139,13 +112,14 @@ func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
 	}
 }
 
-// perfect match.
-func perfectMatch(read fastq.Fastq, scoreMatrix [][]int64) int64 {
-	var perfectScore int64 = 0
-	for i := 0; i < len(read.Seq); i++ {
-		perfectScore += scoreMatrix[read.Seq[i]][read.Seq[i]]
+// TODO: what about neg strand?
+func perfectMatchBig(read fastq.FastqBig, scoreMatrix [][]int64) int64 {
+	var fwdScore, revScore int64 = 0, 0
+	for i, j := 0, len(read.Seq)-1; i <= j; i, j = i+1, j-1 {
+		fwdScore = scoreMatrix[read.Seq[i]][read.Seq[i]]
+		revScore = scoreMatrix[dna.ComplementSingleBase(read.Seq[j])][dna.ComplementSingleBase(read.Seq[j])]
 	}
-	return perfectScore
+	return numbers.Max(fwdScore, revScore)
 }
 
 /*func NodesHeader(ref []*Node) *sam.Header {

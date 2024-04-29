@@ -3,12 +3,13 @@ package genomeGraph
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
-	"strings"
 )
 
 func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {
@@ -196,7 +197,7 @@ func reversePath(alpha []uint32) {
 
 func PathToString(allPaths []uint32) string {
 	var s string = ""
-	if allPaths == nil {
+	if len(allPaths) == 0 {
 		return s
 	} else {
 		s += fmt.Sprint(allPaths[0])

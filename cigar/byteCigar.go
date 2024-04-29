@@ -1,11 +1,12 @@
 package cigar
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // ByteCigar struct encodes sequence comparison operations and includes run length info.
@@ -125,7 +126,6 @@ func IsValidCigar(op byte) bool {
 	default:
 		return false
 	}
-	return false
 }
 
 // ByteCigarToString will process the cigar byte struct and parse and/or convert the data into a string.
@@ -148,11 +148,25 @@ func ByteCigarToString(cigar []ByteCigar) string {
 // M: matches or mismatches, I: insertions, D: for deletions.
 func ByteMatrixTrace(a int64, b int64, c int64) (int64, byte) {
 	if a >= b && a >= c {
-		return a, 'M'
+		return a, Match
 	} else if b >= c {
-		return b, 'I'
+		return b, Insertion
 	} else {
-		return c, 'D'
+		return c, Deletion
+	}
+}
+
+func TraceMatrixExtension(prev int64, a int64, b int64, c int64) (int64, byte) {
+	if a >= b && a >= c {
+		if a > prev {
+			return a, Equal
+		} else {
+			return a, Mismatch
+		}
+	} else if b >= c {
+		return b, Insertion
+	} else {
+		return c, Deletion
 	}
 }
 
@@ -166,43 +180,48 @@ func ReverseBytesCigar(alpha []ByteCigar) {
 	}
 }
 
-// QueryLength calculates the length of the query read from a slice of Cigar structs.
+// QueryRunLen calculates the length of the query read from a slice of ByteCigar structs.
 func QueryRunLen(c []ByteCigar) int {
-	if c == nil {
-		return 0
+    if c == nil {
+        return 0 // Return 0 if the slice is nil
+    }
+
+    var ans int // Use int to prevent overflow issues that might occur with uint16
+    for _, v := range c {
+        switch v.Op {
+        case Match, Insertion, SoftClip, Equal, Mismatch:
+            ans += int(v.RunLen) // Safely cast to int to avoid overflow
+        }
+    }
+    return ans
+}
+
+// AddCigarByte appends or merges a new ByteCigar to the slice of ByteCigar.
+func AddCigarByte(cigs []ByteCigar, newCig ByteCigar) []ByteCigar {
+	if len(cigs) == 0 {
+		return append(cigs, newCig)
+	} else if cigs[len(cigs)-1].Op == newCig.Op {
+		cigs[len(cigs)-1].RunLen += newCig.RunLen
+		return cigs
 	}
-	var ans uint16
-	for _, v := range c {
-		if v.Op == Match || v.Op == Insertion || v.Op == SoftClip || v.Op == Equal || v.Op == Mismatch {
-			ans = ans + v.RunLen
-		}
-	}
-	return int(ans)
+	return append(cigs, newCig)
 }
 
 // CatByteCigar will concatenate two cigar slices into one merged.
 func CatByteCigar(cigs []ByteCigar, newCigs []ByteCigar) []ByteCigar {
-	if len(newCigs) == 0 || newCigs == nil {
-		return cigs
-	} else if len(cigs) == 0 {
-		return newCigs
-	} else {
-		cigs = AddCigarByte(cigs, newCigs[0])
-		cigs = append(cigs, newCigs[1:]...)
+	if len(newCigs) == 0 {
 		return cigs
 	}
-}
-
-// AddCigarByte will add append a cigar byte to an existing slice. The function
-// will perform a check on the tail of the slice and incurment the run length if the
-// cigar Op values are the same.
-func AddCigarByte(cigs []ByteCigar, newCig ByteCigar) []ByteCigar {
 	if len(cigs) == 0 {
-		cigs = append(cigs, newCig)
-	} else if cigs[len(cigs)-1].Op == newCig.Op {
-		cigs[len(cigs)-1].RunLen += newCig.RunLen
-	} else {
-		cigs = append(cigs, newCig)
+		return append([]ByteCigar(nil), newCigs...) // Create a copy of newCigs to ensure immutability
+	}
+
+	// Merge the first of the newCigs with the last of the cigs if possible
+	cigs = AddCigarByte(cigs, newCigs[0])
+	
+	// Append the rest of newCigs
+	if len(newCigs) > 1 {
+		cigs = append(cigs, newCigs[1:]...)
 	}
 	return cigs
 }
@@ -236,3 +255,42 @@ func ByteCigarToUint32(cigar []ByteCigar) []uint32 {
 	}
 	return answer
 }
+
+func SoftClipBases(front int, lengthOfRead int, cig []ByteCigar) []ByteCigar {
+    runLen := QueryRunLen(cig) // Ensure this function counts only alignment-contributing operations
+
+    // Direct return if the current run length already meets or exceeds the required read length
+    if runLen >= lengthOfRead {
+        return cig
+    }
+
+    // Calculate total needed soft clips
+    totalNeeded := lengthOfRead - runLen
+    frontClips := uint16(front)
+    endClips := uint16(totalNeeded - front)
+
+    // Check if there's any need to append new clips
+    if frontClips == 0 && endClips == 0 {
+        return cig
+    }
+
+    // Prepare new slice for answer
+    answerCapacity := len(cig) + 2 // Potentially one soft clip at each end
+    answer := make([]ByteCigar, 0, answerCapacity)
+
+    // Append front soft clip if needed
+    if frontClips > 0 {
+        answer = append(answer, ByteCigar{RunLen: frontClips, Op: 'S'})
+    }
+
+    // Append existing cigar elements
+    answer = append(answer, cig...)
+
+    // Append end soft clip if needed
+    if endClips > 0 {
+        answer = append(answer, ByteCigar{RunLen: endClips, Op: 'S'})
+    }
+
+    return answer
+}
+

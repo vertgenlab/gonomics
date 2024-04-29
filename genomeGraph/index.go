@@ -8,16 +8,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-type SeedDev struct {
-	TargetId    uint32
-	TargetStart uint32
-	QueryStart  uint32
-	Length      uint32
-	PosStrand   bool
-	TotalLength uint32
-	NextPart    *SeedDev
-}
-
 func IndexGenomeIntoMap(genome []Node, seedLen int, seedStep int) map[uint64][]uint64 {
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
@@ -99,21 +89,23 @@ func indexGenomeIntoSliceHelper(prevSeq []dna.Base, currNode *Node, locationCode
 
 // TODO: this does not take into account breaking up seeds by gaps instead of mismatches
 // similar calculations could also be used as the parameters to a banded alignment.
-func seedCouldBeBetter(seedLen int64, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
+func seedCouldBeBetter(seedLen int64, currBestScore int64, perfectScore int64, queryLen int64, config *GraphSettings) bool {
 	seeds := queryLen / (seedLen + 1)
 	remainder := queryLen % (seedLen + 1)
+	// Estimate the number of gaps. This is a simplification and might need adjustment.
+	// For example, assume one gap per seed for simplicity.
+	estimatedGaps := seeds
 
-	// seed by itself could be best
-	if seedLen*maxMatch >= currBestScore &&
-		perfectScore-((queryLen-seedLen)*minMatch) >= currBestScore {
+	// Calculate the penalty from opening and extending gaps
+	gapPenalty := estimatedGaps*config.OpenGapPenalty + (seedLen-1)*estimatedGaps*config.GapPenalty
+
+	// Adjust the score calculations to include the gap penalty
+	if seedLen*config.MaxMatch-gapPenalty >= currBestScore && perfectScore-((queryLen-seedLen)*config.MinMatch)-gapPenalty >= currBestScore {
 		return true
-		// seed along with whole seeds, but not the remainder
-	} else if seedLen*seeds*maxMatch+seeds*leastSevereMismatch >= currBestScore &&
-		perfectScore-remainder*minMatch+seeds*leastSevereMatchMismatchChange >= currBestScore {
+	} else if seedLen*seeds*config.MaxMatch+seeds*config.LeastSevereMismatch-gapPenalty >= currBestScore &&
+		perfectScore-remainder*config.MinMatch+seeds*config.LeastSevereMatchMismatchChange-gapPenalty >= currBestScore {
 		return true
-		// seed along with whole seeds, as well as both remainders
-	} else if seedLen*seeds*maxMatch+remainder*maxMatch+(seeds+1)*leastSevereMismatch >= currBestScore &&
-		perfectScore+(seeds+1)*leastSevereMatchMismatchChange >= currBestScore {
+	} else if seedLen*seeds*config.MaxMatch+remainder*config.MaxMatch+(seeds+1)*config.LeastSevereMismatch-gapPenalty >= currBestScore && perfectScore+(seeds+1)*config.LeastSevereMatchMismatchChange-gapPenalty >= currBestScore {
 		return true
 	} else {
 		return false

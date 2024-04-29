@@ -2,16 +2,17 @@
 package genomeGraph
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"io"
-	"log"
-	"strings"
 )
 
 // GenomeGraph struct contains a slice of Nodes.
@@ -37,6 +38,21 @@ type Edge struct {
 	Prob float32
 }
 
+// GraphSettings defines settings for a genome graph alignment to be passed through alignment helper functions.
+type GraphSettings struct {
+	ScoreMatrix    [][]int64
+	GapPenalty     int64
+	OpenGapPenalty int64
+	TileSize       int
+	StepSize       int
+	Extension      int
+
+	MaxMatch                       int64
+	MinMatch                       int64
+	LeastSevereMismatch            int64
+	LeastSevereMatchMismatchChange int64
+}
+
 // Annotation struct is an uint64 encoding of allele id, starting position on linear reference and variant on node
 // a single byte will represent what allele the node came from, uint32 will be used for starting position of chromosome of the linear reference
 // uint8 are variants are represented as follows: 0=match, 1=mismatch, 2=insert, 3=deletion, 4=hap
@@ -49,37 +65,39 @@ type Edge struct {
 // Read will process a simple graph formated text file and parse the data into graph fields.
 func Read(filename string) *GenomeGraph {
 	simpleReader := fileio.NewByteReader(filename)
+	defer simpleReader.Close()
+
 	genome := EmptyGraph()
 	var weight float32
-	var line string
-	var words []string = make([]string, 0, 2)
+	var line []byte
+	var words [][]byte = make([][]byte, 0, 2)
 	var nodeId, homeNodeIdx, destNodeIdx uint32
 	var homeNode, destNode *Node
 	var i int
 
 	for reader, done := fileio.ReadLine(simpleReader); !done; reader, done = fileio.ReadLine(simpleReader) {
-		line = reader.String()
+		line = reader.Bytes()
 		switch true {
-		case strings.HasPrefix(line, ">"):
-			nodeId = parse.StringToUint32(line[1:])
+		case bytes.HasPrefix(line, []byte(">")):
+			nodeId = parse.StringToUint32(string(line[1:]))
 			AddNode(genome, &Node{Id: nodeId})
-		case strings.Contains(line, "\t"):
-			words = strings.Split(line, "\t")
-			homeNodeIdx = parse.StringToUint32(words[0])
+		case bytes.Contains(line, []byte("\t")):
+			words = bytes.Fields(line)
+			homeNodeIdx = parse.StringToUint32(string(words[0]))
 			homeNode = &genome.Nodes[homeNodeIdx]
 			if len(words) > 2 {
 				for i = 1; i < len(words); i += 2 {
-					weight = parse.StringToFloat32(words[i])
-					destNodeIdx = parse.StringToUint32(words[i+1])
+					weight = parse.StringToFloat32(string(words[i]))
+					destNodeIdx = parse.StringToUint32(string(words[i+1]))
 					destNode = &genome.Nodes[destNodeIdx]
 					AddEdge(homeNode, destNode, weight)
 				}
 			}
 		default:
-			genome.Nodes[nodeId].Seq = append(genome.Nodes[nodeId].Seq, dna.ByteSliceToDnaBases(reader.Bytes())...)
+			genome.Nodes[nodeId].Seq = append(genome.Nodes[nodeId].Seq, dna.ByteSliceToDnaBases(line)...)
 		}
 	}
-	for i = range genome.Nodes {
+	for i = range genome.Nodes { // Fixed the range loop syntax
 		if len(genome.Nodes[i].Seq) != 0 {
 			genome.Nodes[i].SeqTwoBit = dnaTwoBit.NewTwoBit(genome.Nodes[i].Seq)
 		}

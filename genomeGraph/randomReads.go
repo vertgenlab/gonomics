@@ -2,12 +2,15 @@ package genomeGraph
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
 )
 
 func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []fastq.PairedEnd {
@@ -154,4 +157,14 @@ func generateFakeQual(length int) []rune {
 		answer[i] = 'J'
 	}
 	return answer
+}
+
+func IsCorrectCoord(result giraf.Giraf) bool {
+	name := strings.Split(result.QName, "_")
+	// TODO: Need better logic to look at node
+	return parse.StringToInt(name[1]) == result.Path.TStart-result.QStart && parse.StringToInt(name[3]) == result.Path.TEnd
+}
+
+func GirafVisual(gg *GenomeGraph, result giraf.Giraf) {
+
 }

@@ -29,9 +29,17 @@ func GswToGirafPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string
 	wgAlign.Add(threads)
 
 	log.Printf("Aligning %s and %s to genome graph...", strings.Split(filepath.Base(readOne), ".")[0], strings.Split(filepath.Base(readTwo), ".")[0])
+
+	settings := &genomeGraph.GraphSettings{
+		ScoreMatrix: scoreMatrix,
+		GapPenalty:  int64(-600),
+		TileSize:    seedLen,
+		StepSize:    stepSize,
+	}
+
 	start := time.Now()
 	for i := 0; i < threads; i++ {
-		go genomeGraph.RoutineFqPairToGiraf(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, girafPipe, &wgAlign)
+		go genomeGraph.RoutineFqPairToGiraf(ref, seedHash, settings.TileSize, settings.TileSize, settings.ScoreMatrix, fastqPipe, girafPipe, &wgAlign)
 	}
 	wgWrite.Add(1)
 	go genomeGraph.SimpleWriteGirafPair(output, girafPipe, &wgWrite)
@@ -58,10 +66,17 @@ func GswToSamPair(ref *genomeGraph.GenomeGraph, readOne string, readTwo string, 
 	log.Printf("Scoring matrix used:\n%s\n", genomeGraph.ViewMatrix(scoreMatrix))
 	log.Printf("Aligning with the following settings:\n\t\tthreads=%d, seedLen=%d, stepSize=%d\n\n", threads, seedLen, stepSize)
 	wgAlign.Add(threads)
+	settings := &genomeGraph.GraphSettings{
+		ScoreMatrix: scoreMatrix,
+		GapPenalty:  int64(-600),
+		TileSize:    seedLen,
+		StepSize:    stepSize,
+	}
+
 	log.Printf("Aligning sequence to genome graph...")
 	start := time.Now()
 	for i := 0; i < threads; i++ {
-		go genomeGraph.RoutineGirafToSam(ref, seedHash, seedLen, stepSize, scoreMatrix, fastqPipe, samPipe, &wgAlign)
+		go genomeGraph.RoutineGirafToSam(ref, seedHash, settings.TileSize, settings.TileSize, settings.ScoreMatrix, fastqPipe, samPipe, &wgAlign)
 	}
 	wgWrite.Add(1)
 	go sam.WriteFromChan(samPipe, output, header, &wgWrite)

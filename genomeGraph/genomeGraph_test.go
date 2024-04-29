@@ -1,11 +1,13 @@
 package genomeGraph
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
@@ -15,12 +17,12 @@ func TestWorkerWithWriting(t *testing.T) {
 	var output string = "testdata/pairedTest.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
-	var numberOfReads int = 100
+	var numberOfReads int = 500
 	var readLength int = 150
-	var mutations int = 0
+	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
-	var numWorkers int = 8
-	var scoreMatrix = HumanChimpTwoScoreMatrix
+	var numWorkers int = 12
+	var scoreMatrix = align.HumanChimpTwoScoreMatrix
 	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
@@ -58,6 +60,21 @@ func TestWorkerWithWriting(t *testing.T) {
 	fileio.EasyRemove("testdata/simReads_R1.fq")
 	fileio.EasyRemove("testdata/simReads_R2.fq")
 	fileio.EasyRemove("testdata/pairedTest.giraf")
+}
+
+func TestAlignmentCorrectness(t *testing.T) {
+	ans := giraf.Read("testdata/pairedTest.giraf")
+	var count int = 0
+	for i := 0; i < len(ans); i++ {
+		//name := strings.Split(ans[i].QName, "_")
+		if IsCorrectCoord(*ans[i]) {
+			count++
+			fmt.Printf("%s\n", giraf.GirafToString(ans[i]))
+		} else {
+			fmt.Printf("%s\n", giraf.GirafToString(ans[i]))
+		}
+	}
+	fmt.Printf("Aligned %v out of %v correctly...\n", count, len(ans))
 }
 
 /*

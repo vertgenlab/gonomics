@@ -12,9 +12,9 @@ import (
 
 // ExtractBedSettings defines the usage settings for the pFa extractBed subcommand.
 type ExtractBedSettings struct {
-	InFile  string
-	Region  string
-	OutFile string
+	InFile     string
+	Region     string
+	OutFile    string
 	TakeCoords bool
 }
 
@@ -51,9 +51,9 @@ func parseExtractBedArgs() {
 	outFile := extractBedFlags.Arg(2)
 
 	s := ExtractBedSettings{
-		InFile:  inFile,
-		Region:  region,
-		OutFile: outFile,
+		InFile:     inFile,
+		Region:     region,
+		OutFile:    outFile,
 		TakeCoords: *takeCoords,
 	}
 
