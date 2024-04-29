@@ -276,21 +276,14 @@ func writeExtra(bw *BamWriter, s Sam) {
 // retrieveTriplet splits a tag string into type, number, and value.
 func retrieveTriplet(tag string) []string {
 	comp := strings.Split(tag, ":")
+	if len(comp) < 3 || len(comp[0]) != 2 || len(comp[1]) != 1 { // checks to make sure tag is formatted properly
+		log.Panicf("malformed auxiliary data '%s'", tag)
+	}
 	if comp[1] == "B" {
 		comp[1] = comp[1] + comp[2][0:1] // the B case has another value as part of the array that needs to be stored in the second part of the triplet
 		comp[2] = comp[2][2:]            // remove the character that goes to the second part of the triplet and the subsequent comma
 	}
-	if len(comp) == 3 {
-		return comp
-	}
-	if len(comp) < 3 {
-		log.Panicf("malformed auxiliary data '%s'", tag)
-	}
-	// len is >3 so tag value likely has ":"
-	if len(comp[0]) != 2 || len(comp[1]) != 1 { // checks to make sure tag is formatted properly
-		log.Panicf("malformed auxiliary data '%s'", tag)
-	}
-	comp[2] = strings.Join(comp[2:], ":") // rejoin value component of tag
+	comp[2] = strings.Join(comp[2:], ":") // in case value of tag contains literal ':'
 	comp = comp[:3]
 	return comp
 }
