@@ -134,31 +134,6 @@ func perfectMatchBig(read fastq.FastqBig, scoreMatrix [][]int64) int64 {
 	return &header
 }*/
 
-func ChromAndPosToNumber(chrom int, start int) uint64 {
-	var chromCode uint64 = uint64(chrom)
-	chromCode = chromCode << 32
-	var answer uint64 = chromCode | uint64(start)
-	return answer
-}
-
-func dnaToNumber(seq []dna.Base, start int, end int) uint64 {
-	var answer uint64 = uint64(seq[start])
-	for i := start + 1; i < end; i++ {
-		answer = answer << 2
-		answer = answer | uint64(seq[i])
-	}
-	return answer
-}
-
-func numberToChromAndPos(code uint64) (int64, int64) {
-	var rightSideOnes uint64 = 4294967295
-	var leftSideOnes uint64 = rightSideOnes << 32
-	var chromIdx uint64 = code & leftSideOnes
-	chromIdx = chromIdx >> 32
-	var pos uint64 = code & rightSideOnes
-	return int64(chromIdx), int64(pos)
-}
-
 func ViewMatrix(m [][]int64) string {
 	var message string = ""
 	message += fmt.Sprintf("\t\t %d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t %d\n", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3])

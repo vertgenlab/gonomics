@@ -21,7 +21,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 		QEnd:      0,
 		PosStrand: true,
 		Path:      giraf.Path{},
-		Cigar:     make([]cigar.ByteCigar, 0, 2),
+		Cigar:     nil,
 		AlnScore:  0,
 		MapQ:      255,
 		Seq:       read.Seq,
@@ -58,6 +58,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			sk.currScore = sk.seedScore
 		} else {
 			config.Extension = sk.extension - int(sk.currSeed.TotalLength)
+
 			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = LeftAlignTraversal(&gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.currSeq[:sk.currSeed.QueryStart], config, sk, matrixTrace)
 			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = RightAlignTraversal(&gg.Nodes[sk.tailSeed.TargetId], sk.rightSeq, int(sk.tailSeed.TargetStart+sk.tailSeed.Length), sk.rightPath, sk.currSeq[sk.tailSeed.QueryStart+sk.tailSeed.Length:], config, &sk, matrixTrace)
 			sk.currScore = sk.leftScore + sk.seedScore + sk.rightScore
@@ -72,6 +73,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			currBest.Seq = sk.currSeq
 		}
 	}
+
 	if !currBest.PosStrand {
 		fastq.ReverseQualUint8Record(currBest.Qual)
 	}

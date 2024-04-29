@@ -125,7 +125,7 @@ func resetScoreKeeper(sk scoreKeeper) {
 // getLeftBases retrieves bases from the left of a given position in a node's sequence and appends additional sequence.
 func getLeftBases(n *Node, extension int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	seqLen := len(seq)
-	basesToTake := int(math.Min(float64(seqLen+refEnd), float64(extension))) - seqLen
+	basesToTake := numbers.Min(seqLen+refEnd, extension) - seqLen
 	if basesToTake > 0 {
 		ans = append(ans, n.Seq[refEnd-basesToTake:refEnd]...)
 	}
@@ -217,8 +217,7 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, settings *GraphSettings, 
 
 // getRightBases retrieves bases from the right of a given start position in a node's sequence and appends it to the provided sequence.
 func getRightBases(n *Node, extension int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
-	availableBases := len(n.Seq) - start
-	basesToTake := int(math.Min(float64(availableBases), float64(extension)))
+	basesToTake := numbers.Min(len(n.Seq)-start, extension)
 	ans = append(ans, seq...)
 	if basesToTake > 0 {
 		ans = append(ans, n.Seq[start:start+basesToTake]...)

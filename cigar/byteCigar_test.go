@@ -116,6 +116,30 @@ func TestSoftClipBases(t *testing.T) {
 	}
 }
 
+// TestReverseByteCigars tests the reversing functionality of ReverseByteCigars function.
+func TestReverseByteCigars(t *testing.T) {
+	// Define a test case with an initial slice of ByteCigars.
+	cigars := []ByteCigar{
+		{RunLen: 1, Op: Match},
+		{RunLen: 2, Op: Insertion},
+		{RunLen: 3, Op: Deletion},
+	}
+
+	// What we expect after the reverse operation.
+	expected := []ByteCigar{
+		{RunLen: 3, Op: Deletion},
+		{RunLen: 2, Op: Insertion},
+		{RunLen: 1, Op: Match},
+	}
+
+	// Perform the reverse operation using the function under test.
+	reversedCigars := ReverseBytesCigar(cigars)
+
+	// Check if the reversed slice matches the expected slice.
+	if ByteCigarToString(reversedCigars) != ByteCigarToString(expected) {
+		t.Errorf("Error: ReverseByteCigars failed - %v != %v", reversedCigars, expected)
+	}
+}
 func BenchmarkCigarBytesToString(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -147,5 +171,19 @@ func BenchmarkStringToCigar(b *testing.B) {
 	var cigarstring string = "35M2I16D"
 	for n := 0; n < b.N; n++ {
 		FromString(cigarstring)
+	}
+}
+
+func BenchmarkReverseCigar(b *testing.B) {
+	cigars := []ByteCigar{
+		{RunLen: 1, Op: Match},
+		{RunLen: 2, Op: Insertion},
+		{RunLen: 3, Op: Deletion},
+		{RunLen: 1, Op: Match},
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		ReverseBytesCigar(cigars)
 	}
 }

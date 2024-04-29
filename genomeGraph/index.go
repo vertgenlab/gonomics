@@ -9,6 +9,11 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
+const (
+	rightMask uint64 = 0xFFFFFFFF      // 32 ones, to mask the right side (position)
+	leftMast  uint64 = rightMask << 32 // 32 ones shifted, to mask the left side (chromosome)
+)
+
 func IndexGenomeIntoMap(genome []Node, seedLen int, seedStep int) map[uint64][]uint64 {
 	if seedLen < 2 || seedLen > 32 {
 		log.Fatalf("Error: seed length needs to be greater than 1 and less than 33.  Got: %d\n", seedLen)
@@ -128,6 +133,25 @@ func seedCouldBeBetter(seedLen int64, currBestScore int64, perfectScore int64, q
 	} else {
 		return false
 	}
+}
+
+func ChromAndPosToNumber(chrom int, start int) uint64 {
+	return (uint64(chrom) << 32) | uint64(start)
+}
+
+func dnaToNumber(seq []dna.Base, start int, end int) uint64 {
+	var answer uint64 = uint64(seq[start])
+	for i := start + 1; i < end; i++ {
+		answer = answer << 2
+		answer = answer | uint64(seq[i])
+	}
+	return answer
+}
+
+func numberToChromAndPos(code uint64) (int64, int64) {
+	chromIdx := (code & leftMast) >> 32
+	pos := code & rightMask
+	return int64(chromIdx), int64(pos)
 }
 
 func SortSeedDevByTotalLen(seeds []*SeedDev) {

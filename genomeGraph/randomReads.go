@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
@@ -159,10 +160,10 @@ func generateFakeQual(length int) []rune {
 	return answer
 }
 
-func IsCorrectCoord(result giraf.Giraf) bool {
+func IsCorrectCoord(result *giraf.Giraf) bool {
 	name := strings.Split(result.QName, "_")
 	// TODO: Need better logic to look at node
-	return parse.StringToInt(name[1]) == result.Path.TStart-result.QStart && parse.StringToInt(name[3]) == result.Path.TEnd
+	return parse.StringToInt(name[1]) == result.Path.TStart-result.QStart && parse.StringToInt(name[3]) == result.Path.TEnd && cigar.QueryRunLen(result.Cigar) == 150
 }
 
 func GirafVisual(gg *GenomeGraph, result giraf.Giraf) {

@@ -1,11 +1,6 @@
 package genomeGraph
 
 import (
-	"flag"
-	"log"
-	"os"
-	"runtime"
-	"runtime/pprof"
 	"testing"
 	"time"
 
@@ -101,7 +96,7 @@ func TestAlignGraphTraversal(t *testing.T) {
 
 	n1 = Node{
 		Id:  1,
-		Seq: dna.StringToBases("ATCG"),
+		Seq: dna.StringToBases("AAAATCGATAGGGGAAAATTT"),
 	}
 
 	n2 = Node{
@@ -141,6 +136,11 @@ func TestAlignGraphTraversal(t *testing.T) {
 	expectedRightTargetEnd := 9
 	expectedRightQueryEnd := 9
 
+	expectedLeftScore := int64(850) // Simplified expected score
+	expectedLeftAlignment := []cigar.ByteCigar{{RunLen: 9, Op: 'M'}}
+	expectedLeftTargetStart := 2
+	expectedLeftQueryStart := 0
+
 	settings := &GraphSettings{
 		ScoreMatrix: align.HumanChimpTwoScoreMatrix,
 		GapPenalty:  -100,
@@ -149,40 +149,32 @@ func TestAlignGraphTraversal(t *testing.T) {
 	}
 
 	rightAlign, rightScore, rightTargetEnd, rightQueryEnd, _ := RightAlignTraversal(&genome.Nodes[0], read, 0, []uint32{}, read, settings, &scoreKeeper, memory)
-
-	// leftAlign, leftScore, leftTargetStart, leftQueryStart, _ := LeftAlignTraversal(&genome.Nodes[0], read, 0, []uint32{}, read, settings, scoreKeeper, memory)
-
+	leftAlign, leftScore, leftTargetStart, leftQueryStart, _ := LeftAlignTraversal(&genome.Nodes[0], read, 20, []uint32{}, read, settings, scoreKeeper, memory)
 	if rightScore != expectedRightScore {
-		t.Errorf("RightDirection: expected score %d, got %d", expectedRightScore, rightScore)
+		t.Errorf("Error: Right direction expected score %d, got %d", expectedRightScore, rightScore)
+	}
+	if leftScore != expectedLeftScore {
+		t.Errorf("Error: Left direction expected score %d, got %d", expectedLeftScore, leftScore)
 	}
 	if cigar.ByteCigarToString(rightAlign) != cigar.ByteCigarToString(expectedRightAlignment) {
-		t.Errorf("RightDirection: expected alignment %+v, got %+v", expectedRightAlignment, rightAlign)
+		t.Errorf("Error: Right direction expected alignment %+v, got %+v", expectedRightAlignment, rightAlign)
+	}
+	if cigar.ByteCigarToString(leftAlign) != cigar.ByteCigarToString(expectedLeftAlignment) {
+		t.Errorf("Error: Left direction expected alignment %+v, got %+v", expectedLeftAlignment, leftAlign)
 	}
 	if expectedRightTargetEnd != rightTargetEnd || rightQueryEnd != expectedRightQueryEnd {
-		t.Errorf("RightDirection: expected target and query start (%d, %d), got (%d, %d)", expectedRightTargetEnd, rightQueryEnd, rightTargetEnd, rightQueryEnd)
+		t.Errorf("Error: Right direction: expected target and query start (%d, %d), got (%d, %d)", expectedRightTargetEnd, rightQueryEnd, rightTargetEnd, rightQueryEnd)
+	}
+	if expectedLeftTargetStart != leftTargetStart || leftQueryStart != expectedLeftQueryStart {
+		t.Errorf("Error: Left direction expected target and query start (%d, %d), got (%d, %d)", expectedLeftTargetStart, leftQueryStart, leftTargetStart, leftQueryStart)
 	}
 
 }
 
-var cpuprofile = flag.String("cpuprofile", "cpuprofile", "write cpu profile to `file`")
-var memprofile = flag.String("memprofile", "memprofile", "write memory profile to `file`")
-
 func BenchmarkGirafAlignment(b *testing.B) {
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal("could not create CPU profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatal("could not start CPU profile: ", err)
-		}
-		defer pprof.StopCPUProfile()
-	}
 
 	var tileSize int = 32
 	var stepSize int = 32
-
 	config := &GraphSettings{
 		ScoreMatrix:    align.HumanChimpTwoScoreMatrix,
 		GapPenalty:     -600,
@@ -191,7 +183,6 @@ func BenchmarkGirafAlignment(b *testing.B) {
 		StepSize:       stepSize,
 	}
 	config.MaxMatch, config.MinMatch, config.LeastSevereMismatch, config.LeastSevereMatchMismatchChange = MismatchStats(config.ScoreMatrix)
-
 	genome := Read("testdata/bigGenome.sg")
 	fqOne := "testdata/simReads_R1.fq"
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
@@ -202,7 +193,6 @@ func BenchmarkGirafAlignment(b *testing.B) {
 		fqs = append(fqs, read)
 	}
 
-	// memory := MatrixPoolMemory()
 	seedPool := NewMemSeedPool()
 	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{}
@@ -212,29 +202,22 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	defer memory.Put(cache)
 
 	results := []*giraf.Giraf{}
-
+	var correct int = 0
 	var start, stop time.Time
 	for n := 0; n < b.N; n++ {
+
 		start = time.Now()
 		for read := 0; read < len(fqs); read++ {
-			result := GraphSmithWatermanToGiraf(genome, fqs[read], tiles, config, memory, &seedPool, scorekeeper, seedBuildHelper)
-			results = append(results, result)
+			giraf := GraphSmithWatermanToGiraf(genome, fqs[read], tiles, config, memory, &seedPool, scorekeeper, seedBuildHelper)
+			if IsCorrectCoord(giraf) {
+				correct++
+			}
+			results = append(results, giraf)
 		}
 		stop = time.Now()
 		duration := stop.Sub(start)
-		b.Logf("Aligned %d reads in %s (%.1f reads per second).\n", len(fqs), duration, float64(len(fqs))/duration.Seconds())
+		b.Logf("Aligned %v out of %v correctly...\n", correct, len(results))
+		b.Logf("Aligned %d reads in %s (%.1f reads per second).\n", len(results), duration, float64(len(fqs))/duration.Seconds())
 		b.ReportAllocs()
-	}
-
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		runtime.GC()    // get up-to-date statistics
-		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
-		}
 	}
 }

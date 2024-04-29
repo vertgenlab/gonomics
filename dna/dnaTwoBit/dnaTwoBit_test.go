@@ -40,3 +40,17 @@ func TestDnaToFromString(t *testing.T) {
 		}
 	}
 }
+
+func TestGetFragPositions(t *testing.T) {
+	for _, input := range dnaStrings {
+		bases := dna.StringToBases(input)
+		frag := NewTwoBit(bases)
+		var start, end int = 1, 4
+		result := ToString(GetFrag(frag, 1, 4))
+		expected := dna.BasesToString(bases[start:end])
+
+		if result != expected {
+			t.Errorf("Error: GetFrag extracting the correct coordinates  %s != %s....", result, expected)
+		}
+	}
+}
