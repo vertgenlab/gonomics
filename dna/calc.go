@@ -29,12 +29,6 @@ var nnTable = map[string][]float64{
 	"CC":       {-8.0, -19.9},
 }
 
-// R is the universal gas constant (Cal/degrees C*Mol)
-var R float64 = 1.987
-
-// k is related to the concentration. Assumes both the piece of DNA and what it's annealing to are at a combined concentration of 500 nM
-var k float64 = (250 - (250 / 2)) * 1e-9
-
 // identity is a helper function for MeltingTemp. It takes in a base and slice of int with length 2. The function iterates
 // the value in slice[0] if the base is an A/T or iterates slice[1] if the base is a C/G. Log fatal if non-ACTG bases are provided
 func identity(b Base, slc []int) {
@@ -64,6 +58,12 @@ func MeltingTemp(seq []Base) float64 {
 	var deltaS, deltaH float64
 	var val []float64
 
+	// R is the universal gas constant (Cal/degrees C*Mol)
+	var R float64 = 1.987
+
+	// k is related to the concentration. Assumes both the piece of DNA and what it's annealing to are at a combined concentration of 500 nM
+	var k float64 = (250 - (250 / 2)) * 1e-9
+
 	AllToUpper(seq)
 
 	//check to see if the oligo sequence is perfectly self-complimentary
@@ -90,7 +90,7 @@ func MeltingTemp(seq []Base) float64 {
 
 	//if the sequences are fully self-complimentary, a special correction needs to be applied
 	if selfComp {
-		k = 25 * 1e-9
+		k = 250 * 1e-9
 		deltaH += nnTable["selfComp"][0]
 		deltaS += nnTable["selfComp"][1]
 	}
