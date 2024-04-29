@@ -1,7 +1,6 @@
 package genomeGraph
 
 import (
-	"fmt"
 	"log"
 	"sync"
 	"testing"
@@ -60,21 +59,6 @@ func TestWorkerWithWriting(t *testing.T) {
 	fileio.EasyRemove("testdata/simReads_R1.fq")
 	fileio.EasyRemove("testdata/simReads_R2.fq")
 	fileio.EasyRemove("testdata/pairedTest.giraf")
-}
-
-func TestAlignmentCorrectness(t *testing.T) {
-	ans := giraf.Read("testdata/pairedTest.giraf")
-	var count int = 0
-	for i := 0; i < len(ans); i++ {
-		//name := strings.Split(ans[i].QName, "_")
-		if IsCorrectCoord(*ans[i]) {
-			count++
-			fmt.Printf("%s\n", giraf.GirafToString(ans[i]))
-		} else {
-			fmt.Printf("%s\n", giraf.GirafToString(ans[i]))
-		}
-	}
-	fmt.Printf("Aligned %v out of %v correctly...\n", count, len(ans))
 }
 
 /*
