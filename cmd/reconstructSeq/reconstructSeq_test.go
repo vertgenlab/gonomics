@@ -187,5 +187,6 @@ func TestReconstructSeq(t *testing.T) {
 				fileio.EasyRemove(v.PDnaOutFile)
 			}
 		}
+		//structurally important comment?
 	}
 }
