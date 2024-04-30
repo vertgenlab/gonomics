@@ -21,7 +21,7 @@ var FaFilterTests = []struct {
 	minSize      int
 	maxGC        float64
 	minGC        float64
-	finalNbases  int
+	finalBases   int
 }{
 	{"testdata/minSizeTest.fa", "testdata/minSizeOutput.fa", "testdata/minSizeExpected.fa", "", "", "", false, 0, -1, 10, 100, 0, -1},
 	{"testdata/nameContainsTest.fa", "testdata/nameContainsOutput.fa", "testdata/nameContainsExpected.fa", "", "", "_maternal", false, 0, -1, 0, 100, 0, -1},
@@ -33,7 +33,7 @@ var FaFilterTests = []struct {
 func TestFaFilter(t *testing.T) {
 	var err error
 	for _, v := range FaFilterTests {
-		faFilter(v.inputFile, v.outputFile, v.name, v.notName, v.nameContains, v.refPositions, v.start, v.end, v.minSize, v.maxGC, v.minGC, v.finalNbases)
+		faFilter(v.inputFile, v.outputFile, v.name, v.notName, v.nameContains, v.refPositions, v.start, v.end, v.minSize, v.maxGC, v.minGC, v.finalBases)
 		records := fasta.Read(v.outputFile)
 		expected := fasta.Read(v.expectedFile)
 		if !fasta.AllAreEqual(records, expected) {
