@@ -45,7 +45,7 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 	var treeFastas []fasta.Fasta
 
 	for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
-		reconstruct.LoopNodes(tree, i, "", 0, false, 0, false)
+		reconstruct.LoopNodes(tree, i, "", 0, false, 0, false, "", nil)
 	}
 	for j := 0; j < len(leaves); j++ {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
