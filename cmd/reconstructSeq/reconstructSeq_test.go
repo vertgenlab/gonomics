@@ -19,9 +19,9 @@ var ReconstructSeqTests = []struct {
 	HighestProbThreshold float64
 	KeepAllSeq           bool
 	SubMatrix            bool
-	PDnaNode			 string
-	PDnaOutFile			 string
-	ExpectedPFile		 string
+	PDnaNode             string
+	PDnaOutFile          string
+	ExpectedPFile        string
 }{
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -33,9 +33,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
-		PDnaNode:			  "hca",
-		PDnaOutFile:	      "testdata/hca1.pfa",
-		ExpectedPFile:		  "testdata/hca1Expected.pfa",
+		PDnaNode:             "hca",
+		PDnaOutFile:          "testdata/hca1.pfa",
+		ExpectedPFile:        "testdata/hca1Expected.pfa",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -47,9 +47,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
-		PDnaNode:			  "hga",
-		PDnaOutFile:	      "testdata/hga1.pfa",
-		ExpectedPFile:		  "testdata/hga1Expected.pfa",
+		PDnaNode:             "hga",
+		PDnaOutFile:          "testdata/hga1.pfa",
+		ExpectedPFile:        "testdata/hga1Expected.pfa",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -61,9 +61,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
-		PDnaNode:			  "hoa",
-		PDnaOutFile:	      "testdata/hoa1.pfa",
-		ExpectedPFile:		  "testdata/hoa1Expected.pfa",
+		PDnaNode:             "hoa",
+		PDnaOutFile:          "testdata/hoa1.pfa",
+		ExpectedPFile:        "testdata/hoa1Expected.pfa",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -75,9 +75,9 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0.99,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
-		PDnaNode:			  "cba",
-		PDnaOutFile:	      "testdata/cba1.pfa",
-		ExpectedPFile:		  "testdata/cba1Expected.pfa",
+		PDnaNode:             "cba",
+		PDnaOutFile:          "testdata/cba1.pfa",
+		ExpectedPFile:        "testdata/cba1Expected.pfa",
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
@@ -120,9 +120,9 @@ var ReconstructSeqTests = []struct {
 		BiasN:                true,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
-		PDnaNode:			  "hga",
-		PDnaOutFile:	      "testdata/hga2.pfa",
-		ExpectedPFile:		  "testdata/hga2Expected.pfa",
+		PDnaNode:             "hga",
+		PDnaOutFile:          "testdata/hga2.pfa",
+		ExpectedPFile:        "testdata/hga2Expected.pfa",
 	},
 }
 
@@ -169,8 +169,8 @@ func TestReconstructSeq(t *testing.T) {
 			HighestProbThreshold: v.HighestProbThreshold,
 			KeepAllSeq:           v.KeepAllSeq,
 			SubMatrix:            v.SubMatrix,
-			PDnaNode:			  v.PDnaNode,
-			PDnaOutFile:		  v.PDnaOutFile,
+			PDnaNode:             v.PDnaNode,
+			PDnaOutFile:          v.PDnaOutFile,
 		}
 		ReconstructSeq(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
@@ -181,11 +181,12 @@ func TestReconstructSeq(t *testing.T) {
 		if v.PDnaNode != "" {
 			expectedPFa := pFasta.Read(v.ExpectedPFile)
 			reconPFa := pFasta.Read(v.PDnaOutFile)
-			if (!pFasta.AllAreEqual(expectedPFa, reconPFa, 1e-3)) {
+			if !pFasta.AllAreEqual(expectedPFa, reconPFa, 1e-3) {
 				t.Errorf("Error: pfasta output not as expected.")
 			} else {
 				fileio.EasyRemove(v.PDnaOutFile)
 			}
 		}
+		//hi this isto push
 	}
 }
