@@ -111,10 +111,6 @@ var readHeaderTests = []struct {
 					},
 				},
 			},
-			{IsLeaf: true,
-				Reserved: 0,
-				Count:    0,
-			},
 		},
 	},
 }
