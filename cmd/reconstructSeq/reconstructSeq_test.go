@@ -187,6 +187,5 @@ func TestReconstructSeq(t *testing.T) {
 				fileio.EasyRemove(v.PDnaOutFile)
 			}
 		}
-		//hi this isto push
 	}
 }
