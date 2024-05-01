@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/reconstruct"
 	"github.com/vertgenlab/gonomics/simulate"
-	"github.com/vertgenlab/gonomics/dna/pDna"
 )
 
 type Settings struct {
@@ -30,7 +30,7 @@ type Settings struct {
 	UnitBranchLength       float64
 	SubstitutionMatrixFile string
 	PDnaNode               string
-	PDnaOutFile		   	   string			
+	PDnaOutFile            string
 }
 
 func ReconstructSeq(s Settings) {
@@ -57,7 +57,7 @@ func ReconstructSeq(s Settings) {
 
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
-	
+
 	//initialise pfasta for pdna node
 	pDnaRecords := []pFasta.PFasta{{Name: s.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 
@@ -68,7 +68,7 @@ func ReconstructSeq(s Settings) {
 	for j := range leaves {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
 	}
-	
+
 	for k := range branches {
 		treeFastas = append(treeFastas, *branches[k].Fasta)
 	}
@@ -95,15 +95,6 @@ func ReconstructSeq(s Settings) {
 		pFasta.Write(s.PDnaOutFile, pDnaRecords)
 	}
 }
-
-// func writePfastaHeader(out *fileio.EasyWriter, name string, seqLength int) {
-// 	_, err = fmt.Fprint(out, "pFasta_format_1.0\n")
-// 	exception.PanicOnErr(err)
-// 	_, err = fmt.Fprintf(out, "%s\t%v\n", record.Name, seqLength)
-// 	exception.PanicOnErr(err)
-// 	_, err = fmt.Fprintf(out, "EndHeader\n")
-// 	exception.PanicOnErr(err)
-// }
 
 func usage() {
 	fmt.Print(
@@ -156,7 +147,7 @@ func main() {
 		UnitBranchLength:       *unitBranchLength,
 		SubMatrix:              *subMatrix,
 		PDnaNode:               *pDnaNode,
-		PDnaOutFile:			*pDnaOutFile,
+		PDnaOutFile:            *pDnaOutFile,
 	}
 
 	ReconstructSeq(s)

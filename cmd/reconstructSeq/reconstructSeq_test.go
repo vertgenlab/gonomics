@@ -22,6 +22,7 @@ var ReconstructSeqTests = []struct {
 	PDnaNode             string
 	PDnaOutFile          string
 	ExpectedPFile        string
+	Precision            float32
 }{
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -36,6 +37,7 @@ var ReconstructSeqTests = []struct {
 		PDnaNode:             "hca",
 		PDnaOutFile:          "testdata/hca1.pfa",
 		ExpectedPFile:        "testdata/hca1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -50,6 +52,7 @@ var ReconstructSeqTests = []struct {
 		PDnaNode:             "hga",
 		PDnaOutFile:          "testdata/hga1.pfa",
 		ExpectedPFile:        "testdata/hga1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -64,6 +67,7 @@ var ReconstructSeqTests = []struct {
 		PDnaNode:             "hoa",
 		PDnaOutFile:          "testdata/hoa1.pfa",
 		ExpectedPFile:        "testdata/hoa1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -78,6 +82,7 @@ var ReconstructSeqTests = []struct {
 		PDnaNode:             "cba",
 		PDnaOutFile:          "testdata/cba1.pfa",
 		ExpectedPFile:        "testdata/cba1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
@@ -123,6 +128,7 @@ var ReconstructSeqTests = []struct {
 		PDnaNode:             "hga",
 		PDnaOutFile:          "testdata/hga2.pfa",
 		ExpectedPFile:        "testdata/hga2Expected.pfa",
+		Precision:            1e-3,
 	},
 }
 
@@ -181,12 +187,11 @@ func TestReconstructSeq(t *testing.T) {
 		if v.PDnaNode != "" {
 			expectedPFa := pFasta.Read(v.ExpectedPFile)
 			reconPFa := pFasta.Read(v.PDnaOutFile)
-			if !pFasta.AllAreEqual(expectedPFa, reconPFa, 1e-3) {
+			if !pFasta.AllAreEqual(expectedPFa, reconPFa, v.Precision) {
 				t.Errorf("Error: pfasta output not as expected.")
 			} else {
 				fileio.EasyRemove(v.PDnaOutFile)
 			}
 		}
-		//structurally important comment?
 	}
 }

@@ -3,13 +3,12 @@ package reconstruct
 
 import (
 	"log"
-	// "fmt"
 
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
-	"github.com/vertgenlab/gonomics/dna/pDna"
 )
 
 // WriteTreeToFasta writes assigned sequences at all nodes to a fasta file.
@@ -73,6 +72,7 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 	return answer
 }
 
+// LikelihoodsToPbase converts and normalises a slice of probabilities for one position of a sequence. That position refers to a specific base.
 func LikelihoodsToPBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, highestProbThreshold float64) pDna.Float32Base {
 	if len(likelihoods) < 4 {
 		log.Fatalf("Error: Expected four bases, received less.")
@@ -83,10 +83,10 @@ func LikelihoodsToPBase(likelihoods []float64, nonBiasBaseThreshold float64, bia
 		total += v
 	}
 	var answer pDna.Float32Base
-	answer.A = float32(likelihoods[0]/ total) 
-	answer.C = float32(likelihoods[1]/ total)
-	answer.G = float32(likelihoods[2]/ total)
-	answer.T = float32(likelihoods[3]/ total)
+	answer.A = float32(likelihoods[0] / total)
+	answer.C = float32(likelihoods[1] / total)
+	answer.G = float32(likelihoods[2] / total)
+	answer.T = float32(likelihoods[3] / total)
 
 	return answer
 }
@@ -347,7 +347,7 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
 					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold))
 				}
-				
+
 			}
 		} else {
 			answerBase = dna.Gap
