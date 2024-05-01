@@ -13,6 +13,8 @@ func usage() {
 	fmt.Printf(
 		"pFaTools - a collection of tools for manipulating pFasta files.\n" +
 			"Usage:\n" +
+			"\tpFaTools entropyTrack in.pfa out.wig\n" +
+			"\tOR\n" +
 			"\tpFaTools extract in.pfa chrom start end out.pFa\n" +
 			"\tOR\n" +
 			"\tpFaTools extractBed in.pfa regions.bed outDir.pFa\n" +
@@ -34,6 +36,8 @@ func main() {
 	}
 
 	switch flag.Arg(0) {
+	case "entropyTrack":
+		parseEntropyTrackArgs()
 	case "extract":
 		parseExtractArgs()
 	case "extractBed":
