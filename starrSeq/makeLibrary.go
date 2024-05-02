@@ -36,8 +36,7 @@ func searchConstruct(ref fasta.Fasta, query []dna.Base) bool {
 	var testSeq []dna.Base
 	for i := 0; i < len(ref.Seq)-len(query); i++ {
 		testSeq = ref.Seq[i : i+len(query)]
-		fmt.Println(len(testSeq), len(query))
-		if dna.SeqsAreSimilar(testSeq, query, 2) {
+		if dna.SeqsAreSimilar(testSeq, query, 1) {
 			return false
 		}
 	}
@@ -64,11 +63,8 @@ func orderPools(pools [][]fasta.Fasta) [][]int {
 	return ans
 }
 
-func makeNewPool(pools [][]fasta.Fasta) {
-	pools = append(pools, []fasta.Fasta{})
-}
-
-func distributeIntoPool(pools [][]fasta.Fasta, overlap []dna.Base, minTm float64) int {
+func distributeIntoPool(pools, oligoPools [][]fasta.Fasta, overlap []dna.Base, minTm float64) (int, [][]fasta.Fasta, [][]fasta.Fasta) {
+	var match bool = false
 	idx := orderPools(pools)
 	searchSeq := findSearchSeq(overlap, minTm)
 	for i := range idx {
@@ -76,13 +72,17 @@ func distributeIntoPool(pools [][]fasta.Fasta, overlap []dna.Base, minTm float64
 			if searchConstruct(pools[idx[i][0]][j], searchSeq) {
 				continue
 			} else {
+				match = true
 				break
 			}
 		}
-		return idx[i][0]
+		if !match {
+			return idx[i][0], pools, oligoPools
+		}
 	}
-	makeNewPool(pools)
-	return len(pools) + 1
+	pools = append(pools, []fasta.Fasta{})
+	oligoPools = append(oligoPools, []fasta.Fasta{})
+	return len(pools)-1, pools, oligoPools
 }
 
 func checkTm(fa fasta.Fasta, mid int, minTemp, maxTemp float64) (bool, float64) {
@@ -144,7 +144,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 	var pass, odd, inRange bool = false, true, false
 	var Tm, bestDeltaTm, newTm float64
 	var o *fileio.EasyWriter
-	var oligoPools, pools [][]fasta.Fasta = [][]fasta.Fasta{{}}, [][]fasta.Fasta{{}}
+	var oligoPools, pools [][]fasta.Fasta = [][]fasta.Fasta{}, [][]fasta.Fasta{}
 
 	o = fileio.EasyCreate(summaryFile)
 	fileio.WriteToFileHandle(o, "construct\tTm\toverlapBases\toligoSizeF\toligoSizeR\twithinRange\toverlapSize\tconstructSize\tGC%\tpool")
@@ -154,7 +154,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 		inRange, Tm = checkTm(constructs[i], mid, minTemp, maxTemp)
 
 		if inRange {
-			idx = distributeIntoPool(pools, constructs[i].Seq[mid-10:mid+10], minTemp)
+			idx, pools, oligoPools = distributeIntoPool(pools, oligoPools, constructs[i].Seq[mid-10:mid+10], minTemp)
 			oligoPools[idx] = append(oligoPools[idx], createOligos(constructs[i], mid+10, mid-10)...)
 			pools[idx] = append(pools[idx], constructs[i])
 			fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\ttrue\t20\t%d\t%f\t%c",
@@ -185,7 +185,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 						} else {
 							inRange = false
 						}
-						idx = distributeIntoPool(pools, constructs[i].Seq[down:up], minTemp)
+						idx, pools, oligoPools = distributeIntoPool(pools, oligoPools, constructs[i].Seq[down:up], minTemp)
 						oligoPools[idx] = append(oligoPools[idx], createOligos(constructs[i], up, down)...)
 						pools[idx] = append(pools[idx], constructs[i])
 						fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\t%t\t%d\t%d\t%f\t%c",
@@ -193,7 +193,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 						break
 					}
 				}
-				idx = distributeIntoPool(pools, constructs[i].Seq[bestMid-10:bestMid+10], minTemp)
+				idx, pools, oligoPools = distributeIntoPool(pools, oligoPools, constructs[i].Seq[bestMid-10:bestMid+10], minTemp)
 				oligoPools[idx] = append(oligoPools[idx], createOligos(constructs[i], bestMid+10, bestMid-10)...)
 				pools[idx] = append(pools[idx], constructs[i])
 				fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\tfalse\t20\t%d\t%f\t%c",
@@ -202,7 +202,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 			}
 			inRange, Tm = checkTm(constructs[i], mid, minTemp, maxTemp)
 			if inRange {
-				idx = distributeIntoPool(pools, constructs[i].Seq[mid-10:mid+10], minTemp)
+				idx, pools, oligoPools = distributeIntoPool(pools, oligoPools, constructs[i].Seq[mid-10:mid+10], minTemp)
 				oligoPools[idx] = append(oligoPools[idx], createOligos(constructs[i], mid+10, mid-10)...)
 				pools[idx] = append(pools[idx], constructs[i])
 				fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\ttrue\t20\t%d\t%f\t%c",
