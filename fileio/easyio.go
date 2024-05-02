@@ -3,11 +3,12 @@ package fileio
 import (
 	"bufio"
 	"fmt"
-	"github.com/klauspost/pgzip"
 	"io"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/klauspost/pgzip"
 
 	"github.com/vertgenlab/gonomics/exception"
 )
@@ -44,7 +45,6 @@ func EasyOpen(filename string) *EasyReader {
 		// if the file begins with the two magic gzip bytes 1f8d.
 		// If it does, append .gz to the filename so it is parsed
 		// as gzip in the following switch case.
-		answer.File = os.Stdin
 		readerInput, hasMagicGzip = newStdinMagicReader(magicGzip)
 		if hasMagicGzip {
 			filename += ".gz"

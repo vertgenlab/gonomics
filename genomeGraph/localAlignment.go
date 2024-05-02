@@ -7,6 +7,7 @@ import (
 
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 )
 
 // MatrixMemoryPool represents a scoring matrix used in local alignment, specifically for sync.Pool
@@ -18,9 +19,10 @@ type MatrixMemoryPool struct {
 	matrix [][]int64
 	trace  [][]byte
 
-	Seq   []dna.Base
-	Path  []uint32
-	Route []cigar.ByteCigar
+	Seq       []dna.Base
+	TwoBitSeq *dnaTwoBit.TwoBit
+	Path      []uint32
+	Route     []cigar.ByteCigar
 
 	QueryStart  int
 	QueryEnd    int
@@ -33,7 +35,7 @@ type MatrixMemoryPool struct {
 
 type ScoreCard struct {
 	Curr *SeedDev
-	Seq  []dna.Base
+	Seq  *dnaTwoBit.TwoBit
 	Tail *SeedDev
 
 	TargetStart int
@@ -71,7 +73,8 @@ func MatrixPoolMemory(size int) *sync.Pool {
 				routeIdx:    0,
 				matrix:      m,
 				trace:       t,
-				Seq:         make([]dna.Base, 0, 150),
+				Seq:         make([]dna.Base, 0, 300),
+				TwoBitSeq:   &dnaTwoBit.TwoBit{},
 				Path:        make([]uint32, 0, 10),
 				Route:       make([]cigar.ByteCigar, 0, 3),
 				QueryStart:  0,

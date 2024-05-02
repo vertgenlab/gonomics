@@ -18,7 +18,7 @@ func TestWorkerWithWriting(t *testing.T) {
 	var stepSize int = 32
 	var numberOfReads int = 500
 	var readLength int = 150
-	var mutations int = 1
+	var mutations int = 3
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 12
 	var scoreMatrix = align.HumanChimpTwoScoreMatrix

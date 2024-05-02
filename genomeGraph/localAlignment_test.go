@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 )
 
 // func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []*cigar.Cigar, int64, int64, int64, int64)
@@ -27,7 +26,6 @@ func TestRightLocal(t *testing.T) {
 	m, trace := swMatrixSetup(10000)
 
 	score, alignmentPath, refStart, refEnd, queryStart, queryEnd := RightLocal(seqOneA, seqOneB, align.HumanChimpTwoScoreMatrix, -600, m, trace)
-
 	log.Printf("score=%d, alignment=%s, refStart=%d, refEnd=%d, queryStart=%d, queryEnd=%d\n", score, cigar.ByteCigarToString(alignmentPath), refStart, refEnd, queryStart, queryEnd)
 }
 
@@ -44,15 +42,14 @@ func BenchmarkLocalLeftDna(b *testing.B) {
 }
 
 // BenchmarkTwoBitLocalLeftAlign benchmarks the TwoBitLocalLeftAlign function.
-func BenchmarkTwoBitLocalLeftAlign(b *testing.B) {
-	var seqOneA = dnaTwoBit.NewTwoBit(dna.StringToBases("TAGGGGGTGGGGGGGGT"))
-	var seqOneB = dnaTwoBit.NewTwoBit(dna.StringToBases("CAGGGGGTGGGGGGGG"))
-	m, trace := swMatrixSetup(10000)
-	b.ReportAllocs()
-	b.ResetTimer() // Resets the timer to exclude setup time from benchmark measurements
-	for n := 0; n < b.N; n++ {
-		TwoBitLocalLeftAlign(seqOneA, seqOneB, align.HumanChimpTwoScoreMatrix, -600, m, trace)
-	}
-	b.StopTimer()
+// func BenchmarkTwoBitLocalLeftAlign(b *testing.B) {
+// 	var seqOneA = dnaTwoBit.NewTwoBit(dna.StringToBases("TAGGGGGTGGGGGGGGT"))
+// 	var seqOneB = dnaTwoBit.NewTwoBit(dna.StringToBases("CAGGGGGTGGGGGGGG"))
+// 	b.ReportAllocs()
+// 	b.ResetTimer() // Resets the timer to exclude setup time from benchmark measurements
+// 	for n := 0; n < b.N; n++ {
+// 		TwoBitLocalLeftAlign(seqOneA, seqOneB, align.HumanChimpTwoScoreMatrix, -600)
+// 	}
+// 	b.StopTimer()
 
-}
+// }

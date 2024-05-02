@@ -32,6 +32,9 @@ func MustCreate(filename string) *os.File {
 // MustOpen opens the input file.
 // Fatal/Panics when appropriate.
 func MustOpen(filename string) *os.File {
+	if strings.Contains(filename, "stdin") {
+		return os.Stdin
+	}
 	file, err := os.Open(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrNotExist) {
 		log.Fatal(err.Error())

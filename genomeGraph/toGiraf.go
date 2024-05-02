@@ -58,7 +58,6 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			sk.currScore = sk.seedScore
 		} else {
 			config.Extension = sk.extension - int(sk.currSeed.TotalLength)
-
 			sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath = LeftAlignTraversal(&gg.Nodes[sk.currSeed.TargetId], sk.leftSeq, int(sk.currSeed.TargetStart), sk.leftPath, sk.currSeq[:sk.currSeed.QueryStart], config, sk, matrixTrace)
 			sk.rightAlignment, sk.rightScore, sk.targetEnd, sk.queryEnd, sk.rightPath = RightAlignTraversal(&gg.Nodes[sk.tailSeed.TargetId], sk.rightSeq, int(sk.tailSeed.TargetStart+sk.tailSeed.Length), sk.rightPath, sk.currSeq[sk.tailSeed.QueryStart+sk.tailSeed.Length:], config, &sk, matrixTrace)
 			sk.currScore = sk.leftScore + sk.seedScore + sk.rightScore
@@ -94,12 +93,6 @@ type ScoreMatrixHelper struct {
 	MinMatch                       int64
 	LeastSevereMismatch            int64
 	LeastSevereMatchMismatchChange int64
-}
-
-func getScoreMatrixHelp(scoreMatrix [][]int64) *ScoreMatrixHelper {
-	help := ScoreMatrixHelper{Matrix: scoreMatrix}
-	help.MaxMatch, help.MinMatch, help.LeastSevereMismatch, help.LeastSevereMatchMismatchChange = MismatchStats(scoreMatrix)
-	return &help
 }
 
 func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {

@@ -168,7 +168,6 @@ func TestAlignGraphTraversal(t *testing.T) {
 	if expectedLeftTargetStart != leftTargetStart || leftQueryStart != expectedLeftQueryStart {
 		t.Errorf("Error: Left direction expected target and query start (%d, %d), got (%d, %d)", expectedLeftTargetStart, leftQueryStart, leftTargetStart, leftQueryStart)
 	}
-
 }
 
 func BenchmarkGirafAlignment(b *testing.B) {

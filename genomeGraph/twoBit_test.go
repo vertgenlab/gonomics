@@ -1,7 +1,6 @@
 package genomeGraph
 
 import (
-	"log"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/align"
@@ -10,7 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 )
 
-func TestGetLeftTwoBitBases(t *testing.T) {
+func TestGetwoBitBases(t *testing.T) {
 	n1 := &Node{
 		Seq: dna.StringToBases("ACGTA"),
 	}
@@ -27,6 +26,12 @@ func TestGetLeftTwoBitBases(t *testing.T) {
 	rightExpected := dna.StringToBases("ACGTA")
 	rightTargetBases := RightGetTwoBit(n1, 10, 2, dnaTwoBit.NewTwoBit(right), dnaTwoBit.NewTwoBit(dna.StringToBases("")))
 
+	rightDnaBases := getRightBases(n1, 10, 2, right, dna.StringToBases(""))
+
+	if dnaTwoBit.ToString(rightTargetBases) != dna.BasesToString(rightDnaBases) {
+		t.Errorf("RightGetTwoBit() = %v, want %v", dna.BasesToString(rightDnaBases), dnaTwoBit.ToString(rightTargetBases))
+	}
+
 	if dnaTwoBit.ToString(rightTargetBases) != dna.BasesToString(rightExpected) {
 		t.Errorf("getRightBases() = %v, want %v", dnaTwoBit.ToString(rightTargetBases), dna.BasesToString(rightExpected))
 	}
@@ -34,8 +39,13 @@ func TestGetLeftTwoBitBases(t *testing.T) {
 	leftExpected := dna.StringToBases("CGATCGA")
 	leftTargetBases := LeftGetTwoBit(n2, 7, 7, dnaTwoBit.NewTwoBit(leftSeq), dnaTwoBit.NewTwoBit(dna.StringToBases("")))
 
+	leftDnaBases := getLeftBases(n2, 7, 7, leftSeq, dna.StringToBases(""))
+
+	if dnaTwoBit.ToString(leftTargetBases) != dna.BasesToString(leftDnaBases) {
+		t.Errorf("LeftGetTwoBit() = %v, want %v", dna.BasesToString(leftDnaBases), dnaTwoBit.ToString(leftTargetBases))
+	}
 	if dna.BasesToString(leftExpected) != dnaTwoBit.ToString(leftTargetBases) {
-		t.Errorf("getLeftTargetBases() = %v, want %v", dna.BasesToString(leftExpected), dnaTwoBit.ToString(leftTargetBases))
+		t.Errorf("LeftGetTwoBit()= %v, want %v", dna.BasesToString(leftExpected), dnaTwoBit.ToString(leftTargetBases))
 	}
 }
 
@@ -43,36 +53,94 @@ func TestTwoBitLeftLocal(t *testing.T) {
 	var seqOneA = dna.StringToBases("TAGGGGGTGGGGGGGGT")
 	var seqOneB = dna.StringToBases("CAGGGGGTGGGGGGGG")
 	m, trace := swMatrixSetup(10000)
+	config := &GraphSettings{
+		ScoreMatrix:    align.HumanChimpTwoScoreMatrix,
+		TileSize:       32,
+		StepSize:       32,
+		GapPenalty:     -600,
+		OpenGapPenalty: -150,
+	}
+	memoryPool := MatrixPoolMemory(defaultMatrixSize)
 
-	score, alignmentPath, refStart, refEnd, queryStart, queryEnd := TwoBitLocalLeftAlign(dnaTwoBit.NewTwoBit(seqOneA), dnaTwoBit.NewTwoBit(seqOneB), align.HumanChimpTwoScoreMatrix, -600, m, trace)
+	scoreTwoBit, alignmentPathTwoBit, targetStartTwoBit, queryStartTwoBit := TwoBitLocalLeftAlign(dnaTwoBit.NewTwoBit(seqOneA), dnaTwoBit.NewTwoBit(seqOneB), config, memoryPool)
+	scoreDnaBase, alignmentPathDnaBase, targetStartDnaBase, targetEndDnaBase, queryStartDnaBase, queryEndDnaBase := LeftLocal(seqOneA, seqOneB, align.HumanChimpTwoScoreMatrix, config.GapPenalty, m, trace)
+
 	expextedScore := int64(880)
-	log.Printf("score=%d, alignment=%s, refStart=%d, refEnd=%d, queryStart=%d, queryEnd=%d\n", score, cigar.ByteCigarToString(alignmentPath), refStart, refEnd, queryStart, queryEnd)
-	if score != expextedScore {
-		t.Errorf("Error: Left direction expected score %d, got %d", expextedScore, score)
+	expectedAlign := "15=1D"
+	expectedTargetStart := 1
+	expectedTargetEnd := 17
+	expectedQueryStart := 1
+	expectedQueryEnd := 16
+	t.Logf("score=%d, alignment=%s, refStart=%d, queryStart=%d\n", scoreTwoBit, cigar.ByteCigarToString(alignmentPathTwoBit), targetStartTwoBit, queryStartTwoBit)
+
+	if scoreTwoBit != expextedScore || scoreTwoBit != scoreDnaBase {
+		t.Errorf("Error: Left direction expected score %d, got %d", scoreDnaBase, scoreTwoBit)
+	}
+	if expectedAlign != cigar.ByteCigarToString(alignmentPathDnaBase) || cigar.ByteCigarToString(alignmentPathTwoBit) != cigar.ByteCigarToString(alignmentPathDnaBase) {
+		t.Errorf("Error: Left direction expected score %s, got %s", expectedAlign, cigar.ByteCigarToString(alignmentPathTwoBit))
+	}
+
+	if targetStartTwoBit != expectedTargetStart || targetStartTwoBit != targetStartDnaBase {
+		t.Errorf("Error: Left target start position %d, != %d", expectedTargetStart, targetStartTwoBit)
+	}
+
+	if expectedTargetEnd != targetEndDnaBase {
+		t.Errorf("Error: Left target end position %d, != %d", expectedTargetEnd, targetEndDnaBase)
+	}
+
+	if queryStartTwoBit != expectedQueryStart || queryStartTwoBit != queryStartDnaBase {
+		t.Errorf("Error: Left query start position %d, != %d", expectedQueryStart, scoreTwoBit)
+	}
+
+	if expectedQueryEnd != queryEndDnaBase {
+		t.Errorf("Error: Left query end position %d, != %d", expectedQueryEnd, queryEndDnaBase)
 	}
 }
+func TestTwoBitRightLocal(t *testing.T) {
+	var seqOneA = dna.StringToBases("TAGGGGGTGGGGGGGGT")
+	var seqOneB = dna.StringToBases("CAGGGGGTGGGGGGGG")
 
-func TestLeftTwoBitLocal(t *testing.T) {
-	var seqOneA = dnaTwoBit.NewTwoBit(dna.StringToBases("TAGGGGGTGGGGGGGGT"))
-	var seqOneB = dnaTwoBit.NewTwoBit(dna.StringToBases("CAGGGGGTGGGGGGGG"))
+	config := &GraphSettings{
+		ScoreMatrix:    align.HumanChimpTwoScoreMatrix,
+		TileSize:       32,
+		StepSize:       32,
+		GapPenalty:     -600,
+		OpenGapPenalty: -10,
+	}
+	memoryPool := MatrixPoolMemory(defaultMatrixSize)
 	m, trace := swMatrixSetup(10000)
-	score, alignmentPath, refStart, refEnd, queryStart, queryEnd := TwoBitLocalLeftAlign(seqOneA, seqOneB, align.HumanChimpTwoScoreMatrix, -600, m, trace)
-	log.Printf("score=%d, alignment=%s, refStart=%d, refEnd=%d, queryStart=%d, queryEnd=%d\n", score, cigar.ByteCigarToString(alignmentPath), refStart, refEnd, queryStart, queryEnd)
+	scoreTwoBit, alignmentPathTwoBit, targetEndTwoBit, queryEndTwoBit := TwoBitLocalRightAlign(dnaTwoBit.NewTwoBit(seqOneA), dnaTwoBit.NewTwoBit(seqOneB), config, memoryPool)
+	scoreDnaBase, alignmentPathDnaBase, targetStartDnaBase, targetEndDnaBase, queryStartDnaBase, queryEndDnaBase := RightLocal(seqOneA, seqOneB, align.HumanChimpTwoScoreMatrix, config.GapPenalty, m, trace)
+
+	expextedScore := int64(1244)
+	expectedAlign := "1X15="
+	expectedTargetStart := 0
+	expectedTargetEnd := 16
+	expectedQueryStart := 0
+	expectedQueryEnd := 16
+
+	t.Logf("score=%d, alignment=%s, refEnd=%d,  queryEnd=%d\n", scoreTwoBit, cigar.ByteCigarToString(alignmentPathTwoBit), targetEndTwoBit, queryEndTwoBit)
+
+	if scoreTwoBit != expextedScore || scoreTwoBit != scoreDnaBase {
+		t.Errorf("Error: Right direction expected score %d, got %d", expextedScore, scoreTwoBit)
+	}
+	if cigar.ByteCigarToString(alignmentPathTwoBit) != expectedAlign || cigar.ByteCigarToString(alignmentPathTwoBit) != cigar.ByteCigarToString(alignmentPathDnaBase) {
+		t.Errorf("Error: Right direction expected score %s, got %s", cigar.ByteCigarToString(alignmentPathTwoBit), expectedAlign)
+	}
+
+	if expectedTargetStart != targetStartDnaBase {
+		t.Errorf("Error: Right target start position %d, != %d", expectedTargetStart, targetStartDnaBase)
+	}
+
+	if targetEndTwoBit != expectedTargetEnd || targetEndTwoBit != targetEndDnaBase {
+		t.Errorf("Error: Right target end position %d, != %d", expectedTargetEnd, targetEndTwoBit)
+	}
+
+	if expectedQueryStart != queryStartDnaBase {
+		t.Errorf("Error: Right query start position %d, != %d", expectedQueryStart, queryStartDnaBase)
+	}
+
+	if queryEndTwoBit != expectedQueryEnd || queryEndTwoBit != queryEndDnaBase {
+		t.Errorf("Error: Right query end position %d, != %d", expectedQueryEnd, queryEndTwoBit)
+	}
 }
-
-// if rightScore != expectedRightScore {
-// 		t.Errorf("Error: Right direction expected score %d, got %d", expectedRightScore, rightScore)
-// 	}
-
-// 	if cigar.ByteCigarToString(rightAlign) != cigar.ByteCigarToString(expectedRightAlignment) {
-// 		t.Errorf("Error: Right direction expected alignment %+v, got %+v", expectedRightAlignment, rightAlign)
-// 	}
-// 	if cigar.ByteCigarToString(leftAlign) != cigar.ByteCigarToString(expectedLeftAlignment) {
-// 		t.Errorf("Error: Left direction expected alignment %+v, got %+v", expectedLeftAlignment, leftAlign)
-// 	}
-// 	if expectedRightTargetEnd != rightTargetEnd || rightQueryEnd != expectedRightQueryEnd {
-// 		t.Errorf("Error: Right direction: expected target and query start (%d, %d), got (%d, %d)", expectedRightTargetEnd, rightQueryEnd, rightTargetEnd, rightQueryEnd)
-// 	}
-// 	if expectedLeftTargetStart != leftTargetStart || leftQueryStart != expectedLeftQueryStart {
-// 		t.Errorf("Error: Left direction expected target and query start (%d, %d), got (%d, %d)", expectedLeftTargetStart, leftQueryStart, leftTargetStart, leftQueryStart)
-// 	}

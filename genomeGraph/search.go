@@ -27,21 +27,6 @@ type memoryPool struct {
 	Worker []SeedDev
 }
 
-type MatrixAln struct {
-	m     [][]int64
-	trace [][]byte
-}
-
-type dnaPool struct {
-	Seq         []dna.Base
-	Path        []uint32
-	queryStart  int
-	queryEnd    int
-	targetStart int
-	targetEnd   int
-	currScore   int64
-}
-
 type dynamicScoreKeeper struct {
 	i        int
 	j        int
@@ -71,22 +56,6 @@ type scoreKeeper struct {
 	currSeed       SeedDev
 	leftAlignment  []cigar.ByteCigar
 	rightAlignment []cigar.ByteCigar
-}
-
-func NewDnaPool() sync.Pool {
-	return sync.Pool{
-		New: func() interface{} {
-			dnaSeq := dnaPool{
-				Seq:         make([]dna.Base, 0, 150),
-				Path:        make([]uint32, 0, 10),
-				queryStart:  0,
-				targetStart: 0,
-				targetEnd:   0,
-				queryEnd:    0,
-			}
-			return &dnaSeq
-		},
-	}
 }
 
 func NewMemSeedPool() sync.Pool {
@@ -125,7 +94,7 @@ func resetScoreKeeper(sk scoreKeeper) {
 // getLeftBases retrieves bases from the left of a given position in a node's sequence and appends additional sequence.
 func getLeftBases(n *Node, extension int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	seqLen := len(seq)
-	basesToTake := numbers.Min(seqLen+refEnd, extension) - seqLen
+	basesToTake := int(math.Min(float64(seqLen+refEnd), float64(extension))) - seqLen
 	if basesToTake > 0 {
 		ans = append(ans, n.Seq[refEnd-basesToTake:refEnd]...)
 	}
@@ -217,7 +186,8 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, settings *GraphSettings, 
 
 // getRightBases retrieves bases from the right of a given start position in a node's sequence and appends it to the provided sequence.
 func getRightBases(n *Node, extension int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
-	basesToTake := numbers.Min(len(n.Seq)-start, extension)
+	availableBases := len(n.Seq) - start
+	basesToTake := int(math.Min(float64(availableBases), float64(extension)))
 	ans = append(ans, seq...)
 	if basesToTake > 0 {
 		ans = append(ans, n.Seq[start:start+basesToTake]...)
@@ -575,6 +545,7 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.Fast
 	}
 	return finalSeeds
 }
+
 func SortSeedLen(seeds []SeedDev) {
 	sort.Slice(seeds, func(i, j int) bool { return seeds[i].TotalLength > seeds[j].TotalLength })
 }

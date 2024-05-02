@@ -75,8 +75,6 @@ func TestSoftClipBases(t *testing.T) {
 		t.Errorf("Test case 2 failed. Expected %s, but got %s", ByteCigarToString(expected1), ByteCigarToString(result1))
 	}
 
-	// Test case 2: front = 0, lengthOfRead = 25
-
 	insertions := []ByteCigar{
 		{RunLen: 10, Op: 'M'},
 		{RunLen: 5, Op: 'I'},
@@ -139,6 +137,15 @@ func TestReverseByteCigars(t *testing.T) {
 	if ByteCigarToString(reversedCigars) != ByteCigarToString(expected) {
 		t.Errorf("Error: ReverseByteCigars failed - %v != %v", reversedCigars, expected)
 	}
+}
+
+func TestUint32Cigar(t *testing.T) {
+	cigars := []CigarOp{36, 160, 34}
+	expected := "2S10M2D"
+	if Uint32ToString(cigars) != expected {
+		t.Errorf("Error: Uint32Cigar conversion failed %s != %s...", Uint32ToString(cigars), expected)
+	}
+
 }
 func BenchmarkCigarBytesToString(b *testing.B) {
 	b.ReportAllocs()
