@@ -36,7 +36,7 @@ func searchConstruct(ref fasta.Fasta, query []dna.Base) bool {
 	var testSeq []dna.Base
 	for i := 0; i < len(ref.Seq)-len(query); i++ {
 		testSeq = ref.Seq[i : i+len(query)]
-		if dna.SeqsAreSimilar(testSeq, query, 1) {
+		if dna.SeqsAreSimilar(testSeq, query, 2) {
 			return false
 		}
 	}
@@ -64,10 +64,11 @@ func orderPools(pools [][]fasta.Fasta) [][]int {
 }
 
 func distributeIntoPool(pools, oligoPools [][]fasta.Fasta, overlap []dna.Base, minTm float64) (int, [][]fasta.Fasta, [][]fasta.Fasta) {
-	var match bool = false
+	var match bool
 	idx := orderPools(pools)
 	searchSeq := findSearchSeq(overlap, minTm)
 	for i := range idx {
+		match = false
 		for j := range pools[idx[i][0]] {
 			if searchConstruct(pools[idx[i][0]][j], searchSeq) {
 				continue
@@ -139,14 +140,14 @@ func extendOverlap(bestMid int, minTemp float64, maxOligoSize int, construct fas
 	return dna.MeltingTemp(construct.Seq[down:up]), up, down
 }
 
-func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, maxOligoSize int, summaryFile string) [][]fasta.Fasta {
+func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, maxOligoSize int, summaryFile, outDir string) [][]fasta.Fasta {
 	var mid, c, bestMid, up, down, idx int
 	var pass, odd, inRange bool = false, true, false
 	var Tm, bestDeltaTm, newTm float64
 	var o *fileio.EasyWriter
 	var oligoPools, pools [][]fasta.Fasta = [][]fasta.Fasta{}, [][]fasta.Fasta{}
 
-	o = fileio.EasyCreate(summaryFile)
+	o = fileio.EasyCreate(outDir + "/" + summaryFile)
 	fileio.WriteToFileHandle(o, "construct\tTm\toverlapBases\toligoSizeF\toligoSizeR\twithinRange\toverlapSize\tconstructSize\tGC%\tpool")
 
 	for i := range constructs {
@@ -254,7 +255,7 @@ func MakeLibrary(s MakeLibSettings) {
 		constructs = append(constructs, construct)
 	}
 	if s.MinTemp != -1 || s.MaxTemp != -1 {
-		pools = optimizeMeltingTemps(constructs, s.MinTemp, s.MaxTemp, s.MaxOligoLen, s.SumFile)
+		pools = optimizeMeltingTemps(constructs, s.MinTemp, s.MaxTemp, s.MaxOligoLen, s.SumFile, s.OutDir)
 	} else {
 		for i := range constructs {
 			mid = len(constructs[i].Seq) / 2
