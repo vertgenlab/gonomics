@@ -73,21 +73,24 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 }
 
 // LikelihoodsToPbase converts and normalises a slice of probabilities for one position of a sequence. That position refers to a specific base.
-func LikelihoodsToPBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, highestProbThreshold float64) pDna.Float32Base {
+func LikelihoodsToPBase(likelihoods []float64) pDna.Float32Base {
 	if len(likelihoods) < 4 {
 		log.Fatalf("Error: Expected four bases, received less.")
 	}
+
+	var answer pDna.Float32Base = pDna.Float32Base{A: 0, C: 0, G: 0, T: 0}
 
 	var total float64 = 0
 	for _, v := range likelihoods {
 		total += v
 	}
-	var answer pDna.Float32Base
-	answer.A = float32(likelihoods[0] / total)
-	answer.C = float32(likelihoods[1] / total)
-	answer.G = float32(likelihoods[2] / total)
-	answer.T = float32(likelihoods[3] / total)
 
+	if total > 0 {
+		answer.A = float32(likelihoods[0] / total)
+		answer.C = float32(likelihoods[1] / total)
+		answer.G = float32(likelihoods[2] / total)
+		answer.T = float32(likelihoods[3] / total)
+	}
 	return answer
 }
 
@@ -340,12 +343,12 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, biasN, highestProbThreshold) //biased estimate
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
-					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, nonBiasBaseThreshold, biasBase, highestProbThreshold))
+					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix))
 				}
 			} else {
 				answerBase = LikelihoodsToBase(fix, 0, dna.N, biasN, highestProbThreshold) //unbiased estimate
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
-					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix, 0, dna.N, highestProbThreshold))
+					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix))
 				}
 
 			}
