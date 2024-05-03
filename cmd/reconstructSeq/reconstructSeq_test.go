@@ -2,10 +2,9 @@ package main
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"os"
 	"testing"
 )
 
@@ -20,6 +19,10 @@ var ReconstructSeqTests = []struct {
 	HighestProbThreshold float64
 	KeepAllSeq           bool
 	SubMatrix            bool
+	PDnaNode             string
+	PDnaOutFile          string
+	ExpectedPFile        string
+	Precision            float32
 }{
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -31,6 +34,10 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:             "hca",
+		PDnaOutFile:          "testdata/hca1.pfa",
+		ExpectedPFile:        "testdata/hca1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -42,6 +49,10 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:             "hga",
+		PDnaOutFile:          "testdata/hga1.pfa",
+		ExpectedPFile:        "testdata/hga1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -53,6 +64,10 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:             "hoa",
+		PDnaOutFile:          "testdata/hoa1.pfa",
+		ExpectedPFile:        "testdata/hoa1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
@@ -64,6 +79,10 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0.99,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:             "cba",
+		PDnaOutFile:          "testdata/cba1.pfa",
+		ExpectedPFile:        "testdata/cba1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
@@ -106,11 +125,14 @@ var ReconstructSeqTests = []struct {
 		BiasN:                true,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
+		PDnaNode:             "hga",
+		PDnaOutFile:          "testdata/hga2.pfa",
+		ExpectedPFile:        "testdata/hga2Expected.pfa",
+		Precision:            1e-3,
 	},
 }
 
 func TestReconstructSeq(t *testing.T) {
-	var err error
 	var hum fasta.Fasta = fasta.Fasta{Name: "human"}
 	var chi fasta.Fasta = fasta.Fasta{Name: "chimp"}
 	var bon fasta.Fasta = fasta.Fasta{Name: "bonobo"}
@@ -153,13 +175,23 @@ func TestReconstructSeq(t *testing.T) {
 			HighestProbThreshold: v.HighestProbThreshold,
 			KeepAllSeq:           v.KeepAllSeq,
 			SubMatrix:            v.SubMatrix,
+			PDnaNode:             v.PDnaNode,
+			PDnaOutFile:          v.PDnaOutFile,
 		}
 		ReconstructSeq(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: output was not as expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
+		}
+		if v.PDnaNode != "" {
+			expectedPFa := pFasta.Read(v.ExpectedPFile)
+			reconPFa := pFasta.Read(v.PDnaOutFile)
+			if !pFasta.AllAreEqual(expectedPFa, reconPFa, v.Precision) {
+				t.Errorf("Error: pfasta output not as expected.")
+			} else {
+				fileio.EasyRemove(v.PDnaOutFile)
+			}
 		}
 	}
 }
