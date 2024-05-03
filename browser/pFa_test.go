@@ -1,7 +1,6 @@
 package browser
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
@@ -271,7 +270,7 @@ var PFaVisualizerRTests = []struct {
 	Expected         string
 }{
 	{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
-		OutFile:          "testdata/pfa_PFaVisualiserR_out_toy_1.txt",
+		OutFile:          "testdata/pfa_PFaVisualiserR_output_toy_1.txt",
 		Start:            4,
 		End:              21,
 		StartOfAlignment: false,
@@ -283,7 +282,7 @@ var PFaVisualizerRTests = []struct {
 		Expected:         "testdata/pfa_PFaVisualiserR_expected_toy_1.txt",
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
-		OutFile:          "testdata/pfa_PFaVisualiserR_out_toy_2.txt",
+		OutFile:          "testdata/pfa_PFaVisualiserR_output_toy_2.txt",
 		Start:            4,
 		End:              21,
 		StartOfAlignment: false,
@@ -295,7 +294,7 @@ var PFaVisualizerRTests = []struct {
 		Expected:         "testdata/pfa_PFaVisualiserR_expected_toy_2.txt",
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
-		OutFile:          "testdata/pfa_PFaVisualiserR_out_toy_3.txt",
+		OutFile:          "testdata/pfa_PFaVisualiserR_output_toy_3.txt",
 		Start:            4,
 		End:              21,
 		StartOfAlignment: false,
@@ -307,7 +306,7 @@ var PFaVisualizerRTests = []struct {
 		Expected:         "testdata/pfa_PFaVisualiserR_expected_toy_3.txt",
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_1.pfa",
-		OutFile:          "testdata/pfa_PFaVisualiserR_normalised_out_toy_1.txt",
+		OutFile:          "testdata/pfa_PFaVisualiserR_normalised_output_toy_1.txt",
 		Start:            6,
 		End:              13,
 		StartOfAlignment: false,
@@ -319,7 +318,7 @@ var PFaVisualizerRTests = []struct {
 		Expected:         "testdata/pfa_PFaVisualiserR_normalised_expected_toy_1.txt",
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_1.pfa",
-		OutFile:          "testdata/pfa_PFaVisualiserR_normalised_out_toy_2.txt",
+		OutFile:          "testdata/pfa_PFaVisualiserR_normalised_output_toy_2.txt",
 		Start:            6,
 		End:              13,
 		StartOfAlignment: false,
@@ -331,7 +330,7 @@ var PFaVisualizerRTests = []struct {
 		Expected:         "testdata/pfa_PFaVisualiserR_normalised_expected_toy_2.txt",
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_2.pfa",
-		OutFile:          "testdata/pfa_PFaVisualiserR_normalised_out_toy_3.txt",
+		OutFile:          "testdata/pfa_PFaVisualiserR_normalised_output_toy_3.txt",
 		Start:            6,
 		End:              13,
 		StartOfAlignment: false,
@@ -348,8 +347,6 @@ func TestPFaVisualizerR(t *testing.T) {
 	for _, testCase := range PFaVisualizerRTests {
 		PFaVisualizerR(testCase.InFile, testCase.OutFile, testCase.Start, testCase.End, testCase.StartOfAlignment, testCase.EndOfAlignment, testCase.SigFigs, testCase.DecimalPlaces, testCase.LineLength, testCase.SeqName)
 		if !fileio.AreEqual(testCase.OutFile, testCase.Expected) {
-			fmt.Print("HIHIHIHIHIHIHIHIHIHIHIHIIHIHI\n\n\n\n\n")
-			fmt.Printf("%s\n", testCase.OutFile)
 			t.Errorf("Error: in browser. PFaVisualiserR test not as expected.")
 		} else {
 			fileio.EasyRemove(testCase.OutFile)

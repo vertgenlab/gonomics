@@ -244,13 +244,13 @@ func printAllSetsR(out *fileio.EasyWriter, err error, record pFasta.PFasta, star
 		// gives decimal places
 		for idx <= end {
 			base := record.Seq[idx]
-			_, err = fmt.Fprintf(out, "%v\tA\t%.*e\n", idx, decimalPlaces, base.A)
+			_, err = fmt.Fprintf(out, "%v\tA\t%.*f\n", idx, decimalPlaces, base.A)
 			exception.PanicOnErr(err)
-			_, err = fmt.Fprintf(out, "%v\tC\t%.*e\n", idx, decimalPlaces, base.C)
+			_, err = fmt.Fprintf(out, "%v\tC\t%.*f\n", idx, decimalPlaces, base.C)
 			exception.PanicOnErr(err)
-			_, err = fmt.Fprintf(out, "%v\tG\t%.*e\n", idx, decimalPlaces, base.G)
+			_, err = fmt.Fprintf(out, "%v\tG\t%.*f\n", idx, decimalPlaces, base.G)
 			exception.PanicOnErr(err)
-			_, err = fmt.Fprintf(out, "%v\tT\t%.*e\n", idx, decimalPlaces, base.T)
+			_, err = fmt.Fprintf(out, "%v\tT\t%.*f\n", idx, decimalPlaces, base.T)
 			exception.PanicOnErr(err)
 			idx++
 		}
@@ -258,7 +258,7 @@ func printAllSetsR(out *fileio.EasyWriter, err error, record pFasta.PFasta, star
 		// gives sigfigs
 		for idx <= end {
 			base := record.Seq[idx]
-			_, err = fmt.Fprintf(out, "%v\tA\t%.*e\n", idx, sigFigs-1, base.A)
+			_, err = fmt.Fprintf(out, "%v\tA\t%.*f\n", idx, sigFigs-1, base.A)
 			exception.PanicOnErr(err)
 			_, err = fmt.Fprintf(out, "%v\tC\t%.*e\n", idx, sigFigs-1, base.C)
 			exception.PanicOnErr(err)

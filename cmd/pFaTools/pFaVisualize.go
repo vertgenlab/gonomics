@@ -3,26 +3,27 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/browser"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"os"
 	"strings"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/browser"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // VisualizeSettings defines the usage settings for the pFa Visualize subcommand.
 type VisualizeSettings struct {
-	InFile     string
-	OutDir     string
-	Start	   int
-	End	       int
-	SigFigs    int
-	DecimalPlaces int  
-	LineLength int
-	Chrom	   string
+	InFile           string
+	OutDir           string
+	Start            int
+	End              int
+	SigFigs          int
+	DecimalPlaces    int
+	LineLength       int
+	Chrom            string
 	StartOfAlignment bool
-	EndOfAlignment bool
+	EndOfAlignment   bool
+	TsvOut           bool
 }
 
 // VisualizeUsage defines the usage statement for the pFaTools Visualize subcommand.
@@ -45,6 +46,7 @@ func parseVisualizeArgs() {
 	var decimalPlaces *int = VisualizeFlags.Int("decimal", 5, "Specify the number of decimal places to round to. Should be between 1 and 15. Note that decimal places more to the right will accrue larger floating point error.")
 	var lineLength *int = VisualizeFlags.Int("lineLength", 50, "Sets length of each alignment line.")
 	var chrom *string = VisualizeFlags.String("chrom", "", "Specify the name of the sequence to display. Can be empty if only one sequence in input pfasta.")
+	var tsvOut *bool = VisualizeFlags.Bool("tsvOut", false, "Specify if user wants R-ready output (true). Defaults to false.")
 	var startOfAlignment bool = false
 	var endOfAlignment bool = false
 	var start int
@@ -76,16 +78,17 @@ func parseVisualizeArgs() {
 	outDir := VisualizeFlags.Arg(3)
 
 	s := VisualizeSettings{
-		InFile: inFile,
-		OutDir: outDir,
-		Start: start,
-		End: end,
-		SigFigs: *sigFigs,
-		DecimalPlaces: *decimalPlaces,  
-		LineLength: *lineLength,
-		Chrom: *chrom,
+		InFile:           inFile,
+		OutDir:           outDir,
+		Start:            start,
+		End:              end,
+		SigFigs:          *sigFigs,
+		DecimalPlaces:    *decimalPlaces,
+		LineLength:       *lineLength,
+		Chrom:            *chrom,
 		StartOfAlignment: startOfAlignment,
-		EndOfAlignment: endOfAlignment,
+		EndOfAlignment:   endOfAlignment,
+		TsvOut:           *tsvOut,
 	}
 
 	pFaVisualize(s)
@@ -93,5 +96,9 @@ func parseVisualizeArgs() {
 
 // pFaVisualize parses an input pFASTA file and Visualizes the file according to user-defined settings.
 func pFaVisualize(s VisualizeSettings) {
-	browser.PFaVisualizer(s.InFile, s.OutDir, s.Start, s.End, s.StartOfAlignment, s.EndOfAlignment, s.SigFigs, s.DecimalPlaces, s.LineLength, s.Chrom)
+	if s.TsvOut {
+		browser.PFaVisualizerR(s.InFile, s.OutDir, s.Start, s.End, s.StartOfAlignment, s.EndOfAlignment, s.SigFigs, s.DecimalPlaces, s.LineLength, s.Chrom)
+	} else {
+		browser.PFaVisualizer(s.InFile, s.OutDir, s.Start, s.End, s.StartOfAlignment, s.EndOfAlignment, s.SigFigs, s.DecimalPlaces, s.LineLength, s.Chrom)
+	}
 }
