@@ -2,12 +2,12 @@ package browser
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
 	"unicode/utf8"
-	"github.com/vertgenlab/gonomics/fasta/pFasta"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/exception"
 )
 
 // PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
@@ -57,7 +57,7 @@ func PFaVisualizer(infile string, outfile string, start int, end int, startOfAli
 
 			if endOfAlignment {
 				end = len(records[0].Seq)
-			} 
+			}
 
 			_, err = fmt.Fprintf(out, "Start: %d. End: %d. %s: %d.", start, end, formatting, formatNum)
 			exception.PanicOnErr(err)
@@ -73,8 +73,8 @@ func PFaVisualizer(infile string, outfile string, start int, end int, startOfAli
 
 				if endOfAlignment {
 					end = len(records[desiredSeqIdx].Seq)
-				} 
-	
+				}
+
 				_, err = fmt.Fprintf(out, "Start: %d. End: %d. %s: %d.", start, end, formatting, formatNum)
 				exception.PanicOnErr(err)
 
@@ -165,4 +165,108 @@ func calculateLongestNamePFa(f []pFasta.PFasta) int {
 		}
 	}
 	return ans
+}
+
+// PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
+// Can be written to a file or to standard out. Includes lineLength formatting option as int.
+// If 0 sig figs or 0 decimal places, returns full probability
+// There will be slight floating point errors in the last (or last two) places
+func PFaVisualizerR(infile string, outfile string, start int, end int, startOfAlignment bool, endOfAlignment bool, sigFigs int, decimalPlaces int, lineLength int, seqName string) {
+	if !startOfAlignment {
+		if !endOfAlignment && !(start < end) {
+			log.Fatalf("Error: Invalid arguments, start must be lower than end\n")
+		} else if start < 0 {
+			log.Fatalf("Error: Invalid arguments, start must be greater or equal to 0, or (case-insensitive) 'start'\n")
+		}
+	}
+	records := pFasta.Read(infile)
+	out := fileio.EasyCreate(outfile)
+
+	if len(records) > 1 && seqName == "" {
+		log.Fatalf("Error: Invalid arguments, must provide sequence name for file with multiple pFastas.\n")
+	}
+
+	var err error
+
+	if startOfAlignment {
+		start = 0
+	}
+	if len(records) == 0 {
+		log.Fatalf("Error: User provided empty pfasta file.\n")
+	}
+
+	if seqName == "" {
+		// only accepts single pFa or a .pFa with multiple pFastas and a specified record name
+		if len(records) > 1 {
+			log.Fatalf("Error: User must specify sequence name for pFasta file with more than 1 sequence.\n")
+		} else {
+			// pfa with 1 entry
+			if endOfAlignment {
+				end = len(records[0].Seq)
+			}
+
+			_, err = fmt.Fprintf(out, "Position\tBase\tProbability\n")
+			exception.PanicOnErr(err)
+			printAllSetsR(out, err, records[0], start, end, lineLength, sigFigs, decimalPlaces)
+		}
+	} else {
+		// user can specify chrom if multiple entries
+		seqPrinted := false
+		for desiredSeqIdx, desiredSeq := range records {
+			if desiredSeq.Name == seqName {
+				seqPrinted = true
+
+				if endOfAlignment {
+					end = len(records[desiredSeqIdx].Seq)
+				}
+				_, err = fmt.Fprintf(out, "Position\tBase\tProbability\n")
+				exception.PanicOnErr(err)
+				printAllSetsR(out, err, desiredSeq, start, end, lineLength, sigFigs, decimalPlaces)
+
+				break
+			}
+		}
+		if !seqPrinted {
+			log.Fatalf("Error: User specified sequence not in input pfasta file.")
+		}
+	}
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+// printAllSetsR prints probability distribution of bases from pos start to pos end in record
+func printAllSetsR(out *fileio.EasyWriter, err error, record pFasta.PFasta, start int, end int, lineLength int, sigFigs int, decimalPlaces int) {
+	if end == -1 {
+		end = len(record.Seq)
+	}
+	idx := start
+	if sigFigs == 0 {
+		// gives decimal places
+		for idx <= end {
+			base := record.Seq[idx]
+			_, err = fmt.Fprintf(out, "%v\tA\t%.*e\n", idx, decimalPlaces, base.A)
+			exception.PanicOnErr(err)
+			_, err = fmt.Fprintf(out, "%v\tC\t%.*e\n", idx, decimalPlaces, base.C)
+			exception.PanicOnErr(err)
+			_, err = fmt.Fprintf(out, "%v\tG\t%.*e\n", idx, decimalPlaces, base.G)
+			exception.PanicOnErr(err)
+			_, err = fmt.Fprintf(out, "%v\tT\t%.*e\n", idx, decimalPlaces, base.T)
+			exception.PanicOnErr(err)
+			idx++
+		}
+	} else {
+		// gives sigfigs
+		for idx <= end {
+			base := record.Seq[idx]
+			_, err = fmt.Fprintf(out, "%v\tA\t%.*e\n", idx, sigFigs-1, base.A)
+			exception.PanicOnErr(err)
+			_, err = fmt.Fprintf(out, "%v\tC\t%.*e\n", idx, sigFigs-1, base.C)
+			exception.PanicOnErr(err)
+			_, err = fmt.Fprintf(out, "%v\tG\t%.*e\n", idx, sigFigs-1, base.G)
+			exception.PanicOnErr(err)
+			_, err = fmt.Fprintf(out, "%v\tT\t%.*e\n", idx, sigFigs-1, base.T)
+			exception.PanicOnErr(err)
+			idx++
+		}
+	}
 }
