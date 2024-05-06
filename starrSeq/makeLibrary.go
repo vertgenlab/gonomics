@@ -83,7 +83,7 @@ func distributeIntoPool(pools, oligoPools [][]fasta.Fasta, overlap []dna.Base, m
 	}
 	pools = append(pools, []fasta.Fasta{})
 	oligoPools = append(oligoPools, []fasta.Fasta{})
-	return len(pools)-1, pools, oligoPools
+	return len(pools) - 1, pools, oligoPools
 }
 
 func checkTm(fa fasta.Fasta, mid int, minTemp, maxTemp float64) (bool, float64) {
