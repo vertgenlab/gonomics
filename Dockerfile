@@ -1,4 +1,4 @@
-FROM golang:1.20.3-alpine
+FROM golang:1.22.2-alpine
 
 # To build docker container image: run the following command: docker build . -t gonomics
 # Use gonomics programs with: docker run gonomics gsw -h
