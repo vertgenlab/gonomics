@@ -63,7 +63,6 @@ func ToString(g Gaf) string {
 		g.AnnotationExtension,
 		g.GeneProductFormId,
 	)
-
 }
 
 // ReadHeader processes the contiguous header from an EasyReader
@@ -87,7 +86,7 @@ func ReadHeader(file *fileio.EasyReader) Header {
 	return answer
 }
 
-// WriteGaf writes an input Bed struct to an io.Writer.
+// WriteGaf writes an input Gaf struct to an io.Writer.
 func WriteGaf(file io.Writer, input Gaf) {
 	var err error
 	_, err = fmt.Fprintf(file, "%s\n", input)
@@ -191,7 +190,7 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Gaf, wg *sync.WaitGroup, he
 	wg.Done()
 }
 
-// GoReadToChan reads Bed entries from an input filename to a <-chan Bed.
+// GoReadToChan reads Gaf entries from an input filename to a <-chan Gaf.
 func GoReadToChan(filename string) (<-chan Gaf, Header) {
 	data := make(chan Gaf, 1000)
 	header := make(chan Header)

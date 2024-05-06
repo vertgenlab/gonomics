@@ -11,6 +11,7 @@ import (
 var BedFormatTests = []struct {
 	InFile                   string
 	OutFile                  string
+	CoordName                bool
 	ExpectedFile             string
 	UCSCToEnsembl            bool
 	EnsemblToUCSC            bool
@@ -159,6 +160,22 @@ var BedFormatTests = []struct {
 		FdrAnnotation:            true,
 		RawPValueAnnotationField: 1,
 	},
+	{InFile: "testdata/test.bed",
+		OutFile:                  "testdata/test.coordName.bed",
+		ExpectedFile:             "testdata/expected.coordName.bed",
+		CoordName:                true,
+		UCSCToEnsembl:            false,
+		EnsemblToUCSC:            false,
+		ScaleNameFloat:           1,
+		PadLength:                0,
+		UpstreamPadLength:        0,
+		DownstreamPadLength:      0,
+		ChromSizeFile:            "",
+		ToMidpoint:               false,
+		ToTss:                    false,
+		FdrAnnotation:            false,
+		RawPValueAnnotationField: 0,
+	},
 }
 
 func TestBedFormat(t *testing.T) {
@@ -168,6 +185,7 @@ func TestBedFormat(t *testing.T) {
 		s = Settings{
 			InFile:                   v.InFile,
 			OutFile:                  v.OutFile,
+			CoordName:                v.CoordName,
 			UCSCToEnsembl:            v.UCSCToEnsembl,
 			EnsemblToUCSC:            v.EnsemblToUCSC,
 			ScaleNameFloat:           v.ScaleNameFloat,

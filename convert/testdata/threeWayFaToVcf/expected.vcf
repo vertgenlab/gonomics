@@ -1,0 +1,4 @@
+chr1	3	.	A	C	100	PASS	.	GT	1/1
+chr1	6	.	A	C	100	PASS	.	GT	1/0
+chr1	8	.	A	C	100	PASS	.	GT	0/1
+chr1	12	.	A	C,G	100	PASS	.	GT	1/2

@@ -2,6 +2,8 @@ package wig
 
 import (
 	"log"
+	"math"
+
 	//DEBUG: "fmt".
 	"math/rand"
 	"sort"
@@ -11,7 +13,7 @@ import (
 )
 
 // isEqual returns true if two Wig data structures contain the exact same data values and returns false otherwise.
-func isEqual(alpha Wig, beta Wig) bool {
+func isEqual(alpha Wig, beta Wig, precision float64) bool {
 	if strings.Compare(alpha.StepType, beta.StepType) != 0 {
 		return false
 	}
@@ -26,7 +28,7 @@ func isEqual(alpha Wig, beta Wig) bool {
 	}
 	if len(alpha.Values) == len(beta.Values) {
 		for i := 0; i < len(alpha.Values); i++ {
-			if alpha.Values[i] != beta.Values[i] {
+			if math.Abs(alpha.Values[i]-beta.Values[i]) > precision {
 				return false
 			}
 		}
@@ -34,13 +36,18 @@ func isEqual(alpha Wig, beta Wig) bool {
 	return true
 }
 
-// AllEqual returns true if two slices of Wig data structures contain all the same data vales in the same order, false otherwise.
-func AllEqual(alpha []Wig, beta []Wig) bool {
+// AllEqual returns true if two input map[string]Wig have identical contents, within
+// some range of floating point precision.
+func AllEqual(alpha map[string]Wig, beta map[string]Wig, precision float64) bool {
+	var foundInMap bool
 	if len(alpha) != len(beta) {
 		return false
 	}
-	for i := 0; i < len(alpha); i++ {
-		if !isEqual(alpha[i], beta[i]) {
+	for i := range alpha {
+		if _, foundInMap = beta[i]; !foundInMap {
+			return false
+		}
+		if !isEqual(alpha[i], beta[i], precision) {
 			return false
 		}
 	}
@@ -76,43 +83,32 @@ func SortByCoord(w []Wig) {
 
 // Pearson calculates the Pearson Correlation Coefficient between two input wig slices. Data values equal to the 'missing' value are ignored.
 // samplingFrequency is a number between 0 and 1. This represents the proportion of bases that are considered for evaluating the PCC.
-func Pearson(alpha []Wig, beta []Wig, missing float64, samplingFrequency float64) float64 {
+func Pearson(alpha map[string]Wig, beta map[string]Wig, missing float64, samplingFrequency float64) float64 {
 	var a = make([]float64, 0)
 	var b = make([]float64, 0)
-	var i, j int
+	var currPos int
+	var currKey string
+	var foundInMap bool
 	var r float64
-	var chromIndex int
 	if samplingFrequency < 0 || samplingFrequency > 1 {
 		log.Fatalf("Error in wig.Pearson. samplingFrequency must be a value between 0 and 1.")
 	}
-	for i = range alpha {
-		chromIndex = getChromIndex(beta, alpha[i].Chrom)
-		//DEBUG: fmt.Printf("ChromIndex: %v.\n", chromIndex)
-		if len(alpha[i].Values) != len(beta[chromIndex].Values) {
-			log.Fatalf("Error in wig.Pearson. Entries with the same chr name have a different number of values. Len(a): %v. Len(b): %v.", len(alpha[i].Values), len(beta[chromIndex].Values))
+	for currKey = range alpha {
+		if _, foundInMap = beta[currKey]; !foundInMap {
+			log.Fatalf("Error: in wig Pearson, chromin the first wig: %s, not found in the second wig.\n", currKey)
 		}
-		for j = range alpha[i].Values {
-			if alpha[i].Values[j] != missing && beta[chromIndex].Values[j] != missing { //if neither wig has the missing value at this position.
+		if len(alpha[currKey].Values) != len(beta[currKey].Values) {
+			log.Fatalf("Error in wig.Pearson. Entries with the same chr name have a different number of values. Len(a): %v. Len(b): %v.", len(alpha[currKey].Values), len(beta[currKey].Values))
+		}
+		for currPos = range alpha[currKey].Values {
+			if alpha[currKey].Values[currPos] != missing && beta[currKey].Values[currPos] != missing { //if neither wig has the missing value at this position.
 				r = rand.Float64()
 				if r < samplingFrequency {
-					a = append(a, alpha[i].Values[j])
-					b = append(b, beta[chromIndex].Values[j])
+					a = append(a, alpha[currKey].Values[currPos])
+					b = append(b, beta[currKey].Values[currPos])
 				}
 			}
 		}
 	}
 	return numbers.Pearson(a, b)
-}
-
-// getChromIndex takes a slice of Wig structs and the name of a chromosome.  The function
-// returns the index in the first Wig struct in the slice with a chromosome name equal to the
-// search string provided
-func getChromIndex(w []Wig, chrom string) int {
-	for i := range w {
-		if w[i].Chrom == chrom {
-			return i
-		}
-	}
-	log.Fatalf("Error. Chromosome %v not found in wig.", chrom)
-	return -1
 }

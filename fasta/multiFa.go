@@ -8,13 +8,23 @@ import (
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
 func RefPosToAlnPos(record Fasta, RefPos int) int {
-	return RefPosToAlnPosCounter(record, RefPos, 0, 0)
+	var refStart, alnStart = 0, 0
+	for t := alnStart; refStart < RefPos; alnStart++ {
+		t++
+		if t == len(record.Seq) {
+			log.Fatalf("Ran out of chromosome.")
+		} else if record.Seq[t] != dna.Gap {
+			refStart++
+		}
+	}
+	return alnStart
 }
 
 // RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
 func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
 	if refStart > RefPos {
-		refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
+		//refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
+		log.Fatalf("refStart > RefPos")
 	}
 	for t := alnStart; refStart < RefPos; alnStart++ {
 		t++
@@ -29,19 +39,25 @@ func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int)
 
 // AlnPosToRefPos returns the reference position associated with a given AlnPos for an input Fasta. If the AlnPos corresponds to a gap, it gives the preceding reference position.
 // 0 based.
+// Consider using AlnPosToRefPosCounter instead if tracking refStart and alnStart will be beneficial, e.g. when working through entire chromosomes
 func AlnPosToRefPos(record Fasta, AlnPos int) int {
 	return AlnPosToRefPosCounter(record, AlnPos, 0, 0)
 }
 
 // AlnPosToRefPosCounter is like AlnPosToRefPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined with the input variables refStart and alnStart.
 func AlnPosToRefPosCounter(record Fasta, AlnPos int, refStart int, alnStart int) int {
+	return AlnPosToRefPosCounterSeq(record.Seq, AlnPos, refStart, alnStart)
+}
+
+// AlnPosToRefPosCounterSeq is AlnPosToRefPosCounter but the input record is just the sequence of the fasta struct
+func AlnPosToRefPosCounterSeq(record []dna.Base, AlnPos int, refStart int, alnStart int) int {
 	if alnStart > AlnPos {
 		refStart, alnStart = 0, 0 //in case the alnStart was improperly set (greater than the desired position, we reset the counters to 0.
 	}
 	for t := alnStart; t < AlnPos; t++ {
-		if t == len(record.Seq) {
+		if t == len(record) {
 			log.Fatalf("Ran out of chromosome.")
-		} else if record.Seq[t] != dna.Gap {
+		} else if record[t] != dna.Gap {
 			refStart++
 		}
 	}
@@ -239,4 +255,41 @@ func PairwiseMutationDistanceInRange(seq1 Fasta, seq2 Fasta, alnStart int, alnEn
 	}
 
 	return diff
+}
+
+// Scan takes in a multiFa alignment, scans the user-specified sequence for a user-specified pattern (N for now) and returns the positions in reference sequence coordinates
+func ScanN(aln []Fasta, queryName string) [][]int {
+	// create variables
+	var bedPos [][]int
+	var i, bedChromStart, bedChromEnd int
+	var lastRefPos, lastAlnPos = 0, 0
+
+	// find the sequenceIndex of queryName in the multiFa
+	queryIndex := findSequenceIndex(aln, queryName)
+
+	// loop through the query sequence in the multiFa
+	for i = 0; i < len(aln[queryIndex].Seq); i++ {
+		if aln[queryIndex].Seq[i] == dna.N { // scan for N
+			bedChromStart = AlnPosToRefPosCounter(aln[0], i, lastRefPos, lastAlnPos) // convert position in sequence (AlnPos) to RefPos, of the reference sequence in the multiFa (not the query sequence)
+			lastRefPos, lastAlnPos = bedChromStart, i                                // update stored conversion of alnPos to refPos
+			bedChromEnd = bedChromStart + 1
+			bedPos = append(bedPos, []int{bedChromStart, bedChromEnd})
+		}
+	}
+
+	return bedPos
+}
+
+// findSequenceIndex is a helper function for ScanN to find the sequenceIndex of queryName in the multiFa
+func findSequenceIndex(aln []Fasta, queryName string) int {
+	nameIndexMap := make(map[string]int) // map of [sequenceName]sequenceIndex
+	for i := range aln {                 // range through the entire multiFa to make sure record names are unique
+		_, found := nameIndexMap[aln[i].Name]
+		if !found {
+			nameIndexMap[aln[i].Name] = i
+		} else {
+			log.Panicf("%s used for multiple fasta records. record names must be unique.", aln[i].Name)
+		}
+	}
+	return nameIndexMap[queryName]
 }

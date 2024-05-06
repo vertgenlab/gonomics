@@ -97,7 +97,7 @@ func Read(filename string, force bool) (map[string]*Obo, Header) {
 
 	file := fileio.EasyOpen(filename)
 	header := ReadHeader(file)
-	for curr, done = NextObo(file); !done; curr, done = NextObo(file) {
+	for curr, done = NextObo(file, force); !done; curr, done = NextObo(file, force) {
 		answer[curr.Id] = curr
 	}
 	buildTree(answer, force)
@@ -106,7 +106,7 @@ func Read(filename string, force bool) (map[string]*Obo, Header) {
 
 // NextObo is a helper function of Read. NextObo checks a reader for additional lines of data
 // and returns an Obo struct and a bool telling the caller if it is done reading from the file.
-func NextObo(reader *fileio.EasyReader) (*Obo, bool) {
+func NextObo(reader *fileio.EasyReader, force bool) (*Obo, bool) {
 	var currLine string
 	var answer Obo
 	var done, endOfEntry bool = false, false
@@ -127,12 +127,12 @@ func NextObo(reader *fileio.EasyReader) (*Obo, bool) {
 	if done {
 		return nil, true
 	}
-	answer = processOboTerm(lines)
+	answer = processOboTerm(lines, force)
 	return &answer, false
 }
 
 // processOboTerm is a helper function of NextObo that parses an Obo struct from a set of input lines.
-func processOboTerm(lines []string) Obo {
+func processOboTerm(lines []string, force bool) Obo {
 	var words, isAWords []string
 	var isAStruct IsADescription
 	var answer Obo
@@ -149,22 +149,22 @@ func processOboTerm(lines []string) Obo {
 		} else {
 			switch words[0] {
 			case "id":
-				if answer.Id != "" {
+				if answer.Id != "" && !force {
 					log.Fatalf("Error: more than one ID found for the following Obo entry:\n%v", lines)
 				}
 				answer.Id = words[1]
 			case "name":
-				if answer.Name != "" {
+				if answer.Name != "" && !force {
 					log.Fatalf("Error: more than one name found for the following Obo entry:\n%v", lines)
 				}
 				answer.Name = words[1]
 			case "namespace":
-				if answer.NameSpace != "" {
+				if answer.NameSpace != "" && !force {
 					log.Fatalf("Error: more than one namespace found for the following Obo entry:\n%v", lines)
 				}
 				answer.NameSpace = words[1]
 			case "def":
-				if answer.Def != "" {
+				if answer.Def != "" && !force {
 					log.Fatalf("Error: more than one def found for the following Obo entry:\n%v", lines)
 				}
 				answer.Def = words[1]
@@ -200,14 +200,16 @@ func processOboTerm(lines []string) Obo {
 	if answer.Id == "" {
 		log.Fatalf("Error: 'id' not found in the following term:\n%v", lines)
 	}
-	if answer.Name == "" {
-		log.Fatalf("Error: 'name' not found in the following term:\n%v", lines)
-	}
-	if answer.NameSpace == "" {
-		log.Fatalf("Error: 'namespace' not found in the following term:\n%v", lines)
-	}
-	if answer.Def == "" {
-		log.Fatalf("Error: 'def' not found in the following term:\n%v", lines)
+	if !force {
+		if answer.Name == "" {
+			log.Fatalf("Error: 'name' not found in the following term:\n%v", lines)
+		}
+		if answer.NameSpace == "" {
+			log.Fatalf("Error: 'namespace' not found in the following term:\n%v", lines)
+		}
+		if answer.Def == "" {
+			log.Fatalf("Error: 'def' not found in the following term:\n%v", lines)
+		}
 	}
 
 	return answer

@@ -24,6 +24,8 @@ var BedFilterTests = []struct {
 	MaxEnd                int
 	MinNameFloat          float64
 	MaxNameFloat          float64
+	NameEquals            string
+	NameNotEquals         string
 	MaxAnnotationFloat    float64
 	MinAnnotationFloat    float64
 	AnnotationFilterField int
@@ -111,6 +113,50 @@ var BedFilterTests = []struct {
 		SubSet:                1,
 		SetSeed:               0,
 	},
+	{InFile: "testdata/test.nameFilter.bed",
+		OutFile:               "testdata/tmp.nameFilter.bed",
+		ExpectedFile:          "testdata/expected.nameFilter.bed",
+		MinScore:              -1 * numbers.MaxInt,
+		MaxScore:              numbers.MaxInt,
+		MinLength:             0,
+		MaxLength:             numbers.MaxInt,
+		MinStart:              0,
+		MaxStart:              numbers.MaxInt,
+		MinEnd:                0,
+		MaxEnd:                numbers.MaxInt,
+		MinNameFloat:          -1 * math.MaxFloat64,
+		MaxNameFloat:          math.MaxFloat64,
+		NameEquals:            "NameMatch",
+		NameNotEquals:         "",
+		MinAnnotationFloat:    -1 * numbers.MaxInt,
+		MaxAnnotationFloat:    numbers.MaxInt,
+		AnnotationFilterField: 1,
+		Chrom:                 "",
+		SubSet:                1,
+		SetSeed:               0,
+	},
+	{InFile: "testdata/test.nameFilter.nonMatch.bed",
+		OutFile:               "testdata/tmp.nameFilter.nonMatch.bed",
+		ExpectedFile:          "testdata/expected.nameFilter.nonMatch.bed",
+		MinScore:              -1 * numbers.MaxInt,
+		MaxScore:              numbers.MaxInt,
+		MinLength:             0,
+		MaxLength:             numbers.MaxInt,
+		MinStart:              0,
+		MaxStart:              numbers.MaxInt,
+		MinEnd:                0,
+		MaxEnd:                numbers.MaxInt,
+		MinNameFloat:          -1 * math.MaxFloat64,
+		MaxNameFloat:          math.MaxFloat64,
+		NameEquals:            "",
+		NameNotEquals:         "NameNonMatch",
+		MinAnnotationFloat:    -1 * numbers.MaxInt,
+		MaxAnnotationFloat:    numbers.MaxInt,
+		AnnotationFilterField: 1,
+		Chrom:                 "",
+		SubSet:                1,
+		SetSeed:               0,
+	},
 }
 
 func TestBedFilter(t *testing.T) {
@@ -130,6 +176,8 @@ func TestBedFilter(t *testing.T) {
 			MaxEnd:                v.MaxEnd,
 			MinNameFloat:          v.MinNameFloat,
 			MaxNameFloat:          v.MaxNameFloat,
+			NameEquals:            v.NameEquals,
+			NameNotEquals:         v.NameNotEquals,
 			MinAnnotationFloat:    v.MinAnnotationFloat,
 			MaxAnnotationFloat:    v.MaxAnnotationFloat,
 			AnnotationFilterField: v.AnnotationFilterField,

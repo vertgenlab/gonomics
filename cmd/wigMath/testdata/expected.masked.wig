@@ -1,30 +1,19 @@
-fixedStep chrom=chr3 start=400601 step=1
--10.000000
--10.000000
--10.000000
-11.000000
-22.000000
-33.000000
--10.000000
--10.000000
-365.000000
-389.000000
--10.000000
--10.000000
-fixedStep chrom=chr5 start=1 step=1
--10.000000
--10.000000
--10.000000
-5.000000
-65.000000
--10.000000
--10.000000
-4.000000
--10.000000
--10.000000
-4.000000
-5.000000
-6.000000
-7.000000
-5.000000
-4.000000
+fixedStep chrom=chr3 start=4 step=1
+11
+22
+33
+fixedStep chrom=chr3 start=9 step=1
+365
+389
+fixedStep chrom=chr5 start=4 step=1
+5
+65
+fixedStep chrom=chr5 start=8 step=1
+4
+fixedStep chrom=chr5 start=11 step=1
+4
+5
+6
+7
+5
+4

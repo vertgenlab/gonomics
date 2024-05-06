@@ -26,7 +26,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-func sequelOverlap(options *Settings) chan *queryAnswer {
+func intervalOverlap(options *Settings) chan *queryAnswer {
 	selectChan := interval.GoReadToChan(options.SelectFile)
 
 	var intervals []interval.Interval
@@ -42,7 +42,7 @@ func sequelOverlap(options *Settings) chan *queryAnswer {
 	var wg sync.WaitGroup
 	for i := 0; i < options.Threads; i++ {
 		wg.Add(1)
-		go queryWorker(tree, queryChan, answerChan, options.Relationship, &wg, options.MergedOutput)
+		go queryWorker(tree, queryChan, answerChan, options.Relationship, &wg, options.MergedOutput, options.ThresholdOverlap)
 	}
 
 	// Spawn a goroutine that closes answerChan once all queryWorkers have finished
@@ -58,16 +58,16 @@ func main() {
 	//var extend *int = flag.Int("extend", 0, "WIP") //TODO
 	var nonOverlap *bool = flag.Bool("nonOverlap", false, "Return records that do NOT have any overlap with records in the select file")
 	var threads *int = flag.Int("threads", 1, "Number of threads to use.")
-	//var percentOverlap *float64 = flag.Float64("percentOverlap", 0, "WIP") //TODO
+	var thresholdOverlap *float64 = flag.Float64("thresholdOverlap", 0, "Returns regions that have a minimum percentage of overlap between select and infile regions.")
 	//var baseOverlap *int = flag.Int("baseOverlap", 0, "WIP")               //TODO
 	var aggregate *bool = flag.Bool("aggregate", false, "Determine overlap based on the sum of overlapping target records rather than individual target records.")
 	var relationship *string = flag.String("relationship", "any", "Choose a specific relationships that target and query records must fulfill to be reported. Use --printRelationships for more information.")
 	var mergedOutput *bool = flag.Bool("mergedOutput", false, "Print the input line followed by the corresponding select lines in the outfile.")
 	//var swapTargetQuery *bool = flag.Bool("swapTargetQuery", false, "WIP") //TODO
 	var helpRelationships *bool = flag.Bool("printRelationships", false, "Show a diagram of the valid interval relationships that can be tested for.")
-	cpuprof := flag.String("cpuprof", "", "DEBUG: cpu profile output for use with go tool pprof")
-	memprof := flag.String("memprof", "", "DEBUG: mem profile output for use with go tool pprof")
-	exectrace := flag.String("exectrace", "", "DEBUG: execution trace output for use with go tool trace")
+	cpuprof := flag.String("cpuProf", "", "DEBUG: cpu profile output for use with go tool pprof")
+	memProf := flag.String("memProf", "", "DEBUG: mem profile output for use with go tool pprof")
+	execTrace := flag.String("execTrace", "", "DEBUG: execution trace output for use with go tool trace")
 	flag.Parse()
 
 	if *helpRelationships {
@@ -80,7 +80,8 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		pprof.StartCPUProfile(cpu)
+		err = pprof.StartCPUProfile(cpu)
+		exception.PanicOnErr(err)
 		defer pprof.StopCPUProfile()
 	}
 
@@ -93,6 +94,10 @@ func main() {
 		log.Fatalln("ERROR: Cannot use both mergedOutput and nonOverlap")
 	}
 
+	if *thresholdOverlap != 0 && *nonOverlap {
+		log.Fatalln("ERROR: Cannot use both thresholdOverlap and nonOverlap")
+	}
+
 	var expectedNumArgs int = 3
 	var err error
 	flag.Usage = usage
@@ -101,7 +106,6 @@ func main() {
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n\n", expectedNumArgs, len(flag.Args()))
-		return
 	}
 
 	selectFile, inFile, outFile := flag.Arg(0), flag.Arg(1), flag.Arg(2)
@@ -110,9 +114,9 @@ func main() {
 		Output:     outFile,
 		SelectFile: selectFile,
 		//Extend:          *extend,
-		NonOverlap: *nonOverlap,
-		Threads:    *threads,
-		//PercentOverlap:  *percentOverlap,
+		NonOverlap:       *nonOverlap,
+		Threads:          *threads,
+		ThresholdOverlap: *thresholdOverlap,
 		//BaseOverlap:     *baseOverlap,
 		Aggregate:    *aggregate,
 		Relationship: *relationship,
@@ -120,28 +124,30 @@ func main() {
 		//SwapTargetQuery: *swapTargetQuery,
 	}
 
-	if *exectrace != "" {
-		runtrace := fileio.EasyCreate(*exectrace)
-		err = trace.Start(runtrace)
+	if *execTrace != "" {
+		runTrace := fileio.EasyCreate(*execTrace)
+		err = trace.Start(runTrace)
 		exception.PanicOnErr(err)
 	}
 
-	answerChan := sequelOverlap(options)
+	answerChan := intervalOverlap(options)
 	output := fileio.EasyCreate(options.Output)
-	writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap)
+	writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap, options.ThresholdOverlap)
 	err = output.Close()
 	exception.PanicOnErr(err)
 
-	if *exectrace != "" {
+	if *execTrace != "" {
 		trace.Stop()
 	}
 
-	if *memprof != "" {
-		mem, err := os.Create(*memprof)
+	if *memProf != "" {
+		mem, err := os.Create(*memProf)
 		if err != nil {
 			log.Fatal(err)
 		}
-		pprof.WriteHeapProfile(mem)
-		mem.Close()
+		err = pprof.WriteHeapProfile(mem)
+		exception.PanicOnErr(err)
+		err = mem.Close()
+		exception.PanicOnErr(err)
 	}
 }

@@ -1,4 +1,4 @@
-fixedStep chrom=chr3 start=400601 step=1
+fixedStep chrom=chr3 start=1 step=1
 -10
 -10
 -10

@@ -71,8 +71,13 @@ func branchLengthsMultiFaBed(s Settings) {
 	for i := 0; i < len(regions); i++ {
 		if passesSearchSpaceTest(regions[i], bitArray, s) {
 			currSize = regions[i].ChromEnd - regions[i].ChromStart
-			currAln = fasta.RefPosToAlnPosCounter(records[0], regions[i].ChromStart, currRef, currAln) //we update the currAln to the position of the next bed entry, using the cached ref and aln from the last iteration
-			currRef = regions[i].ChromStart                                                            //now we can safely update currRef to the position of the current bed entry.
+			//we update the currAln to the position of the next bed entry, using the cached ref and aln from the last iteration if possible
+			if currRef > regions[i].ChromStart {
+				currAln = fasta.RefPosToAlnPos(records[0], regions[i].ChromStart)
+			} else {
+				currAln = fasta.RefPosToAlnPosCounter(records[0], regions[i].ChromStart, currRef, currAln)
+			}
+			currRef = regions[i].ChromStart //now we can safely update currRef to the position of the current bed entry.
 			if s.UseSnpDistance {
 				reachedEnd = phylo.AccelFourWaySnpDistancesAndWeights(records, currAln, currSize, &currDistance, s.ZeroDistanceWeightConstant, s.CavalliSforzaEdwardsQ)
 			} else {

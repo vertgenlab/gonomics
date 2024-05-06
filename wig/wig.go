@@ -5,11 +5,13 @@ package wig
 import (
 	"errors"
 	"fmt"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -17,29 +19,13 @@ import (
 // Wig stores information on the chromosome location and step properties of Wig data. Individual wig values
 // are stored in the underlying WigValue struct. Can only handle fixedStep wigs.
 type Wig struct {
-	StepType string
-	Chrom    string
-	Start    int
-	Step     int
-	Span     int
-	Values   []float64
-}
-
-// Read generates a Wig data structure from an input filename, provided as a string for a WIG format file.
-func Read(filename string) []Wig {
-	var curr Wig
-	var finalWig []Wig
-	var doneReading bool = false
-
-	file := fileio.EasyOpen(filename)
-
-	for curr, doneReading = NextWig(file); !doneReading; curr, doneReading = NextWig(file) { //TODO: use channels here instead of appending.
-		finalWig = append(finalWig, curr)
-	}
-	var err error
-	err = file.Close()
-	exception.PanicOnErr(err)
-	return finalWig
+	StepType     string
+	Chrom        string
+	Start        int
+	Step         int
+	Span         int
+	DefaultValue float64 // this will be the value in positions where there is no wig data, alternatively referred to as "MissingValue" in some functions
+	Values       []float64
 }
 
 // NextWig returns a Wig struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
@@ -119,81 +105,114 @@ func GoReadToChan(filename string) <-chan Wig {
 	return data
 }
 
-// PrintFirst prints the first record in a Wig struct. Mainly used for debugging.
-func PrintFirst(rec []Wig) {
-	if len(rec) == 0 {
-		fmt.Println("Empty Wig; length of input was zero.")
-	} else {
-		fmt.Printf("StepType=%s Chrom=%s Start=%d Step=%d\n", rec[0].StepType, rec[0].Chrom,
-			rec[0].Start, rec[0].Step)
-		if rec[0].StepType == "fixedStep" {
-			fmt.Println(rec[0].Values[0])
-		} else if rec[0].StepType == "variableStep" {
-			log.Fatalf("ERROR: Wiggle at chrom %s and starting %d is variableStep Wig, must convert to fixedStep before reading in Wig to gonomics", rec[0].Chrom, rec[0].Start)
-		}
-	}
-}
-
-// Write writes a Wig data structure to a WIG format file at the input filename.
-func Write(filename string, rec []Wig) {
-	file := fileio.EasyCreate(filename)
-	for i := range rec {
-		//log.Printf("Printing wig object: %d\n", i)
-		WriteToFileHandle(file, rec[i])
-	}
+// Write writes an input map[string]Wig to an output filename. Entries in the map
+// will be written in alphanumeric order of the map keys.
+func Write(filename string, records map[string]Wig) {
 	var err error
-	err = file.Close()
+	keys := make([]string, 0)
+	out := fileio.EasyCreate(filename)
+	for currKey := range records {
+		keys = append(keys, currKey)
+	}
+	//sorting by keys to write in deterministic order
+	sort.Strings(keys)
+	for _, currKey := range keys {
+		WriteToFileHandle(out, records[currKey])
+	}
+	err = out.Close()
 	exception.PanicOnErr(err)
 }
 
-// WriteToFileHandle is an helper function for Write that writes the Wig data structure to an io.Writer
+// WriteToFileHandle is a helper function for Write that writes the Wig data structure to an io.Writer
 func WriteToFileHandle(file io.Writer, rec Wig) {
 	var err error
-	if rec.StepType == "fixedStep" {
-		if rec.Span != -1 { //if there was a span in the header line
-			_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d span=%d\n", rec.StepType, rec.Chrom,
-				rec.Start, rec.Step, rec.Span)
-		} else {
-			_, err = fmt.Fprintf(file, "%s chrom=%s start=%d step=%d\n", rec.StepType, rec.Chrom,
-				rec.Start, rec.Step)
-		}
-		exception.PanicOnErr(err)
-	} else if rec.StepType == "variableStep" {
-		log.Fatalf("ERROR: %s is variableStep Wig, must convert to fixedStep before reading in Wig to gonomics", rec.StepType)
-	} else {
-		log.Fatalf("Invalid step type for wig.")
-	}
-
-	for i := range rec.Values {
-		if rec.StepType == "fixedStep" {
-			if rec.Values[i] == 0 {
-				_, err = fmt.Fprintf(file, "0\n") //will turn a 0.000000 to a 0 to save mem
-			} else {
-				_, err = fmt.Fprintf(file, "%f\n", rec.Values[i])
-			} //Only print significant figures to some capacity? rpkm
-			// We want to make this as concise as possible.
-			// How can we break up a wig into sections that actually has data and skip over large sections of zeros?
+	var inDefaultRegion bool = true // bool to detect when we are in a region of defaultValues, where we don't need to write to file
+	for currIndex := range rec.Values {
+		if rec.Values[currIndex] != rec.DefaultValue {
+			if inDefaultRegion {
+				inDefaultRegion = false
+				_, err = fmt.Fprintf(file, "%s\n", makeWigHeaderString(rec, rec.Start+currIndex-1))
+				exception.PanicOnErr(err)
+			}
+			_, err = fmt.Fprintf(file, "%g\n", rec.Values[currIndex])
 			exception.PanicOnErr(err)
+		} else {
+			inDefaultRegion = true
 		}
 	}
 }
 
-// ChromToSlice returns the values from a wig entry matching a user-specified chromosome name.
-func ChromToSlice(w []Wig, chrom string) []float64 {
-	var output []float64
-	for _, v := range w {
-		if v.Chrom == chrom {
-			if v.Step == 1 {
-				if v.Start == 1 {
-					output = make([]float64, len(v.Values))
-					output = v.Values
-				} else {
-					log.Fatalf("Invalid start coordinate.")
+// makeWigHeaderString makes a wig header for a given Wig struct at a user-specified index position.
+// currIndex is index of values, and therefore zero-based. Note that wig start positions are 1-based.
+func makeWigHeaderString(record Wig, currIndex int) string {
+	switch record.StepType {
+	case "fixedStep":
+		if record.Span != -1 { //-1 encodes missing Span, so this is the case where the header had a Span
+			return fmt.Sprintf("%s chrom=%s start=%d step=%d span=%d", record.StepType, record.Chrom,
+				currIndex+1, record.Step, record.Span)
+		} else {
+			return fmt.Sprintf("%s chrom=%s start=%d step=%d", record.StepType, record.Chrom,
+				currIndex+1, record.Step)
+		}
+	case "variableStep":
+		log.Fatalf("Error: VariableStep Wig detected, must convert to fixedStep before reading in Wig to gonomics.\n")
+		return ""
+	default:
+		log.Fatalf("Error: Invalid step type for wig.")
+		return ""
+	}
+}
+
+// Read creates a whole genome wig map, where each key is a chromosome name and the value is the corresponding
+// wig struct. The wig struct values slice is the size of the whole chromosome, as specified by an input chromSizeFile.
+// Positions in the genome where there is no wig coverage are set to a user-specified defaultValue.
+// This function is robust against different step sizes between entries and multiple wig entries per chromosome, but
+// is currently limited to 'fixedStep' beds.
+func Read(filename string, chromSizeFile string, defaultValue float64) map[string]Wig {
+	var currValue, currPos, currOffset int
+	var foundInMap bool
+	sizes := chromInfo.ReadToMap(chromSizeFile)
+	answer := MakeSkeleton(sizes, defaultValue)
+	wigChan := GoReadToChan(filename)
+	for currWig := range wigChan {
+		if _, foundInMap = answer[currWig.Chrom]; !foundInMap {
+			log.Fatalf("Error: chrom name in wig file: %s, not found in reference genome chrom sizes.\n", currWig.Chrom)
+		}
+		currPos = currWig.Start - 1 // from 1-based to zero-based
+		for currValue = range currWig.Values {
+			if currPos >= len(answer[currWig.Chrom].Values) {
+				log.Fatalf("Error: position of values in the input wig exceed the chrom length specified in the chrom sizes file. Offending entry on Chr: %v at start: %v\n", currWig.Chrom, currWig.Start)
+			}
+			for currOffset = 0; currOffset < currWig.Step; currOffset++ {
+				if currPos >= len(answer[currWig.Chrom].Values) {
+					log.Fatalf("Error: position of values in the input wig exceed the chrom length specified in the chrom sizes file. Offending entry on Chr: %v at start: %v\n", currWig.Chrom, currWig.Start)
 				}
-			} else {
-				log.Fatalf("invalid step size, step size must be 1.")
+				if answer[currWig.Chrom].Values[currPos] != defaultValue {
+					log.Fatalf("Error: multiple entries in the input wig map to the same genomic position.")
+				}
+				answer[currWig.Chrom].Values[currPos] = currWig.Values[currValue]
+				currPos++
 			}
 		}
 	}
-	return output
+	return answer
+}
+
+// MakeSkeleton creates a fixed-step map[string]Wig, with one Wig entry per chromosome, where the size of the
+// Values slice in each struct is equal to the chromosome length, as specified by an input chromSizes map[string]chromInfo.ChromInfo.
+// 'Skeleton' refers to the fact that the values are uniformly set to a defaultValue, and contain no information.
+func MakeSkeleton(chromSizes map[string]chromInfo.ChromInfo, defaultValue float64) map[string]Wig {
+	var answer = make(map[string]Wig, 0)
+	var currentWig Wig
+	var x int
+
+	for _, v := range chromSizes {
+		currentWig = Wig{StepType: "fixedStep", Chrom: v.Name, Start: 1, Step: 1, Span: -1, DefaultValue: defaultValue}
+		currentWig.Values = make([]float64, v.Size)
+		for x = 0; x < v.Size; x++ {
+			currentWig.Values[x] = defaultValue
+		}
+		answer[v.Name] = currentWig
+	}
+	return answer
 }

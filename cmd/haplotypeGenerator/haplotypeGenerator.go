@@ -6,8 +6,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -15,74 +13,81 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
 )
 
-func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, outdir string) {
+type Settings struct {
+	ReferenceGenomeFile string
+	VcfFile             string
+	RegionBedFile       string
+	IncludeRef          bool
+	OutDir              string
+	Verbose             int
+	LineLength          int
+}
+
+func haplotypeGenerator(s Settings) {
 	var currState int
-	variants, header := vcf.Read(snpFile)
-	variantIntervals := make([]interval.Interval, len(variants))
-
-	// fmt.Println("started ok")
-
-	for i := range variants {
-		variantIntervals[i] = variants[i]
-	}
-
-	tree := interval.BuildTree(variantIntervals)
-
-	regions := bed.Read(regionFile)
-	genome := fasta.Read(genomeFile)
+	regions := bed.Read(s.RegionBedFile)
+	genome := fasta.Read(s.ReferenceGenomeFile)
 	genomeMap := helperFastaIndex(genome)
-
-	samplesNames := vcf.SampleNamesInOrder(header)
-
+	var currHaplotype fasta.Fasta
 	for i := range regions {
-		// fmt.Printf("working on region index %v.\n", i)
+		overlappingVariants := make([]vcf.Vcf, 0)
+		variantChan, header := vcf.GoReadToChan(s.VcfFile)
+		samplesNames := vcf.SampleNamesInOrder(header)
+		if s.Verbose > 0 {
+			fmt.Printf("working on region index %v.\n", i)
+		}
+		for currVariant := range variantChan {
+			if interval.Overlap(currVariant, regions[i]) && vcf.IsSubstitution(currVariant) {
+				overlappingVariants = append(overlappingVariants, currVariant)
+			}
+		}
 
-		overlappingVariants := interval.Query(tree, regions[i], "any")
 		currIndex := genomeMap[regions[i].Chrom]
 		refHaplotype := fasta.Extract(genome[currIndex], regions[i].ChromStart, regions[i].ChromEnd, regions[i].Chrom)
-
-		outputFilename := fmt.Sprintf("%s/%s.%v.%v.fa", outdir, regions[i].Chrom, regions[i].ChromStart, regions[i].ChromEnd)
-
-		// fmt.Printf("output filename: %s\n", outputFilename)
-
+		outputFilename := fmt.Sprintf("%s/%s.%v.%v.fa", s.OutDir, regions[i].Chrom, regions[i].ChromStart, regions[i].ChromEnd)
 		out := fileio.EasyCreate(outputFilename)
-		sampleHaplotypes := make([]fasta.Fasta, len(header.Samples)*2)
 
-		// fmt.Printf("last line of header: \n%s", header.Text[len(header.Text)-1])
+		if s.IncludeRef {
+			fasta.WriteFasta(out, refHaplotype, s.LineLength)
+		}
 
-		// fmt.Printf("length of sample haplotypes: %v.\n", len(sampleHaplotypes))
-		// fmt.Printf("length of header.Samples: %v.\n", len(header.Samples))
+		if s.Verbose > 0 {
+			fmt.Printf("output filename: %s\n", outputFilename)
+			fmt.Printf("last line of header: \n%s\n", header.Text[len(header.Text)-1])
+			fmt.Printf("length of header.Samples: %v.\n", len(header.Samples))
+		}
 
-		for j := range sampleHaplotypes {
-			sampleHaplotypes[j] = fasta.Copy(refHaplotype)
-			currSampleIndex := j / 2
-			if j%2 == 0 {
-				sampleHaplotypes[j].Name = fmt.Sprintf("%s_A", samplesNames[currSampleIndex])
-			} else {
-				sampleHaplotypes[j].Name = fmt.Sprintf("%s_B", samplesNames[currSampleIndex])
+		for j := range samplesNames {
+			// first we calculate the haplotype for A, and write it out
+			currHaplotype = fasta.Copy(refHaplotype)
+			currHaplotype.Name = fmt.Sprintf("%s_A", samplesNames[j])
+			if s.Verbose > 0 {
+				fmt.Printf("working on haplotype: \n%s", currHaplotype.Name)
 			}
-
-			// fmt.Printf("working on haplotype: \n%s", sampleHaplotypes[j].Name)
-
 			for k := range overlappingVariants {
-				if j%2 == 0 {
-					currState = int(overlappingVariants[k].(vcf.Vcf).Samples[currSampleIndex].Alleles[0])
-					if currState > 0 {
-						sampleHaplotypes[j].Seq[overlappingVariants[k].(vcf.Vcf).Pos-regions[i].ChromStart-1] = dna.StringToBase(overlappingVariants[k].(vcf.Vcf).Alt[currState-1])
-					}
-				} else {
-					currState = int(overlappingVariants[k].(vcf.Vcf).Samples[currSampleIndex].Alleles[1])
-					if currState > 0 {
-						sampleHaplotypes[j].Seq[overlappingVariants[k].(vcf.Vcf).Pos-regions[i].ChromStart-1] = dna.StringToBase(overlappingVariants[k].(vcf.Vcf).Alt[currState-1])
-					}
+				currState = int(overlappingVariants[k].Samples[j].Alleles[0])
+				if currState > 0 {
+					currHaplotype.Seq[overlappingVariants[k].Pos-regions[i].ChromStart-1] = dna.StringToBase(overlappingVariants[k].Alt[currState-1])
 				}
 			}
-			// fmt.Println("writing haplotype")
-			// fmt.Println(sampleHaplotypes[j])
+			fasta.WriteFasta(out, currHaplotype, s.LineLength)
 
-			fasta.WriteFasta(out, sampleHaplotypes[j], 50)
+			// now we calculate the haplotype for B, and write it out
+			currHaplotype = fasta.Copy(refHaplotype)
+			currHaplotype.Name = fmt.Sprintf("%s_B", samplesNames[j])
+			if s.Verbose > 0 {
+				fmt.Printf("working on haplotype: \n%s", currHaplotype.Name)
+			}
+			for k := range overlappingVariants {
+				currState = int(overlappingVariants[k].Samples[j].Alleles[1])
+				if currState > 0 {
+					currHaplotype.Seq[overlappingVariants[k].Pos-regions[i].ChromStart-1] = dna.StringToBase(overlappingVariants[k].Alt[currState-1])
+				}
+			}
+			fasta.WriteFasta(out, currHaplotype, s.LineLength)
 		}
 
 		err := out.Close()
@@ -90,7 +95,7 @@ func haplotypeGenerator(genomeFile string, snpFile string, regionFile string, ou
 	}
 }
 
-// Helper function returns a map connecting chromosome names to their index in a fasta slice.
+// helperFastaIndex is a helper function that returns a map connecting chromosome names to their index in a fasta slice.
 func helperFastaIndex(genome []fasta.Fasta) map[string]int {
 	var answer = make(map[string]int)
 	for i := range genome {
@@ -104,13 +109,16 @@ func usage() {
 		"haplotypeGenerator - Generate unique haplotypes for provided regions from genetic variation data.\n" +
 			"Ignores structural variants, considers only substitutions\n" +
 			"Usage:\n" +
-			"genomeFile.fa snpFile.vcf regionFile.bed outDir\n" +
+			"haplotypeGenerator genomeFile.fa snpFile.vcf regionFile.bed outDir\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 4
+	var lineLength *int = flag.Int("lineLength", 50, "Specify the number of bases per line in the output fasta.\n")
+	var includeRef *bool = flag.Bool("includeRef", false, "If set, the program will also write out the reference haplotype as the first result. Note that as only substitutions are considered, this renders the output file a valid multiFa.\n")
+	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints.\n")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -125,7 +133,17 @@ func main() {
 	genomeFile := flag.Arg(0)
 	snpFile := flag.Arg(1)
 	regionFile := flag.Arg(2)
-	outdir := flag.Arg(3)
+	outDir := flag.Arg(3)
 
-	haplotypeGenerator(genomeFile, snpFile, regionFile, outdir)
+	s := Settings{
+		ReferenceGenomeFile: genomeFile,
+		VcfFile:             snpFile,
+		RegionBedFile:       regionFile,
+		OutDir:              outDir,
+		IncludeRef:          *includeRef,
+		LineLength:          *lineLength,
+		Verbose:             *verbose,
+	}
+
+	haplotypeGenerator(s)
 }

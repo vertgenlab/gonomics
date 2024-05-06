@@ -1,0 +1,77 @@
+fixedStep chrom=chr1 start=7 step=1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+fixedStep chrom=chr1 start=20 step=1
+1
+1
+1
+fixedStep chrom=chr2 start=9 step=1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+fixedStep chrom=chr3 start=9 step=1
+1
+1
+1
+1
+1
+1
+fixedStep chrom=chr4 start=16 step=1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+fixedStep chrom=chr5 start=29 step=1
+1
+1
+1
+1
+1
+fixedStep chrom=chr6 start=37 step=1
+1
+1
+1
+1
+1
+1
+1
+1
+1

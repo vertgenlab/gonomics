@@ -266,7 +266,6 @@ func getHeaderCommentLines(filepath string) []string {
 		} else if strings.HasPrefix(line, "// Command Usage:") {
 			answer = append(answer, line)
 		}
-
 	}
 	err := file.Close()
 	if err != nil {

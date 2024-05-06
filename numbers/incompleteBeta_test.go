@@ -1,8 +1,32 @@
 package numbers
 
 import (
+	"math"
 	"testing"
 )
+
+var NegativeBinomialCdfTests = []struct {
+	X        float64
+	R        float64
+	P        float64
+	Expected float64
+}{
+	{X: 3,
+		R:        4,
+		P:        0.9,
+		Expected: 0.99727,
+	},
+}
+
+func TestNegativeBinomialCdf(t *testing.T) {
+	var currAnswer float64
+	for _, v := range NegativeBinomialCdfTests {
+		currAnswer = NegativeBinomialCdf(v.X, v.R, v.P)
+		if math.Abs(currAnswer-v.Expected)/v.Expected > 0.01 {
+			t.Errorf("Error: in NegativeBinomialCdf. Expected: %v. Found: %v.\n", v.Expected, currAnswer)
+		}
+	}
+}
 
 var incompleteBetaTests = []struct {
 	a      float64
@@ -29,7 +53,7 @@ var incompleteBetaTests = []struct {
 
 func TestIncompleteBeta(t *testing.T) {
 	for _, test := range incompleteBetaTests {
-		calculated := incompleteBetaHelper(test.a, test.b, test.x)
+		calculated := RegularizedIncompleteBeta(test.a, test.b, test.x)
 		if calculated > test.answer*1.01 || calculated < test.answer*0.99 {
 			t.Errorf("For incompleteBetaHelper with a: %f, b: %f, and x: %f we expected %e, but got %e.", test.a, test.b, test.x, test.answer, calculated)
 		}

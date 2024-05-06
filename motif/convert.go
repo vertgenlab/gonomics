@@ -42,27 +42,55 @@ func PfmSliceToPpmSlice(input []PositionMatrix, pseudocount float64) []PositionM
 }
 
 // PpmToPwm creates a position weight matrix from an input position probability matrix.
-func PpmToPwm(input PositionMatrix) PositionMatrix {
+func PpmToPwm(input PositionMatrix, gcContent float64) PositionMatrix {
 	if input.Type != Probability {
 		log.Fatalf("Input PositionMatrix must be of type 'Probability' to be converted to a PWM.")
 	}
-	var row, column int
+	pGC := gcContent / 2.0       //the probability of a C or a G is gcContent / 2 (equal probability G and C)
+	pAT := (1 - gcContent) / 2.0 //the probability of an A or T is 1-gcContent / 2 (equal probability A and T)
+	var column int
 	var answer = CopyPositionMatrix(input)
 	answer.Type = Weight
 	for column = 0; column < len(input.Mat[0]); column++ {
-		for row = 0; row < 4; row++ {
-			answer.Mat[row][column] = math.Log2(input.Mat[row][column] * 4)
-		}
+		answer.Mat[dna.A][column] = math.Log2(input.Mat[dna.A][column] / pAT)
+		answer.Mat[dna.C][column] = math.Log2(input.Mat[dna.C][column] / pGC)
+		answer.Mat[dna.G][column] = math.Log2(input.Mat[dna.G][column] / pGC)
+		answer.Mat[dna.T][column] = math.Log2(input.Mat[dna.T][column] / pAT)
 	}
 	return answer
 }
 
 // PpmSliceToPwmSlice creates a slice of position weight matrices from
 // a slice of position probability matrices.
-func PpmSliceToPwmSlice(input []PositionMatrix) []PositionMatrix {
+func PpmSliceToPwmSlice(input []PositionMatrix, gcContent float64) []PositionMatrix {
 	var answer = make([]PositionMatrix, len(input))
 	for i := range input {
-		answer[i] = PpmToPwm(input[i])
+		answer[i] = PpmToPwm(input[i], gcContent)
+	}
+	return answer
+}
+
+// PwmToPpm creates a position probability matrix from an input position weight matrix.
+func PwmToPpm(input PositionMatrix) PositionMatrix {
+	if input.Type != Weight {
+		log.Fatalf("Input PositionMatrix must be of type 'Weight' to be converted to a PPM.")
+	}
+	var row, column int
+	var answer = CopyPositionMatrix(input)
+	answer.Type = Probability
+	for column = 0; column < len(input.Mat[0]); column++ {
+		for row = 0; row < 4; row++ {
+			answer.Mat[row][column] = math.Pow(2, input.Mat[row][column]) / 4.0
+		}
+	}
+
+	return answer
+}
+
+func PwmSliceToPpmSlice(input []PositionMatrix) []PositionMatrix {
+	var answer = make([]PositionMatrix, len(input))
+	for i := range input {
+		answer[i] = PwmToPpm(input[i])
 	}
 	return answer
 }

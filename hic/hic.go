@@ -58,7 +58,6 @@ func Equal(a Straw, b Straw) bool {
 	} else {
 		return false
 	}
-
 }
 
 // AllAreEqual compares two slices of Straw structs to see if the values are identical and returns a bool
@@ -78,7 +77,7 @@ func AllAreEqual(a []Straw, b []Straw) bool {
 	return true
 }
 
-// NextStraw returns a Bed struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
+// NextStraw returns a Straw struct from an input fileio.EasyReader. Returns a bool that is true when the reader is done.
 func NextStraw(reader *fileio.EasyReader) (Straw, bool) {
 	line, done := fileio.EasyNextRealLine(reader)
 	if done {
@@ -87,7 +86,7 @@ func NextStraw(reader *fileio.EasyReader) (Straw, bool) {
 	return processStrawLine(line), false
 }
 
-// ReadToChan reads from a fileio.EasyReader to send Bed structs to a chan<- Straw.
+// ReadToChan reads from a fileio.EasyReader to send Straw structs to a chan<- Straw.
 func ReadToChan(file *fileio.EasyReader, data chan<- Straw, wg *sync.WaitGroup) {
 	for curr, done := NextStraw(file); !done; curr, done = NextStraw(file) {
 		data <- curr

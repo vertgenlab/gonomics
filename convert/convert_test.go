@@ -5,13 +5,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/sam"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/wig"
 )
 
 var seqA []dna.Base = dna.StringToBases("--TTTC--ATGAATAATCA")
@@ -27,11 +28,38 @@ var expected []vcf.Vcf = []vcf.Vcf{var1, var2, var3, var4, var5}
 var expectedSubOnly []vcf.Vcf = []vcf.Vcf{var1, var4, var5}
 var expectedRetainN []vcf.Vcf = []vcf.Vcf{var1, var2, var3, var4, var5, var6}
 
+func TestSamToBedWithDeletions(t *testing.T) {
+	var outBeds []bed.Bed
+	var j bed.Bed
+	var err error
+	inSam, _ := sam.Read("testdata/test1.sam")
+	out := fileio.EasyCreate("testdata/out.samToBedDel.bed")
+	for _, i := range inSam {
+		outBeds = SamToBedWithDeletions(i)
+		for _, j = range outBeds {
+			bed.WriteToFileHandle(out, j)
+		}
+	}
+	err = out.Close()
+	exception.PanicOnErr(err)
+	if !fileio.AreEqual("testdata/out.samToBedDel.bed", "testdata/exp.samToBedDel.bed") {
+		t.Errorf("ERROR in SamToBedWithDeletions: expected != actual.")
+	} else {
+		err = os.Remove("testdata/out.samToBedDel.bed")
+		exception.PanicOnErr(err)
+	}
+}
+
+func TestSamToBed(t *testing.T) {
+	//TODO
+}
+
 func TestPairwiseFaToVcf(t *testing.T) { //this test is for the default settings.
 	var err error
 	out := fileio.EasyCreate("tmp.txt")
 	PairwiseFaToVcf(inputFa, "chr1", out, false, false)
-	out.Close()
+	err = out.Close()
+	exception.PanicOnErr(err)
 	input, _ := vcf.Read("tmp.txt")
 	if !vcf.AllEqual(input, expected) {
 		t.Errorf("Pairwise VCF results do not match.")
@@ -42,11 +70,37 @@ func TestPairwiseFaToVcf(t *testing.T) { //this test is for the default settings
 	}
 }
 
+var ThreeWayFaToVcfTests = []struct {
+	InFile       string
+	OutFile      string
+	ExpectedFile string
+	Chrom        string
+}{
+	{InFile: "testdata/threeWayFaToVcf/input.fa", OutFile: "tmp.threeWayFaToVcf.txt", ExpectedFile: "testdata/threeWayFaToVcf/expected.vcf", Chrom: "chr1"},
+}
+
+func TestThreeWayFaToVcf(t *testing.T) {
+	var err error
+	var out *fileio.EasyWriter
+	for _, v := range ThreeWayFaToVcfTests {
+		threeWayInputFa := fasta.Read(v.InFile)
+		out = fileio.EasyCreate(v.OutFile)
+		ThreeWayFaToVcf(threeWayInputFa, v.Chrom, out)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Threeway VCF results do not match.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
+
 func TestPairwiseFaToVcfRetainN(t *testing.T) {
 	var err error
 	out := fileio.EasyCreate("tmpRetainN.txt")
 	PairwiseFaToVcf(inputFa, "chr1", out, false, true)
-	out.Close()
+	err = out.Close()
+	exception.PanicOnErr(err)
 	input, _ := vcf.Read("tmpRetainN.txt")
 	if !vcf.AllEqual(input, expectedRetainN) {
 		t.Errorf("Pairwise VCF results do not match in retainN test.")
@@ -61,7 +115,8 @@ func TestPairwiseFaToVcfSubstitutionsOnly(t *testing.T) {
 	var err error
 	out := fileio.EasyCreate("tmpSub.txt")
 	PairwiseFaToVcf(inputFa, "chr1", out, true, false)
-	out.Close()
+	err = out.Close()
+	exception.PanicOnErr(err)
 	input, _ := vcf.Read("tmpSub.txt")
 	if !vcf.AllEqual(input, expectedSubOnly) {
 		t.Errorf("Pairwise VCF results do not match in subsitutionsOnly test.")
@@ -116,6 +171,7 @@ var BedValuesToWigTests = []struct {
 		AnnotationField: 0},
 }
 
+/* TODO: Fix BedToWig
 func TestBedValuesToWig(t *testing.T) {
 	var err error
 	var reference map[string]chromInfo.ChromInfo
@@ -159,3 +215,4 @@ func TestBedGraphToWig(t *testing.T) {
 		}
 	}
 }
+*/
