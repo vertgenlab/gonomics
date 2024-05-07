@@ -1,11 +1,10 @@
 package main
 
 import (
-	"os"
-	"testing"
-
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"os"
+	"testing"
 )
 
 var WigToTrainingSetTests = []struct {
@@ -27,8 +26,8 @@ var WigToTrainingSetTests = []struct {
 	IncludeRevComp       bool
 	NoHeader             bool
 }{
-	{InWigFile: "testdata/in.wig",
-		InFastaFile:          "testdata/genome.fa",
+	{InWigFile: "testdata/toTrainSet.wig",
+		InFastaFile:          "testdata/toTrainSet.fa",
 		TrainFile:            "testdata/tmp.train.txt",
 		ValidateFile:         "testdata/tmp.validate.txt",
 		TestFile:             "testdata/tmp.test.txt",
@@ -45,8 +44,8 @@ var WigToTrainingSetTests = []struct {
 		IncludeRevComp:       false,
 		NoHeader:             false,
 	},
-	{InWigFile: "testdata/in.wig",
-		InFastaFile:          "testdata/genome.fa",
+	{InWigFile: "testdata/toTrainSet.wig",
+		InFastaFile:          "testdata/toTrainSet.fa",
 		TrainFile:            "testdata/tmp.log.train.txt",
 		ValidateFile:         "testdata/tmp.log.validate.txt",
 		TestFile:             "testdata/tmp.log.test.txt",
@@ -63,8 +62,8 @@ var WigToTrainingSetTests = []struct {
 		IncludeRevComp:       false,
 		NoHeader:             false,
 	},
-	{InWigFile: "testdata/in.wig",
-		InFastaFile:          "testdata/genome.fa",
+	{InWigFile: "testdata/toTrainSet.wig",
+		InFastaFile:          "testdata/toTrainSet.fa",
 		TrainFile:            "testdata/tmp.revComp.train.txt",
 		ValidateFile:         "testdata/tmp.revComp.validate.txt",
 		TestFile:             "testdata/tmp.revComp.test.txt",
@@ -81,8 +80,8 @@ var WigToTrainingSetTests = []struct {
 		IncludeRevComp:       true,
 		NoHeader:             false,
 	},
-	{InWigFile: "testdata/in.wig",
-		InFastaFile:          "testdata/genome.fa",
+	{InWigFile: "testdata/toTrainSet.wig",
+		InFastaFile:          "testdata/toTrainSet.fa",
 		TrainFile:            "testdata/tmp.noHeader.train.txt",
 		ValidateFile:         "testdata/tmp.noHeader.validate.txt",
 		TestFile:             "testdata/tmp.noHeader.test.txt",
@@ -105,7 +104,7 @@ func TestWigToTrainingSet(t *testing.T) {
 	var err error
 
 	for _, v := range WigToTrainingSetTests {
-		s := Settings{
+		s := ToTrainingSetSettings{
 			InWigFile:      v.InWigFile,
 			InFastaFile:    v.InFastaFile,
 			TrainFile:      v.TrainFile,
@@ -121,7 +120,7 @@ func TestWigToTrainingSet(t *testing.T) {
 			IncludeRevComp: v.IncludeRevComp,
 			NoHeader:       v.NoHeader,
 		}
-		wigToTrainingSet(s)
+		toTrainingSet(s)
 		if !fileio.AreEqual(v.TrainFile, v.ExpectedTrainFile) {
 			t.Errorf("Error in WigToTrainingSet. Training file was not as expected.")
 		} else {
