@@ -14,17 +14,30 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 )
 
-// MustOpen opens the input file.
+// MustCreate creates a file with the input name.
 // Fatal/Panics when appropriate.
 func MustCreate(filename string) *os.File {
 	if filename == "" {
-		log.Fatalf("Must write to a non-empty filename")
-	}
-	if strings.Contains(filename, "stdin") {
-		return os.Stdin
+		log.Fatalf("Error: Must write to a non-empty filename...")
 	}
 	file, err := os.Create(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrExist) {
+		log.Fatal(err.Error())
+	} else {
+		exception.PanicOnErr(err)
+	}
+	return file
+}
+
+// MustOpen opens the input file.
+// Fatal/Panics when appropriate.
+func MustOpen(filename string) *os.File {
+	if strings.Contains(filename, "stdin") {
+		return os.Stdin
+	}
+
+	file, err := os.Open(filename)
+	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrNotExist) {
 		log.Fatal(err.Error())
 	} else {
 		exception.PanicOnErr(err)
