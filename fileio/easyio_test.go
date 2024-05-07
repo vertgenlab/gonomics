@@ -53,18 +53,20 @@ func copyFile(inputFilename string, outputFilename string) {
 }
 
 func BenchmarkRead(b *testing.B) {
-	copyFile("testdata/big.fa.gz", "testdata/big.fa")
+	unzip := "testdata/big.fa"
+	copyFile("testdata/big.fa.gz", unzip)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		var er *EasyReader
 		var done bool
 
-		er = EasyOpen("testdata/big.fa")
+		er = EasyOpen(unzip)
 
 		for _, done = EasyNextLine(er); !done; _, done = EasyNextLine(er) {
 		}
 		er.Close()
 	}
+	EasyRemove(unzip)
 }
 
 func BenchmarkReadGz(b *testing.B) {
@@ -81,47 +83,55 @@ func BenchmarkReadGz(b *testing.B) {
 }
 
 func BenchmarkWriteFileio(b *testing.B) {
+	test := "testdata/testWrite.dna"
 	for n := 0; n < b.N; n++ {
-		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna")
+		var ew *EasyWriter = EasyCreate(test)
 
 		for i := 0; i < 10000; i++ {
 			writeDnaFileio(ew)
 		}
 		ew.Close()
 	}
+	EasyRemove(test)
 }
 
 func BenchmarkWriteFileioGz(b *testing.B) {
+	test := "testdata/testWrite.dna.gz"
 	for n := 0; n < b.N; n++ {
-		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna.gz")
+		var ew *EasyWriter = EasyCreate(test)
 
 		for i := 0; i < 10000; i++ {
 			writeDnaFileio(ew)
 		}
 		ew.Close()
 	}
+	EasyRemove(test)
 }
 
 func BenchmarkWriteIo(b *testing.B) {
+	test := "testdata/testWrite.dna"
 	for n := 0; n < b.N; n++ {
-		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna")
+		var ew *EasyWriter = EasyCreate(test)
 
 		for i := 0; i < 10000; i++ {
 			writeDnaIo(ew)
 		}
 		ew.Close()
 	}
+	EasyRemove(test)
 }
 
 func BenchmarkWriteIoGz(b *testing.B) {
+	test := "testdata/testWrite.dna.gz"
 	for n := 0; n < b.N; n++ {
-		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna.gz")
+		var ew *EasyWriter = EasyCreate(test)
 
 		for i := 0; i < 10000; i++ {
 			writeDnaIo(ew)
 		}
 		ew.Close()
 	}
+	EasyRemove(test)
 }
 
 func BenchmarkWriteFile(b *testing.B) {

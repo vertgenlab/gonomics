@@ -1,6 +1,9 @@
 package fileio
 
 import (
+	"io"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -49,4 +52,41 @@ func TestEqual(t *testing.T) {
 	if !AreEqual(testfile, testfile) || !AreEqualIgnoreComments(testfile, testfile) {
 		t.Errorf("problem with equal")
 	}
+}
+
+func TestFileioStdin(t *testing.T) {
+	input := "Gonomics!"
+
+	// Create a temporary file to simulate input to stdin
+	stdin, err := os.CreateTemp("", "stdinTest")
+	if err != nil {
+		t.Fatalf("Error: Failed to create temporary file: %v", err)
+	}
+
+	if _, err := stdin.WriteString(input); err != nil {
+		t.Fatalf("Error: Failed to write simulated input to temp file: %v", err)
+	}
+
+	// Seek back to the start of the file so it can be read
+	if _, err := stdin.Seek(0, io.SeekStart); err != nil {
+		t.Fatalf("Error: Failed to seek to the start of the temp file: %v", err)
+	}
+	// Redirect os.Stdin to the temporary file
+	os.Stdin = stdin
+
+	// Call MustOpen with "stdin" and read from os.Stdin
+	file := MustOpen("/dev/stdin")
+	defer file.Close()
+
+	// Read the data returned by MustOpen
+	var readData strings.Builder
+	if _, err := io.Copy(&readData, file); err != nil {
+		t.Fatalf("Error: Failed to read from simulated stdin: %v", err)
+	}
+
+	// Verify the data matches what was written to the simulated stdin
+	if readData.String() != input {
+		t.Errorf("Error: Expected %q, got %q", input, readData.String())
+	}
+	os.Remove(stdin.Name())
 }

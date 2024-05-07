@@ -30,14 +30,18 @@ func TestLineExceedsDefaultBufferSize(t *testing.T) {
 }
 
 func BenchmarkByteioReader(b *testing.B) {
+	unzip := "testdata/big.fa"
+	copyFile("testdata/big.fa.gz", unzip)
 	b.ReportAllocs()
 	b.ResetTimer()
+
 	for n := 0; n < b.N; n++ {
-		reader := NewByteReader("testdata/big.fa")
+		reader := NewByteReader(unzip)
 		for _, done := ReadLine(reader); !done; _, done = ReadLine(reader) {
 			//Nothing to assign, testing pure reading of the file
 		}
 	}
+	EasyRemove(unzip)
 }
 
 func BenchmarkByteioReaderGz(b *testing.B) {
@@ -52,15 +56,18 @@ func BenchmarkByteioReaderGz(b *testing.B) {
 }
 
 func BenchmarkEasyReaderReg(b *testing.B) {
+	unzip := "testdata/big.fa"
+	copyFile("testdata/big.fa.gz", unzip)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		var reader *EasyReader
 		var done bool
-		reader = EasyOpen("testdata/big.fa")
+		reader = EasyOpen(unzip)
 		for _, done = EasyNextLine(reader); !done; _, done = EasyNextLine(reader) {
 		}
 	}
+	EasyRemove(unzip)
 }
 
 func BenchmarkEasyReaderGz(b *testing.B) {
