@@ -135,8 +135,9 @@ func BenchmarkWriteIoGz(b *testing.B) {
 }
 
 func BenchmarkWriteFile(b *testing.B) {
+	test := "testdata/testWrite.dna"
 	for n := 0; n < b.N; n++ {
-		osf, err := os.Create("testdata/testWrite.dna")
+		osf, err := os.Create(test)
 		exception.PanicOnErr(err)
 
 		for i := 0; i < 10000; i++ {
@@ -144,6 +145,7 @@ func BenchmarkWriteFile(b *testing.B) {
 		}
 		osf.Close()
 	}
+	EasyRemove(test)
 }
 
 var testfile2 string = "testdata/smallTest"
