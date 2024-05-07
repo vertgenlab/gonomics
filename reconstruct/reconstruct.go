@@ -2,6 +2,7 @@
 package reconstruct
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/vertgenlab/gonomics/dna"
@@ -49,6 +50,7 @@ func mutationProbability(a int, b int, t float64) float64 {
 func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, biasN bool, highestProbThreshold float64) dna.Base {
 	var highestProb, nonBiasBaseProb, total float64 = 0, 0, 0
 	var answer dna.Base = biasBase
+	fmt.Printf("Just set answer (%v) to biasBase (%v)\n", answer, biasBase)
 	for baseIdx, baseProb := range likelihoods {
 		total += baseProb
 		if dna.Base(baseIdx) != biasBase {
@@ -57,6 +59,7 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 		if baseProb > highestProb {
 			highestProb = baseProb
 			answer = dna.Base(baseIdx)
+			fmt.Printf("Just changed answer to %v\n", answer)
 		}
 	}
 	if highestProb/total < highestProbThreshold {
@@ -331,6 +334,7 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 			log.Fatalf("Error: Bias reconstruction node was specified as the root node.")
 		}
 		biasParentName = biasLeafNode.Up.Name
+		fmt.Printf("biasLeafName: %v, biasParentName: %v\n", biasLeafName, biasParentName)
 	}
 
 	internalNodes := expandedTree.GetBranch(root)
@@ -342,6 +346,7 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 			if biasParentName != "" && internalNodes[k].Name == biasParentName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, biasN, highestProbThreshold) //biased estimate
+				fmt.Printf("biasBase: %v, answerBase: %v\n", biasBase, answerBase)
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
 					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix))
 				}
