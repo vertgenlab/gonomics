@@ -96,9 +96,9 @@ func TestBinomialSum(t *testing.T) {
 }
 
 func TestPoissonDist(t *testing.T) {
-	input1 := PoissonDist(4, 5)
+	input1, _ := PoissonDist(4, 5, false)
 	expected1 := 1.754674e-01
-	input2 := PoissonDist(0, 5)
+	input2, _ := PoissonDist(0, 5, false)
 	expected2 := 6.737947e-03
 	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)

@@ -1,9 +1,12 @@
 package pFasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna/pDna"
 	"math/rand"
+	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna/pDna"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 func randSeq(length int) PFasta {
@@ -30,7 +33,7 @@ var WriteTests = []struct {
 	Records   []PFasta
 	Precision float32
 }{
-	{OutFile: "testdata/out.test.pFa",
+	{OutFile: "out.test.pFa",
 		Records: []PFasta{
 			{Name: "chr1",
 				Seq: []pDna.Float32Base{
@@ -74,19 +77,23 @@ var WriteTests = []struct {
 		Precision: 1e-3, // float16 for writing is quite inaccurate, this fails at 1e-4
 	},
 	{
-		OutFile:   "testdata/out.test.pFa",
+		OutFile:   "out.test.pFa",
 		Records:   []PFasta{randSeq(100000)},
 		Precision: 1e-2,
 	},
 }
 
 func TestWriteAndRead(t *testing.T) {
+	var err error
 	var records []PFasta
 	for _, v := range WriteTests {
 		Write(v.OutFile, v.Records)
 		records = Read(v.OutFile)
 		if !AllAreEqual(records, v.Records, v.Precision) {
 			t.Errorf("Error: in pFasta. Write and read test was not as expected.\n")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
 		}
 	}
 }
