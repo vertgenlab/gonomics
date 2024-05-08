@@ -14,6 +14,7 @@ import (
 	"github.com/vertgenlab/gonomics/ontology/gaf"
 	"github.com/vertgenlab/gonomics/ontology/obo"
 	"log"
+	"strings"
 )
 
 type Ontology struct {
@@ -125,7 +126,7 @@ func termProportionOfGenome(ontologies map[string]*Ontology, geneProportions map
 // bedpe form, an annotation file in gaf form and a map that takes GO term ID's and relates them to other GO term features
 // in obo format, and finally it takes a string which will write out all regions of the genome with their assigned
 // genes in the name column and their assigned ontologies in the annotation field.
-func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, genes map[string]*gtf.Gene, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo, out3dOntology string) {
+func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, genes map[string]*gtf.Gene, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo, out3dOntology string, geneEnrichments bool, termEnrichments bool) {
 	var err error
 	var filledSpace []bed.Bed
 	var filledSpaceIntervals []interval.Interval
@@ -149,27 +150,33 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		write3dOntologies(out3dOntology, geneOntologies, filledSpace)
 	}
 
-	proportionsForGenes := geneProportionOfGenome(filledSpace)
-	geneOut := fileio.EasyCreate("testdata/proportionsForGenes.txt")
-	_, err = fmt.Fprintf(geneOut, "Gene\tProportion\n")
-	exception.PanicOnErr(err)
-	for i := range proportionsForGenes {
-		_, err = fmt.Fprintf(geneOut, "%s\t%e\n", i, proportionsForGenes[i])
+	var proportionsForGenes map[string]float64
+	name := strings.TrimSuffix(out3dOntology, ".bed")
+	if geneEnrichments {
+		proportionsForGenes = geneProportionOfGenome(filledSpace)
+		geneOut := fileio.EasyCreate(name + ".geneProportions.txt")
+		_, err = fmt.Fprintf(geneOut, "Gene\tProportion\n")
+		exception.PanicOnErr(err)
+		for i := range proportionsForGenes {
+			_, err = fmt.Fprintf(geneOut, "%s\t%e\n", i, proportionsForGenes[i])
+			exception.PanicOnErr(err)
+		}
+		err = geneOut.Close()
 		exception.PanicOnErr(err)
 	}
-	err = geneOut.Close()
-	exception.PanicOnErr(err)
 
-	proportionsForTerms := termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
-
-	termOut := fileio.EasyCreate("testdata/proportionsForTerms.txt")
-	_, err = fmt.Fprintf(termOut, "Term\tName\tProportion\n")
-	exception.PanicOnErr(err)
-	for i := range proportionsForTerms {
-		_, err = fmt.Fprintf(termOut, "%s\t%s\t%e\n", i, ontologies[i].Name, proportionsForTerms[i])
+	var proportionsForTerms map[string]float64
+	if termEnrichments {
+		proportionsForTerms = termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
+		termOut := fileio.EasyCreate(name + ".termProportions.txt")
+		_, err = fmt.Fprintf(termOut, "Term\tName\tProportion\n")
 		exception.PanicOnErr(err)
+		for i := range proportionsForTerms {
+			_, err = fmt.Fprintf(termOut, "%s\t%s\t%e\n", i, ontologies[i].Name, proportionsForTerms[i])
+			exception.PanicOnErr(err)
+		}
+		err = termOut.Close()
 	}
-	err = termOut.Close()
 
 	for i := range filledSpace {
 		filledSpaceIntervals = append(filledSpaceIntervals, filledSpace[i])
@@ -193,15 +200,16 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	}
 
 	var enrichment float64
-
-	out := fileio.EasyCreate("testdata/testOut.txt")
-	for i := range proportionsForTerms {
-		enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], false)
-		_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
+	if termEnrichments {
+		out := fileio.EasyCreate(name + ".terms2.txt")
+		for i := range proportionsForTerms {
+			enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], true)
+			_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
+			exception.PanicOnErr(err)
+		}
+		err = out.Close()
 		exception.PanicOnErr(err)
 	}
-	err = out.Close()
-	exception.PanicOnErr(err)
 }
 
 // write3dOntologies take a 3D filled space bed, a map of gene names to their ontologies and an output file name and

@@ -60,7 +60,7 @@ func TestThreeDGreat(t *testing.T) {
 		}
 		annotations, _ = gaf.Read(v.AnnotationsFile)
 		obos, _ = obo.Read(v.OboFile, v.Force)
-		ThreeDGreat(queries, sizes, genes, contacts, annotations, obos, v.OntOutFile)
+		ThreeDGreat(queries, sizes, genes, contacts, annotations, obos, v.OntOutFile, false, false)
 	}
 	if bed.AllAreEqual(bed.Read("testdata/3dOntologies.bed"), bed.Read("testdata/expected.3dOntologies.bed")) {
 		err := os.Remove("testdata/3dOntologies.bed")
