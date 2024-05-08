@@ -60,7 +60,7 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 			answer = dna.Base(baseIdx)
 		}
 	}
-	fmt.Printf("Likelihoods: %v. biasBase: %v. nonBiasBaseProb: %v, total: %v, nonBiasBaseProb/total: %v.\n", likelihoods, biasBase, nonBiasBaseProb, total, nonBiasBaseProb/total)
+	fmt.Printf("Likelihoods: %v.\nbiasBase: %v.\nnonBiasBaseProb: %v, total: %v, nonBiasBaseProb/total: %v.\n", likelihoods, biasBase, nonBiasBaseProb, total, nonBiasBaseProb/total)
 	if highestProb/total < highestProbThreshold {
 		return dna.N
 	}
@@ -346,7 +346,7 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 			if biasParentName != "" && internalNodes[k].Name == biasParentName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, biasN, highestProbThreshold) //biased estimate
-				fmt.Printf("biasBase: %v, answerBase: %v\n", biasBase, answerBase)
+				fmt.Printf("biasBase: %v, answerBase: %v\n", biasBase, answerBase)                               // all nodes will print likelihoods, but only bias will print this line
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
 					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix))
 				}
@@ -363,5 +363,6 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 		}
 
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)
+		fmt.Printf("internalNodes[k].Fasta.Name: %v. \ninternalNodes[k].Fasta.Seq: %v\n", internalNodes[k].Fasta.Name, internalNodes[k].Fasta.Seq)
 	}
 }
