@@ -50,7 +50,6 @@ func mutationProbability(a int, b int, t float64) float64 {
 func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, biasN bool, highestProbThreshold float64) dna.Base {
 	var highestProb, nonBiasBaseProb, total float64 = 0, 0, 0
 	var answer dna.Base = biasBase
-	fmt.Printf("Just set answer (%v) to biasBase (%v)\n", answer, biasBase)
 	for baseIdx, baseProb := range likelihoods {
 		total += baseProb
 		if dna.Base(baseIdx) != biasBase {
@@ -59,19 +58,21 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 		if baseProb > highestProb {
 			highestProb = baseProb
 			answer = dna.Base(baseIdx)
-			fmt.Printf("Just changed answer to %v\n", answer)
 		}
 	}
+	fmt.Printf("Likelihoods: %v. biasBase: %v. nonBiasBaseProb: %v, total: %v, nonBiasBaseProb/total: %v.\n", likelihoods, biasBase, nonBiasBaseProb, total, nonBiasBaseProb/total)
 	if highestProb/total < highestProbThreshold {
 		return dna.N
 	}
 	if nonBiasBaseProb/total < nonBiasBaseThreshold {
+		fmt.Printf("nonBiasBaseProb/total < nonBiasBaseThreshold. answer should be biasBase: %v.\n", answer)
 		if biasN && ((1 - nonBiasBaseProb/total) < nonBiasBaseThreshold) { // if biasN mode mode, AND BiasBaseProb < ProbThreshold, then we cannot reconstruct base, return N (otherwise, we know with some certainty (ProbThreshold) that ancestor base is either the same as bias, or different from bias)
 			return dna.N
 		} else {
 			return biasBase
 		}
 	}
+	fmt.Printf("answer should NOT be biasBase. answer: %v.\n", answer)
 	return answer
 }
 

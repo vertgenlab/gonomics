@@ -62,6 +62,7 @@ func ReconstructSeq(s Settings) {
 	pDnaRecords := []pFasta.PFasta{{Name: s.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 
 	for i := range leaves[0].Fasta.Seq {
+		fmt.Printf("i: %v. ", i)
 		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.BiasN, s.HighestProbThreshold, s.SubMatrix, s.PDnaNode, pDnaRecords)
 	}
 
