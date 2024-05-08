@@ -12,6 +12,9 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// Tree consists of a map that links strings (usually chromosome names) to the root node of a tree containing the intervals for that chromosome.
+type Tree map[string]*intervalNode
+
 // Interval is a type interface for any genomic datatype that has chromosomal coordinate info (chromosome, start, end).
 // In order to satisfy this interface, a type must have GetChrom(), GetChromStart(), and GetChromEnd() methods.
 // Note that the these methods must return positions for a 0-base half-closed interval [start - end).
@@ -21,14 +24,14 @@ type Interval interface {
 	GetChromEnd() int
 }
 
-type IntervalNode struct {
-	val    Interval // only stored in leaf nodes
-	data   []Interval
-	xMid   int
-	iLeft  []int
-	iRight []int
-	lChild *IntervalNode
-	rChild *IntervalNode
+type intervalNode struct {
+	Val    Interval // only stored in leaf nodes
+	Data   []Interval
+	XMid   int
+	ILeft  []int
+	IRight []int
+	LChild *intervalNode
+	RChild *intervalNode
 }
 
 func sortIntervals(s []Interval, less func(a, b Interval) bool) {
@@ -77,8 +80,8 @@ func splitIntervalsByChr(intervals []Interval) map[string][]Interval {
 }
 
 // BuildTree takes a slice of intervals and returns a map that can be used for Querying overlaps.
-func BuildTree(intervals []Interval) map[string]*IntervalNode {
-	answer := make(map[string]*IntervalNode)
+func BuildTree(intervals []Interval) map[string]*intervalNode {
+	answer := make(map[string]*intervalNode)
 	chrMap := splitIntervalsByChr(intervals)
 
 	for idx, val := range chrMap {
@@ -89,7 +92,7 @@ func BuildTree(intervals []Interval) map[string]*IntervalNode {
 	return answer
 }
 
-func buildTree(intervals []Interval) *IntervalNode {
+func buildTree(intervals []Interval) *intervalNode {
 	p := make([]Interval, len(intervals))
 	pY := make([]Interval, len(intervals))
 	copy(p, intervals)
@@ -100,12 +103,12 @@ func buildTree(intervals []Interval) *IntervalNode {
 	sortIntervals(p, xLess)
 	//sortIntervals(pY, yLess)
 
-	var answer *IntervalNode
+	var answer *intervalNode
 
 	// 2. if P contains only one interval i then
 	// 3. Creating a leaf node vleaf storing this interval. i.e., vleaf. interval = i
 	if len(p) == 1 {
-		answer = &IntervalNode{val: p[0], data: pY}
+		answer = &intervalNode{Val: p[0], Data: pY}
 	} else {
 		// 4. else
 		// 5. Split P into Pleft and Pright, the subsets ≤ and > the median x-value xmid of P.
@@ -135,15 +138,15 @@ func buildTree(intervals []Interval) *IntervalNode {
 		vLeft := buildTree(pLeft)
 		vRight := buildTree(pRight)
 
-		// 11. Create a node v storing xmid, Ileft and Iright. v.x = xmid; v.data = Py;
+		// 11. Create a node v storing xmid, Ileft and Iright. v.x = xmid; v.Data = Py;
 		// v. lfc = Ileft; v. rfc = Iright; v. lchild = vleft; v. rchild = vright
-		answer = &IntervalNode{
-			data:   pY,
-			xMid:   p[midPos].GetChromStart(),
-			iLeft:  iLeft,
-			iRight: iRight,
-			lChild: vLeft,
-			rChild: vRight,
+		answer = &intervalNode{
+			Data:   pY,
+			XMid:   p[midPos].GetChromStart(),
+			ILeft:  iLeft,
+			IRight: iRight,
+			LChild: vLeft,
+			RChild: vRight,
 		}
 	}
 
@@ -154,7 +157,7 @@ func buildTree(intervals []Interval) *IntervalNode {
 
 // Query takes a map (built with BuildTree), a query interval, and a relationship and returns a slice of type Interval
 // of treeMap entries that overlapped the query interval.
-func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []Interval {
+func Query(treeMap map[string]*intervalNode, q Interval, relationship string) []Interval {
 	var answer []Interval
 	m := treeMap[q.GetChrom()]
 	if m == nil {
@@ -202,7 +205,7 @@ func Query(treeMap map[string]*IntervalNode, q Interval, relationship string) []
 
 // QueryBool searches the input treeMap and returns true if any interval satisfies the input relationship relative to the input interval q.
 // QueryBool is faster than Query and is preferred when simply checking if the input q does or does not overlap the tree.
-func QueryBool(treeMap map[string]*IntervalNode, q Interval, relationship string, ans []Interval) bool {
+func QueryBool(treeMap map[string]*intervalNode, q Interval, relationship string, ans []Interval) bool {
 	m := treeMap[q.GetChrom()]
 	if m == nil {
 		return false
@@ -246,11 +249,11 @@ func QueryBool(treeMap map[string]*IntervalNode, q Interval, relationship string
 	}
 }
 
-func checkQuery(tree *IntervalNode, q Interval, relationship string, answer []Interval) bool {
+func checkQuery(tree *intervalNode, q Interval, relationship string, answer []Interval) bool {
 	return len(query(tree, q, relationship, answer)) > 0
 }
 
-func query(tree *IntervalNode, q Interval, relationship string, answer []Interval) []Interval {
+func query(tree *intervalNode, q Interval, relationship string, answer []Interval) []Interval {
 	// 1. Transform interval query with respect to interval I and relationship R
 	// to range query with x range [x1, x2] and y range [y1, y2] according to Table 1.
 	x1, x2, y1, y2 := transform(q, relationship)
@@ -265,11 +268,11 @@ func query(tree *IntervalNode, q Interval, relationship string, answer []Interva
 		return nil
 	}
 
-	if vSplit.val != nil { // 4. if vsplit is a leaf node then
+	if vSplit.Val != nil { // 4. if vsplit is a leaf node then
 		// 5. if vsplit. interval. x ∈ [x1, x2] and vsplit. interval. y ∈ [y1, y2] then
-		if withinRange(vSplit.val, relationship, x1, x2, y1, y2) {
+		if withinRange(vSplit.Val, relationship, x1, x2, y1, y2) {
 			// 6. Report the interval in vsplit, S = S ∪ {vsplit. interval}
-			switch z := vSplit.val.(type) {
+			switch z := vSplit.Val.(type) {
 			case *AggregateInterval:
 				answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 			default:
@@ -279,30 +282,30 @@ func query(tree *IntervalNode, q Interval, relationship string, answer []Interva
 		return answer // 8. return S
 	}
 
-	// 9. Perform binary search on vsplit.data for y1 by y-value,
-	// find the index i of the smallest element no less than y1 in vsplit.data.
-	i := sort.Search(len(vSplit.data), func(i int) bool {
-		return float64(vSplit.data[i].GetChromEnd()-1) >= y1
+	// 9. Perform binary search on vsplit.Data for y1 by y-value,
+	// find the index i of the smallest element no less than y1 in vsplit.Data.
+	i := sort.Search(len(vSplit.Data), func(i int) bool {
+		return float64(vSplit.Data[i].GetChromEnd()-1) >= y1
 	})
 
 	ri := i // save this value for later
 
-	if i >= len(vSplit.data) {
+	if i >= len(vSplit.Data) {
 		return nil
 	}
 
-	var v *IntervalNode
-	v, i = vSplit.lChild, vSplit.iLeft[i] // 10. vsplit = vsplit.lchild, i = vsplit.lfc[i]
+	var v *intervalNode
+	v, i = vSplit.LChild, vSplit.ILeft[i] // 10. vsplit = vsplit.lchild, i = vsplit.lfc[i]
 
-	for v.val == nil && i != -1 { // 11. while v is not a leaf and i ≠ 1 do // ADDED MODIFICATION TO 11
-		if x1 <= float64(v.xMid) { // 12. if x1 ≤ v.x then
-			j := v.iRight[i] // 13. j = v.rfc[i]
+	for v.Val == nil && i != -1 { // 11. while v is not a leaf and i ≠ 1 do // ADDED MODIFICATION TO 11
+		if x1 <= float64(v.XMid) { // 12. if x1 ≤ v.x then
+			j := v.IRight[i] // 13. j = v.rfc[i]
 
-			// 14. while j ≠ −1 and v.rchild.data[j].y ≤ y2 and j ≤ v.rchild.data.size do
-			for j != -1 && j < len(v.rChild.data) && float64(v.rChild.data[j].GetChromEnd()-1) <= y2 {
+			// 14. while j ≠ −1 and v.rchild.Data[j].y ≤ y2 and j ≤ v.rchild.Data.size do
+			for j != -1 && j < len(v.RChild.Data) && float64(v.RChild.Data[j].GetChromEnd()-1) <= y2 {
 				if relationship == "m" || relationship == "mi" {
-					if v.rChild.data[j].GetChromStart() != v.rChild.data[j].GetChromEnd()-1 {
-						switch z := v.rChild.data[j].(type) {
+					if v.RChild.Data[j].GetChromStart() != v.RChild.Data[j].GetChromEnd()-1 {
+						switch z := v.RChild.Data[j].(type) {
 						case *AggregateInterval:
 							answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 						default:
@@ -310,8 +313,8 @@ func query(tree *IntervalNode, q Interval, relationship string, answer []Interva
 						}
 					}
 				} else {
-					// 15. Report interval, S = S ∪ {v. rchild. data[j]}
-					switch z := v.rChild.data[j].(type) {
+					// 15. Report interval, S = S ∪ {v. rchild. Data[j]}
+					switch z := v.RChild.Data[j].(type) {
 					case *AggregateInterval:
 						answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 					default:
@@ -321,28 +324,28 @@ func query(tree *IntervalNode, q Interval, relationship string, answer []Interva
 				j++ // 16. j=j+1
 			} // 17. end while
 
-			i, v = v.iLeft[i], v.lChild // 18. i = v.lfc[i], v = v.lchild
+			i, v = v.ILeft[i], v.LChild // 18. i = v.lfc[i], v = v.lchild
 		} else { // 19. else
-			i, v = v.iRight[i], v.rChild //20. i=v.rfc[i], v=v.rchild
+			i, v = v.IRight[i], v.RChild //20. i=v.rfc[i], v=v.rchild
 		} // 21. end if
 	} // 22. end while
 
 	// 23. if v is a leaf and v.interval.x ∈ [x1, x2] and v.interval.y ∈ [y1, y2] then
-	if v.val != nil && withinRange(v.val, relationship, x1, x2, y1, y2) {
-		answer = append(answer, v.val) // 24. Report the interval in v, S = S ∪ {v. interval}
+	if v.Val != nil && withinRange(v.Val, relationship, x1, x2, y1, y2) {
+		answer = append(answer, v.Val) // 24. Report the interval in v, S = S ∪ {v. interval}
 	} // 25. end if
 
-	v, i = vSplit.rChild, vSplit.iRight[ri] // 26. v = vsplit. rchild, i = vsplit. rcf[i]
+	v, i = vSplit.RChild, vSplit.IRight[ri] // 26. v = vsplit. rchild, i = vsplit. rcf[i]
 
-	for v.val == nil && i != -1 { // 27. while v is not a leaf and i≠−1 do
-		if x2 >= float64(v.xMid) { // 28. if x2 ≥ v. x then
-			j := v.iLeft[i] // 29. j = v. lfc[i]
+	for v.Val == nil && i != -1 { // 27. while v is not a leaf and i≠−1 do
+		if x2 >= float64(v.XMid) { // 28. if x2 ≥ v. x then
+			j := v.ILeft[i] // 29. j = v. lfc[i]
 
-			// 30. while j ≠ −1 and v. lchild. data[j]. y ≤ y2 and j ≤ v. lchild. data. size do
-			for j != -1 && j < len(v.lChild.data) && float64(v.lChild.data[j].GetChromEnd()-1) <= y2 {
+			// 30. while j ≠ −1 and v. lchild. Data[j]. y ≤ y2 and j ≤ v. lchild. Data. size do
+			for j != -1 && j < len(v.LChild.Data) && float64(v.LChild.Data[j].GetChromEnd()-1) <= y2 {
 				if relationship == "m" || relationship == "mi" {
-					if v.lChild.data[j].GetChromStart() != v.lChild.data[j].GetChromEnd()-1 {
-						switch z := v.lChild.data[j].(type) {
+					if v.LChild.Data[j].GetChromStart() != v.LChild.Data[j].GetChromEnd()-1 {
+						switch z := v.LChild.Data[j].(type) {
 						case *AggregateInterval:
 							answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 						default:
@@ -350,25 +353,25 @@ func query(tree *IntervalNode, q Interval, relationship string, answer []Interva
 						}
 					}
 				} else {
-					switch z := v.lChild.data[j].(type) {
+					switch z := v.LChild.Data[j].(type) {
 					case *AggregateInterval:
 						answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 					default:
 						answer = append(answer, z)
 					}
-				} // 31. Report interval, S = S ∪ {v. lchild. data[j]}
+				} // 31. Report interval, S = S ∪ {v. lchild. Data[j]}
 				j++ // 32. j=j+1
 			} // 33. end while
 
-			i, v = v.iRight[i], v.rChild // 34. i=v. rfc[i], v=v. rchild
+			i, v = v.IRight[i], v.RChild // 34. i=v. rfc[i], v=v. rchild
 		} else { // 35. else
-			i, v = v.iLeft[i], v.lChild // 36. i = v. lfc[i], v = v. lchild
+			i, v = v.ILeft[i], v.LChild // 36. i = v. lfc[i], v = v. lchild
 		} // 37. end if
 	} // 38. end while
 
 	// 39. if v is a leaf and v. interval. x ∈ [x1, x2] and v. interval. y ∈ [y1, y2] then
-	if v.val != nil && withinRange(v.val, relationship, x1, x2, y1, y2) {
-		switch z := v.val.(type) {
+	if v.Val != nil && withinRange(v.Val, relationship, x1, x2, y1, y2) {
+		switch z := v.Val.(type) {
 		case *AggregateInterval:
 			answer = append(answer, query(z.tree[q.GetChrom()], q, relationship, answer[len(answer):cap(answer)])...)
 		default:
@@ -394,16 +397,16 @@ func withinRange(q Interval, relationship string, x1, x2, y1, y2 float64) bool {
 	return (q1 >= x1 && q1 <= x2) && (q2 >= y1 && q2 <= y2)
 }
 
-func findSplit(x1, x2 float64, node *IntervalNode) *IntervalNode {
-	if node.val != nil { // Handles case where only 1 node is present in tree
+func findSplit(x1, x2 float64, node *intervalNode) *intervalNode {
+	if node.Val != nil { // Handles case where only 1 node is present in tree
 		return node
 	}
 
-	for node.val == nil {
-		if float64(node.xMid) < x1 {
-			node = node.rChild
-		} else if x2 < float64(node.xMid) {
-			node = node.lChild
+	for node.Val == nil {
+		if float64(node.XMid) < x1 {
+			node = node.RChild
+		} else if x2 < float64(node.XMid) {
+			node = node.LChild
 		} else {
 			return node
 		}

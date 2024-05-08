@@ -70,8 +70,8 @@ func IntervalSimilarity(a []Interval, b []Interval) (float64, float64, float64) 
 	return overlapPercA, overlapPercB, (overlapPercA + overlapPercB) / 2
 }
 
-// BedSliceToIntervalMap takes in a slice of bed and returns a map of string -- *IntervalNode which can be used for interval.Query
-func BedSliceToIntervalMap(inBed []bed.Bed) map[string]*IntervalNode {
+// BedSliceToIntervalMap takes in a slice of bed and returns a map of string -- *intervalNode which can be used for interval.Query
+func BedSliceToIntervalMap(inBed []bed.Bed) map[string]*intervalNode {
 	var smallWindowIntervals []Interval
 
 	for bd := range inBed {

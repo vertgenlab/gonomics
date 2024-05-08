@@ -4,7 +4,7 @@ type AggregateInterval struct {
 	chr   string
 	start int
 	end   int
-	tree  map[string]*IntervalNode
+	tree  map[string]*intervalNode
 }
 
 func (a *AggregateInterval) GetChrom() string {
