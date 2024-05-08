@@ -335,7 +335,6 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 			log.Fatalf("Error: Bias reconstruction node was specified as the root node.")
 		}
 		biasParentName = biasLeafNode.Up.Name
-		fmt.Printf("biasLeafName: %v, biasParentName: %v\n", biasLeafName, biasParentName)
 	}
 
 	internalNodes := expandedTree.GetBranch(root)
