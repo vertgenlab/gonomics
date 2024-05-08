@@ -48,7 +48,7 @@ func samCoverage(s Settings) {
 		fmt.Fprintf(out, "%v\t%v\tEmpirical\n", i, pileups)
 		y, outlier := numbers.PoissonDist(i, lambda, false)
 		if !outlier {
-			fmt.Fprintf(out, "%v\t%v\tExpected\n", i, y*float64(totalCount))
+			fmt.Fprintf(out, "%v\t%.6g\tExpected\n", i, y*float64(totalCount))
 		}
 	}
 	if s.Verbose > 0 {
