@@ -17,7 +17,7 @@ const (
 	testRelationship string = "any"
 )
 
-func linearOverlap(tree map[string]*interval.IntervalNode) {
+func linearOverlap(tree interval.Tree) {
 	var currVcf vcf.Vcf
 	var done bool
 	file := fileio.EasyOpen(testInputFile)
@@ -28,7 +28,7 @@ func linearOverlap(tree map[string]*interval.IntervalNode) {
 	}
 }
 
-func concurrentOverlap(tree map[string]*interval.IntervalNode, threads int) {
+func concurrentOverlap(tree interval.Tree, threads int) {
 	queryChan, _ := vcf.GoReadToChan(testInputFile)
 	answerChan := make(chan queryAnswer, 1000)
 
@@ -49,7 +49,7 @@ func concurrentOverlap(tree map[string]*interval.IntervalNode, threads int) {
 	}
 }
 
-func concurrentQueryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan vcf.Vcf, answerChan chan<- queryAnswer, relationship string, wg *sync.WaitGroup) {
+func concurrentQueryWorker(tree interval.Tree, queryChan <-chan vcf.Vcf, answerChan chan<- queryAnswer, relationship string, wg *sync.WaitGroup) {
 	var qa queryAnswer
 	for query := range queryChan {
 		qa.query = query
@@ -59,7 +59,7 @@ func concurrentQueryWorker(tree map[string]*interval.IntervalNode, queryChan <-c
 	wg.Done()
 }
 
-func prepTree() map[string]*interval.IntervalNode {
+func prepTree() interval.Tree {
 	selectBeds := bed.Read(testSelectFile)
 	intervals := make([]interval.Interval, len(selectBeds))
 	for i := range selectBeds {
@@ -70,7 +70,7 @@ func prepTree() map[string]*interval.IntervalNode {
 
 func BenchmarkLinearOverlap(b *testing.B) {
 	b.StopTimer()
-	var tree map[string]*interval.IntervalNode = prepTree()
+	var tree interval.Tree = prepTree()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		linearOverlap(tree)
@@ -80,7 +80,7 @@ func BenchmarkLinearOverlap(b *testing.B) {
 func BenchmarkConcurrentOverlapThreads1(b *testing.B) {
 	b.StopTimer()
 	var threads int = 1
-	var tree map[string]*interval.IntervalNode = prepTree()
+	var tree interval.Tree = prepTree()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		concurrentOverlap(tree, threads)
@@ -90,7 +90,7 @@ func BenchmarkConcurrentOverlapThreads1(b *testing.B) {
 func BenchmarkConcurrentOverlapThreads2(b *testing.B) {
 	b.StopTimer()
 	var threads int = 2
-	var tree map[string]*interval.IntervalNode = prepTree()
+	var tree interval.Tree = prepTree()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		concurrentOverlap(tree, threads)
@@ -100,7 +100,7 @@ func BenchmarkConcurrentOverlapThreads2(b *testing.B) {
 func BenchmarkConcurrentOverlapThreads4(b *testing.B) {
 	b.StopTimer()
 	var threads int = 4
-	var tree map[string]*interval.IntervalNode = prepTree()
+	var tree interval.Tree = prepTree()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		concurrentOverlap(tree, threads)
@@ -109,7 +109,7 @@ func BenchmarkConcurrentOverlapThreads4(b *testing.B) {
 func BenchmarkConcurrentOverlapThreads8(b *testing.B) {
 	b.StopTimer()
 	var threads int = 8
-	var tree map[string]*interval.IntervalNode = prepTree()
+	var tree interval.Tree = prepTree()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		concurrentOverlap(tree, threads)

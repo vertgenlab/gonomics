@@ -25,7 +25,7 @@ type vcfEffectPrediction struct {
 }
 
 // GenesToIntervalTree builds a fractionally cascaded 2d interval tree for efficiently identifying genes that overlap a variant.
-func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNode {
+func GenesToIntervalTree(genes map[string]*Gene) interval.Tree {
 	MoveAllCanonicalToZero(genes)
 	intervals := make([]interval.Interval, len(genes))
 	var i int = 0
@@ -40,7 +40,7 @@ func GenesToIntervalTree(genes map[string]*Gene) map[string]*interval.IntervalNo
 // VcfToVariant determines the effects of a variant on the cDNA and amino acid sequence by querying genes in the tree made by GenesToIntervalTree
 // Note that if multiple genes are found to overlap a variant this function will return the variant based on the first queried gene and throw an error
 // All bases in fasta record must be uppercase.
-func VcfToVariant(v vcf.Vcf, tree map[string]*interval.IntervalNode, seq map[string][]dna.Base, allTranscripts bool) (*vcfEffectPrediction, error) {
+func VcfToVariant(v vcf.Vcf, tree interval.Tree, seq map[string][]dna.Base, allTranscripts bool) (*vcfEffectPrediction, error) {
 	var answer *vcfEffectPrediction
 	var err error
 

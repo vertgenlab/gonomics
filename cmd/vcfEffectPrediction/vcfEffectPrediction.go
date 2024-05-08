@@ -80,7 +80,7 @@ func vcfEffectPrediction(settings *Settings) (<-chan vcf.Vcf, vcf.Header) {
 	return answer, vcfHeader
 }
 
-func annotationWorker(wg *sync.WaitGroup, tree map[string]*interval.IntervalNode, fasta map[string][]dna.Base, vcfChan <-chan vcf.Vcf, answer chan<- vcf.Vcf, allTranscripts bool) {
+func annotationWorker(wg *sync.WaitGroup, tree interval.Tree, fasta map[string][]dna.Base, vcfChan <-chan vcf.Vcf, answer chan<- vcf.Vcf, allTranscripts bool) {
 	var annotation string
 	for vcfRecord := range vcfChan {
 		variant, _ := gtf.VcfToVariant(vcfRecord, tree, fasta, allTranscripts) //TODO: make gtf.vcfEffectPrediciton a public struct and declare outside of loop

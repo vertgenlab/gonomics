@@ -30,14 +30,14 @@ type fileWriter interface {
 	WriteToFileHandle(io.Writer)
 }
 
-func buildTree(intervals []interval.Interval, aggregate bool) map[string]*interval.IntervalNode {
+func buildTree(intervals []interval.Interval, aggregate bool) interval.Tree {
 	if aggregate {
 		interval.MergeIntervals(intervals)
 	}
 	return interval.BuildTree(intervals)
 }
 
-func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interval.Interval, answerChan chan<- *queryAnswer, relationship string, wg *sync.WaitGroup, mergedOutput bool, thresholdOverlap float64) {
+func queryWorker(tree interval.Tree, queryChan <-chan interval.Interval, answerChan chan<- *queryAnswer, relationship string, wg *sync.WaitGroup, mergedOutput bool, thresholdOverlap float64) {
 	var answer []interval.Interval
 	buf := make([]interval.Interval, 1000)
 	numSeen := 0
@@ -49,7 +49,7 @@ func queryWorker(tree map[string]*interval.IntervalNode, queryChan <-chan interv
 	wg.Done()
 }
 
-func getAnswer(query interval.Interval, tree map[string]*interval.IntervalNode, relationship string, mergedOutput bool, thresholdOverlap float64, buf []interval.Interval) []interval.Interval {
+func getAnswer(query interval.Interval, tree interval.Tree, relationship string, mergedOutput bool, thresholdOverlap float64, buf []interval.Interval) []interval.Interval {
 	var answer []interval.Interval
 
 	// special case to run QueryBool for faster processing
