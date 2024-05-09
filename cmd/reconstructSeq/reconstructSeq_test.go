@@ -14,6 +14,7 @@ var ReconstructSeqTests = []struct {
 	OutFile              string
 	ExpectedFile         string
 	BiasLeafName         string
+	BiasNodeName         string
 	NonBiasProbThreshold float64
 	BiasN                bool
 	HighestProbThreshold float64
@@ -29,6 +30,7 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.AllPossibleOneHuman.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.fa",
 		BiasLeafName:         "",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0,
 		BiasN:                false,
 		HighestProbThreshold: 0,
@@ -44,6 +46,7 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.AllPossibleOneHuman.ThresholdPoint8.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.ThresholdPoint8.fa",
 		BiasLeafName:         "human",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0.8,
 		BiasN:                false,
 		HighestProbThreshold: 0,
@@ -59,6 +62,7 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.AllPossibleOneHuman.ThresholdPoint99.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.ThresholdPoint99.fa",
 		BiasLeafName:         "human",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0.99,
 		BiasN:                false,
 		HighestProbThreshold: 0,
@@ -74,6 +78,7 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.AllPossibleOneHuman.highestProbThreshold99.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.highestProbThreshold99.fa",
 		BiasLeafName:         "human",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0,
 		BiasN:                false,
 		HighestProbThreshold: 0.99,
@@ -89,6 +94,7 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.AllPossibleOneHuman.withExtraSeqs.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.fa",
 		BiasLeafName:         "",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0,
 		BiasN:                false,
 		HighestProbThreshold: 0,
@@ -100,6 +106,7 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.AllPossibleOneHuman.withExtraSeqs.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.keepAllSeq.fa",
 		BiasLeafName:         "",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0,
 		BiasN:                false,
 		HighestProbThreshold: 0,
@@ -111,6 +118,7 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.AllPossibleOneHuman.withExtraSeqsRef.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.keepAllSeqRef.fa",
 		BiasLeafName:         "",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0,
 		BiasN:                false,
 		HighestProbThreshold: 0,
@@ -121,6 +129,7 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.short.biasN.fa",
 		ExpectedFile:         "testdata/expected.short.biasN.fa",
 		BiasLeafName:         "human",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0.8,
 		BiasN:                true,
 		HighestProbThreshold: 0,
@@ -170,6 +179,7 @@ func TestReconstructSeq(t *testing.T) {
 			FastaInput:           v.FastaFile,
 			OutFile:              v.OutFile,
 			BiasLeafName:         v.BiasLeafName,
+			BiasNodeName:         v.BiasNodeName,
 			NonBiasProbThreshold: v.NonBiasProbThreshold,
 			BiasN:                v.BiasN,
 			HighestProbThreshold: v.HighestProbThreshold,
