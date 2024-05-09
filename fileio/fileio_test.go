@@ -54,39 +54,40 @@ func TestEqual(t *testing.T) {
 	}
 }
 
-func TestFileioStdin(t *testing.T) {
-	input := "Gonomics!"
-
-	// Create a temporary file to simulate input to stdin
-	mockStdin, err := os.CreateTemp("", "mockStdin")
-	if err != nil {
-		t.Fatalf("Error: Failed to create temporary file: %v", err)
+func TestStdinSimulation(t *testing.T) {
+	testCases := []string{
+		"Gonomics fileio stdin mock",
+		"",                 // Empty string
+		"\nHello\nWorld\n", // Multiple lines
+		"Secret input with special characters !@#$%^&*()_+",
 	}
 
-	if _, err := mockStdin.WriteString(input); err != nil {
-		t.Fatalf("Error: Failed to write simulated input to temp file: %v", err)
-	}
+	for _, input := range testCases {
+		mockStdin, err := os.CreateTemp("", "mockStdin")
+		if err != nil {
+			t.Fatalf("Error: Failed to create temporary file: %v", err)
+		}
+		defer mockStdin.Close()
 
-	// Seek back to the start of the file so it can be read
-	if _, err := mockStdin.Seek(0, io.SeekStart); err != nil {
-		t.Fatalf("Error: Failed to seek to the start of the temp file: %v", err)
-	}
-	// Redirect os.Stdin to the temporary file
-	os.Stdin = mockStdin
+		if _, err := mockStdin.WriteString(input); err != nil {
+			t.Fatalf("Error: Failed to write simulated input: %v", err)
+		}
+		if _, err := mockStdin.Seek(0, io.SeekStart); err != nil {
+			t.Fatalf("Error: Failed to seek to the start: %v", err)
+		}
+		os.Stdin = mockStdin
 
-	// Call MustOpen with "stdin" and read from os.Stdin
-	file := MustOpen("/dev/stdin")
-	defer file.Close()
+		file := MustOpen("/dev/stdin")
+		defer file.Close()
 
-	// Read the data returned by MustOpen
-	var readData strings.Builder
-	if _, err := io.Copy(&readData, file); err != nil {
-		t.Fatalf("Error: Failed to read from simulated stdin: %v", err)
-	}
+		var reader strings.Builder
 
-	// Verify the data matches what was written to the simulated stdin
-	if readData.String() != input {
-		t.Errorf("Error: Expected %q, got %q", input, readData.String())
+		if _, err := io.Copy(&reader, file); err != nil {
+			t.Fatalf("Error: Failed to read from simulated stdin: %v", err)
+		}
+		if reader.String() != input {
+			t.Errorf("Error: Mismatch for input %q. Expected: %q, got %q", input, input, reader.String())
+		}
+		MustRemove(mockStdin.Name())
 	}
-	os.Remove(mockStdin.Name())
 }
