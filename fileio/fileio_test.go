@@ -68,7 +68,6 @@ func TestStdinSimulation(t *testing.T) {
 			t.Fatalf("Error: Failed to create temporary file: %v", err)
 		}
 		defer mockStdin.Close()
-
 		if _, err := mockStdin.WriteString(input); err != nil {
 			t.Fatalf("Error: Failed to write simulated input: %v", err)
 		}
