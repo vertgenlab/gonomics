@@ -43,6 +43,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	seeds.Worker = seeds.Worker[:0]
 	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, config.TileSize, sk.perfectScore, config.ScoreMatrix, seeds.Hits, seeds.Worker, seedBuildHelper)
 	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(len(read.Seq)), config); i++ {
+		//for i := 0; i < len(seeds.Hits); i++ {
 		sk.currSeed = seeds.Hits[i]
 		sk.tailSeed = *getLastPart(&sk.currSeed)
 		if sk.currSeed.PosStrand {

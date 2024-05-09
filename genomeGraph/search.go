@@ -2,6 +2,7 @@ package genomeGraph
 
 import (
 	"bytes"
+	"container/heap"
 	"io"
 	"log"
 	"math"
@@ -94,7 +95,7 @@ func resetScoreKeeper(sk scoreKeeper) {
 // getLeftBases retrieves bases from the left of a given position in a node's sequence and appends additional sequence.
 func getLeftBases(n *Node, extension int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	seqLen := len(seq)
-	basesToTake := int(math.Min(float64(seqLen+refEnd), float64(extension))) - seqLen
+	basesToTake := numbers.Min(seqLen+refEnd, extension) - seqLen
 	if basesToTake > 0 {
 		ans = append(ans, n.Seq[refEnd-basesToTake:refEnd]...)
 	}
@@ -187,7 +188,7 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, settings *GraphSettings, 
 // getRightBases retrieves bases from the right of a given start position in a node's sequence and appends it to the provided sequence.
 func getRightBases(n *Node, extension int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
 	availableBases := len(n.Seq) - start
-	basesToTake := int(math.Min(float64(availableBases), float64(extension)))
+	basesToTake := numbers.Min(availableBases, extension)
 	ans = append(ans, seq...)
 	if basesToTake > 0 {
 		ans = append(ans, n.Seq[start:start+basesToTake]...)
@@ -379,9 +380,12 @@ type seedHelper struct {
 	tempSeed                                  SeedDev
 }
 
-func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool, answer []SeedDev) []SeedDev {
+func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool) []SeedDev {
+	pq := make(MaxPriorityQueue, 0)
+	heap.Init(&pq)
+
 	const basesPerInt int = 32
-	answer = answer[:0]
+
 	var nodeOffset int = nodeStart % basesPerInt
 	var readOffset int = 31 - ((readStart - nodeOffset + 31) % 32)
 	var rightMatches int = 0
@@ -400,18 +404,22 @@ func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeSt
 	// we went all the way to end and there might be more
 	if readStart+rightMatches < len(read.Seq) && nodeStart+rightMatches == node.SeqTwoBit.Len && len(node.Next) != 0 {
 		for i = 0; i < len(node.Next); i++ {
-			nextParts = extendToTheRightDev(node.Next[i].Dest, read, readStart+rightMatches, 0, posStrand, nextParts)
+			nextParts = extendToTheRightDev(node.Next[i].Dest, read, readStart+rightMatches, 0, posStrand)
 			// if we aligned into the next node, make a seed for this node and point it to the next one
 			for j = 0; j < len(nextParts); j++ {
 				currNode = SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches) + nextParts[j].TotalLength, NextPart: &nextParts[j]}
-				answer = append(answer, currNode)
+				heap.Push(&pq, &MaxItem{Value: &currNode, Priority: currNode.TotalLength})
 			}
 		}
-	}
-	// if the alignment did not go to another node, return the match for this node
-	if len(answer) == 0 {
+	} else {
 		currNode = SeedDev{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches), NextPart: nil}
-		answer = []SeedDev{currNode}
+		heap.Push(&pq, &MaxItem{Value: &currNode, Priority: currNode.TotalLength})
+	}
+	var answer []SeedDev
+	// if the alignment did not go to another node, return the match for this node
+	for pq.Len() > 0 {
+		item := heap.Pop(&pq).(*MaxItem)
+		answer = append(answer, *item.Value)
 	}
 
 	return answer
@@ -422,6 +430,9 @@ func extendToTheLeftDev(node *Node, read *fastq.FastqBig, currPart SeedDev) []Se
 	var i int
 	var readBase dna.Base
 
+	pq := make(MaxPriorityQueue, 0)
+	heap.Init(&pq)
+
 	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
 		for i = 0; i < len(node.Prev); i++ {
 			if currPart.PosStrand {
@@ -430,20 +441,25 @@ func extendToTheLeftDev(node *Node, read *fastq.FastqBig, currPart SeedDev) []Se
 				readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
 			}
 			if readBase == dnaTwoBit.GetBase(node.Prev[i].Dest.SeqTwoBit, uint(node.Prev[i].Dest.SeqTwoBit.Len)-1) {
-				prevParts = extendToTheLeftHelperDev(node.Prev[i].Dest, read, currPart)
-				answer = append(answer, prevParts...)
+				prevParts = extendToTheLeftHelperDev(node.Prev[i].Dest, read, currPart, &pq)
+				for _, part := range prevParts {
+					heap.Push(&pq, &MaxItem{Value: &part, Priority: part.TotalLength})
+				}
 			}
 		}
+	} else {
+		heap.Push(&pq, &MaxItem{Value: &currPart, Priority: currPart.TotalLength})
 	}
 
-	if len(answer) == 0 {
-		return []SeedDev{currPart}
-	} else {
-		return answer
+	for pq.Len() > 0 {
+		item := heap.Pop(&pq).(*MaxItem)
+		answer = append(answer, *item.Value)
 	}
+
+	return answer
 }
 
-func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart SeedDev) []SeedDev {
+func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart SeedDev, pq *MaxPriorityQueue) []SeedDev {
 	const basesPerInt int = 32
 	var nodePos int = node.SeqTwoBit.Len - 1
 	var readPos int = int(nextPart.QueryStart) - 1
@@ -474,14 +490,15 @@ func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart SeedDev
 				readBase = dnaTwoBit.GetBase(&read.RainbowRc[0], uint(currPart.QueryStart)-1)
 			}
 			if readBase == dnaTwoBit.GetBase(node.Prev[i].Dest.SeqTwoBit, uint(node.Prev[i].Dest.SeqTwoBit.Len)-1) {
-				prevParts = extendToTheLeftHelperDev(node.Prev[i].Dest, read, currPart)
+				prevParts = extendToTheLeftHelperDev(node.Prev[i].Dest, read, currPart, pq)
 				answer = append(answer, prevParts...)
 			}
 		}
 	}
 	// if the alignment did not go to another node, return the match for this node
 	if len(answer) == 0 {
-		answer = []SeedDev{currPart}
+		heap.Push(pq, &MaxItem{Value: &currPart, Priority: currPart.TotalLength})
+		answer = append(answer, currPart) // Add currPart to results
 	}
 	return answer
 }
@@ -503,6 +520,7 @@ func restartSeedHelper(helper *seedHelper) {
 }
 
 // seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int64 = 0, 0.
+
 func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []SeedDev, tempSeeds []SeedDev, seedBuildHelper *seedHelper) []SeedDev {
 	const basesPerInt int64 = 32
 	restartSeedHelper(seedBuildHelper)
@@ -520,9 +538,18 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.Fast
 			seedBuildHelper.nodeOffset = int(seedBuildHelper.nodePos % basesPerInt)
 			seedBuildHelper.readOffset = 31 - ((readStart - seedBuildHelper.nodeOffset + 31) % 32)
 			seedBuildHelper.leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[seedBuildHelper.nodeIdx].SeqTwoBit, int(seedBuildHelper.nodePos), &read.Rainbow[seedBuildHelper.readOffset], readStart+seedBuildHelper.readOffset))
-			tempSeeds = extendToTheRightDev(&nodes[seedBuildHelper.nodeIdx], read, readStart-(seedBuildHelper.leftMatches-1), int(seedBuildHelper.nodePos)-(seedBuildHelper.leftMatches-1), true, tempSeeds)
+			tempSeeds = extendToTheRightDev(&nodes[seedBuildHelper.nodeIdx], read, readStart-(seedBuildHelper.leftMatches-1), int(seedBuildHelper.nodePos)-(seedBuildHelper.leftMatches-1), true)
 			for _, seedBuildHelper.tempSeed = range tempSeeds {
-				finalSeeds = append(finalSeeds, extendToTheLeftDev(&nodes[seedBuildHelper.nodeIdx], read, seedBuildHelper.tempSeed)...)
+				pq := make(MaxPriorityQueue, 0)
+				heap.Init(&pq)
+
+				for _, seed := range extendToTheLeftDev(&nodes[seedBuildHelper.nodeIdx], read, seedBuildHelper.tempSeed) {
+					heap.Push(&pq, &MaxItem{Value: &seed, Priority: seed.TotalLength})
+				}
+				for pq.Len() > 0 {
+					item := heap.Pop(&pq).(*MaxItem)
+					finalSeeds = append(finalSeeds, *item.Value)
+				}
 			}
 		}
 		// do rev strand
@@ -534,14 +561,9 @@ func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.Fast
 			seedBuildHelper.readOffset = 31 - ((readStart - seedBuildHelper.nodeOffset + 31) % 32)
 
 			seedBuildHelper.leftMatches = numbers.Min(readStart+1, dnaTwoBit.CountLeftMatches(nodes[seedBuildHelper.nodeIdx].SeqTwoBit, int(seedBuildHelper.nodePos), &read.RainbowRc[seedBuildHelper.readOffset], readStart+seedBuildHelper.readOffset))
-			tempSeeds = extendToTheRightDev(&nodes[seedBuildHelper.nodeIdx], read, readStart-(seedBuildHelper.leftMatches-1), int(seedBuildHelper.nodePos)-(seedBuildHelper.leftMatches-1), false, tempSeeds)
+			tempSeeds = extendToTheRightDev(&nodes[seedBuildHelper.nodeIdx], read, readStart-(seedBuildHelper.leftMatches-1), int(seedBuildHelper.nodePos)-(seedBuildHelper.leftMatches-1), false)
 			finalSeeds = append(finalSeeds, tempSeeds...)
 		}
-	}
-	if len(finalSeeds) > 100 {
-		SortSeedLen(finalSeeds)
-	} else {
-		heapSortSeeds(finalSeeds)
 	}
 	return finalSeeds
 }

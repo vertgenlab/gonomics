@@ -12,12 +12,13 @@ import (
 
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
-var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+var cpuprofile = flag.String("cpuprofile", "cpuprofile", "write cpu profile to `file`")
+var memprofile = flag.String("memprofile", "cpuprofile", "write memory profile to `file`")
 
 func BenchmarkGsw(b *testing.B) {
 	if *cpuprofile != "" {
@@ -50,32 +51,21 @@ func BenchmarkGsw(b *testing.B) {
 
 	b.ResetTimer()
 	genome := Read("testdata/bigGenome.sg")
-	log.Printf("Reading in the genome (simple graph)...\n")
-	log.Printf("Indexing the genome...\n")
 
 	fastqPipe := make(chan fastq.PairedEndBig, 2408)
 	girafPipe := make(chan giraf.GirafPair, 2408)
-
-	//log.Printf("Simulating reads...\n")
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
-	//os.Remove("testdata/simReads_R1.fq")
-	//os.Remove("testdata/simReads_R2.fq")
 
 	fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
-
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
 	go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
-	log.Printf("Finished Indexing Genome...\n")
-
-	log.Printf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
 	start := time.Now()
 	for i := 0; i < numWorkers; i++ {
 		go RoutineFqPairToGiraf(genome, tiles, settings.TileSize, settings.StepSize, settings.ScoreMatrix, fastqPipe, girafPipe, &workerWaiter)
 	}
 	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
-	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
 	writerWaiter.Add(1)
 	workerWaiter.Wait()
 	close(girafPipe)
@@ -86,6 +76,7 @@ func BenchmarkGsw(b *testing.B) {
 	duration := stop.Sub(start)
 	//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+	fileio.MustRemove(output)
 
 }
 
