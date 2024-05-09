@@ -54,6 +54,14 @@ func TestEqual(t *testing.T) {
 	}
 }
 
+func TestMustCreateEmptyFilenameError(t *testing.T) {
+	if os.Getenv("TEST_FATAL") != "1" {
+		return
+	}
+	// Will cause log.Fatal in this test context
+	MustCreate("")
+}
+
 func TestStdinSimulation(t *testing.T) {
 	testCases := []string{
 		"Gonomics fileio stdin mock",
