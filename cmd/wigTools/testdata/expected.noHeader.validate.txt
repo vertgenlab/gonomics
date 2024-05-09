@@ -1,0 +1,4 @@
+chr1:48-51	GTT	96
+chr1:48-51_rev	AAC	96
+chr1:63-66	AGA	3
+chr1:63-66_rev	TCT	3

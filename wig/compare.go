@@ -2,6 +2,8 @@ package wig
 
 import (
 	"log"
+	"math"
+
 	//DEBUG: "fmt".
 	"math/rand"
 	"sort"
@@ -11,7 +13,7 @@ import (
 )
 
 // isEqual returns true if two Wig data structures contain the exact same data values and returns false otherwise.
-func isEqual(alpha Wig, beta Wig) bool {
+func isEqual(alpha Wig, beta Wig, precision float64) bool {
 	if strings.Compare(alpha.StepType, beta.StepType) != 0 {
 		return false
 	}
@@ -26,7 +28,7 @@ func isEqual(alpha Wig, beta Wig) bool {
 	}
 	if len(alpha.Values) == len(beta.Values) {
 		for i := 0; i < len(alpha.Values); i++ {
-			if alpha.Values[i] != beta.Values[i] {
+			if math.Abs(alpha.Values[i]-beta.Values[i]) > precision {
 				return false
 			}
 		}
@@ -34,13 +36,18 @@ func isEqual(alpha Wig, beta Wig) bool {
 	return true
 }
 
-// AllEqual returns true if two slices of Wig data structures contain all the same data vales in the same order, false otherwise.
-func AllEqual(alpha []Wig, beta []Wig) bool {
+// AllEqual returns true if two input map[string]Wig have identical contents, within
+// some range of floating point precision.
+func AllEqual(alpha map[string]Wig, beta map[string]Wig, precision float64) bool {
+	var foundInMap bool
 	if len(alpha) != len(beta) {
 		return false
 	}
-	for i := 0; i < len(alpha); i++ {
-		if !isEqual(alpha[i], beta[i]) {
+	for i := range alpha {
+		if _, foundInMap = beta[i]; !foundInMap {
+			return false
+		}
+		if !isEqual(alpha[i], beta[i], precision) {
 			return false
 		}
 	}
