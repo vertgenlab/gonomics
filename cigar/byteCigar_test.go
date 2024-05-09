@@ -139,14 +139,6 @@ func TestReverseByteCigars(t *testing.T) {
 	}
 }
 
-func TestUint32Cigar(t *testing.T) {
-	cigars := []CigarOp{36, 160, 34}
-	expected := "2S10M2D"
-	if Uint32ToString(cigars) != expected {
-		t.Errorf("Error: Uint32Cigar conversion failed %s != %s...", Uint32ToString(cigars), expected)
-	}
-
-}
 func BenchmarkCigarBytesToString(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()

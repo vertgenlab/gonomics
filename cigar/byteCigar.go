@@ -297,39 +297,3 @@ func SoftClipBases(front int, lengthOfRead int, cig []ByteCigar) []ByteCigar {
 
 	return answer
 }
-
-func NewUint32Cigar(n int, op byte) CigarOp {
-	return CigarOp(lookUpUint32(op)) | (CigarOp(n) << 4)
-}
-
-// func AppendUint32Cigar(cigars []CigarOp, n int, op byte) UInt32Cigar {
-// 	if len(cigars) == 0 {
-// 		return append(cigars, NewUint32Cigar(1, op))
-// 	} else if lookUpCigByte(cigars[len(cigars)-1]) & 0xf == op {
-// 		AddRunLength(cigars[len(cigars)-1], 1)
-// 	} else {
-// 		return append(cigars, NewUint32Cigar(1, op))
-// 	}
-// }
-
-func AddRunLength(op CigarOp, length int) CigarOp {
-	currentLength := int(op >> 4)
-	newLength := currentLength + length
-
-	if newLength > (1<<28 - 1) {
-		panic("Error: illegal CIGAR op length after increment")
-	}
-	op = (op & 0xF) | CigarOp(newLength<<4)
-	return op
-}
-
-func Uint32ToString(uintCigar []CigarOp) string {
-	var str strings.Builder
-	for _, c := range uintCigar {
-		_, err := str.WriteString(strconv.Itoa(int(c >> 4)))
-		exception.FatalOnErr(err)
-		err = str.WriteByte(lookUpCigByte(uint32(c) & 0xf))
-		exception.FatalOnErr(err)
-	}
-	return str.String()
-}
