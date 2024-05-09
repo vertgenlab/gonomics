@@ -2,7 +2,6 @@
 package reconstruct
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/vertgenlab/gonomics/dna"
@@ -60,19 +59,16 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 			answer = dna.Base(baseIdx)
 		}
 	}
-	fmt.Printf("Likelihoods: %v.\nbiasBase: %v.\nnonBiasBaseProb: %v, total: %v, nonBiasBaseProb/total: %v.\n", likelihoods, biasBase, nonBiasBaseProb, total, nonBiasBaseProb/total)
 	if highestProb/total < highestProbThreshold {
 		return dna.N
 	}
 	if nonBiasBaseProb/total < nonBiasBaseThreshold {
-		fmt.Printf("nonBiasBaseProb/total < nonBiasBaseThreshold. answer should be biasBase: %v.\n", answer)
 		if biasN && ((1 - nonBiasBaseProb/total) < nonBiasBaseThreshold) { // if biasN mode mode, AND BiasBaseProb < ProbThreshold, then we cannot reconstruct base, return N (otherwise, we know with some certainty (ProbThreshold) that ancestor base is either the same as bias, or different from bias)
 			return dna.N
 		} else {
 			return biasBase
 		}
 	}
-	fmt.Printf("answer should NOT be biasBase. answer: %v.\n", answer)
 	return answer
 }
 
@@ -347,7 +343,6 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, bias
 			if biasLeafName != "" && internalNodes[k].Name == biasNodeName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, biasN, highestProbThreshold) //biased estimate
-				fmt.Printf("biasBase: %v, answerBase: %v\n", biasBase, answerBase)                               // all nodes will print likelihoods, but only bias will print this line
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
 					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix))
 				}
@@ -364,6 +359,5 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, bias
 		}
 
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)
-		fmt.Printf("internalNodes[k].Fasta.Name: %v. \ninternalNodes[k].Fasta.Seq: %v\n", internalNodes[k].Fasta.Name, internalNodes[k].Fasta.Seq)
 	}
 }
