@@ -139,6 +139,17 @@ var ReconstructSeqTests = []struct {
 		ExpectedPFile:        "testdata/hga2Expected.pfa",
 		Precision:            1e-3,
 	},
+	{NewickFile: "testdata/allT2T.4d.mod",
+		FastaFile:            "testdata/allT2T.fa",
+		OutFile:              "testdata/out.allT2T.biasNodeName.fa",
+		ExpectedFile:         "testdata/expected.allT2T.biasNodeName.fa",
+		BiasLeafName:         "chimpT2Tpri",
+		BiasNodeName:         "hcaT2T",
+		NonBiasProbThreshold: 0.8,
+		BiasN:                false,
+		HighestProbThreshold: 0,
+		KeepAllSeq:           true,
+	},
 }
 
 func TestReconstructSeq(t *testing.T) {
