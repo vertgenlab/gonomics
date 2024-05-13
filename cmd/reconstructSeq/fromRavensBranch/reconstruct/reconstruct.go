@@ -16,6 +16,7 @@ func WriteTreeToFasta(tree *expandedTree.ETree, outFile string) {
 	nodes := expandedTree.GetTree(tree)
 
 	for i := 0; i < len(nodes); i++ {
+		l
 		fastas = append(fastas, *nodes[i].Fasta)
 	}
 	fasta.Write(outFile, fastas)

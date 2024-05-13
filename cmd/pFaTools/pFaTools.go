@@ -22,6 +22,8 @@ func usage() {
 			"\tpFaTools sample in.pfa outDir.Fa\n" +
 			"\tOR\n" +
 			"\tPFaTools visualize in.pfa start end outDir.txt\n" +
+			"\tOR\n" +
+			"\tPFaTools faToPfa in.fa out.pfa\n" +
 			"Enter a subcommand to view options.\n")
 }
 
@@ -46,6 +48,8 @@ func main() {
 		parseSampleArgs()
 	case "visualize":
 		parseVisualizeArgs()
+	case "faToPfa":
+		parseFaToPfaArgs()
 	default:
 		flag.Usage()
 		log.Fatalf("Error: unrecognized subcommand: %v.\n", flag.Arg(0))

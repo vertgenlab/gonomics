@@ -6,8 +6,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
@@ -15,6 +13,8 @@ import (
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/reconstruct"
 	"github.com/vertgenlab/gonomics/simulate"
+	"log"
+	"strings"
 )
 
 type Settings struct {
@@ -29,12 +29,13 @@ type Settings struct {
 	SubMatrix              bool
 	UnitBranchLength       float64
 	SubstitutionMatrixFile string
-	PDnaNode               string
+	PDnaNodes              []string
 	PDnaOutFile            string
 }
 
 func ReconstructSeq(s Settings) {
 	var treeFastas []fasta.Fasta
+	var pDnaRecords []pFasta.PFasta
 
 	if s.NonBiasProbThreshold < 0 || s.NonBiasProbThreshold > 1 {
 		log.Fatalf("Error: nonBiasProbThreshold must be a value between 0 and 1. Found: %v.\n", s.NonBiasProbThreshold)
@@ -91,7 +92,7 @@ func ReconstructSeq(s Settings) {
 
 	fasta.Write(s.OutFile, treeFastas)
 
-	if s.PDnaNode != "" {
+	if s.PDnaOutFile != "" {
 		pFasta.Write(s.PDnaOutFile, pDnaRecords)
 	}
 }
@@ -116,7 +117,7 @@ func main() {
 	var substitutionMatrixFile *string = flag.String("substitutionMatrixFile", "", "Set a file to define a substitution matrix.")
 	var unitBranchLength *float64 = flag.Float64("unitBranchLength", -1, "If using a substitution matrix, specify the branch length over which the substitution matrix was derived.")
 	var subMatrix *bool = flag.Bool("subMatrix", false, "Use a substitution matrix instead of the default model. If no substitution matrix file is provided, the Jukes-Cantor model will be used.")
-	var pDnaNode *string = flag.String("pDnaNode", "", "Specify a node to get the pDNA sequence of. Defaults to empty. Requires pDnaOutFile")
+	var pDnaNodes *string = flag.String("pDnaNode", "", "Specify 1 or more nodes to get the pDNA sequence of. Defaults to empty. Requires pDnaOutFile")
 	var pDnaOutFile *string = flag.String("pDnaOutFile", "", "Name of pDnaNode pfasta. Requires pDnaNode.")
 	var expectedNumArgs = 3
 
@@ -129,6 +130,19 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(flag.Args()))
 	}
+
+	var pDnaNodeSplit []string
+	if *pDnaOutFile != "" {
+		if *pDnaNodes == "" {
+			flag.Usage()
+			log.Fatalf("Error: -pDnaOutFile was specified, but -pDnaNode was empty\n")
+		} else { // -pDnaOutFile and -pDnaNode were both specified. Parse -pfaNames
+			pDnaNodeSplit = strings.Split(*pDnaNodes, ",")
+		}
+	} else if *pDnaOutFile == "" && *pDnaNodes != "" {
+		flag.Usage()
+		log.Fatalf("Error: -pDnaOutFile was not specified, but -pDnaNode was not empty\n")
+	} // else is -pDnaOutFile and -pDnaNode were both empty, aka mode without pFa
 
 	newickInput := flag.Arg(0)
 	fastaInput := flag.Arg(1)
@@ -146,7 +160,7 @@ func main() {
 		SubstitutionMatrixFile: *substitutionMatrixFile,
 		UnitBranchLength:       *unitBranchLength,
 		SubMatrix:              *subMatrix,
-		PDnaNode:               *pDnaNode,
+		PDnaNodes:              pDnaNodeSplit,
 		PDnaOutFile:            *pDnaOutFile,
 	}
 
