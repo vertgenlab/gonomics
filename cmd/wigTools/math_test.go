@@ -1,12 +1,11 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"math"
 	"os"
 	"testing"
-
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var WigMathTests = []struct {
@@ -31,16 +30,16 @@ var WigMathTests = []struct {
 	SamplingFrequency      float64
 }{
 	{
-		InFile:                 "testdata/in.wig",
-		ChromSizes:             "testdata/genome.chrom.sizes",
-		OutFile:                "testdata/tmp.add.wig",
-		ExpectedFile:           "testdata/expected.add.wig",
+		InFile:                 "testdata/math/in.wig",
+		ChromSizes:             "testdata/math/genome.chrom.sizes",
+		OutFile:                "testdata/math/tmp.add.wig",
+		ExpectedFile:           "testdata/math/expected.add.wig",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
 		ScalarMultiply:         1,
 		ScalarDivide:           1,
-		AddFile:                "testdata/second.wig",
+		AddFile:                "testdata/math/second.wig",
 		MaxFile:                "",
 		SubtractFile:           "",
 		MovingAverageSmoothing: 1,
@@ -52,10 +51,10 @@ var WigMathTests = []struct {
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.wig",
-		ChromSizes:             "testdata/genome.chrom.sizes",
-		OutFile:                "testdata/tmp.wig",
-		ExpectedFile:           "testdata/expected.subtract.wig",
+		InFile:                 "testdata/math/in.wig",
+		ChromSizes:             "testdata/math/genome.chrom.sizes",
+		OutFile:                "testdata/math/tmp.wig",
+		ExpectedFile:           "testdata/math/expected.subtract.wig",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
@@ -63,7 +62,7 @@ var WigMathTests = []struct {
 		ScalarDivide:           1,
 		AddFile:                "",
 		MaxFile:                "",
-		SubtractFile:           "testdata/second.wig",
+		SubtractFile:           "testdata/math/second.wig",
 		MovingAverageSmoothing: 1,
 		AbsoluteError:          "",
 		AbsolutePercentError:   "",
@@ -73,10 +72,10 @@ var WigMathTests = []struct {
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/unsmooth.wig",
-		ChromSizes:             "testdata/smooth.chrom.sizes",
-		OutFile:                "testdata/tmp.smooth.wig",
-		ExpectedFile:           "testdata/expected.smooth.wig",
+		InFile:                 "testdata/math/unsmooth.wig",
+		ChromSizes:             "testdata/math/smooth.chrom.sizes",
+		OutFile:                "testdata/math/tmp.smooth.wig",
+		ExpectedFile:           "testdata/math/expected.smooth.wig",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
@@ -94,10 +93,10 @@ var WigMathTests = []struct {
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.wig",
-		ChromSizes:             "testdata/genome.chrom.sizes",
-		OutFile:                "testdata/tmp.absError.wig",
-		ExpectedFile:           "testdata/expected.absError.wig",
+		InFile:                 "testdata/math/in.wig",
+		ChromSizes:             "testdata/math/genome.chrom.sizes",
+		OutFile:                "testdata/math/tmp.absError.wig",
+		ExpectedFile:           "testdata/math/expected.absError.wig",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
@@ -107,7 +106,7 @@ var WigMathTests = []struct {
 		MaxFile:                "",
 		SubtractFile:           "",
 		MovingAverageSmoothing: 1,
-		AbsoluteError:          "testdata/second.wig",
+		AbsoluteError:          "testdata/math/second.wig",
 		AbsolutePercentError:   "",
 		Missing:                -10,
 		MissingBed:             false,
@@ -115,10 +114,10 @@ var WigMathTests = []struct {
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.wig",
-		ChromSizes:             "testdata/genome.chrom.sizes",
-		OutFile:                "testdata/tmp.absPercentError.wig",
-		ExpectedFile:           "testdata/expected.absPercentError.wig",
+		InFile:                 "testdata/math/in.wig",
+		ChromSizes:             "testdata/math/genome.chrom.sizes",
+		OutFile:                "testdata/math/tmp.absPercentError.wig",
+		ExpectedFile:           "testdata/math/expected.absPercentError.wig",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
@@ -129,17 +128,17 @@ var WigMathTests = []struct {
 		SubtractFile:           "",
 		MovingAverageSmoothing: 1,
 		AbsoluteError:          "",
-		AbsolutePercentError:   "testdata/second.wig",
+		AbsolutePercentError:   "testdata/math/second.wig",
 		Missing:                -10,
 		MissingBed:             false,
 		Pearson:                "",
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.wig",
-		ChromSizes:             "testdata/genome.chrom.sizes",
-		OutFile:                "testdata/tmp.Pearson.txt",
-		ExpectedFile:           "testdata/expected.Pearson.txt",
+		InFile:                 "testdata/math/in.wig",
+		ChromSizes:             "testdata/math/genome.chrom.sizes",
+		OutFile:                "testdata/math/tmp.Pearson.txt",
+		ExpectedFile:           "testdata/math/expected.Pearson.txt",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
@@ -153,14 +152,14 @@ var WigMathTests = []struct {
 		AbsolutePercentError:   "",
 		Missing:                -10,
 		MissingBed:             false,
-		Pearson:                "testdata/second.wig",
+		Pearson:                "testdata/math/second.wig",
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.wig",
-		ChromSizes:             "testdata/genome.chrom.sizes",
-		OutFile:                "testdata/tmp.Mult55.wig",
-		ExpectedFile:           "testdata/expected.mult55.wig",
+		InFile:                 "testdata/math/in.wig",
+		ChromSizes:             "testdata/math/genome.chrom.sizes",
+		OutFile:                "testdata/math/tmp.Mult55.wig",
+		ExpectedFile:           "testdata/math/expected.mult55.wig",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
@@ -178,10 +177,10 @@ var WigMathTests = []struct {
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.wig",
-		ChromSizes:             "testdata/genome.chrom.sizes",
-		OutFile:                "testdata/tmp.divide4.wig",
-		ExpectedFile:           "testdata/expected.divide4.wig",
+		InFile:                 "testdata/math/in.wig",
+		ChromSizes:             "testdata/math/genome.chrom.sizes",
+		OutFile:                "testdata/math/tmp.divide4.wig",
+		ExpectedFile:           "testdata/math/expected.divide4.wig",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
@@ -199,10 +198,10 @@ var WigMathTests = []struct {
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.wig",
-		ChromSizes:             "testdata/genome.chrom.sizes",
-		OutFile:                "testdata/tmp.min25.wig",
-		ExpectedFile:           "testdata/expected.min25.wig",
+		InFile:                 "testdata/math/in.wig",
+		ChromSizes:             "testdata/math/genome.chrom.sizes",
+		OutFile:                "testdata/math/tmp.min25.wig",
+		ExpectedFile:           "testdata/math/expected.min25.wig",
 		BedMask:                "",
 		MinValue:               25,
 		MaxValue:               math.MaxFloat64,
@@ -220,10 +219,10 @@ var WigMathTests = []struct {
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.wig",
-		ChromSizes:             "testdata/genome.chrom.sizes",
-		OutFile:                "testdata/tmp.max300.wig",
-		ExpectedFile:           "testdata/expected.max300.wig",
+		InFile:                 "testdata/math/in.wig",
+		ChromSizes:             "testdata/math/genome.chrom.sizes",
+		OutFile:                "testdata/math/tmp.max300.wig",
+		ExpectedFile:           "testdata/math/expected.max300.wig",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               300,
@@ -241,10 +240,10 @@ var WigMathTests = []struct {
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.missing.wig",
-		ChromSizes:             "testdata/missing.chrom.sizes",
-		OutFile:                "testdata/tmp.missing.bed",
-		ExpectedFile:           "testdata/expected.missing.bed",
+		InFile:                 "testdata/math/in.missing.wig",
+		ChromSizes:             "testdata/math/missing.chrom.sizes",
+		OutFile:                "testdata/math/tmp.missing.bed",
+		ExpectedFile:           "testdata/math/expected.missing.bed",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
@@ -262,11 +261,11 @@ var WigMathTests = []struct {
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.missing.wig",
-		ChromSizes:             "testdata/missing.chrom.sizes",
-		OutFile:                "testdata/tmp.masked.wig",
-		ExpectedFile:           "testdata/expected.masked.wig",
-		BedMask:                "testdata/mask.bed",
+		InFile:                 "testdata/math/in.missing.wig",
+		ChromSizes:             "testdata/math/missing.chrom.sizes",
+		OutFile:                "testdata/math/tmp.masked.wig",
+		ExpectedFile:           "testdata/math/expected.masked.wig",
+		BedMask:                "testdata/math/mask.bed",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
 		ScalarMultiply:         1,
@@ -283,17 +282,17 @@ var WigMathTests = []struct {
 		SamplingFrequency:      1,
 	},
 	{
-		InFile:                 "testdata/in.max.wig",
-		ChromSizes:             "testdata/max.chrom.sizes",
-		OutFile:                "testdata/tmp.max.wig",
-		ExpectedFile:           "testdata/expected.max.wig",
+		InFile:                 "testdata/math/in.max.wig",
+		ChromSizes:             "testdata/math/max.chrom.sizes",
+		OutFile:                "testdata/math/tmp.max.wig",
+		ExpectedFile:           "testdata/math/expected.max.wig",
 		BedMask:                "",
 		MinValue:               -1 * math.MaxFloat64,
 		MaxValue:               math.MaxFloat64,
 		ScalarMultiply:         1,
 		ScalarDivide:           1,
 		AddFile:                "",
-		MaxFile:                "testdata/second.wig",
+		MaxFile:                "testdata/math/second.wig",
 		SubtractFile:           "",
 		MovingAverageSmoothing: 1,
 		AbsoluteError:          "",
@@ -307,9 +306,9 @@ var WigMathTests = []struct {
 
 func TestWigMath(t *testing.T) {
 	var err error
-	var s Settings
+	var s MathSettings
 	for _, v := range WigMathTests {
-		s = Settings{
+		s = MathSettings{
 			InFile:                 v.InFile,
 			ChromSizes:             v.ChromSizes,
 			OutFile:                v.OutFile,
