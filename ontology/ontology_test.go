@@ -5,7 +5,6 @@ import (
 	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/ontology/gaf"
 	"github.com/vertgenlab/gonomics/ontology/obo"
 	"log"
@@ -47,20 +46,18 @@ var ThreeDGreatTests = []struct {
 func TestThreeDGreat(t *testing.T) {
 	var queries []bed.Bed
 	var sizes map[string]chromInfo.ChromInfo
-	var genes map[string]*gtf.Gene
 	var contacts []bedpe.BedPe
 	var annotations []gaf.Gaf
 	var obos map[string]*obo.Obo
 	for _, v := range ThreeDGreatTests {
 		queries = bed.Read(v.QueryFile)
 		sizes = chromInfo.ReadToMap(v.ChromSizesFile)
-		genes = gtf.Read(v.GeneFile)
 		if v.ContactsFile != "" {
 			contacts = bedpe.Read(v.ContactsFile)
 		}
 		annotations, _ = gaf.Read(v.AnnotationsFile)
 		obos, _ = obo.Read(v.OboFile, v.Force)
-		ThreeDGreat(queries, sizes, genes, contacts, annotations, obos, v.OntOutFile, false, false)
+		ThreeDGreat(queries, sizes, v.GeneFile, contacts, annotations, obos, v.OntOutFile, false, false)
 	}
 	if bed.AllAreEqual(bed.Read("testdata/3dOntologies.bed"), bed.Read("testdata/expected.3dOntologies.bed")) {
 		err := os.Remove("testdata/3dOntologies.bed")

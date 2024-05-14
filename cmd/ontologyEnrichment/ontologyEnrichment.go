@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/bed/bedpe"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/ontology"
 	"github.com/vertgenlab/gonomics/ontology/gaf"
 	"github.com/vertgenlab/gonomics/ontology/obo"
@@ -16,31 +15,33 @@ import (
 func ontologyEnrichment(inputFile string, chromSizes string, geneFile string, annotationsFile string, oboFile string, enrichmentOut string, force bool, contactFile string) {
 	var queries []bed.Bed
 	var sizes map[string]chromInfo.ChromInfo
-	var genes map[string]*gtf.Gene
 	var contacts []bedpe.BedPe
 	var annotations []gaf.Gaf
 	var obos map[string]*obo.Obo
 
 	queries = bed.Read(inputFile)
 	sizes = chromInfo.ReadToMap(chromSizes)
-	genes = gtf.Read(geneFile)
 	if contactFile != "" {
 		contacts = bedpe.Read(contactFile)
 	}
+	log.Print("queries handled")
 	annotations, _ = gaf.Read(annotationsFile)
+	log.Print("annotations read")
 	obos, _ = obo.Read(oboFile, force)
-	ontology.ThreeDGreat(queries, sizes, genes, contacts, annotations, obos, enrichmentOut, true, true)
+	log.Print("obos read")
+	ontology.ThreeDGreat(queries, sizes, geneFile, contacts, annotations, obos, enrichmentOut, true, true)
 }
 
 func usage() {
 	fmt.Print(
-		"ontologyEnrichment will assign regions in the input data to heir closest gene provided in the gene file input either " +
+		"ontologyEnrichment will assign regions in the input data to their closest gene provided in the gene file input either " +
 			"using proximity (if no contact file is given) or by the " +
 			"closest gene in 3d space if a contact file is provided. With those assigned genes, and their corresponding GO terms, " +
 			"provided in the gaf and obo files, " +
 			"each query region will be assigned a GO term and then enrichment for each GO term assigned will be calculated." +
+			"Note: gene file may be a normal gtf file, or a bed file with each TSS listed as a single point" +
 			"Usage:\n" +
-			"ontologyEnrichment [options] inputFile.bed chromSizes geneFile.gtf annotationsFile.gaf oboFile.obo enrichmentOut.bed\n" +
+			"ontologyEnrichment [options] inputFile.bed chromSizes geneFile.gtf/tssFile.bed annotationsFile.gaf oboFile.obo enrichmentOut.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }

@@ -94,7 +94,7 @@ func geneProportionOfGenome(filledSpace []bed.Bed) map[string]float64 {
 
 	for i := range filledSpace {
 		currLen = filledSpace[i].ChromEnd - filledSpace[i].ChromStart
-		currGene = filledSpace[i].Name
+		currGene = strings.ToUpper(filledSpace[i].Name)
 		answerCounts[currGene] += currLen
 		totalBases += currLen
 	}
@@ -114,7 +114,7 @@ func termProportionOfGenome(ontologies map[string]*Ontology, geneProportions map
 	for i := range ontologies {
 		answer[i] = 0
 		for j = range ontologies[i].Genes {
-			answer[i] += geneProportions[ontologies[i].Genes[j]]
+			answer[i] += geneProportions[strings.ToUpper(ontologies[i].Genes[j])]
 		}
 	}
 	return answer
@@ -126,9 +126,10 @@ func termProportionOfGenome(ontologies map[string]*Ontology, geneProportions map
 // bedpe form, an annotation file in gaf form and a map that takes GO term ID's and relates them to other GO term features
 // in obo format, and finally it takes a string which will write out all regions of the genome with their assigned
 // genes in the name column and their assigned ontologies in the annotation field.
-func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, genes map[string]*gtf.Gene, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo, out3dOntology string, geneEnrichments bool, termEnrichments bool) {
+func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, geneFile string, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo, out3dOntology string, geneEnrichments bool, termEnrichments bool) {
 	var err error
-	var filledSpace []bed.Bed
+
+	var filledSpace, tssBed []bed.Bed
 	var filledSpaceIntervals []interval.Interval
 	var queryOverlaps []interval.Interval
 	var kCache = make(map[string]int) //mapping Go Term Names to number of query elements that overlap. This is 'k' in the binomial test.
@@ -138,20 +139,35 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	var currOntologyName string
 	var ontologiesForCurrGene []*Ontology
 
-	tssBed := gtf.GenesToTssBed(genes, chromSizes, true)
+	log.Print("reading gene file")
+	geneString := strings.Split(geneFile, ".")
+	if geneString[len(geneString)-1] != "bed" {
+		genes := gtf.Read(geneFile)
+		tssBed = gtf.GenesToTssBed(genes, chromSizes, true)
+	} else {
+		tssBed = bed.Read(geneFile)
+	}
+	bed.SortByCoord(tssBed)
+	log.Print("bed file sorted")
 	filledSpace = Fill3dSpace(contacts, tssBed, chromSizes)
+	log.Print("space filled")
 	ontologies := OboToOntology(oboMap)
+	log.Print("ontologies created")
 	GeneAssignmentsFromGaf(annotations, ontologies)
+	log.Print("genes assigned")
 	geneOntologies := GenesToOntologies(ontologies)
+	log.Print("genes translated to ontologies")
 
 	//TODO: filtering out genes without ontology annotations? as an option?
 
 	if out3dOntology != "" {
 		write3dOntologies(out3dOntology, geneOntologies, filledSpace)
 	}
+	log.Print("3d ontologies file written")
 
 	var proportionsForGenes map[string]float64
 	name := strings.TrimSuffix(out3dOntology, ".bed")
+	log.Print("gene enrichments")
 	if geneEnrichments {
 		proportionsForGenes = geneProportionOfGenome(filledSpace)
 		geneOut := fileio.EasyCreate(name + ".geneProportions.txt")
@@ -165,19 +181,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		exception.PanicOnErr(err)
 	}
 
-	var proportionsForTerms map[string]float64
-	if termEnrichments {
-		proportionsForTerms = termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
-		termOut := fileio.EasyCreate(name + ".termProportions.txt")
-		_, err = fmt.Fprintf(termOut, "Term\tName\tProportion\n")
-		exception.PanicOnErr(err)
-		for i := range proportionsForTerms {
-			_, err = fmt.Fprintf(termOut, "%s\t%s\t%e\n", i, ontologies[i].Name, proportionsForTerms[i])
-			exception.PanicOnErr(err)
-		}
-		err = termOut.Close()
-	}
-
 	for i := range filledSpace {
 		filledSpaceIntervals = append(filledSpaceIntervals, filledSpace[i])
 	}
@@ -185,10 +188,13 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 
 	bed.AllToMidpoint(queries)
 
+	log.Print("calculating overlap")
 	for i := range queries {
 		queryOverlaps = interval.Query(tree, queries[i], "any")
 		if len(queryOverlaps) != 1 {
 			log.Print(len(queryOverlaps))
+			log.Print(queryOverlaps)
+			log.Print(queries[i])
 			log.Fatalf("Why did this happen?!?")
 		}
 		currOverlapGene = queryOverlaps[0].(bed.Bed).Name // type assert as bed and extract name of gene assigned to query
@@ -198,19 +204,27 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 			kCache[currOntologyName] += 1
 		}
 	}
+	log.Print("calculating term enrichments")
 
+	var proportionsForTerms map[string]float64
 	var enrichment float64
 	if termEnrichments {
-		out := fileio.EasyCreate(name + ".terms2.txt")
+		proportionsForTerms = termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
+		out := fileio.EasyCreate(name + ".termProportions.txt")
+		_, err = fmt.Fprintf(out, "Term\tName\tProportion\n")
+		enrichOut := fileio.EasyCreate(name + ".termEnrichment.txt")
 		for i := range proportionsForTerms {
+			_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, proportionsForTerms[i])
 			enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], true)
-			_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
+			_, err = fmt.Fprintf(enrichOut, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
 			exception.PanicOnErr(err)
 		}
 		err = out.Close()
 		exception.PanicOnErr(err)
 	}
 }
+
+//TODO: somehow enrichments aren't coming through, I think they should be, since I am using all BMP genes, they should all to some degree have agreemnt for what they are ontologically
 
 // write3dOntologies take a 3D filled space bed, a map of gene names to their ontologies and an output file name and
 // write out a bed that contains all the filled space information as well as the ontologies that relate to the gene assignments in teh Annotation field of bed
