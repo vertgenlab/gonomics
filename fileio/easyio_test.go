@@ -1,11 +1,14 @@
 package fileio
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
+	"github.com/klauspost/pgzip"
 	"github.com/vertgenlab/gonomics/exception"
 )
 
@@ -174,5 +177,58 @@ func TestWrite(t *testing.T) {
 	} else {
 		err = os.Remove("test.txt")
 		exception.PanicOnErr(err)
+	}
+}
+
+func TestStdinGzip(t *testing.T) {
+	testCases := []string{
+		"fileio stdin with gzip",
+		"stdin.gz",
+	}
+
+	for _, input := range testCases {
+		// Create a temporary file to simulate stdin
+		mockStdin, err := os.CreateTemp("", "mockStdin.gz")
+		if err != nil {
+			t.Fatalf("Error: Failed to create temporary file: %v", err)
+		}
+		defer mockStdin.Close()
+		defer EasyRemove(mockStdin.Name())
+
+		// Gzip the input data
+		var gzippedInput bytes.Buffer
+		gzWriter := pgzip.NewWriter(&gzippedInput)
+		if _, err := gzWriter.Write([]byte(input)); err != nil {
+			t.Fatalf("Error: Failed to gzip input: %v", err)
+		}
+		if err := gzWriter.Close(); err != nil {
+			t.Fatalf("Error: Failed to close gzip writer: %v", err)
+		}
+
+		// Write the gzipped input to the mock stdin
+		if _, err := io.Copy(mockStdin, &gzippedInput); err != nil {
+			t.Fatalf("Error: Failed to write simulated input: %v", err)
+		}
+
+		// Seek to the beginning of the mock stdin
+		if _, err := mockStdin.Seek(0, io.SeekStart); err != nil {
+			t.Fatalf("Error: Failed to seek to the start: %v", err)
+		}
+
+		// Set os.Stdin to the mock stdin
+		os.Stdin = mockStdin
+
+		// Call the function being tested
+		file := EasyOpen("/dev/stdin")
+		defer file.Close()
+
+		// Read from the file and compare with the original input
+		var reader strings.Builder
+		if _, err := io.Copy(&reader, file); err != nil {
+			t.Fatalf("Error: Failed to read from simulated stdin: %v", err)
+		}
+		if reader.String() != input {
+			t.Errorf("Error: Mismatch for input %q. Expected: %q, got %q", input, input, reader.String())
+		}
 	}
 }
