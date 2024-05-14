@@ -14,10 +14,10 @@ var FilterTests = []struct {
 	ExpectedFile string
 	Chrom        string
 }{
-	{InFile: "testdata/in.filter.wig",
-		ChromSizes:   "testdata/test.filter.chrom.sizes",
-		OutFile:      "testdata/tmp.filter.wig",
-		ExpectedFile: "testdata/expected.filter.wig",
+	{InFile: "testdata/filter/in.filter.wig",
+		ChromSizes:   "testdata/filter/test.filter.chrom.sizes",
+		OutFile:      "testdata/filter/tmp.filter.wig",
+		ExpectedFile: "testdata/filter/expected.filter.wig",
 		Chrom:        "chr3"},
 }
 

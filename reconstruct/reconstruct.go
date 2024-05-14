@@ -311,15 +311,14 @@ func descendentBaseExists(node *expandedTree.ETree, pos int) {
 
 // LoopNodes performs ancestral sequence reconstruction for all nodes of an input tree, specified by an input root node,
 // at a user-specified alignment position.
-// Options: the user may specify a 'biasLeafName'. When specified, the reconstruction of this sequence's immediate ancestor
+// Options: the user may specify a 'biasLeafName'. When specified, the reconstruction of this sequence's immediate ancestor, or 'biasNodeName'
 // will be biased towards that descendent. The degree of this bias is controlled by the option 'nonBiasBaseThreshold'.
 // The user may also specify a 'highestProbThreshold'. If the program is uncertain about ancestral reconstruction for a particular
 // node, this option will allow LoopNodes to return an 'N' for that node instead.
 // if subMatrix is true, mutation probabilities will be calculated from the tree's substitution matrix instead of from the branch length
-func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, biasN bool, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaRecords []pFasta.PFasta) {
+func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, biasNodeName string, nonBiasBaseThreshold float64, biasN bool, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaRecords []pFasta.PFasta) {
 	var fix []float64
 	var biasBase, answerBase dna.Base
-	var biasParentName string
 	var biasLeafNode *expandedTree.ETree
 
 	if biasLeafName != "" {
@@ -330,7 +329,9 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 		if biasLeafNode.Up == nil {
 			log.Fatalf("Error: Bias reconstruction node was specified as the root node.")
 		}
-		biasParentName = biasLeafNode.Up.Name
+		if biasNodeName == "" { // if no otherwise specified biasNodeName, set biasNodeName to be immediate ancestor
+			biasNodeName = biasLeafNode.Up.Name
+		}
 	}
 
 	internalNodes := expandedTree.GetBranch(root)
@@ -339,7 +340,7 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 	for k := range internalNodes {
 		fix = FixFc(root, internalNodes[k], subMatrix)
 		if internalNodes[k].BasePresent {
-			if biasParentName != "" && internalNodes[k].Name == biasParentName {
+			if biasLeafName != "" && internalNodes[k].Name == biasNodeName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, biasN, highestProbThreshold) //biased estimate
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
