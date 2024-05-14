@@ -29,7 +29,6 @@ type Float64Diff struct {
 // IsGap returns true if the DNA base's probability vector is 0 at all 4 bases, indicating that the base is a gap
 func IsGap(p Float32Base) bool {
 	if p.A == 0 && p.C == 0 && p.G == 0 && p.T == 0 {
-		//fmt.Printf("found gap. p: %v\n", p) // TODO: remove after debugging. Check isGap works
 		return true
 	} else {
 		return false
@@ -49,7 +48,6 @@ func IsNonGap(p Float32Base) bool {
 // IsN returns true if the DNA base's probability vector is the same but not 0 (==0.25) at all 4 bases, indicating that the base is an N
 func IsN(p Float32Base) bool {
 	if p.A != 0 && p.A == p.C && p.A == p.G && p.A == p.T {
-		//fmt.Printf("found N. p: %v\n", p) // TODO: remove after debugging. Check isN works
 		return true
 	} else {
 		return false

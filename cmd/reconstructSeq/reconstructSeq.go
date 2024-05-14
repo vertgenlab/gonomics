@@ -76,7 +76,6 @@ func ReconstructSeq(s Settings) {
 	}
 
 	for i := range leaves[0].Fasta.Seq {
-		// TODO: need to fix LoopNodes calls in other packages
 		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.BiasNodeName, s.NonBiasProbThreshold, s.BiasN, s.HighestProbThreshold, s.SubMatrix, s.PDnaNode, s.PDnaNodeMulti, pDnaRecords, pDnaRecordsMulti)
 	}
 

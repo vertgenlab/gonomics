@@ -35,6 +35,7 @@ var ReconstructTests = []struct {
 	HighestProbThreshold float64
 	SubMatrix            bool
 	PDnaNode             string
+	PDnaNodeMulti        []string
 	PDnaOutFile          string
 	PDnaExpected         string
 	Precision            float32
@@ -87,7 +88,7 @@ func TestReconstruct(t *testing.T) {
 		}
 
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
-			LoopNodes(tree, i, v.BiasLeafName, v.BiasNodeName, v.NonBiasProbThreshold, false, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
+			LoopNodes(tree, i, v.BiasLeafName, v.BiasNodeName, v.NonBiasProbThreshold, false, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, v.PDnaNodeMulti, outPFasta, outPFasta)
 		}
 		WriteTreeToFasta(tree, v.ReconOutFile)
 
@@ -386,6 +387,7 @@ var EmpiricalReconstructionComparisonPDna = []struct {
 	SeqLen                      int
 	SubMatrix                   bool
 	PDnaNode                    string
+	PDnaNodeMulti               []string
 	PDnaOutFile                 string
 	PDnaExpected                string
 	Precision                   float32
@@ -596,7 +598,7 @@ func TestEmpiricalReconstruction(t *testing.T) {
 		expandedTree.PopulateSubstitutionMatrices(currReconTree, unitMatrix, 0.1)
 		reconLeaves := expandedTree.GetLeaves(currReconTree)
 		for i := range reconLeaves[0].Fasta.Seq {
-			LoopNodes(currReconTree, i, v.BiasLeafName, v.BiasNodeName, v.NonBiasProbThreshold, v.BiasN, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, outPFasta)
+			LoopNodes(currReconTree, i, v.BiasLeafName, v.BiasNodeName, v.NonBiasProbThreshold, v.BiasN, v.HighestProbThreshold, v.SubMatrix, v.PDnaNode, v.PDnaNodeMulti, outPFasta, outPFasta)
 		}
 
 		//third, we compare the reconstruction and sim and write to a file
