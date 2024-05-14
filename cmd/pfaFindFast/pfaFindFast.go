@@ -33,7 +33,6 @@ func pfaFindFast(s Settings) {
 
 	records := pFasta.Read(s.InFile)    // fasta.Read already makes sure that sequence names are unique
 	recordsMap := pFasta.ToMap(records) // generate map[string][]dna.Base. No order but can do key-value search
-	// TODO: pFasta.ToMap
 
 	if len(records) < 2 {
 		log.Fatalf("Error: There must be at least 2 pFasta records in the input file.\n")
