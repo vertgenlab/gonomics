@@ -15,7 +15,6 @@ type Float32Base struct {
 	T float32
 }
 
-/*
 // Float32Diff encodes a probability vector using float64 precision that describes the difference between 2 pDNA probability vectors
 // The probability of A, C, G, and T should add up to 0
 type Float64Diff struct {
@@ -24,7 +23,6 @@ type Float64Diff struct {
 	G float64
 	T float64
 }
-*/
 
 // IsGap returns true if the DNA base's probability vector is 0 at all 4 bases, indicating that the base is a gap
 func IsGap(p Float32Base) bool {
@@ -35,7 +33,6 @@ func IsGap(p Float32Base) bool {
 	}
 }
 
-/*
 // IsNonGap returns true if the DNA base's probability vector adds up to 1, indicating that the base is a valid non-gap
 func IsNonGap(p Float32Base) bool {
 	if p.A+p.C+p.G+p.T == 1 {
@@ -53,7 +50,6 @@ func IsN(p Float32Base) bool {
 		return false
 	}
 }
-*/
 
 // EqualBase returns true if two input Float32Base structs, p and q, are 'equal', defined
 // within a user-defined degree of precision.
@@ -107,7 +103,6 @@ func Entropy(base Float32Base) float64 {
 	return answer
 }
 
-/*
 // Diff returns the vector that is the difference between 2 pDNA bases' probability vectors
 func Diff(p Float32Base, q Float32Base) Float64Diff {
 	return Float64Diff{
@@ -130,7 +125,6 @@ func Mag(d Float64Diff) float64 {
 func Dist(p Float32Base, q Float32Base) float64 {
 	return Mag(Diff(p, q))
 }
-*/
 
 // Dot
 func Dot(p Float32Base, q Float32Base) float64 {
