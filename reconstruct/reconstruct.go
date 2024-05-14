@@ -392,7 +392,7 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, bias
 		if len(pDnaNodeMulti) > 0 {
 			for i, v := range pDnaNodeMulti {
 				if internalNodes[k].Fasta.Name == v {
-					pDnaRecordsMulti[i].Seq = append(pDnaRecordsMulti[i].Seq, answerBasePdna)
+					pDnaRecordsMulti[i+1].Seq = append(pDnaRecordsMulti[i+1].Seq, answerBasePdna) // because pDnaRecordsMulti[0] is reference, append to pDnaRecordsMulti[i+1] sequence
 				}
 			}
 		}
