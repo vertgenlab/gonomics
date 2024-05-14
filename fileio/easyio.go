@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 
@@ -34,35 +33,18 @@ func EasyOpen(filename string) *EasyReader {
 	if strings.Contains(filename, "http") {
 		return EasyHttp(filename)
 	}
-
-	answer := EasyReader{}
-	var hasMagicGzip bool
-	var readerInput io.Reader
-
-	answer.File = MustOpen(filename)
-	hasMagicGzip = IsGzip(answer.File)
-	readerInput = answer.File
-
-	var err error
+	answer := EasyReader{
+		File: MustOpen(filename),
+	}
 	switch {
-	case strings.HasSuffix(filename, ".gz") && hasMagicGzip:
-		answer.internalGzip, err = pgzip.NewReader(readerInput)
+	case IsGzip(answer.File):
+		var err error
+		answer.internalGzip, err = pgzip.NewReader(answer.File)
 		exception.PanicOnErr(err)
 		answer.BuffReader = bufio.NewReader(answer.internalGzip)
-
-	case strings.HasSuffix(filename, ".gz"):
-		log.Fatalf("ERROR: input file '%s' has the .gz suffix, but is not a gzip file", filename)
-
-	case hasMagicGzip:
-		log.Printf("WARNING: The input file '%s' looks like it may be gzipped, "+
-			"but does not have the .gz suffix. Processing as a non-gzip file. Add the .gz "+
-			"suffix to process as a gzip file.", filename)
-		fallthrough
-
 	default:
-		answer.BuffReader = bufio.NewReader(readerInput)
+		answer.BuffReader = bufio.NewReader(answer.File)
 	}
-
 	return &answer
 }
 
