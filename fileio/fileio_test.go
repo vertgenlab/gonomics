@@ -110,7 +110,7 @@ func TestStdinGzip(t *testing.T) {
 
 	for _, input := range testCases {
 		// Create a temporary file to simulate stdin
-		mockStdin, err := os.CreateTemp("", "mockStdin")
+		mockStdin, err := os.CreateTemp("", "mockStdin.gz")
 		if err != nil {
 			t.Fatalf("Error: Failed to create temporary file: %v", err)
 		}
