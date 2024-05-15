@@ -74,7 +74,7 @@ func usage() {
 	fmt.Print(
 		"pfaFindFast - For two pFasta sequences, calculate scores at each base for the divergence that separates the two pDNA bases, and return a bed file with calculations.\n" +
 			"Usage:\n" +
-			" pfaFindFast input.fa output.bed\n" +
+			" pfaFindFast input.pFa output.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
