@@ -12,7 +12,7 @@ import (
 	"log"
 )
 
-func ontologyEnrichment(inputFile string, chromSizes string, geneFile string, annotationsFile string, oboFile string, enrichmentOut string, force bool, contactFile string) {
+func ontologyEnrichment(inputFile string, chromSizes string, geneFile string, annotationsFile string, oboFile string, enrichmentOut string, force bool, contactFile string, geneProportions bool, termEnrichments bool) {
 	var queries []bed.Bed
 	var sizes map[string]chromInfo.ChromInfo
 	var contacts []bedpe.BedPe
@@ -24,12 +24,9 @@ func ontologyEnrichment(inputFile string, chromSizes string, geneFile string, an
 	if contactFile != "" {
 		contacts = bedpe.Read(contactFile)
 	}
-	log.Print("queries handled")
 	annotations, _ = gaf.Read(annotationsFile)
-	log.Print("annotations read")
 	obos, _ = obo.Read(oboFile, force)
-	log.Print("obos read")
-	ontology.ThreeDGreat(queries, sizes, geneFile, contacts, annotations, obos, enrichmentOut, true, true)
+	ontology.ThreeDGreat(queries, sizes, geneFile, contacts, annotations, obos, enrichmentOut, geneProportions, termEnrichments)
 }
 
 func usage() {
@@ -50,6 +47,8 @@ func main() {
 	var expectedNumArgs = 6
 	var force *bool = flag.Bool("force", false, "Default is set to false, this should only be set to true if the obo should be read ignoring empty fields besides the ID.")
 	var contactFile *string = flag.String("contactFile", "", "If the goal is to assign query regions to their closest 3d gene, then provide a contact file in the form of a bedpe.")
+	var geneProportions *bool = flag.Bool("geneEnrichments", true, "If the user doesn't want to output the gene proportions file listing how much of the genome each gene covers, then set to false.")
+	var termEnrichments *bool = flag.Bool("termEnrichments", true, "If user doesn't want to output the GO term enrichments for a set of input data, set to false.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -66,5 +65,5 @@ func main() {
 	oboFile := flag.Arg(4)
 	enrichmentOut := flag.Arg(5)
 
-	ontologyEnrichment(inputFile, chromSizes, geneFile, annotationsFile, oboFile, enrichmentOut, *force, *contactFile)
+	ontologyEnrichment(inputFile, chromSizes, geneFile, annotationsFile, oboFile, enrichmentOut, *force, *contactFile, *geneProportions, *termEnrichments)
 }

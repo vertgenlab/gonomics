@@ -128,7 +128,6 @@ func termProportionOfGenome(ontologies map[string]*Ontology, geneProportions map
 // genes in the name column and their assigned ontologies in the annotation field.
 func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, geneFile string, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo, out3dOntology string, geneEnrichments bool, termEnrichments bool) {
 	var err error
-
 	var filledSpace, tssBed []bed.Bed
 	var filledSpaceIntervals []interval.Interval
 	var queryOverlaps []interval.Interval
@@ -137,9 +136,9 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	var currOverlapGene string
 	var currOntologyIndex int
 	var currOntologyName string
+	name := strings.TrimSuffix(out3dOntology, ".bed")
 	var ontologiesForCurrGene []*Ontology
 
-	log.Print("reading gene file")
 	geneString := strings.Split(geneFile, ".")
 	if geneString[len(geneString)-1] != "bed" {
 		genes := gtf.Read(geneFile)
@@ -148,28 +147,20 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		tssBed = bed.Read(geneFile)
 	}
 	bed.SortByCoord(tssBed)
-	log.Print("bed file sorted")
 	filledSpace = Fill3dSpace(contacts, tssBed, chromSizes)
-	log.Print("space filled")
 	ontologies := OboToOntology(oboMap)
-	log.Print("ontologies created")
 	GeneAssignmentsFromGaf(annotations, ontologies)
-	log.Print("genes assigned")
 	geneOntologies := GenesToOntologies(ontologies)
-	log.Print("genes translated to ontologies")
 
 	//TODO: filtering out genes without ontology annotations? as an option?
 
 	if out3dOntology != "" {
 		write3dOntologies(out3dOntology, geneOntologies, filledSpace)
 	}
-	log.Print("3d ontologies file written")
 
 	var proportionsForGenes map[string]float64
-	name := strings.TrimSuffix(out3dOntology, ".bed")
-	log.Print("gene enrichments")
+	proportionsForGenes = geneProportionOfGenome(filledSpace)
 	if geneEnrichments {
-		proportionsForGenes = geneProportionOfGenome(filledSpace)
 		geneOut := fileio.EasyCreate(name + ".geneProportions.txt")
 		_, err = fmt.Fprintf(geneOut, "Gene\tProportion\n")
 		exception.PanicOnErr(err)
@@ -188,14 +179,10 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 
 	bed.AllToMidpoint(queries)
 
-	log.Print("calculating overlap")
 	for i := range queries {
 		queryOverlaps = interval.Query(tree, queries[i], "any")
 		if len(queryOverlaps) != 1 {
-			log.Print(len(queryOverlaps))
-			log.Print(queryOverlaps)
-			log.Print(queries[i])
-			log.Fatalf("Why did this happen?!?")
+			log.Fatalf("Query overlapped multiple regions in filled space. %v", queries[i])
 		}
 		currOverlapGene = queryOverlaps[0].(bed.Bed).Name // type assert as bed and extract name of gene assigned to query
 		ontologiesForCurrGene = geneOntologies[currOverlapGene]
@@ -204,7 +191,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 			kCache[currOntologyName] += 1
 		}
 	}
-	log.Print("calculating term enrichments")
 
 	var proportionsForTerms map[string]float64
 	var enrichment float64
@@ -214,10 +200,13 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		_, err = fmt.Fprintf(out, "Term\tName\tProportion\n")
 		enrichOut := fileio.EasyCreate(name + ".termEnrichment.txt")
 		for i := range proportionsForTerms {
-			_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, proportionsForTerms[i])
-			enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], true)
-			_, err = fmt.Fprintf(enrichOut, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
-			exception.PanicOnErr(err)
+			if proportionsForTerms[i] > 0 {
+				enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], true)
+				_, err = fmt.Fprintf(enrichOut, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
+				exception.PanicOnErr(err)
+			} else {
+				continue
+			}
 		}
 		err = out.Close()
 		exception.PanicOnErr(err)
