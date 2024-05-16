@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
@@ -23,13 +24,13 @@ var ontologyEnrichmentTests = []struct {
 	{
 		Input:           "testdata/tiny.phastCons.bed",
 		ChromSize:       "testdata/mm39.chrom.sizes",
-		GeneFile:        "mm39.all.tss.bed",
+		GeneFile:        "testdata/tiny.tss.bed",
 		GafFile:         "testdata/mgi.gaf.test.gz",
 		OboFile:         "testdata/go.obo",
 		OutFile:         "testdata/ontologyTest.bed",
 		Force:           false,
 		ContactFile:     "",
-		GeneEnrichments: false,
+		GeneEnrichments: true,
 		TermEnrichments: false,
 	},
 }
@@ -37,7 +38,7 @@ var ontologyEnrichmentTests = []struct {
 func TestOntologyEnrichment(t *testing.T) {
 	for _, s := range ontologyEnrichmentTests {
 		ontologyEnrichment(s.Input, s.ChromSize, s.GeneFile, s.GafFile, s.OboFile, s.OutFile, s.Force, s.ContactFile, s.GeneEnrichments, s.TermEnrichments)
-		if fileio.AreEqual(s.OutFile, "testdata/expectedOntologies.bed") {
+		if bed.AllAreEqual(bed.Read(s.OutFile), bed.Read("testdata/expectedOntologies.bed")) && fileio.AreEqualIgnoreOrder("testdata/ontologyTest.geneProportions.txt", "testdata/expectedGeneProportions.txt") {
 			err := os.Remove(s.OutFile)
 			exception.PanicOnErr(err)
 		} else {
