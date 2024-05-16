@@ -41,6 +41,8 @@ func TestOntologyEnrichment(t *testing.T) {
 		if bed.AllAreEqual(bed.Read(s.OutFile), bed.Read("testdata/expectedOntologies.bed")) && fileio.AreEqualIgnoreOrder("testdata/ontologyTest.geneProportions.txt", "testdata/expectedGeneProportions.txt") {
 			err := os.Remove(s.OutFile)
 			exception.PanicOnErr(err)
+			err = os.Remove("testdata/ontologyTest.geneProportions.txt")
+			exception.PanicOnErr(err)
 		} else {
 			log.Fatal("output and expected didn't match")
 		}
