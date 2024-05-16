@@ -31,7 +31,7 @@ var ontologyEnrichmentTests = []struct {
 		Force:           false,
 		ContactFile:     "",
 		GeneEnrichments: true,
-		TermEnrichments: false,
+		TermEnrichments: true,
 	},
 }
 
@@ -44,7 +44,15 @@ func TestOntologyEnrichment(t *testing.T) {
 			err = os.Remove("testdata/ontologyTest.geneProportions.txt")
 			exception.PanicOnErr(err)
 		} else {
-			log.Fatal("output and expected didn't match")
+			log.Fatal("output for bed or gene proportions and expected didn't match")
+		}
+		if fileio.AreEqualIgnoreOrder("testdata/ontologyTest.termEnrichment.txt", "testdata/expectedTermEnrichment.txt") && fileio.AreEqualIgnoreOrder("testdata/ontologyTest.termProportions.txt", "testdata/expectedTermProportions.txt") {
+			err := os.Remove("testdata/ontologyTest.termEnrichment.txt")
+			exception.PanicOnErr(err)
+			err = os.Remove("testdata/ontologyTest.termProportions.txt")
+			exception.PanicOnErr(err)
+		} else {
+			log.Fatal("output for terms and expected didn't match")
 		}
 	}
 
