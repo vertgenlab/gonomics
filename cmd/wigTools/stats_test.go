@@ -1,11 +1,10 @@
 package main
 
 import (
-	"os"
-	"testing"
-
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"os"
+	"testing"
 )
 
 var WigStatsTests = []struct {
@@ -16,19 +15,19 @@ var WigStatsTests = []struct {
 	ExpectedFile     string
 	MissingDataValue float64
 }{
-	{InputNoGapBed: "testdata/test.noGap.bed",
-		InputWig:         "testdata/test.wig",
-		ChromSizes:       "testdata/test.chrom.sizes",
-		OutputFile:       "testdata/tmp.tsv",
-		ExpectedFile:     "testdata/expected.tsv",
+	{InputNoGapBed: "testdata/stats/test.noGap.bed",
+		InputWig:         "testdata/stats/test.wig",
+		ChromSizes:       "testdata/stats/test.chrom.sizes",
+		OutputFile:       "testdata/stats/tmp.tsv",
+		ExpectedFile:     "testdata/stats/expected.tsv",
 		MissingDataValue: -10},
 }
 
 func TestWigStats(t *testing.T) {
 	var err error
-	var s Settings
+	var s StatsSettings
 	for _, v := range WigStatsTests {
-		s = Settings{
+		s = StatsSettings{
 			InFile:           v.InputWig,
 			NoGapFile:        v.InputNoGapBed,
 			ChromSizes:       v.ChromSizes,

@@ -6,6 +6,9 @@ import (
 	"github.com/vertgenlab/gonomics/browser"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/numbers/parse"
+	"github.com/vertgenlab/gonomics/browser"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"os"
 	"strings"
@@ -13,6 +16,14 @@ import (
 
 // VisualizeSettings defines the usage settings for the pFa Visualize subcommand.
 type VisualizeSettings struct {
+	InFile           string
+	OutDir           string
+	Start            int
+	End              int
+	SigFigs          int
+	DecimalPlaces    int
+	LineLength       int
+	Chrom            string
 	InFile           string
 	OutDir           string
 	Start            int
@@ -78,6 +89,14 @@ func parseVisualizeArgs() {
 	outDir := VisualizeFlags.Arg(3)
 
 	s := VisualizeSettings{
+		InFile:           inFile,
+		OutDir:           outDir,
+		Start:            start,
+		End:              end,
+		SigFigs:          *sigFigs,
+		DecimalPlaces:    *decimalPlaces,
+		LineLength:       *lineLength,
+		Chrom:            *chrom,
 		InFile:           inFile,
 		OutDir:           outDir,
 		Start:            start,

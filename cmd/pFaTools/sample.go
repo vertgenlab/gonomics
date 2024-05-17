@@ -15,7 +15,7 @@ import (
 // SampleSettings defines the usage settings for the pFa sample subcommand.
 type SampleSettings struct {
 	InFile     string
-	Chrom	   string
+	Chrom      string
 	OutDir     string
 	NumSamples int
 	SetSeed    int64
@@ -56,7 +56,7 @@ func parseSampleArgs() {
 
 	s := SampleSettings{
 		InFile:     inFile,
-		Chrom: 		chrom,
+		Chrom:      chrom,
 		OutDir:     outDir,
 		NumSamples: *numSamples,
 		SetSeed:    *setSeed,

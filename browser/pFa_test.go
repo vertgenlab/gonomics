@@ -31,63 +31,63 @@ var PrintOneSetLinesTests = []struct {
 	LineG:         make([]float32, 30),
 	LineT:         make([]float32, 30),
 	Start:         2,
-	Records: []pFasta.PFasta{pFasta.PFasta{Name: "chr1",
+	Records: []pFasta.PFasta{{Name: "chr1",
 		Seq: []pDna.Float32Base{
-			pDna.Float32Base{
+			{
 				A: 0.23857,
 				C: 0.3323,
 				G: 0.44958,
 				T: 0.139448,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.334,
 				C: 0.44239,
 				G: 0.134875,
 				T: 0.12394,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.384398,
 				C: 0.59723,
 				G: 0.3289,
 				T: 0.8325,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.488532,
 				C: 0.23858,
 				G: 0.548523,
 				T: 0.5473,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.92323,
 				C: 0.237,
 				G: 0.1747,
 				T: 0.5839,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.483284,
 				C: 0.123,
 				G: 0.25388,
 				T: 0.98243,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.00834,
 				C: 0.5288,
 				G: 0.58001,
 				T: 0.4892,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.5688,
 				C: 0.278,
 				G: 0.1937,
 				T: 0.1111,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.42397,
 				C: 0.2358,
 				G: 0.984,
 				T: 0.3823,
 			},
-			pDna.Float32Base{
+			{
 				A: 0.042387,
 				C: 0.587,
 				G: 0.32871,

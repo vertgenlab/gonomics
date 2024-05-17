@@ -1,11 +1,10 @@
 package main
 
 import (
-	"os"
-	"testing"
-
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"os"
+	"testing"
 )
 
 var WigToTrainingSetTests = []struct {
@@ -27,74 +26,74 @@ var WigToTrainingSetTests = []struct {
 	IncludeRevComp       bool
 	NoHeader             bool
 }{
-	{InWigFile: "testdata/in.wig",
-		InFastaFile:          "testdata/genome.fa",
-		TrainFile:            "testdata/tmp.train.txt",
-		ValidateFile:         "testdata/tmp.validate.txt",
-		TestFile:             "testdata/tmp.test.txt",
+	{InWigFile: "testdata/toTrainSet/toTrainSet.wig",
+		InFastaFile:          "testdata/toTrainSet/toTrainSet.fa",
+		TrainFile:            "testdata/toTrainSet/tmp.train.txt",
+		ValidateFile:         "testdata/toTrainSet/tmp.validate.txt",
+		TestFile:             "testdata/toTrainSet/tmp.test.txt",
 		WindowSize:           3,
 		Stride:               3,
 		ValidationProp:       0.1,
 		TestingProp:          0.1,
 		SetSeed:              5,
 		Missing:              -10,
-		ExpectedTrainFile:    "testdata/expected.train.txt",
-		ExpectedValidateFile: "testdata/expected.validate.txt",
-		ExpectedTestFile:     "testdata/expected.test.txt",
+		ExpectedTrainFile:    "testdata/toTrainSet/expected.train.txt",
+		ExpectedValidateFile: "testdata/toTrainSet/expected.validate.txt",
+		ExpectedTestFile:     "testdata/toTrainSet/expected.test.txt",
 		LogTransform:         false,
 		IncludeRevComp:       false,
 		NoHeader:             false,
 	},
-	{InWigFile: "testdata/in.wig",
-		InFastaFile:          "testdata/genome.fa",
-		TrainFile:            "testdata/tmp.log.train.txt",
-		ValidateFile:         "testdata/tmp.log.validate.txt",
-		TestFile:             "testdata/tmp.log.test.txt",
+	{InWigFile: "testdata/toTrainSet/toTrainSet.wig",
+		InFastaFile:          "testdata/toTrainSet/toTrainSet.fa",
+		TrainFile:            "testdata/toTrainSet/tmp.log.train.txt",
+		ValidateFile:         "testdata/toTrainSet/tmp.log.validate.txt",
+		TestFile:             "testdata/toTrainSet/tmp.log.test.txt",
 		WindowSize:           3,
 		Stride:               3,
 		ValidationProp:       0.1,
 		TestingProp:          0.1,
 		SetSeed:              5,
 		Missing:              -10,
-		ExpectedTrainFile:    "testdata/expected.log.train.txt",
-		ExpectedValidateFile: "testdata/expected.log.validate.txt",
-		ExpectedTestFile:     "testdata/expected.log.test.txt",
+		ExpectedTrainFile:    "testdata/toTrainSet/expected.log.train.txt",
+		ExpectedValidateFile: "testdata/toTrainSet/expected.log.validate.txt",
+		ExpectedTestFile:     "testdata/toTrainSet/expected.log.test.txt",
 		LogTransform:         true,
 		IncludeRevComp:       false,
 		NoHeader:             false,
 	},
-	{InWigFile: "testdata/in.wig",
-		InFastaFile:          "testdata/genome.fa",
-		TrainFile:            "testdata/tmp.revComp.train.txt",
-		ValidateFile:         "testdata/tmp.revComp.validate.txt",
-		TestFile:             "testdata/tmp.revComp.test.txt",
+	{InWigFile: "testdata/toTrainSet/toTrainSet.wig",
+		InFastaFile:          "testdata/toTrainSet/toTrainSet.fa",
+		TrainFile:            "testdata/toTrainSet/tmp.revComp.train.txt",
+		ValidateFile:         "testdata/toTrainSet/tmp.revComp.validate.txt",
+		TestFile:             "testdata/toTrainSet/tmp.revComp.test.txt",
 		WindowSize:           3,
 		Stride:               3,
 		ValidationProp:       0.1,
 		TestingProp:          0.1,
 		SetSeed:              5,
 		Missing:              -10,
-		ExpectedTrainFile:    "testdata/expected.revComp.train.txt",
-		ExpectedValidateFile: "testdata/expected.revComp.validate.txt",
-		ExpectedTestFile:     "testdata/expected.revComp.test.txt",
+		ExpectedTrainFile:    "testdata/toTrainSet/expected.revComp.train.txt",
+		ExpectedValidateFile: "testdata/toTrainSet/expected.revComp.validate.txt",
+		ExpectedTestFile:     "testdata/toTrainSet/expected.revComp.test.txt",
 		LogTransform:         false,
 		IncludeRevComp:       true,
 		NoHeader:             false,
 	},
-	{InWigFile: "testdata/in.wig",
-		InFastaFile:          "testdata/genome.fa",
-		TrainFile:            "testdata/tmp.noHeader.train.txt",
-		ValidateFile:         "testdata/tmp.noHeader.validate.txt",
-		TestFile:             "testdata/tmp.noHeader.test.txt",
+	{InWigFile: "testdata/toTrainSet/toTrainSet.wig",
+		InFastaFile:          "testdata/toTrainSet/toTrainSet.fa",
+		TrainFile:            "testdata/toTrainSet/tmp.noHeader.train.txt",
+		ValidateFile:         "testdata/toTrainSet/tmp.noHeader.validate.txt",
+		TestFile:             "testdata/toTrainSet/tmp.noHeader.test.txt",
 		WindowSize:           3,
 		Stride:               3,
 		ValidationProp:       0.1,
 		TestingProp:          0.1,
 		SetSeed:              5,
 		Missing:              -10,
-		ExpectedTrainFile:    "testdata/expected.noHeader.train.txt",
-		ExpectedValidateFile: "testdata/expected.noHeader.validate.txt",
-		ExpectedTestFile:     "testdata/expected.noHeader.test.txt",
+		ExpectedTrainFile:    "testdata/toTrainSet/expected.noHeader.train.txt",
+		ExpectedValidateFile: "testdata/toTrainSet/expected.noHeader.validate.txt",
+		ExpectedTestFile:     "testdata/toTrainSet/expected.noHeader.test.txt",
 		LogTransform:         false,
 		IncludeRevComp:       true,
 		NoHeader:             true,
@@ -105,7 +104,7 @@ func TestWigToTrainingSet(t *testing.T) {
 	var err error
 
 	for _, v := range WigToTrainingSetTests {
-		s := Settings{
+		s := ToTrainingSetSettings{
 			InWigFile:      v.InWigFile,
 			InFastaFile:    v.InFastaFile,
 			TrainFile:      v.TrainFile,
@@ -121,7 +120,7 @@ func TestWigToTrainingSet(t *testing.T) {
 			IncludeRevComp: v.IncludeRevComp,
 			NoHeader:       v.NoHeader,
 		}
-		wigToTrainingSet(s)
+		toTrainingSet(s)
 		if !fileio.AreEqual(v.TrainFile, v.ExpectedTrainFile) {
 			t.Errorf("Error in WigToTrainingSet. Training file was not as expected.")
 		} else {
