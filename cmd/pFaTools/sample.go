@@ -28,7 +28,7 @@ func sampleUsage(sampleFlags *flag.FlagSet) {
 		"\tpFa (probabilistic FASTA) encodes position-wise probabilities in matrix entries. Columns should therefore sum to 1.\n" +
 		"\tFa (FASTA) encodes integer counts in matrix entries, typically corresponding to read counts from sequencing.\n" +
 		"Usage:\n" +
-		"pFaTools sample in.pFa out.fasta\n" +
+		"pFaTools sample in.pFa chrom out.fasta\n" +
 		"options:\n")
 	sampleFlags.PrintDefaults()
 }

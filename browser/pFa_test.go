@@ -253,6 +253,7 @@ func TestPFaVisualizer(t *testing.T) {
 		} else {
 			fileio.EasyRemove(testCase.OutFile)
 		}
+
 	}
 }
 
