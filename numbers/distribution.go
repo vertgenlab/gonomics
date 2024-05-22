@@ -13,12 +13,6 @@ func NormalDist(x float64, mu float64, sigma float64) float64 {
 	return (1 / (sigma * math.Sqrt(2*math.Pi))) * math.Exp(-0.5*math.Pow((x-mu)/sigma, 2))
 }
 
-func NormalLogSpace(x float64, mu float64, sigma float64) float64 {
-	logDenominator := math.Log(sigma) + 0.5*math.Log(2*math.Pi)
-	logNumerator := -0.5 * math.Pow((x-mu)/sigma, 2)
-	return logNumerator - logDenominator
-}
-
 // StandardNormalDist returns the probability density for an input x value on a standard normal distribution (mu=0, sigma=1).
 func StandardNormalDist(x float64) float64 {
 	return NormalDist(x, 0, 1)
