@@ -13,10 +13,11 @@ import (
 
 	// uncomment for additional tests
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 var ReconstructTests = []struct {
@@ -570,7 +571,7 @@ func TestEmpiricalReconstruction(t *testing.T) {
 	_, err = fmt.Fprintf(out, "Name\tTreeIndex\tNodeName\tInaccuracy\n")
 	exception.PanicOnErr(err)
 	for _, v := range EmpiricalReconstructionComparisonPDna {
-		rand.Seed(v.SetSeed)
+		rand.New(rand.NewSource(v.SetSeed))
 
 		//first, we make a tree to test, and run a molecular evolution simulation to generate sequences
 		currRandGamma, _ = numbers.RandGamma(v.NodeGammaAlpha, v.NodeGammaBeta)

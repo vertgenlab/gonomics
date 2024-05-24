@@ -40,8 +40,8 @@ func TestWarningOnErr(t *testing.T) {
 
 func TestRandAutoSeedExists(t *testing.T) {
 	os.Setenv("GODEBUG", "randautoseed=0,other=value")
-
 	expected := "randautoseed=0,other=value"
+
 	if os.Getenv("GODEBUG") != expected && os.Getenv("GODEBUG") != "other=value,randautoseed=0" {
 		t.Errorf("setGoDebug did not update randautoseed correctly")
 	}

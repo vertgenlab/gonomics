@@ -1,7 +1,10 @@
 package interval
 
 import (
+	"bytes"
+	"log"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/bed"
@@ -17,7 +20,7 @@ func TestReadToChanBed(t *testing.T) {
 
 	// Create the interval channel
 	interval := make(chan Interval, 1)
-	go ReadToChan(bedFile, interval)
+	ReadToChan(bedFile, interval)
 
 	// Check the intervals read from the channel
 	expectedBeds := []bed.Bed{b1}
@@ -43,15 +46,29 @@ func TestReadToChanBed(t *testing.T) {
 }
 
 func TestReadToChanUnknownFileType(t *testing.T) {
+	if os.Getenv("TEST_FATAL") != "1" {
+		return
+	}
 	// Create a temporary file with an unknown extension
 	unknownData := "testdata/interval.unknown"
 	unknownFile := fileio.EasyCreate(unknownData)
 	defer unknownFile.Close()
+	defer fileio.EasyRemove(unknownData)
 
-	if os.Getenv("TEST_FATAL") != "1" {
-		return
+	// Channel to receive intervals (not expected to be used)
+	intervalCh := make(chan Interval)
+
+	// Call ReadToChan in a goroutine
+	ReadToChan(unknownData, intervalCh)
+	// Capture log output
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer log.SetOutput(os.Stderr)
+	expectedMessage := "Error:"
+	logOutput := buf.String()
+	if !strings.Contains(expectedMessage, logOutput) {
+		t.Errorf("Expected log message:\n%s\nNot found in actual log:\n%s", expectedMessage, logOutput)
+	} else {
+		t.Log("log.Fatalf called with expected message - Test Passed!")
 	}
-	interval := make(chan Interval, 1)
-	go ReadToChan(unknownData, interval)
-	fileio.EasyRemove(unknownData)
 }
