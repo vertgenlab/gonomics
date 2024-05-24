@@ -1,6 +1,7 @@
 package interval
 
 import (
+	"log"
 	"path"
 
 	"github.com/vertgenlab/gonomics/axt"
@@ -52,11 +53,15 @@ func ReadToChan(inputFile string, send chan<- Interval) {
 		for val := range receive {
 			send <- val
 		}
+
 	case ".chain":
 		receive, _ := chain.GoReadToChan(inputFile)
 		for val := range receive {
 			send <- val
 		}
+
+	default:
+		log.Fatalf("Error: File type of %s is unknown. Does not match any of the following: .bed/.axt/.vcf/sam/.bam/.chain...\n", inputFile)
 	}
 	close(send)
 }

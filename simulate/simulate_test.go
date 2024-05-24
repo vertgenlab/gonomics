@@ -42,7 +42,7 @@ var MutateSeqTests = []struct {
 }
 
 func TestMutateGene(t *testing.T) {
-	rand.Seed(1)
+	rand.New(rand.NewSource(1))
 	for _, test := range MutateSeqTests {
 		seq := fasta.Read(test.sequence)
 		bases := seq[0].Seq

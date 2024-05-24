@@ -43,13 +43,20 @@ func simulateDivergentWindowsVcf(s Settings) {
 
 	for i := 0; i < s.NumWindows; i++ {
 		windows[i].Variants = make([]vcf.Vcf, s.NumWindowSites)
-		//Shuffle the vcf records, our subset will be composed to the first entries in the shuffled order.
-		rand.Seed(s.SetSeed * int64(i))
-		rand.Shuffle(len(TotalSites), func(i, j int) { TotalSites[i], TotalSites[j] = TotalSites[j], TotalSites[i] })
-		copy(windows[i].Variants, TotalSites[:s.NumWindowSites]) //keep only as many results as specified
+		// Create a new random source with the seed
+		r := rand.New(rand.NewSource(s.SetSeed * int64(i)))
+
+		// Shuffle the Vcf records
+		r.Shuffle(len(TotalSites), func(i, j int) {
+			TotalSites[i], TotalSites[j] = TotalSites[j], TotalSites[i]
+		})
+
+		// Copy the first NumWindowSites records to the current window
+		copy(windows[i].Variants, TotalSites[:s.NumWindowSites])
+
+		// Count the number of divergent variants
 		windows[i].NumDivergent = countDivergent(windows[i].Variants)
 	}
-
 	//now sort the windows by the number of divergent sites from low to high
 	sort.Slice(windows, func(i, j int) bool { return windows[i].NumDivergent < windows[j].NumDivergent })
 	lowerOut := fileio.EasyCreate(s.LowerOut)

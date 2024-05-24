@@ -14,7 +14,7 @@ import (
 
 func TestSam(t *testing.T) {
 	var err error
-	rand.Seed(1)
+	rand.New(rand.NewSource(1))
 	ref := fasta.Read("testdata/eng.fa")
 	out := fileio.EasyCreate("testdata/actual.sam")
 	var bw *sam.BamWriter
