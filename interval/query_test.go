@@ -18,40 +18,6 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-func TestReadToChanBed(t *testing.T) {
-	var b bed.Bed = bed.Bed{Chrom: "chr1", ChromStart: 100, ChromEnd: 200, Name: "First", Score: 1, Strand: '+', FieldsInitialized: 6}
-	var beds []bed.Bed = []bed.Bed{b}
-	var bedFile string = "testdata/interval.bed"
-
-	bed.Write(bedFile, beds)
-
-	// Create the interval channel
-	interval := make(chan Interval, 1)
-	ReadToChan(bedFile, interval)
-
-	// Check the intervals read from the channel
-	expectedBeds := []bed.Bed{b}
-	for _, expected := range expectedBeds {
-		val, ok := <-interval
-		if !ok {
-			t.Fatalf("Expected more intervals, but channel was closed")
-		}
-		bedVal, ok := val.(*bed.Bed)
-		if !ok {
-			t.Fatalf("Expected *bed.Bed type, got %T", val)
-		}
-		if bedVal.GetChrom() != expected.GetChrom() || bedVal.GetChromStart() != expected.GetChromStart() || bedVal.GetChromEnd() != expected.GetChromEnd() {
-			t.Errorf("Error: %v != %v", bedVal, expected)
-		}
-	}
-
-	// Verify that no more intervals are left in the channel
-	if _, ok := <-interval; ok {
-		t.Errorf("Expected channel to be closed, but it still has values")
-	}
-	fileio.EasyRemove(bedFile)
-}
-
 func TestReadToChanAxt(t *testing.T) {
 	var a axt.Axt = axt.Axt{
 		RName:      "TargetGenome",
@@ -70,8 +36,7 @@ func TestReadToChanAxt(t *testing.T) {
 	axt.Write(axtFile, axts)
 
 	// Create the interval channel
-	interval := make(chan Interval, 1)
-	ReadToChan(axtFile, interval)
+	interval := GoReadToChan(axtFile)
 
 	// Check the intervals read from the channel
 	expected := []axt.Axt{a}
@@ -96,31 +61,29 @@ func TestReadToChanAxt(t *testing.T) {
 	fileio.EasyRemove(axtFile)
 }
 
-func TestReadToChanVcf(t *testing.T) {
-	var v vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 2, Ref: "A", Alt: []string{"T"}}
+func TestReadToChanBed(t *testing.T) {
+	var b bed.Bed = bed.Bed{Chrom: "chr1", ChromStart: 100, ChromEnd: 200, Name: "First", Score: 1, Strand: '+', FieldsInitialized: 6}
+	var beds []bed.Bed = []bed.Bed{b}
+	var bedFile string = "testdata/interval.bed"
 
-	var vcfs []vcf.Vcf = []vcf.Vcf{v}
-	var vcfFile string = "testdata/interval.vcf.gz"
-
-	vcf.Write(vcfFile, vcfs)
+	bed.Write(bedFile, beds)
 
 	// Create the interval channel
-	interval := make(chan Interval, 1)
-	ReadToChan(vcfFile, interval)
+	interval := GoReadToChan(bedFile)
 
 	// Check the intervals read from the channel
-	expected := []vcf.Vcf{v}
-	for _, expected := range expected {
+	expectedBeds := []bed.Bed{b}
+	for _, expected := range expectedBeds {
 		val, ok := <-interval
 		if !ok {
 			t.Fatalf("Expected more intervals, but channel was closed")
 		}
-		axtVal, ok := val.(vcf.Vcf)
+		bedVal, ok := val.(*bed.Bed)
 		if !ok {
-			t.Fatalf("Expected vcf.Vcf type, got %T", val)
+			t.Fatalf("Expected *bed.Bed type, got %T", val)
 		}
-		if axtVal.GetChrom() != expected.GetChrom() || axtVal.GetChromStart() != expected.GetChromStart() || axtVal.GetChromEnd() != expected.GetChromEnd() {
-			t.Errorf("Error: %v != %v", axtVal, expected)
+		if bedVal.GetChrom() != expected.GetChrom() || bedVal.GetChromStart() != expected.GetChromStart() || bedVal.GetChromEnd() != expected.GetChromEnd() {
+			t.Errorf("Error: %v != %v", bedVal, expected)
 		}
 	}
 
@@ -128,53 +91,7 @@ func TestReadToChanVcf(t *testing.T) {
 	if _, ok := <-interval; ok {
 		t.Errorf("Expected channel to be closed, but it still has values")
 	}
-	fileio.EasyRemove(vcfFile)
-}
-
-func TestReadToChanSam(t *testing.T) {
-	var s sam.Sam = sam.Sam{
-		QName: "r001",
-		Flag:  99,
-		MapQ:  30,
-		RName: "ref",
-		Pos:   7,
-		Cigar: cigar.FromString("8M2I4M1D3M"),
-		RNext: "=",
-		PNext: 37,
-		TLen:  39,
-		Seq:   dna.StringToBases("TTAGATAAAGGATACTG"),
-		Qual:  "*",
-		Extra: "",
-	}
-
-	var sams []sam.Sam = []sam.Sam{s}
-	var samFile string = "testdata/interval.sam"
-	sam.Write(samFile, sams, sam.Header{})
-
-	// Create the interval channel
-	interval := make(chan Interval, 1)
-	ReadToChan(samFile, interval)
-
-	// Check the intervals read from the channel
-	expected := []sam.Sam{s}
-	for _, expected := range expected {
-		val, ok := <-interval
-		if !ok {
-			t.Fatalf("Expected more intervals, but channel was closed")
-		}
-		axtVal, ok := val.(sam.Sam)
-		if !ok {
-			t.Fatalf("Expected sam.Sam type, got %T", val)
-		}
-		if axtVal.GetChrom() != expected.GetChrom() || axtVal.GetChromStart() != expected.GetChromStart() || axtVal.GetChromEnd() != expected.GetChromEnd() {
-			t.Errorf("Error: %v != %v", axtVal, expected)
-		}
-	}
-	// Verify that no more intervals are left in the channel
-	if _, ok := <-interval; ok {
-		t.Errorf("Expected channel to be closed, but it still has values")
-	}
-	fileio.EasyRemove(samFile)
+	fileio.EasyRemove(bedFile)
 }
 
 func TestReadToChanChain(t *testing.T) {
@@ -223,6 +140,88 @@ func TestReadToChanChain(t *testing.T) {
 	}
 	fileio.EasyRemove(chainFile)
 }
+
+func TestReadToChanSam(t *testing.T) {
+	var s sam.Sam = sam.Sam{
+		QName: "r001",
+		Flag:  99,
+		MapQ:  30,
+		RName: "ref",
+		Pos:   7,
+		Cigar: cigar.FromString("8M2I4M1D3M"),
+		RNext: "=",
+		PNext: 37,
+		TLen:  39,
+		Seq:   dna.StringToBases("TTAGATAAAGGATACTG"),
+		Qual:  "*",
+		Extra: "",
+	}
+
+	var sams []sam.Sam = []sam.Sam{s}
+	var samFile string = "testdata/interval.sam"
+	sam.Write(samFile, sams, sam.Header{})
+
+	// Create the interval channel
+	interval := make(chan Interval, 1)
+	ReadToChan(samFile, interval)
+
+	// Check the intervals read from the channel
+	expected := []sam.Sam{s}
+	for _, expected := range expected {
+		val, ok := <-interval
+		if !ok {
+			t.Fatalf("Expected more intervals, but channel was closed")
+		}
+		axtVal, ok := val.(sam.Sam)
+		if !ok {
+			t.Fatalf("Expected sam.Sam type, got %T", val)
+		}
+		if axtVal.GetChrom() != expected.GetChrom() || axtVal.GetChromStart() != expected.GetChromStart() || axtVal.GetChromEnd() != expected.GetChromEnd() {
+			t.Errorf("Error: %v != %v", axtVal, expected)
+		}
+	}
+	// Verify that no more intervals are left in the channel
+	if _, ok := <-interval; ok {
+		t.Errorf("Expected channel to be closed, but it still has values")
+	}
+	fileio.EasyRemove(samFile)
+}
+
+func TestReadToChanVcf(t *testing.T) {
+	var v vcf.Vcf = vcf.Vcf{Chr: "chr1", Pos: 2, Ref: "A", Alt: []string{"T"}}
+
+	var vcfs []vcf.Vcf = []vcf.Vcf{v}
+	var vcfFile string = "testdata/interval.vcf.gz"
+
+	vcf.Write(vcfFile, vcfs)
+
+	// Create the interval channel
+	interval := make(chan Interval, 1)
+	ReadToChan(vcfFile, interval)
+
+	// Check the intervals read from the channel
+	expected := []vcf.Vcf{v}
+	for _, expected := range expected {
+		val, ok := <-interval
+		if !ok {
+			t.Fatalf("Expected more intervals, but channel was closed")
+		}
+		axtVal, ok := val.(vcf.Vcf)
+		if !ok {
+			t.Fatalf("Expected vcf.Vcf type, got %T", val)
+		}
+		if axtVal.GetChrom() != expected.GetChrom() || axtVal.GetChromStart() != expected.GetChromStart() || axtVal.GetChromEnd() != expected.GetChromEnd() {
+			t.Errorf("Error: %v != %v", axtVal, expected)
+		}
+	}
+
+	// Verify that no more intervals are left in the channel
+	if _, ok := <-interval; ok {
+		t.Errorf("Expected channel to be closed, but it still has values")
+	}
+	fileio.EasyRemove(vcfFile)
+}
+
 func TestReadToChanUnknownFileType(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
