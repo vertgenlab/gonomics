@@ -10,16 +10,13 @@ import (
 )
 
 func TestPanicOnErr(t *testing.T) {
-
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("PanicOnErr did not panic on error...\n")
 		}
 	}()
-	var err error = fmt.Errorf("Error: test exception error handling...\n")
-
+	var err error = fmt.Errorf("Error: panic exception error handling...\n")
 	PanicOnErr(err)
-	FatalOnErr(err)
 }
 
 func TestWarningOnErr(t *testing.T) {
