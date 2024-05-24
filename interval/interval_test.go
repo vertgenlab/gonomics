@@ -192,7 +192,6 @@ const (
 )
 
 func BenchmarkBuildTree(b *testing.B) {
-
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	intervals := generateIntervals(numIntervals, rangeLow, rangeHigh)
 	b.ResetTimer()
