@@ -22,7 +22,7 @@ var RandGeneTests = []struct {
 }
 
 func TestRandGene(t *testing.T) {
-	rand.Seed(1)
+	rand.New(rand.NewSource(1))
 	for _, test := range RandGeneTests {
 		a := RandGene(test.name, test.length, test.GC)
 		if len(a[0].Seq) != test.length {
