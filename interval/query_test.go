@@ -2,6 +2,7 @@ package interval
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -46,9 +47,11 @@ func TestReadToChanBed(t *testing.T) {
 }
 
 func TestReadToChanUnknownFileType(t *testing.T) {
-	if os.Getenv("TEST_FATAL") != "1" {
-		return
-	}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Error: Unknown file type should throw error...\n")
+		}
+	}()
 	// Create a temporary file with an unknown extension
 	unknownData := "testdata/interval.unknown"
 	unknownFile := fileio.EasyCreate(unknownData)
@@ -64,8 +67,10 @@ func TestReadToChanUnknownFileType(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	defer log.SetOutput(os.Stderr)
-	expectedMessage := "Error:"
+
+	expectedMessage := fmt.Sprintf("file type of %s is unknown. Does not match any of the following: .bed/.axt/.vcf/sam/.bam/.chain", unknownData)
 	logOutput := buf.String()
+
 	if !strings.Contains(expectedMessage, logOutput) {
 		t.Errorf("Expected log message:\n%s\nNot found in actual log:\n%s", expectedMessage, logOutput)
 	} else {

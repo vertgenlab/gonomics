@@ -1,6 +1,7 @@
 package interval
 
 import (
+	"fmt"
 	"log"
 	"path"
 
@@ -61,7 +62,7 @@ func ReadToChan(inputFile string, send chan<- Interval) {
 		}
 
 	default:
-		log.Fatalf("Error: File type of %s is unknown. Does not match any of the following: .bed/.axt/.vcf/sam/.bam/.chain...\n", inputFile)
+		log.Panic(fmt.Errorf("file type of %s is unknown. Does not match any of the following: .bed/.axt/.vcf/sam/.bam/.chain", inputFile))
 	}
 	close(send)
 }
