@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"os"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
-	"math/rand"
-	"os"
 )
 
 type GenicSettings struct {
@@ -63,7 +64,7 @@ func parseGenicArgs() {
 
 func Genic(s GenicSettings) {
 	var fastas, leafFastas []fasta.Fasta
-	rand.Seed(s.SetSeed)
+	rand.New(rand.NewSource(s.SetSeed))
 
 	tree, err := expandedTree.ReadTree(s.TreeFile, s.InFile)
 	exception.PanicOnErr(err)
