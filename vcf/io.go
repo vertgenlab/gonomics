@@ -1,7 +1,7 @@
 package vcf
 
 import (
-	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"strconv"
@@ -192,9 +192,6 @@ func NextVcf(reader *fileio.EasyReader) (Vcf, bool) {
 
 // TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed. geno bool variable determines whether to print notes or genotypes.
 func WriteVcfToFileHandle(file io.Writer, input []Vcf) {
-	writer := bufio.NewWriter(file)
-	defer writer.Flush()
-
 	for i := 0; i < len(input); i++ {
 		WriteVcf(file, input[i])
 	}
@@ -202,12 +199,7 @@ func WriteVcfToFileHandle(file io.Writer, input []Vcf) {
 
 // WriteVcf writes an individual Vcf struct to an io.Writer.
 func WriteVcf(writer io.Writer, record Vcf) {
-	buf, ok := writer.(*bufio.Writer)
-	if !ok {
-		buf = bufio.NewWriter(writer)
-		defer buf.Flush() // Flush only if we created a new buffered writer
-	}
-	_, err := buf.WriteString(record.String())
+	_, err := fmt.Fprint(writer, record.String())
 	exception.PanicOnErr(err)
 }
 
