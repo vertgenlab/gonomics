@@ -41,7 +41,7 @@ func TestSamplesToString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := SamplesToString(tt.samples)
 			if result != tt.expected {
-				t.Errorf("expected %q, got %q", tt.expected, result)
+				t.Errorf("Error: expected %q, got %q", tt.expected, result)
 			}
 		})
 	}
