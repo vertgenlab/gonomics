@@ -97,17 +97,31 @@ func TestVcf_String(t *testing.T) {
 		t.Run(tt.record.Id, func(t *testing.T) {
 			got := tt.record.String()
 			if got != tt.want {
-				t.Errorf("String() = %q, want %q", got, tt.want)
+				t.Errorf("Error: String() = %q, want %q", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestSample_String(t *testing.T) {
-	sample := Sample{Alleles: []int16{0, 1}, Phase: []bool{false, true}, FormatData: []string{"GT", "DP"}}
-	expected := "0|1GT:DP"
-	result := sample.String()
-	if result != expected {
-		t.Errorf("expected %q, got %q", expected, result)
+	tests := []struct {
+		sample   Sample
+		expected string
+	}{
+		{
+			sample:   Sample{Alleles: []int16{0, 1}, Phase: []bool{false, true}, FormatData: []string{"GT", "DP"}},
+			expected: "0|1GT:DP",
+		},
+		{
+			sample:   Sample{Alleles: nil, Phase: nil, FormatData: nil},
+			expected: ".",
+		},
+	}
+	for _, s := range tests {
+		result := s.sample.String()
+		if result != s.expected {
+			t.Errorf("Error: String() = %q, want %q", result, s.expected)
+		}
+
 	}
 }
