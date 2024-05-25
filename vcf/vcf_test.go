@@ -65,16 +65,16 @@ func BenchmarkWrite(b *testing.B) {
 	b.ReportAllocs()
 	records, _ := Read("testdata/test.vcf")
 	for i := 0; i < b.N; i++ {
-		Write("tmp", records)
+		Write("testdata/tmp", records)
 	}
-	os.Remove("tmp")
+	os.Remove("testdata/tmp")
 }
 
 func BenchmarkWriteGzip(b *testing.B) {
 	b.ReportAllocs()
 	records, _ := Read("testdata/test.vcf")
 	for i := 0; i < b.N; i++ {
-		Write("tmp.gz", records)
+		Write("testdata/tmp.gz", records)
 	}
-	os.Remove("tmp")
+	os.Remove("testdata/tmp")
 }
