@@ -1,6 +1,8 @@
 package vcf
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestSnp(t *testing.T) {
 	tests := []struct {
