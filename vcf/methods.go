@@ -49,10 +49,9 @@ func (s Sample) String() string {
 	if s.Alleles == nil {
 		buf.WriteByte('.')
 	} else {
-		buf.WriteString(strconv.Itoa(int(s.Alleles[0])))
-		for i := 1; i < len(s.Alleles); i++ {
-			if i < len(s.Phase) {
-				buf.WriteString(PhasedToString(s.Phase[i]))
+		for i := 0; i < len(s.Alleles); i++ {
+			if i > 0 && i < len(s.Phase) {
+				buf.WriteByte(PhasedToByte(s.Phase[i]))
 			}
 			buf.WriteString(strconv.Itoa(int(s.Alleles[i])))
 		}

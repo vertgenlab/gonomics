@@ -63,12 +63,12 @@ func GetAltBases(words []string) [][]dna.Base {
 	return answer
 }
 
-// PhasedToString returns "|" when true and "/" otherwise.
-func PhasedToString(phased bool) string {
+// PhasedToByte returns '|' when true and '/' otherwise.
+func PhasedToByte(phased bool) byte {
 	if phased {
-		return "|"
+		return '|'
 	} else {
-		return "/"
+		return '/'
 	}
 }
 

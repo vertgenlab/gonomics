@@ -47,6 +47,23 @@ func TestSamplesToString(t *testing.T) {
 	}
 }
 
+func TestPhasedToByte(t *testing.T) {
+	tests := []struct {
+		input    bool
+		expected byte
+	}{
+		{true, '|'},
+		{false, '/'},
+	}
+
+	for _, test := range tests {
+		result := PhasedToByte(test.input)
+		if result != test.expected {
+			t.Errorf("Error: PhasedToByte(%v) = %v; want %v", test.input, result, test.expected)
+		}
+	}
+}
+
 // Test for PrintSampleNames function
 func TestPrintSampleNames(t *testing.T) {
 	header := Header{
