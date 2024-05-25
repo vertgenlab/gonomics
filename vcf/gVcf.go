@@ -50,7 +50,7 @@ func PrintSampleNames(header Header) string {
 			return builder.String()
 		}
 	}
-	return builder.String()
+	return ""
 }
 
 // GetAltBases converts a slice of DNA sequenes encoded as strings into a slice
