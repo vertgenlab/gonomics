@@ -35,3 +35,21 @@ func TestWriteVcf(t *testing.T) {
 		t.Errorf("expected %q, got %q", expected, result)
 	}
 }
+
+func TestIsVcfFile(t *testing.T) {
+	tests := []struct {
+		filename string
+		expected bool
+	}{
+		{"test.vcf", true},
+		{"test.vcf.gz", true},
+		{"estAncestorSequence.fa", false},
+	}
+
+	for _, test := range tests {
+		result := IsVcfFile(test.filename)
+		if result != test.expected {
+			t.Errorf("Error: IsVcfFile(%q) = %v; want %v", test.filename, result, test.expected)
+		}
+	}
+}
