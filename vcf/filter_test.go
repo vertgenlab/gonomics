@@ -1,6 +1,8 @@
 package vcf
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestIsHeterozygous(t *testing.T) {
 	tests := []struct {
