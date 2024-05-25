@@ -47,7 +47,7 @@ func PrintSampleNames(header Header) string {
 				builder.WriteString(words[i])
 				builder.WriteByte('\n')
 			}
-			break
+			return builder.String()
 		}
 	}
 	return builder.String()
