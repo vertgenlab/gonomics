@@ -46,3 +46,21 @@ func TestSamplesToString(t *testing.T) {
 		})
 	}
 }
+
+// Test for PrintSampleNames function
+func TestPrintSampleNames(t *testing.T) {
+	header := Header{
+		Text: []string{
+			"##fileformat=VCFv4.3",
+			"##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">",
+			"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSample1\tSample2\tSample3",
+		},
+	}
+
+	expected := "Sample1\nSample2\nSample3\n"
+	result := PrintSampleNames(header)
+
+	if result != expected {
+		t.Errorf("expected %q, got %q", expected, result)
+	}
+}
