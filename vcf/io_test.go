@@ -1,46 +1,37 @@
 package vcf
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
-func TestToString(t *testing.T) {
-	tests := []struct {
-		record Vcf
-		want   string
-	}{
-		{
-			record: Vcf{
-				Chr:    "chr1",
-				Pos:    123456,
-				Id:     "rs123456",
-				Ref:    "A",
-				Alt:    []string{"C", "G"},
-				Qual:   99.9,
-				Filter: "PASS",
-				Info:   "DP=100",
-			},
-			want: "chr1\t123456\trs123456\tA\tC,G\t99.9\tPASS\tDP=100\n",
-		},
-		{
-			record: Vcf{
-				Chr:    "chr2",
-				Pos:    234567,
-				Id:     "rs234567",
-				Ref:    "G",
-				Alt:    []string{"A"},
-				Qual:   50.5,
-				Filter: "q10",
-				Info:   "AF=0.5",
-			},
-			want: "chr2\t234567\trs234567\tG\tA\t50.5\tq10\tAF=0.5\n",
-		},
+func TestWriteVcf(t *testing.T) {
+	// Create a Vcf struct for testing
+	record := Vcf{
+		Chr:     "1",
+		Pos:     1234567,
+		Id:      "rs123456",
+		Ref:     "A",
+		Alt:     []string{"G", "T"},
+		Qual:    99.0,
+		Filter:  "PASS",
+		Info:    "DP=100",
+		Format:  []string{"GT", "AD"},
+		Samples: []Sample{{[]int16{0, 1}, []bool{false, false}, []string{""}}},
 	}
+	expected := "1\t1234567\trs123456\tA\tG,T\t99\tPASS\tDP=100\tGT:AD\t0/1\n"
 
-	for _, tt := range tests {
-		t.Run(tt.record.Id, func(t *testing.T) {
-			got := ToString(tt.record)
-			if got != tt.want {
-				t.Errorf("ToString() = %q, want %q", got, tt.want)
-			}
-		})
+	// Create a buffer to write to
+	var buf bytes.Buffer
+
+	// Write the Vcf record to the buffer
+	WriteVcf(&buf, record)
+
+	// Get the result as a string
+	result := buf.String()
+
+	// Check if the result matches the expected string
+	if result != expected {
+		t.Errorf("expected %q, got %q", expected, result)
 	}
 }

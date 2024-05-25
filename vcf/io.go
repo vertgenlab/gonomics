@@ -2,7 +2,6 @@ package vcf
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"strconv"
@@ -67,15 +66,18 @@ func processVcfLine(line string) Vcf {
 
 	curr.Chr = data[0]
 	curr.Pos, err = strconv.Atoi(data[1])
-	exception.PanicOnErr(err)
-
+	if err != nil {
+		log.Panicf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
+	}
 	curr.Id = data[2]
 	curr.Ref = data[3]
 	curr.Alt = strings.Split(data[4], ",")
 	curr.Qual = 255
 	if data[5] != "." {
 		curr.Qual, err = strconv.ParseFloat(data[5], 64)
-		exception.PanicOnErr(err)
+		if err != nil {
+			log.Panicf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
+		}
 	}
 	curr.Filter = data[6]
 	curr.Info = data[7]
@@ -185,22 +187,11 @@ func NextVcf(reader *fileio.EasyReader) (Vcf, bool) {
 	return processVcfLine(line), false
 }
 
-// FormatToString converts the []string Format struct into a string by concatenating with a colon delimiter.
-func FormatToString(format []string) string {
-	if len(format) == 0 {
-		return ""
-	}
-	var answer = format[0]
-	for i := 1; i < len(format); i++ {
-		answer = answer + ":" + format[i]
-	}
-	return answer
-}
-
 // TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed. geno bool variable determines whether to print notes or genotypes.
 func WriteVcfToFileHandle(file io.Writer, input []Vcf) {
 	writer := bufio.NewWriter(file)
 	defer writer.Flush()
+
 	for i := 0; i < len(input); i++ {
 		WriteVcf(file, input[i])
 	}
@@ -213,7 +204,7 @@ func WriteVcf(writer io.Writer, record Vcf) {
 		buf = bufio.NewWriter(writer)
 		defer buf.Flush() // Flush only if we created a new buffered writer
 	}
-	_, err := buf.WriteString(ToString(record))
+	_, err := buf.WriteString(record.String())
 	exception.PanicOnErr(err)
 }
 
@@ -231,35 +222,4 @@ func IsVcfFile(filename string) bool {
 	} else {
 		return false
 	}
-}
-
-// ToString efficiently converts a Vcf record to a string. Uses pre-allocated buffer and direct writes for performance.
-func ToString(record Vcf) string {
-	var buf strings.Builder
-	buf.Grow(256) // Pre-allocate some space for efficiency.
-
-	buf.WriteString(record.Chr)
-	buf.WriteString("\t")
-	buf.WriteString(fmt.Sprint(record.Pos))
-	buf.WriteString("\t")
-	buf.WriteString(record.Id)
-	buf.WriteString("\t")
-	buf.WriteString(record.Ref)
-	buf.WriteString("\t")
-	buf.WriteString(strings.Join(record.Alt, ","))
-	buf.WriteString("\t")
-	buf.WriteString(fmt.Sprint(record.Qual))
-	buf.WriteString("\t")
-	buf.WriteString(record.Filter)
-	buf.WriteString("\t")
-	buf.WriteString(record.Info)
-
-	if len(record.Format) > 0 {
-		buf.WriteString("\t")
-		buf.WriteString(FormatToString(record.Format))
-		buf.WriteString("\t")
-		buf.WriteString(SamplesToString(record.Samples))
-	}
-	buf.WriteString("\n")
-	return buf.String()
 }

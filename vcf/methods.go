@@ -10,12 +10,55 @@ import (
 
 // String implements the fmt.Stringer interface for easy printing of Vcf with the fmt package.
 func (v Vcf) String() string {
-	return fmt.Sprintf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Id, v.Ref, strings.Join(v.Alt, ","), v.Qual, v.Filter, v.Info, v.Format, SamplesToString(v.Samples))
+	var buf strings.Builder
+	buf.Grow(256) // Pre-allocate some space for efficiency.
+
+	buf.WriteString(v.Chr)
+	buf.WriteString("\t")
+	buf.WriteString(fmt.Sprint(v.Pos))
+	buf.WriteString("\t")
+	buf.WriteString(v.Id)
+	buf.WriteString("\t")
+	buf.WriteString(v.Ref)
+	buf.WriteString("\t")
+	buf.WriteString(strings.Join(v.Alt, ","))
+	buf.WriteString("\t")
+	buf.WriteString(fmt.Sprint(v.Qual))
+	buf.WriteString("\t")
+	buf.WriteString(v.Filter)
+	buf.WriteString("\t")
+	buf.WriteString(v.Info)
+
+	if len(v.Format) > 0 {
+		buf.WriteString("\t")
+		buf.WriteString(strings.Join(v.Format, ":"))
+		buf.WriteString("\t")
+		buf.WriteString(SamplesToString(v.Samples))
+	}
+	buf.WriteString("\n")
+	return buf.String()
 }
 
 // String implements the fmt.Stringer interface for easy printing of Sample with the fmt package.
 func (s Sample) String() string {
-	return sampleToString(s)
+	var buf strings.Builder
+	if s.FormatData == nil {
+		buf.WriteString(".")
+		return buf.String()
+	}
+	if s.Alleles == nil {
+		buf.WriteString(".")
+	} else {
+		buf.WriteString(fmt.Sprint(s.Alleles[0]))
+		for i := 1; i < len(s.Phase); i++ {
+			buf.WriteString(fmt.Sprintf("%s%d", PhasedToString(s.Phase[i]), s.Alleles[i]))
+		}
+	}
+	if len(s.FormatData) > 1 {
+		buf.WriteString(strings.Join(s.FormatData, ":"))
+	}
+
+	return buf.String()
 }
 
 // GetChrom returns the chromosome that the variant is on.
