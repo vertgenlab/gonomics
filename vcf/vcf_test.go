@@ -76,5 +76,5 @@ func BenchmarkWriteGzip(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Write("testdata/tmp.gz", records)
 	}
-	os.Remove("testdata/tmp")
+	os.Remove("testdata/tmp.gz")
 }

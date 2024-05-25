@@ -26,9 +26,14 @@ func TestSamplesToString(t *testing.T) {
 			expected: "0|1GT:DP\t1|1GT:DP",
 		},
 		{
-			name:     "No FormatData",
-			samples:  nil,
-			expected: "",
+			name:     "Null FormatData",
+			samples:  []Sample{{Alleles: []int16{0, 1}, Phase: []bool{false, false}, FormatData: nil}},
+			expected: ".",
+		},
+		{
+			name:     "Null Alleles",
+			samples:  []Sample{{Alleles: nil, Phase: []bool{false, false}, FormatData: nil}},
+			expected: ".",
 		},
 	}
 
