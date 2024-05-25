@@ -19,27 +19,29 @@ func TestPanicOnErr(t *testing.T) {
 	PanicOnErr(err)
 }
 
+func TestFatalOnErr(t *testing.T) {
+	// Test with no error
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer func() { log.SetOutput(os.Stderr) }()
+
+	FatalOnErr(nil)
+	if buf.Len() > 0 {
+		t.Errorf("Error: FatalOnErr logged output when no error was provided")
+	}
+
+}
+
 func TestWarningOnErr(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	defer func() {
 		log.SetOutput(os.Stderr)
 	}()
-
 	var warning string = "Warning: warning error handling...\n"
 
 	WarningOnErr(fmt.Errorf(warning))
-
 	if !strings.Contains(buf.String(), warning) {
-		t.Errorf("WarningOnErr did not log the correct warning message")
-	}
-}
-
-func TestRandAutoSeedExists(t *testing.T) {
-	os.Setenv("GODEBUG", "randautoseed=0,other=value")
-	expected := "randautoseed=0,other=value"
-
-	if os.Getenv("GODEBUG") != expected && os.Getenv("GODEBUG") != "other=value,randautoseed=0" {
-		t.Errorf("setGoDebug did not update randautoseed correctly")
+		t.Errorf("Error: WarningOnErr did not log the correct warning message")
 	}
 }
