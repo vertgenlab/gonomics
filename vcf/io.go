@@ -1,13 +1,15 @@
 package vcf
 
 import (
+	"bufio"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/exception"
 
 	"github.com/vertgenlab/gonomics/fileio"
 )
@@ -65,18 +67,15 @@ func processVcfLine(line string) Vcf {
 
 	curr.Chr = data[0]
 	curr.Pos, err = strconv.Atoi(data[1])
-	if err != nil {
-		log.Panicf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
-	}
+	exception.PanicOnErr(err)
+
 	curr.Id = data[2]
 	curr.Ref = data[3]
 	curr.Alt = strings.Split(data[4], ",")
 	curr.Qual = 255
 	if data[5] != "." {
 		curr.Qual, err = strconv.ParseFloat(data[5], 64)
-		if err != nil {
-			log.Panicf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
-		}
+		exception.PanicOnErr(err)
 	}
 	curr.Filter = data[6]
 	curr.Info = data[7]
@@ -200,26 +199,21 @@ func FormatToString(format []string) string {
 
 // TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed. geno bool variable determines whether to print notes or genotypes.
 func WriteVcfToFileHandle(file io.Writer, input []Vcf) {
-	var err error
+	writer := bufio.NewWriter(file)
+	defer writer.Flush()
 	for i := 0; i < len(input); i++ {
-		//DEBUG:fmt.Printf("Notes: %s\n", input[i].Notes)
-		if len(input[i].Format) == 0 {
-			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info)
-		} else {
-			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, FormatToString(input[i].Format), SamplesToString(input[i].Samples))
-		}
-		exception.PanicOnErr(err)
+		WriteVcf(file, input[i])
 	}
 }
 
 // WriteVcf writes an individual Vcf struct to an io.Writer.
-func WriteVcf(file io.Writer, input Vcf) {
-	var err error
-	if len(input.Format) == 0 {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info)
-	} else {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, FormatToString(input.Format), SamplesToString(input.Samples))
+func WriteVcf(writer io.Writer, record Vcf) {
+	buf, ok := writer.(*bufio.Writer)
+	if !ok {
+		buf = bufio.NewWriter(writer)
+		defer buf.Flush() // Flush only if we created a new buffered writer
 	}
+	_, err := buf.WriteString(ToString(record))
 	exception.PanicOnErr(err)
 }
 
@@ -227,20 +221,7 @@ func WriteVcf(file io.Writer, input Vcf) {
 func Write(filename string, data []Vcf) {
 	file := fileio.EasyCreate(filename)
 	WriteVcfToFileHandle(file, data)
-	err := file.Close()
-	exception.PanicOnErr(err)
-}
-
-// PrintVcf prints every line of a []Vcf.
-func PrintVcf(data []Vcf) {
-	for i := 0; i < len(data); i++ {
-		PrintSingleLine(data[i])
-	}
-}
-
-// PrintSingleLine prints an individual Vcf line.
-func PrintSingleLine(data Vcf) {
-	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, strings.Join(data.Alt, ","), data.Qual, data.Filter, data.Info, data.Format, SamplesToString(data.Samples))
+	exception.PanicOnErr(file.Close())
 }
 
 // IsVcfFile checks suffix of filename to confirm if the file is a vcf formatted file.
@@ -250,4 +231,35 @@ func IsVcfFile(filename string) bool {
 	} else {
 		return false
 	}
+}
+
+// ToString efficiently converts a Vcf record to a string. Uses pre-allocated buffer and direct writes for performance.
+func ToString(record Vcf) string {
+	var buf strings.Builder
+	buf.Grow(256) // Pre-allocate some space for efficiency.
+
+	buf.WriteString(record.Chr)
+	buf.WriteString("\t")
+	buf.WriteString(fmt.Sprint(record.Pos))
+	buf.WriteString("\t")
+	buf.WriteString(record.Id)
+	buf.WriteString("\t")
+	buf.WriteString(record.Ref)
+	buf.WriteString("\t")
+	buf.WriteString(strings.Join(record.Alt, ","))
+	buf.WriteString("\t")
+	buf.WriteString(fmt.Sprint(record.Qual))
+	buf.WriteString("\t")
+	buf.WriteString(record.Filter)
+	buf.WriteString("\t")
+	buf.WriteString(record.Info)
+
+	if len(record.Format) > 0 {
+		buf.WriteString("\t")
+		buf.WriteString(FormatToString(record.Format))
+		buf.WriteString("\t")
+		buf.WriteString(SamplesToString(record.Samples))
+	}
+	buf.WriteString("\n")
+	return buf.String()
 }

@@ -62,9 +62,19 @@ func BenchmarkReadParsed(b *testing.B) {
 }
 
 func BenchmarkWrite(b *testing.B) {
+	b.ReportAllocs()
 	records, _ := Read("testdata/test.vcf")
 	for i := 0; i < b.N; i++ {
 		Write("tmp", records)
+	}
+	os.Remove("tmp")
+}
+
+func BenchmarkWriteGzip(b *testing.B) {
+	b.ReportAllocs()
+	records, _ := Read("testdata/test.vcf")
+	for i := 0; i < b.N; i++ {
+		Write("tmp.gz", records)
 	}
 	os.Remove("tmp")
 }
