@@ -1,8 +1,8 @@
 package vcf
 
 import (
-	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/vertgenlab/gonomics/dna"
@@ -14,28 +14,28 @@ func (v Vcf) String() string {
 	buf.Grow(256) // Pre-allocate some space for efficiency.
 
 	buf.WriteString(v.Chr)
-	buf.WriteString("\t")
-	buf.WriteString(fmt.Sprint(v.Pos))
-	buf.WriteString("\t")
+	buf.WriteByte('\t')
+	buf.WriteString(strconv.Itoa(v.Pos))
+	buf.WriteByte('\t')
 	buf.WriteString(v.Id)
-	buf.WriteString("\t")
+	buf.WriteByte('\t')
 	buf.WriteString(v.Ref)
-	buf.WriteString("\t")
+	buf.WriteByte('\t')
 	buf.WriteString(strings.Join(v.Alt, ","))
-	buf.WriteString("\t")
-	buf.WriteString(fmt.Sprint(v.Qual))
-	buf.WriteString("\t")
+	buf.WriteByte('\t')
+	buf.WriteString(strconv.FormatFloat(v.Qual, 'f', -1, 64))
+	buf.WriteByte('\t')
 	buf.WriteString(v.Filter)
-	buf.WriteString("\t")
+	buf.WriteByte('\t')
 	buf.WriteString(v.Info)
 
 	if len(v.Format) > 0 {
-		buf.WriteString("\t")
+		buf.WriteByte('\t')
 		buf.WriteString(strings.Join(v.Format, ":"))
-		buf.WriteString("\t")
+		buf.WriteByte('\t')
 		buf.WriteString(SamplesToString(v.Samples))
 	}
-	buf.WriteString("\n")
+	buf.WriteByte('\n')
 	return buf.String()
 }
 
@@ -43,15 +43,18 @@ func (v Vcf) String() string {
 func (s Sample) String() string {
 	var buf strings.Builder
 	if s.FormatData == nil {
-		buf.WriteString(".")
+		buf.WriteByte('.')
 		return buf.String()
 	}
 	if s.Alleles == nil {
-		buf.WriteString(".")
+		buf.WriteByte('.')
 	} else {
-		buf.WriteString(fmt.Sprint(s.Alleles[0]))
-		for i := 1; i < len(s.Phase); i++ {
-			buf.WriteString(fmt.Sprintf("%s%d", PhasedToString(s.Phase[i]), s.Alleles[i]))
+		buf.WriteString(strconv.Itoa(int(s.Alleles[0])))
+		for i := 1; i < len(s.Alleles); i++ {
+			if i < len(s.Phase) {
+				buf.WriteString(PhasedToString(s.Phase[i]))
+			}
+			buf.WriteString(strconv.Itoa(int(s.Alleles[i])))
 		}
 	}
 	if len(s.FormatData) > 1 {

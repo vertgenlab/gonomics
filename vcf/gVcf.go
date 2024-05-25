@@ -45,7 +45,7 @@ func PrintSampleNames(header Header) string {
 			words := strings.Split(line, "\t")
 			for i := 9; i < len(words); i++ {
 				builder.WriteString(words[i])
-				builder.WriteString("\n")
+				builder.WriteByte('\n')
 			}
 			break
 		}
@@ -87,7 +87,7 @@ func SamplesToString(samples []Sample) string {
 	var builder strings.Builder
 	for i, sample := range samples {
 		if i > 0 {
-			builder.WriteString("\t")
+			builder.WriteByte('\t')
 		}
 		builder.WriteString(sample.String())
 	}
