@@ -165,16 +165,19 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 
 // splitGenotype splits each elements of the GT field into a slice of elements (e.g. 1/1 becomes []string{"1", "/", "1").
 func splitGenotype(gt string) []string {
-	answer := make([]string, 0, len(gt))
+	var answer []string
+	var builder strings.Builder
+
 	for i := 0; i < len(gt); i++ {
 		if gt[i] == '/' || gt[i] == '|' {
-			answer = append(answer, gt[:i])
+			answer = append(answer, builder.String())
 			answer = append(answer, string(gt[i]))
-			gt = gt[i+1:]
-			i = 0
+			builder.Reset()
+		} else {
+			builder.WriteByte(gt[i])
 		}
 	}
-	answer = append(answer, gt)
+	answer = append(answer, builder.String())
 	return answer
 }
 
