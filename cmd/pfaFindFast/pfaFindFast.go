@@ -15,16 +15,18 @@ import (
 )
 
 type Settings struct {
-	InFile          string
-	OutFile         string
-	FirstQueryName  string
-	SecondQueryName string
-	WindowSize      int
-	RefChromName    string
-	RemoveN         bool
-	LongOutput      bool
-	DivergenceRate  float64
-	OutputAlnPos    bool
+	InFile                  string
+	OutFile                 string
+	FirstQueryName          string
+	SecondQueryName         string
+	WindowSize              int
+	RefChromName            string
+	RemoveN                 bool
+	LongOutput              bool
+	DivergenceRate          float64
+	OutputAlnPos            bool
+	BaseDistToDivThreshold  float64
+	BaseDotToSubstThreshold float64
 }
 
 func pfaFindFast(s Settings) {
@@ -89,6 +91,8 @@ func main() {
 	var longOutput *bool = flag.Bool("longOutput", false, "Print percent diverged and raw -Log10PValue in output. Requires the 'divergenceRate' argument.")
 	var divergenceRate *float64 = flag.Float64("divergenceRate", math.MaxFloat64, "Set the null divergence rate for p value calculations with 'longOutput'.")
 	var outputAlnPos *bool = flag.Bool("outputAlnPos", false, "Print the alignment position of the window's start in output as the last column.")
+	var baseDotToSubstThreshold *float64 = flag.Float64("baseDotToSubstThreshold", 0.8, "Specify the threshold above which to call the 1 - dot product of 2 bases a substitution. Defaults to 0.8.")
+	var baseDistToDivThreshold *float64 = flag.Float64("baseDistToDivThreshold", 0.7, "Specify the threshold above which to call the distance between 2 bases a divergence. Defaults to 0.7.")
 	// for go proflier cpu
 	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
@@ -125,16 +129,18 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		InFile:          inFile,
-		OutFile:         outFile,
-		FirstQueryName:  *firstQueryName,
-		SecondQueryName: *secondQueryName,
-		WindowSize:      *windowSize,
-		RefChromName:    *refChromName,
-		RemoveN:         *removeN,
-		LongOutput:      *longOutput,
-		DivergenceRate:  *divergenceRate,
-		OutputAlnPos:    *outputAlnPos,
+		InFile:                  inFile,
+		OutFile:                 outFile,
+		FirstQueryName:          *firstQueryName,
+		SecondQueryName:         *secondQueryName,
+		WindowSize:              *windowSize,
+		RefChromName:            *refChromName,
+		RemoveN:                 *removeN,
+		LongOutput:              *longOutput,
+		DivergenceRate:          *divergenceRate,
+		OutputAlnPos:            *outputAlnPos,
+		BaseDistToDivThreshold:  *baseDistToDivThreshold,
+		BaseDotToSubstThreshold: *baseDotToSubstThreshold,
 	}
 
 	pfaFindFast(s)

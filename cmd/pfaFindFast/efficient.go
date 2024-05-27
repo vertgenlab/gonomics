@@ -178,15 +178,13 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 				prevLastRefIdxOfWindowPlusOne = lastRefIdxOfWindowPlusOne
 				prevLastAlnIdxOfWindowPlusOne = lastAlnIdxOfWindow + 1
 
-				// TODO: make Threshold adjustable; output diff
+				// TODO: output diff
 				// now that window edges are found, calculate divergence score (distance or dot product) for each position, the average of the window, and conversion to substitution
 				// window edges in AlnPos [closed, open) for bed: alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow+1
 				// window edges in RefPos [closed, open) for bed: refIdxWindowStart, lastRefIdxOfWindowPlusOne
 				// window edges in AlnPos [closed, closed] for distance scores: alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow
-				baseDistToDivThreshold := 0.7
-				baseDotToSubstThreshold := 0.8
-				windowDotSubst = windowDotToSubst(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, baseDotToSubstThreshold)
-				windowDistDiv = windowDistToDiv(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, baseDistToDivThreshold)
+				windowDotSubst = windowDotToSubst(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, s.BaseDotToSubstThreshold)
+				windowDistDiv = windowDistToDiv(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, s.BaseDistToDivThreshold)
 				windowDot, windowDotMean = dotWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
 				windowDist, windowDistMean = distWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
 
