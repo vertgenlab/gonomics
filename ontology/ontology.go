@@ -50,7 +50,7 @@ func OboToOntology(records map[string]*obo.Obo) map[string]*Ontology {
 	return answer
 }
 
-// GeneAssignmentsFromGaf translates a slice of gaf structs into a map where the string value is a GO term id and the key is an ontology struct
+// GeneAssignmentsFromGaf translates a slice of gaf structs into a map where the string key is a GO term id and the value is an ontology struct
 func GeneAssignmentsFromGaf(records []gaf.Gaf, terms map[string]*Ontology) {
 	records = gaf.RemoveDuplicates(records)
 	for i := range records {
