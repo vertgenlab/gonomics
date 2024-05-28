@@ -249,14 +249,7 @@ func ontologiesToStrings(onts []*Ontology) []string {
 /*
 1. Filter obsolete Obos and filter "Not" Gaf entries.
 2. Potentially assigning genes to parent nodes in ontology tree.
-8. Return p value for each Ontology
-
-CACHING
 
 Note: gene slice must have unique entries.
-
-Other TODO from Craig:
-
-minigenome with small toy examples of overlaps we can reason
 
 */
