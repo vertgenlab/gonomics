@@ -218,8 +218,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	}
 }
 
-//TODO: somehow enrichments aren't coming through, I think they should be, since I am using all BMP genes, they should all to some degree have agreemnt for what they are ontologically
-
 // write3dOntologies take a 3D filled space bed, a map of gene names to their ontologies and an output file name and
 // write out a bed that contains all the filled space information as well as the ontologies that relate to the gene assignments in teh Annotation field of bed
 func write3dOntologies(filename string, geneToOnt map[string][]*Ontology, filledSpace []bed.Bed) {
