@@ -204,7 +204,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\t%e\t%e\t%d\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, windowDotSubst+totalGaps, "+", percentDiverged, rawPValue, windowDotSubst, windowDotMean, windowDot, windowDistDiv, windowDistMean, windowDist)
 						exception.PanicOnErr(err)
 					} else if !s.LongOutput && s.OutputAlnPos {
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\t%e\t%e\t%d\t%e\t%e\t%d\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, windowDotSubst+totalGaps, alnIdxBeforeWindow+1, windowDotSubst, windowDotMean, windowDot, windowDistDiv, windowDistMean, windowDist)
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\t%d\t%e\t%e\t%d\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, windowDotSubst+totalGaps, alnIdxBeforeWindow+1, windowDotSubst, windowDotMean, windowDot, windowDistDiv, windowDistMean, windowDist)
 						exception.PanicOnErr(err)
 					} else if s.LongOutput && s.OutputAlnPos {
 						percentDiverged = 100 * (float64(windowDotSubst+totalGaps) / float64(s.WindowSize))
