@@ -1,5 +1,7 @@
 // Package gaf provides functions for reading, writing, and manipulating GO Annotation File (GAF) format files.
 // This package uses the GAF 2.2 file format as specified at the following URL: http://geneontology.org/docs/go-annotation-file-gaf-format-2.2/
+// Files in this format can be downloaded after fileting for desired subsets (species, gene, GO term, etc.) here: https://www.ebi.ac.uk/QuickGO/annotations
+// GAF files that are species-specific and are listed (human, pig, cow, dog, etc.) can be downloaded on this site: https://current.geneontology.org/products/pages/downloads.html
 package gaf
 
 import (
