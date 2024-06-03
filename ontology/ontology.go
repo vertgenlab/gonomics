@@ -188,6 +188,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		ontologiesForCurrGene = geneOntologies[currOverlapGene]
 		for currOntologyIndex = range ontologiesForCurrGene {
 			currOntologyName = ontologiesForCurrGene[currOntologyIndex].Id
+			log.Print("adding to kCache")
 			kCache[currOntologyName] += 1
 		}
 	}
@@ -216,6 +217,19 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		err = enrichOut.Close()
 		exception.PanicOnErr(err)
 	}
+
+	inputEnrichOut := fileio.EasyCreate(name + ".inputEnrichments.txt")
+	_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\n")
+	var answer float64
+	log.Print(len(kCache))
+	for k := range kCache {
+		answer = float64(kCache[k] / n)
+		_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\n", k, ontologies[k].Name, answer)
+		exception.PanicOnErr(err)
+	}
+	err = inputEnrichOut.Close()
+	exception.PanicOnErr(err)
+
 }
 
 // write3dOntologies take a 3D filled space bed, a map of gene names to their ontologies and an output file name and
