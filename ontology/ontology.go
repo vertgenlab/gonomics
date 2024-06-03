@@ -188,7 +188,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		ontologiesForCurrGene = geneOntologies[currOverlapGene]
 		for currOntologyIndex = range ontologiesForCurrGene {
 			currOntologyName = ontologiesForCurrGene[currOntologyIndex].Id
-			log.Print("adding to kCache")
 			kCache[currOntologyName] += 1
 		}
 	}
@@ -222,7 +221,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\n")
 	var queryProportion float64
 	var answer float64
-	log.Print(len(kCache))
 	for k := range kCache {
 		queryProportion = float64(kCache[k] / n)
 		answer = queryProportion / proportionsForTerms[k]
