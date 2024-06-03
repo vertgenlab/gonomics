@@ -1,6 +1,7 @@
 package numbers
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
@@ -128,10 +129,25 @@ func NormalLeftIntegral(x float64, mu float64, sigma float64) float64 {
 	return DefiniteIntegral(f, mu-200*sigma, x)
 }
 
-// NormalLeftIntegral returns the area under the curve of an input normal probability distribution defined by mean (mu) and standard deviation (sigma) to the right of an input point x.
+// NormalRightIntegral returns the area under the curve of an input normal probability distribution defined by mean (mu) and standard deviation (sigma) to the right of an input point x.
 func NormalRightIntegral(x float64, mu float64, sigma float64) float64 {
 	f := NormalClosure(mu, sigma)
 	return DefiniteIntegral(f, mu+200*sigma, x)
+}
+
+func LogNormalRightTailCDF(x, mu, sigma float64) (float64, error) {
+	z := (x - mu) / sigma
+	logErfc := math.Log(math.Erfc(z / math.Sqrt2))
+	logHalf := math.Log(0.5)
+	result := logHalf + logErfc
+
+	if math.IsInf(result, 0) {
+		return result, fmt.Errorf("overflow detected")
+	}
+	if result == math.Inf(-1) {
+		return result, fmt.Errorf("underflow detected")
+	}
+	return result, nil
 }
 
 // NormalAdaptiveIntegral returns the integral under a normal probability distribution with mean mu and standard deviation sigma from a specified left and right bound.
@@ -268,7 +284,11 @@ func BinomialRightSummation(n int, k int, p float64, logOutput bool) float64 {
 			return 1
 		}
 	}
-	return evaluateRightBinomialSum(n, k, p, logOutput)
+	if float64(n)*p > 10 && float64(n)*(1-p) > 10 {
+		return evaluateRightBinomialSumApproximate(n, k, p, logOutput)
+	} else {
+		return evaluateRightBinomialSum(n, k, p, logOutput)
+	}
 }
 
 // BinomialSum calculates the sum of probabilities in a binomial distribution with n experiments and success probability p between two input k values. Inclusive on both ends.
@@ -316,5 +336,27 @@ func evaluateLeftBinomialSum(n int, k int, p float64, logOutput bool) float64 {
 			answer += curr
 		}
 	}
+	return answer
+}
+
+// evaluateRightBinomialSumApproximate is a helper function that calculates the sum of probabilities under a binomial distribution with parameters n and p to the right of an input k value, inclusive.
+func evaluateRightBinomialSumApproximate(n int, k int, p float64, logOutput bool) float64 {
+	var curr float64
+	var x, mu, sig float64
+	mu = float64(n) * p
+	x = float64(k) - 0.5
+	sig = math.Sqrt(float64(n) * p * (1 - p))
+
+	var answer float64
+	if logOutput {
+		answer, _ = LogNormalRightTailCDF(x, mu, sig)
+	} else {
+		answer = NormalDist(x, mu, sig)
+		for i := int(x) + 1; i <= n; i++ {
+			curr = NormalDist(float64(i), mu, sig)
+			answer += curr
+		}
+	}
+
 	return answer
 }
