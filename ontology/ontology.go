@@ -220,10 +220,12 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 
 	inputEnrichOut := fileio.EasyCreate(name + ".inputEnrichments.txt")
 	_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\n")
+	var queryProportion float64
 	var answer float64
 	log.Print(len(kCache))
 	for k := range kCache {
-		answer = float64(kCache[k] / n)
+		queryProportion = float64(kCache[k] / n)
+		answer = queryProportion / proportionsForTerms[k]
 		_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\n", k, ontologies[k].Name, answer)
 		exception.PanicOnErr(err)
 	}
