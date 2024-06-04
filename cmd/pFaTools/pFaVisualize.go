@@ -6,9 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/browser"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"github.com/vertgenlab/gonomics/browser"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"os"
 	"strings"
@@ -16,14 +13,6 @@ import (
 
 // VisualizeSettings defines the usage settings for the pFa Visualize subcommand.
 type VisualizeSettings struct {
-	InFile           string
-	OutDir           string
-	Start            int
-	End              int
-	SigFigs          int
-	DecimalPlaces    int
-	LineLength       int
-	Chrom            string
 	InFile           string
 	OutDir           string
 	Start            int
@@ -97,14 +86,6 @@ func parseVisualizeArgs() {
 		DecimalPlaces:    *decimalPlaces,
 		LineLength:       *lineLength,
 		Chrom:            *chrom,
-		InFile:           inFile,
-		OutDir:           outDir,
-		Start:            start,
-		End:              end,
-		SigFigs:          *sigFigs,
-		DecimalPlaces:    *decimalPlaces,
-		LineLength:       *lineLength,
-		Chrom:            *chrom,
 		StartOfAlignment: startOfAlignment,
 		EndOfAlignment:   endOfAlignment,
 		TsvOut:           *tsvOut,
@@ -116,7 +97,7 @@ func parseVisualizeArgs() {
 // pFaVisualize parses an input pFASTA file and Visualizes the file according to user-defined settings.
 func pFaVisualize(s VisualizeSettings) {
 	if s.TsvOut {
-		browser.PFaVisualizerR(s.InFile, s.OutDir, s.Start, s.End, s.StartOfAlignment, s.EndOfAlignment, s.SigFigs, s.DecimalPlaces, s.LineLength, s.Chrom)
+		browser.PFaVisualizerTsv(s.InFile, s.OutDir, s.Start, s.End, s.StartOfAlignment, s.EndOfAlignment, s.SigFigs, s.DecimalPlaces, s.LineLength, s.Chrom)
 	} else {
 		browser.PFaVisualizer(s.InFile, s.OutDir, s.Start, s.End, s.StartOfAlignment, s.EndOfAlignment, s.SigFigs, s.DecimalPlaces, s.LineLength, s.Chrom)
 	}

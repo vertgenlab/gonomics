@@ -167,11 +167,11 @@ func calculateLongestNamePFa(f []pFasta.PFasta) int {
 	return ans
 }
 
-// PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
+// PFaVisualizerTsv produces command line visualizations of pFasta format alignments from a specified start and end position.
 // Can be written to a file or to standard out. Includes lineLength formatting option as int.
 // If 0 sig figs or 0 decimal places, returns full probability
 // There will be slight floating point errors in the last (or last two) places
-func PFaVisualizerR(infile string, outfile string, start int, end int, startOfAlignment bool, endOfAlignment bool, sigFigs int, decimalPlaces int, lineLength int, seqName string) {
+func PFaVisualizerTsv(infile string, outfile string, start int, end int, startOfAlignment bool, endOfAlignment bool, sigFigs int, decimalPlaces int, lineLength int, seqName string) {
 	if !startOfAlignment {
 		if !endOfAlignment && !(start < end) {
 			log.Fatalf("Error: Invalid arguments, start must be lower than end\n")
@@ -207,7 +207,7 @@ func PFaVisualizerR(infile string, outfile string, start int, end int, startOfAl
 
 			_, err = fmt.Fprintf(out, "Position\tBase\tProbability\n")
 			exception.PanicOnErr(err)
-			printAllSetsR(out, err, records[0], start, end, lineLength, sigFigs, decimalPlaces)
+			printAllSetsTsv(out, err, records[0], start, end, lineLength, sigFigs, decimalPlaces)
 		}
 	} else {
 		// user can specify chrom if multiple entries
@@ -221,7 +221,7 @@ func PFaVisualizerR(infile string, outfile string, start int, end int, startOfAl
 				}
 				_, err = fmt.Fprintf(out, "Position\tBase\tProbability\n")
 				exception.PanicOnErr(err)
-				printAllSetsR(out, err, desiredSeq, start, end, lineLength, sigFigs, decimalPlaces)
+				printAllSetsTsv(out, err, desiredSeq, start, end, lineLength, sigFigs, decimalPlaces)
 
 				break
 			}
@@ -234,8 +234,8 @@ func PFaVisualizerR(infile string, outfile string, start int, end int, startOfAl
 	exception.PanicOnErr(err)
 }
 
-// printAllSetsR prints probability distribution of bases from pos start to pos end in record
-func printAllSetsR(out *fileio.EasyWriter, err error, record pFasta.PFasta, start int, end int, lineLength int, sigFigs int, decimalPlaces int) {
+// printAllSetsTsv prints probability distribution of bases from pos start to pos end in record
+func printAllSetsTsv(out *fileio.EasyWriter, err error, record pFasta.PFasta, start int, end int, lineLength int, sigFigs int, decimalPlaces int) {
 	if end == -1 {
 		end = len(record.Seq)
 	}
