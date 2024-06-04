@@ -222,7 +222,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	var queryProportion float64
 	var answer float64
 	for k := range kCache {
-		queryProportion = float64(kCache[k] / n)
+		queryProportion = float64(kCache[k]) / float64(n)
 		answer = queryProportion / proportionsForTerms[k]
 		_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\n", k, ontologies[k].Name, answer)
 		exception.PanicOnErr(err)
