@@ -140,6 +140,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	var ontologiesForCurrGene []*Ontology
 
 	geneString := strings.Split(geneFile, ".")
+	log.Print("reading genes")
 	if geneString[len(geneString)-1] != "bed" {
 		genes := gtf.Read(geneFile)
 		tssBed = gtf.GenesToTssBed(genes, chromSizes, true)
@@ -147,8 +148,11 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		tssBed = bed.Read(geneFile)
 	}
 	bed.SortByCoord(tssBed)
+	log.Print("sorted")
 	filledSpace = Fill3dSpace(contacts, tssBed, chromSizes)
+	log.Print("filled space")
 	ontologies := OboToOntology(oboMap)
+	log.Print("Made ontology map")
 	GeneAssignmentsFromGaf(annotations, ontologies)
 	geneOntologies := GenesToOntologies(ontologies)
 
@@ -158,6 +162,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		write3dOntologies(out3dOntology, geneOntologies, filledSpace)
 	}
 
+	log.Print("calculating gene proportions")
 	var proportionsForGenes map[string]float64
 	proportionsForGenes = geneProportionOfGenome(filledSpace)
 	if geneEnrichments {
@@ -179,6 +184,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 
 	bed.AllToMidpoint(queries)
 
+	log.Print("ranging queries")
 	for i := range queries {
 		queryOverlaps = interval.Query(tree, queries[i], "any")
 		if len(queryOverlaps) != 1 {
@@ -191,6 +197,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 			kCache[currOntologyName] += 1
 		}
 	}
+	log.Print("calculating term Proportions")
 
 	var proportionsForTerms map[string]float64
 	var enrichment float64
@@ -216,6 +223,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		err = enrichOut.Close()
 		exception.PanicOnErr(err)
 	}
+	log.Print("calculating enrichments")
 
 	inputEnrichOut := fileio.EasyCreate(name + ".inputEnrichments.txt")
 	_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\n")
