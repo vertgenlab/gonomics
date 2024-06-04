@@ -208,13 +208,13 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		enrichOut := fileio.EasyCreate(name + ".termEnrichment.txt")
 		_, err = fmt.Fprintf(enrichOut, "Term\tName\tEnrichment\n")
 		log.Print("starting ranging")
+		log.Print(len(proportionsForTerms))
 		for i := range proportionsForTerms {
 			if proportionsForTerms[i] > 0 {
 				_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, proportionsForTerms[i])
 				exception.PanicOnErr(err)
 				enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], true)
 				_, err = fmt.Fprintf(enrichOut, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
-				exception.PanicOnErr(err)
 			} else {
 				continue
 			}

@@ -341,7 +341,6 @@ func evaluateLeftBinomialSum(n int, k int, p float64, logOutput bool) float64 {
 
 // evaluateRightBinomialSumApproximate is a helper function that calculates the sum of probabilities under a binomial distribution with parameters n and p to the right of an input k value, inclusive.
 func evaluateRightBinomialSumApproximate(n int, k int, p float64, logOutput bool) float64 {
-	log.Print("here")
 	var curr float64
 	var x, mu, sig float64
 	mu = float64(n) * p
