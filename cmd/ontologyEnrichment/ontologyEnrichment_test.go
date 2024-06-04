@@ -51,6 +51,7 @@ func TestOntologyEnrichment(t *testing.T) {
 			exception.PanicOnErr(err)
 			err = os.Remove("testdata/ontologyTest.termProportions.txt")
 			exception.PanicOnErr(err)
+			err = os.Remove("testdata/ontologyTest.inputEnrichments.txt")
 		} else {
 			log.Fatal("output for terms and expected didn't match")
 		}
