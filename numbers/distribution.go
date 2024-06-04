@@ -276,7 +276,7 @@ func BinomialLeftSummation(n int, k int, p float64, logOutput bool) float64 {
 }
 
 // BinomialRightSummation calculates the sum of binomial probabilities to the right of k successes for a binomial distribution with n experiments and a success probability of p, inclusive.
-func BinomialRightSummation(n int, k int, p float64, logOutput bool) float64 {
+func BinomialRightSummation(n int, k int, p float64, logOutput bool, exact bool) float64 {
 	if k == 0 {
 		if logOutput {
 			return 0
@@ -284,7 +284,7 @@ func BinomialRightSummation(n int, k int, p float64, logOutput bool) float64 {
 			return 1
 		}
 	}
-	if float64(n)*p > 10 && float64(n)*(1-p) > 10 {
+	if float64(n)*p > 5 && float64(n)*(1-p) > 5 && !exact {
 		return evaluateRightBinomialSumApproximate(n, k, p, logOutput)
 	} else {
 		log.Print("ended up here instead")

@@ -215,7 +215,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 			if proportionsForTerms[i] > 0 {
 				_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, proportionsForTerms[i])
 				exception.PanicOnErr(err)
-				enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], true)
+				enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], true, false)
 				_, err = fmt.Fprintf(enrichOut, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
 			} else {
 				continue
