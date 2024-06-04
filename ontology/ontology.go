@@ -221,7 +221,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 				continue
 			}
 			if count%1000 == 0 {
-				log.Print("100")
+				log.Print("+1000")
 			}
 		}
 		err = out.Close()
@@ -229,20 +229,20 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		err = enrichOut.Close()
 		exception.PanicOnErr(err)
 	}
-	//log.Print("calculating enrichments")
-	//
-	//inputEnrichOut := fileio.EasyCreate(name + ".inputEnrichments.txt")
-	//_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\n")
-	//var queryProportion float64
-	//var answer float64
-	//for k := range kCache {
-	//	queryProportion = float64(kCache[k]) / float64(n)
-	//	answer = queryProportion / proportionsForTerms[k]
-	//	_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\n", k, ontologies[k].Name, answer)
-	//	exception.PanicOnErr(err)
-	//}
-	//err = inputEnrichOut.Close()
-	//exception.PanicOnErr(err)
+	log.Print("calculating enrichments")
+
+	inputEnrichOut := fileio.EasyCreate(name + ".inputEnrichments.txt")
+	_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\n")
+	var queryProportion float64
+	var answer float64
+	for k := range kCache {
+		queryProportion = float64(kCache[k]) / float64(n)
+		answer = queryProportion / proportionsForTerms[k]
+		_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\n", k, ontologies[k].Name, answer)
+		exception.PanicOnErr(err)
+	}
+	err = inputEnrichOut.Close()
+	exception.PanicOnErr(err)
 
 }
 
