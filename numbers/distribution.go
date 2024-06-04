@@ -287,6 +287,7 @@ func BinomialRightSummation(n int, k int, p float64, logOutput bool, exact bool)
 	if float64(n)*p > 5 && float64(n)*(1-p) > 5 && !exact {
 		return evaluateRightBinomialSumApproximate(n, k, p, logOutput)
 	} else {
+		log.Print("ended up here")
 		return evaluateRightBinomialSum(n, k, p, logOutput)
 	}
 }
