@@ -1,6 +1,6 @@
 module github.com/vertgenlab/gonomics
 
-go 1.22.2
+go 1.22
 
 require (
 	github.com/klauspost/pgzip v1.2.6
