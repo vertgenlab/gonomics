@@ -127,19 +127,18 @@ func termProportionOfGenome(ontologies map[string]*Ontology, geneProportions map
 // bedpe form, an annotation file in gaf form and a map that takes GO term ID's and relates them to other GO term features
 // in obo format, and finally it takes a string which will write out all regions of the genome with their assigned
 // genes in the name column and their assigned ontologies in the annotation field.
-func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, geneFile string, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo, out3dOntology string, geneEnrichments bool, termEnrichments bool) {
+func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, geneFile string, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo, out3dOntology string, geneEnrichments bool, enrichments bool) {
 	var err error
 	var totalBases int
 	var filledSpace, tssBed []bed.Bed
 	var filledSpaceIntervals []interval.Interval
 	var queryOverlaps []interval.Interval
 	var kCache = make(map[string]int) //mapping Go Term Names to number of query elements that overlap. This is 'k' in the binomial test.
-	//var n = len(queries)              // this stores the number of query elements, which is the number of trials in the binomial test.
 	var currOverlapGene string
 	var currOntologyIndex, queryBases int
 	var currOntologyName string
 	var proportionsForTerms map[string]float64
-	var currP, mu, muTotal, sigTotal float64
+	var currP, mu float64
 	overlapProb := make([]float64, 1)
 	var pval []float64
 	ontologiesIndex := make(map[int]string)
@@ -147,7 +146,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	var ontologiesForCurrGene []*Ontology
 
 	geneString := strings.Split(geneFile, ".")
-	log.Print("reading genes")
 	if geneString[len(geneString)-1] != "bed" {
 		genes := gtf.Read(geneFile)
 		tssBed = gtf.GenesToTssBed(genes, chromSizes, true)
@@ -155,7 +153,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		tssBed = bed.Read(geneFile)
 	}
 	bed.SortByCoord(tssBed)
-	log.Print("sorted")
 	filledSpace = Fill3dSpace(contacts, tssBed, chromSizes)
 	for f := range filledSpace {
 		totalBases += filledSpace[f].ChromEnd - filledSpace[f].ChromStart
@@ -163,19 +160,17 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	for q := range queries {
 		queryBases += queries[q].ChromEnd - queries[q].ChromStart
 	}
-	log.Print("filled space")
 	ontologies := OboToOntology(oboMap)
-	log.Print("Made ontology map")
 	GeneAssignmentsFromGaf(annotations, ontologies)
 	geneOntologies := GenesToOntologies(ontologies)
 
-	//TODO: filtering out genes without ontology annotations? as an option?
+	//TODO: filtering out genes without ontology annotations? as an option? Currently these are ignored since
+	//TODO (cont'd): we use the ontologies for all calculations, they go in the map and stay blank,, but for efficiency's sake, we may want to filter them
 
 	if out3dOntology != "" {
 		write3dOntologies(out3dOntology, geneOntologies, filledSpace)
 	}
 
-	log.Print("calculating gene proportions")
 	var proportionsForGenes map[string]float64
 	proportionsForGenes = geneProportionOfGenome(filledSpace)
 	if geneEnrichments {
@@ -197,7 +192,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 
 	bed.AllToMidpoint(queries)
 
-	log.Print("ranging queries")
 	for i := range queries {
 		queryOverlaps = interval.Query(tree, queries[i], "any")
 		if len(queryOverlaps) != 1 {
@@ -211,47 +205,36 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		}
 	}
 
-	log.Print("calculating term Proportions")
-
-	if termEnrichments {
+	if enrichments {
 		proportionsForTerms = termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
 		out := fileio.EasyCreate(name + ".termProportions.txt")
 		_, err = fmt.Fprintf(out, "Term\tName\tProportion\n")
-		enrichOut := fileio.EasyCreate(name + ".termEnrichment.txt")
-		_, err = fmt.Fprintf(enrichOut, "Term\tName\tEnrichment\n")
 		for i := range proportionsForTerms {
 			if proportionsForTerms[i] > 0 {
 				_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, proportionsForTerms[i])
 				exception.PanicOnErr(err)
+				//calculations to determine the enrichment and p-value for each GO term in the input dataset
 				ontologiesIndex[len(overlapProb)-1] = i
 				overlapProb = append(overlapProb, proportionsForTerms[i]*(float64(queryBases)/float64(totalBases)))
 				mu = overlapProb[len(overlapProb)-1]
-				muTotal += mu
-				sigTotal += math.Sqrt(mu * (1 - mu))
-				log.Print(mu)
-				log.Print(math.Sqrt(mu * (1 - mu)))
 				currP, err = numbers.LogNormalRightTailCDF(float64(kCache[i]), mu, math.Sqrt(mu*(1-mu)))
 				exception.PanicOnErr(err)
-				log.Print(currP)
 				pval = append(pval, currP)
 			}
 		}
 
 		err = out.Close()
 		exception.PanicOnErr(err)
-		err = enrichOut.Close()
-		exception.PanicOnErr(err)
-	}
-	log.Print("calculating overlapProb")
 
-	inputEnrichOut := fileio.EasyCreate(name + ".inputEnrichments.txt")
-	_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\tP-Value\n")
-	for o := range ontologiesIndex {
-		_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\t%e\n", ontologiesIndex[o], ontologies[ontologiesIndex[o]].Name, overlapProb[o], pval[o])
+		inputEnrichOut := fileio.EasyCreate(name + ".inputEnrichments.txt")
+		_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\tP-Value\n")
+		for o := range ontologiesIndex {
+			_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\t%e\n", ontologiesIndex[o], ontologies[ontologiesIndex[o]].Name, overlapProb[o], pval[o])
+			exception.PanicOnErr(err)
+		}
+		err = inputEnrichOut.Close()
 		exception.PanicOnErr(err)
 	}
-	err = inputEnrichOut.Close()
-	exception.PanicOnErr(err)
 }
 
 // write3dOntologies take a 3D filled space bed, a map of gene names to their ontologies and an output file name and
