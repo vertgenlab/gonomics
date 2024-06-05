@@ -142,7 +142,7 @@ func LogNormalRightTailCDF(x, mu, sigma float64) (float64, error) {
 	result := logHalf + logErfc
 
 	if math.IsInf(result, 0) {
-		return result, fmt.Errorf("overflow detected")
+		return result, fmt.Errorf("overflow detected %e", result)
 	}
 	if result == math.Inf(-1) {
 		return result, fmt.Errorf("underflow detected")
