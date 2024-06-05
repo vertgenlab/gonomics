@@ -293,7 +293,6 @@ var SampleTests = []struct {
 func TestExtract(t *testing.T) {
 	for _, testCase := range ExtractTests {
 		res := Extract(testCase.Input, testCase.Start, testCase.End, testCase.OutputName)
-		fmt.Print(res)
 		if !IsEqual(res, testCase.Expected, testCase.Precision) {
 			t.Errorf("Error: in pFasta. Extract valid input test was not as expected.")
 		}
@@ -303,7 +302,6 @@ func TestExtract(t *testing.T) {
 func TestExtractBed(t *testing.T) {
 	for _, testCase := range ExtractBedTests {
 		res := ExtractBed(testCase.Input, testCase.Region, testCase.OutputName)
-		fmt.Print(res)
 		if !IsEqual(res, testCase.Expected, testCase.Precision) {
 			t.Errorf("Error: in pFasta. ExtractBed valid input test not as expected.\n")
 		}

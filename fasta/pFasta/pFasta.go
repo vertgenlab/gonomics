@@ -1,6 +1,7 @@
 package pFasta
 
 import (
+	"io"
 	"bufio"
 	"encoding/binary"
 	"fmt"
@@ -37,6 +38,7 @@ func Write(outFile string, records []PFasta) {
 
 	var currSeqIndex, currPos int
 	for currSeqIndex = range records {
+		fmt.Printf("%d\t%d\n", currSeqIndex, len(records[currSeqIndex].Seq))
 		for currPos = range records[currSeqIndex].Seq {
 			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].A)
 			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].C)
@@ -113,16 +115,16 @@ func Read(inFile string) []PFasta {
 
 	for currSeq = range records {
 		for currPos = range records[currSeq].Seq {
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(reader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].A = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(reader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].C = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(reader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].G = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(reader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].T = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
 		}

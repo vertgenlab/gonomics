@@ -2,14 +2,33 @@ package pFasta
 
 import (
 	"github.com/vertgenlab/gonomics/dna/pDna"
+	"math/rand"
 	"testing"
 )
 
+func randomSeq(length int) PFasta {
+	var one, two, three, four, total float32
+	var answer PFasta = PFasta{}
+	answer.Name = "randSeq"
+	answer.Seq = make([]pDna.Float32Base, length)
+	for i := 0; i < length; i++ {
+		one = rand.Float32()
+		two = rand.Float32()
+		three = rand.Float32()
+		four = rand.Float32()
+		total = one + two + three + four
+		answer.Seq[i].A = one / total
+		answer.Seq[i].C = two / total
+		answer.Seq[i].G = three / total
+		answer.Seq[i].T = four / total
+	}
+	return answer
+}
+
 var WriteTests = []struct {
-	OutFile      string
-	Records      []PFasta
-	Precision    float32
-	ExpectedFile string
+	OutFile   string
+	Records   []PFasta
+	Precision float32
 }{
 	{OutFile: "testdata/out.test.pFa",
 		Records: []PFasta{
@@ -52,9 +71,23 @@ var WriteTests = []struct {
 				},
 			},
 		},
-		Precision:    1e-3, // float16 for writing is quite inaccurate, this fails at 1e-4
-		ExpectedFile: "testdata/expected.test.pFa",
+		Precision: 1e-3, // float16 for writing is quite inaccurate, this fails at 1e-4
 	},
+	{OutFile: "testdata/out.test.pFa",
+		Records:   []PFasta{randomSeq(10000000)},
+		Precision: 3e-1,
+	},
+}
+
+var WriteTestsTwo = []struct {
+        OutFile   string
+        Records   []PFasta
+        Precision float32
+}{
+	{OutFile: "testdata/out.testTwo.pFa",
+                Records:   []PFasta{randomSeq(10000000)},
+                Precision: 3e-1,
+        },
 }
 
 func TestWriteAndRead(t *testing.T) {
@@ -66,4 +99,15 @@ func TestWriteAndRead(t *testing.T) {
 			t.Errorf("Error: in pFasta. Write and read test was not as expected.\n")
 		}
 	}
+}
+
+func TestWriteAndReadTwo(t *testing.T) {
+        var records []PFasta
+        for _, v := range WriteTestsTwo {
+                WriteTwo(v.OutFile, v.Records)
+                records = ReadTwo(v.OutFile)
+                if !AllAreEqual(records, v.Records, v.Precision) {
+                        t.Errorf("Error: in pFasta. Write and read test was not as expected.\n")
+                }
+        }
 }

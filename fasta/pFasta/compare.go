@@ -1,6 +1,7 @@
 package pFasta
 
 import (
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"strings"
 )
@@ -37,6 +38,20 @@ func IsEqual(a PFasta, b PFasta, precision float32) bool {
 	}
 	for i := range a.Seq {
 		if !pDna.EqualBase(a.Seq[i], b.Seq[i], precision) {
+			fmt.Printf("%e\t%e\n", a.Seq[i].A, b.Seq[i].A)
+			fmt.Printf("%e\t%e\n", a.Seq[i].C, b.Seq[i].C)
+			fmt.Printf("%e\t%e\n", a.Seq[i].G, b.Seq[i].G)
+			fmt.Printf("%e\t%e\n", a.Seq[i].T, b.Seq[i].T)
+			return false
+		}
+	}
+	return true
+}
+
+// IsValid returns false if any base position in the sequence is not valid
+func IsValid(pFaIn PFasta, precision float32) bool {
+	for i := range pFaIn.Seq {
+		if !pDna.IsValid(pFaIn.Seq[i], precision) {
 			return false
 		}
 	}

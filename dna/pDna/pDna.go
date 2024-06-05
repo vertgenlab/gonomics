@@ -26,7 +26,6 @@ type Float64Diff struct {
 // IsGap returns true if the DNA base's probability vector is 0 at all 4 bases, indicating that the base is a gap
 func IsGap(p Float32Base) bool {
 	if p.A == 0 && p.C == 0 && p.G == 0 && p.T == 0 {
-		//fmt.Printf("found gap. p: %v\n", p) // TODO: remove after debugging. Check isGap works
 		return true
 	} else {
 		return false
@@ -146,4 +145,25 @@ func MakeValid(p Float32Base) Float32Base {
 			T: p.T / total,
 		}
 	}
+}
+
+// IsValid returns false if any probabilties are below zero or great than one.  It
+// will also return false for non-gap positions (not all probabilities equal to zero) if
+// the probabilities sum to a number outside 1-precision and 1+precision.  Otherwise,
+// this function will beturn true.
+func IsValid(base Float32Base, precision float32) bool {
+	var sum float32
+	if !IsGap(base) {
+		if base.A < 0 && base.C < 0 && base.G < 0 && base.T < 0 {
+			return false
+		}
+		if base.A > 1 && base.C > 1 && base.G > 1 && base.T > 1 {
+			return false
+		}
+		sum = base.A + base.C + base.G + base.T
+		if sum < 1-precision || sum > 1+precision {
+			return false
+		}
+	}
+	return true
 }
