@@ -23,7 +23,7 @@ var ontologyEnrichmentTests = []struct {
 }{
 	{
 		Input:           "testdata/tiny.phastCons.bed",
-		ChromSize:       "testdata/mm39.chrom.sizes",
+		ChromSize:       "testdata/mm39.chrom.sizes", //"testdata/mm39.noGap.bed",
 		GeneFile:        "testdata/tiny.tss.bed",
 		GafFile:         "testdata/mgi.gaf.test.gz",
 		OboFile:         "testdata/go.obo",

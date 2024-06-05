@@ -19,6 +19,16 @@ func ontologyEnrichment(inputFile string, chromSizes string, geneFile string, an
 	var annotations []gaf.Gaf
 	var obos map[string]*obo.Obo
 
+	//liftQueries := lift.GoRead(inputFile)
+	//liftGenes := lift.GoRead(geneFile)
+	//liftSizes := lift.GoRead(chromSizes)
+	//
+	//probs := lift.ElementOverlapProbabilities(liftQueries, liftGenes, liftSizes)
+	//log.Print(probs)
+	//overlapCount := lift.OverlapCount(liftQueries, liftGenes)
+	//summary := lift.EnrichmentPValueApproximation(probs, overlapCount)
+	//log.Print(summary)
+
 	queries = bed.Read(inputFile)
 	sizes = chromInfo.ReadToMap(chromSizes)
 	if contactFile != "" {
