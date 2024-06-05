@@ -148,6 +148,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	//var probs []float64
 	//summary := make([]float64, 4)
 	ontologiesIndex := make(map[int]string)
+	queryOntOverlapLen := make(map[string]int)
 	name := strings.TrimSuffix(out3dOntology, ".bed")
 	var ontologiesForCurrGene []*Ontology
 
@@ -201,7 +202,11 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	}
 	tree := interval.BuildTree(filledSpaceIntervals)
 
+	//7.298204e+08 3.490146e-04 1.867867e-02
+
+	queryCopy := queries
 	bed.AllToMidpoint(queries)
+	log.Print(len(queryCopy))
 
 	for i := range queries {
 		queryOverlaps = interval.Query(tree, queries[i], "any")
@@ -213,6 +218,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		for currOntologyIndex = range ontologiesForCurrGene {
 			currOntologyName = ontologiesForCurrGene[currOntologyIndex].Id
 			kCache[currOntologyName] += 1
+			queryOntOverlapLen[currOntologyName] += queryCopy[i].ChromEnd - queryCopy[i].ChromStart
 		}
 	}
 
@@ -220,7 +226,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\tvalue\tmu\tsigma\n")
 	exception.PanicOnErr(err)
 
-	log.Print("here")
 	//for o := range ontologies {
 	//	if len(ontologies[o].Genes) > 0 {
 	//		ontologyBedSet = bed.BedsWithNameSet(filledSpace, ontologies[o].Genes)
@@ -271,7 +276,11 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 				exception.PanicOnErr(err)
 				//calculations to determine the enrichment and p-value for each GO term in the input dataset
 				ontologiesIndex[len(overlapProb)-1] = i
-				overlapProb = append(overlapProb, proportionsForTerms[i]*(float64(queryBases)/float64(totalBases)))
+				//this represents a mu that is equivalent to the number of bases of query that overlaps a GO term divided by the size of the genome
+				overlapProb = append(overlapProb, float64(queryOntOverlapLen[i])/float64(totalBases))
+				//this mu would be if the query bases were randomly distributed in the genome, we want the
+				//probability that a random base is both a query and a given ontology
+				//overlapProb = append(overlapProb, proportionsForTerms[i]*(float64(queryBases)/float64(totalBases)))
 				mu = overlapProb[len(overlapProb)-1]
 				mus = append(mus, mu)
 				sigma = math.Sqrt(mu * (1 - mu))
