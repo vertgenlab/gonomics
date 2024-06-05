@@ -138,7 +138,6 @@ func NormalRightIntegral(x float64, mu float64, sigma float64) float64 {
 func LogNormalRightTailCDF(x, mu, sigma float64) (float64, error) {
 	z := (x - mu) / sigma
 	logErfc := logspace.Divide(math.Log(z), math.Log(math.Sqrt2))
-	//logErfc := math.Log(math.Erfc(z / math.Sqrt2))
 	logHalf := math.Log(0.5)
 	result := logHalf + logErfc
 
@@ -146,7 +145,7 @@ func LogNormalRightTailCDF(x, mu, sigma float64) (float64, error) {
 		return result, fmt.Errorf("overflow detected result: %e, x: %e, mu: %e, sigma: %e, z: %e, logErfc: %e", result, x, mu, sigma, z, logErfc)
 	}
 	if result == math.Inf(-1) {
-		return result, fmt.Errorf("underflow detected")
+		return result, fmt.Errorf("underflow detected result: %e, x: %e, mu: %e, sigma: %e, z: %e, logErfc: %e", result, x, mu, sigma, z, logErfc)
 	}
 	return result, nil
 }
