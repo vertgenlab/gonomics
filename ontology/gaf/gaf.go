@@ -146,7 +146,7 @@ func processGafLine(line string) Gaf {
 	var answer Gaf = Gaf{
 		Db:              words[0],
 		DbObjectId:      words[1],
-		DbObjectSymbol:  words[2],
+		DbObjectSymbol:  strings.ToUpper(words[2]),
 		Qualifier:       words[3],
 		GoId:            words[4],
 		DbReference:     words[5],

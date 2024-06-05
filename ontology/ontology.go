@@ -10,7 +10,8 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
-	"github.com/vertgenlab/gonomics/numbers"
+	//"github.com/vertgenlab/gonomics/interval/lift"
+	//"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/ontology/gaf"
 	"github.com/vertgenlab/gonomics/ontology/obo"
 	"log"
@@ -131,19 +132,29 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	var err error
 	var totalBases int
 	var filledSpace, tssBed []bed.Bed
+	//ontologyBedSet []bed.Bed
 	var filledSpaceIntervals []interval.Interval
 	var queryOverlaps []interval.Interval
+	//var ontologyLiftSet, queryLiftSet, noGapLift []lift.Lift
 	var kCache = make(map[string]int) //mapping Go Term Names to number of query elements that overlap. This is 'k' in the binomial test.
 	var currOverlapGene string
 	var currOntologyIndex, queryBases int
+	//var count int
 	var currOntologyName string
 	var proportionsForTerms map[string]float64
-	var currP, mu float64
+	//var enrichment, mu, sigma float64
+	//var pvalE, pvalD float64
 	overlapProb := make([]float64, 1)
-	var pval []float64
+	//var probs []float64
+	//summary := make([]float64, 4)
 	ontologiesIndex := make(map[int]string)
 	name := strings.TrimSuffix(out3dOntology, ".bed")
 	var ontologiesForCurrGene []*Ontology
+
+	//noGap := bed.ReadChromSizesToBed(chromSizes)
+	//for n := range noGap {
+	//	noGapLift = append(noGapLift, noGap[n])
+	//}
 
 	geneString := strings.Split(geneFile, ".")
 	if geneString[len(geneString)-1] != "bed" {
@@ -159,6 +170,7 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	}
 	for q := range queries {
 		queryBases += queries[q].ChromEnd - queries[q].ChromStart
+		//queryLiftSet = append(queryLiftSet, queries[q])
 	}
 	ontologies := OboToOntology(oboMap)
 	GeneAssignmentsFromGaf(annotations, ontologies)
@@ -184,7 +196,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		err = geneOut.Close()
 		exception.PanicOnErr(err)
 	}
-
 	for i := range filledSpace {
 		filledSpaceIntervals = append(filledSpaceIntervals, filledSpace[i])
 	}
@@ -205,6 +216,51 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		}
 	}
 
+	inputEnrichOut := fileio.EasyCreate(name + ".inputEnrichments.txt")
+	_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\tvalue\tmu\tsigma\n")
+	exception.PanicOnErr(err)
+
+	log.Print("here")
+	//for o := range ontologies {
+	//	if len(ontologies[o].Genes) > 0 {
+	//		ontologyBedSet = bed.BedsWithNameSet(filledSpace, ontologies[o].Genes)
+	//	}
+	//	if len(ontologyBedSet) > 0 {
+	//		for b := range ontologyBedSet {
+	//			ontologyLiftSet = append(ontologyLiftSet, ontologyBedSet[b])
+	//			probs = lift.ElementOverlapProbabilities(ontologyLiftSet, queryLiftSet, noGapLift)
+	//
+	//			for i := range probs {
+	//				mu += probs[i]
+	//				sigma += probs[i] * (1 - probs[i])
+	//			}
+	//			sigma = math.Sqrt(sigma)
+	//			summary[0] = 1.0
+	//			summary[1] = mu //expected
+	//			count = lift.OverlapCount(ontologyLiftSet, queryLiftSet)
+	//			//summary[2] = numbers.NormalRightIntegral(float64(count), mu, sigma)
+	//			//summary[3] = numbers.NormalLeftIntegral(float64(count), mu, sigma)
+	//
+	//			//summary = lift.EnrichmentPValueApproximation(probs, count)
+	//			enrichment = float64(count) / mu
+	//			//pvalE = summary[2]
+	//			//pvalD = summary[3]
+	//			if b == 0 {
+	//			}
+	//		}
+	//
+	//		_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\t%d\t%e\t%e\n", o, ontologies[o].Name, enrichment, count, mu, sigma)
+	//		exception.PanicOnErr(err)
+	//	}
+	//
+	//}
+	//err = inputEnrichOut.Close()
+	//exception.PanicOnErr(err)
+
+	var mu, sigma float64
+	//currP float64
+	var mus, sigmas []float64
+	//var pvals []float64
 	if enrichments {
 		proportionsForTerms = termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
 		out := fileio.EasyCreate(name + ".termProportions.txt")
@@ -217,19 +273,25 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 				ontologiesIndex[len(overlapProb)-1] = i
 				overlapProb = append(overlapProb, proportionsForTerms[i]*(float64(queryBases)/float64(totalBases)))
 				mu = overlapProb[len(overlapProb)-1]
-				currP, err = numbers.LogNormalRightTailCDF(float64(kCache[i]), mu, math.Sqrt(mu*(1-mu)))
-				exception.PanicOnErr(err)
-				pval = append(pval, currP)
+				mus = append(mus, mu)
+				sigma = math.Sqrt(mu * (1 - mu))
+				sigmas = append(sigmas, sigma)
+				//currP, err = numbers.LogNormalRightTailCDF(float64(kCache[i]), mu, math.Sqrt(mu*(1-mu)))
+				//exception.PanicOnErr(err)
+				//pvals = append(pvals, currP)
 			}
 		}
 
 		err = out.Close()
 		exception.PanicOnErr(err)
 
-		inputEnrichOut := fileio.EasyCreate(name + ".inputEnrichments.txt")
-		_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\tP-Value\n")
+		inputEnrichOut = fileio.EasyCreate(name + ".inputEnrichments.txt")
+		//_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\tMu\tSigma\tValue\tP-Value\n")
+		_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\tMu\tSigma\tValue\n")
 		for o := range ontologiesIndex {
-			_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\t%e\n", ontologiesIndex[o], ontologies[ontologiesIndex[o]].Name, overlapProb[o], pval[o])
+			//_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\t%e\t%e\t%d\t%e\n", ontologiesIndex[o], ontologies[ontologiesIndex[o]].Name, float64(kCache[ontologiesIndex[o]])/mu, mus[o], sigmas[o], kCache[ontologiesIndex[o]], pvals[o])
+			_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\t%e\t%e\t%d\n", ontologiesIndex[o], ontologies[ontologiesIndex[o]].Name, float64(kCache[ontologiesIndex[o]])/mu, mus[o], sigmas[o], kCache[ontologiesIndex[o]])
+
 			exception.PanicOnErr(err)
 		}
 		err = inputEnrichOut.Close()
