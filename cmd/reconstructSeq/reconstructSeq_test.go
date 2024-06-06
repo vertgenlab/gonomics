@@ -2,10 +2,9 @@ package main
 
 import (
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"os"
 	"testing"
 )
 
@@ -15,61 +14,87 @@ var ReconstructSeqTests = []struct {
 	OutFile              string
 	ExpectedFile         string
 	BiasLeafName         string
+	BiasNodeName         string
 	NonBiasProbThreshold float64
 	BiasN                bool
 	HighestProbThreshold float64
 	KeepAllSeq           bool
 	SubMatrix            bool
+	PDnaNode             string
+	PDnaOutFile          string
+	ExpectedPFile        string
+	Precision            float32
 }{
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
 		OutFile:              "testdata/out.AllPossibleOneHuman.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.fa",
 		BiasLeafName:         "",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0,
 		BiasN:                false,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:             "hca",
+		PDnaOutFile:          "testdata/hca1.pfa",
+		ExpectedPFile:        "testdata/hca1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
 		OutFile:              "testdata/out.AllPossibleOneHuman.ThresholdPoint8.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.ThresholdPoint8.fa",
 		BiasLeafName:         "human",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0.8,
 		BiasN:                false,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:             "hga",
+		PDnaOutFile:          "testdata/hga1.pfa",
+		ExpectedPFile:        "testdata/hga1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
 		OutFile:              "testdata/out.AllPossibleOneHuman.ThresholdPoint99.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.ThresholdPoint99.fa",
 		BiasLeafName:         "human",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0.99,
 		BiasN:                false,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:             "hoa",
+		PDnaOutFile:          "testdata/hoa1.pfa",
+		ExpectedPFile:        "testdata/hoa1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.fa",
 		OutFile:              "testdata/out.AllPossibleOneHuman.highestProbThreshold99.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.highestProbThreshold99.fa",
 		BiasLeafName:         "human",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0,
 		BiasN:                false,
 		HighestProbThreshold: 0.99,
 		KeepAllSeq:           false,
 		SubMatrix:            false,
+		PDnaNode:             "cba",
+		PDnaOutFile:          "testdata/cba1.pfa",
+		ExpectedPFile:        "testdata/cba1Expected.pfa",
+		Precision:            1e-3,
 	},
 	{NewickFile: "testdata/4d.genericNames.mod",
 		FastaFile:            "testdata/allPossible.oneHuman.withExtraSeqs.fa",
 		OutFile:              "testdata/out.AllPossibleOneHuman.withExtraSeqs.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.fa",
 		BiasLeafName:         "",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0,
 		BiasN:                false,
 		HighestProbThreshold: 0,
@@ -81,6 +106,7 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.AllPossibleOneHuman.withExtraSeqs.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.keepAllSeq.fa",
 		BiasLeafName:         "",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0,
 		BiasN:                false,
 		HighestProbThreshold: 0,
@@ -92,6 +118,7 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.AllPossibleOneHuman.withExtraSeqsRef.fa",
 		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.keepAllSeqRef.fa",
 		BiasLeafName:         "",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0,
 		BiasN:                false,
 		HighestProbThreshold: 0,
@@ -102,15 +129,30 @@ var ReconstructSeqTests = []struct {
 		OutFile:              "testdata/out.short.biasN.fa",
 		ExpectedFile:         "testdata/expected.short.biasN.fa",
 		BiasLeafName:         "human",
+		BiasNodeName:         "",
 		NonBiasProbThreshold: 0.8,
 		BiasN:                true,
+		HighestProbThreshold: 0,
+		KeepAllSeq:           true,
+		PDnaNode:             "hga",
+		PDnaOutFile:          "testdata/hga2.pfa",
+		ExpectedPFile:        "testdata/hga2Expected.pfa",
+		Precision:            1e-3,
+	},
+	{NewickFile: "testdata/allT2T.4d.mod",
+		FastaFile:            "testdata/allT2T.fa",
+		OutFile:              "testdata/out.allT2T.biasNodeName.fa",
+		ExpectedFile:         "testdata/expected.allT2T.biasNodeName.fa",
+		BiasLeafName:         "chimpT2Tpri",
+		BiasNodeName:         "hcaT2T",
+		NonBiasProbThreshold: 0.8,
+		BiasN:                false,
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
 	},
 }
 
 func TestReconstructSeq(t *testing.T) {
-	var err error
 	var hum fasta.Fasta = fasta.Fasta{Name: "human"}
 	var chi fasta.Fasta = fasta.Fasta{Name: "chimp"}
 	var bon fasta.Fasta = fasta.Fasta{Name: "bonobo"}
@@ -148,18 +190,29 @@ func TestReconstructSeq(t *testing.T) {
 			FastaInput:           v.FastaFile,
 			OutFile:              v.OutFile,
 			BiasLeafName:         v.BiasLeafName,
+			BiasNodeName:         v.BiasNodeName,
 			NonBiasProbThreshold: v.NonBiasProbThreshold,
 			BiasN:                v.BiasN,
 			HighestProbThreshold: v.HighestProbThreshold,
 			KeepAllSeq:           v.KeepAllSeq,
 			SubMatrix:            v.SubMatrix,
+			PDnaNode:             v.PDnaNode,
+			PDnaOutFile:          v.PDnaOutFile,
 		}
 		ReconstructSeq(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: output was not as expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
+		}
+		if v.PDnaNode != "" {
+			expectedPFa := pFasta.Read(v.ExpectedPFile)
+			reconPFa := pFasta.Read(v.PDnaOutFile)
+			if !pFasta.AllAreEqual(expectedPFa, reconPFa, v.Precision) {
+				t.Errorf("Error: pfasta output not as expected.")
+			} else {
+				fileio.EasyRemove(v.PDnaOutFile)
+			}
 		}
 	}
 }

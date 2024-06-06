@@ -1,0 +1,486 @@
+Term	Name	Proportion
+GO:0009950	dorsal/ventral axis specification	2.424783e-02
+GO:0060039	pericardium development	9.190989e-02
+GO:0014916	regulation of lung blood pressure	7.218320e-02
+GO:0071773	cellular response to BMP stimulus	3.850789e-01
+GO:0016310	phosphorylation	2.512543e-01
+GO:0090090	negative regulation of canonical Wnt signaling pathway	9.190989e-02
+GO:0035360	positive regulation of peroxisome proliferator activated receptor signaling pathway	9.190989e-02
+GO:0090190	positive regulation of branching involved in ureteric bud morphogenesis	1.098198e-02
+GO:0042127	regulation of cell population proliferation	7.218320e-02
+GO:0021978	telencephalon regionalization	1.028919e-01
+GO:0010159	specification of animal organ position	1.098198e-02
+GO:0060395	SMAD protein signal transduction	2.967078e-02
+GO:0060348	bone development	2.714121e-01
+GO:0003222	ventricular trabecula myocardium morphogenesis	2.424783e-02
+GO:1905770	regulation of mesodermal cell differentiation	1.098198e-02
+GO:0048378	regulation of lateral mesodermal cell fate specification	2.424783e-02
+GO:0001936	regulation of endothelial cell proliferation	3.522981e-02
+GO:0003203	endocardial cushion morphogenesis	1.161577e-01
+GO:0005737	cytoplasm	2.504961e-01
+GO:2000860	positive regulation of aldosterone secretion	7.259154e-02
+GO:0016324	apical plasma membrane	7.218320e-02
+GO:0042733	embryonic digit morphogenesis	3.522981e-02
+GO:0036122	BMP binding	1.923597e-01
+GO:0001502	cartilage condensation	9.592864e-02
+GO:0060686	negative regulation of prostatic bud formation	2.821778e-02
+GO:0003183	mitral valve morphogenesis	9.643103e-02
+GO:0010629	negative regulation of gene expression	1.271397e-01
+GO:0006508	proteolysis	3.991779e-02
+GO:0010665	regulation of cardiac muscle cell apoptotic process	2.424783e-02
+GO:0060426	lung vasculature development	1.750751e-01
+GO:0071363	cellular response to growth factor stimulus	2.952515e-01
+GO:0060391	positive regulation of SMAD protein signal transduction	4.536586e-01
+GO:0008201	heparin binding	2.821778e-02
+GO:0030218	erythrocyte differentiation	1.098198e-02
+GO:0046982	protein heterodimerization activity	7.259154e-02
+GO:0061036	positive regulation of cartilage development	2.326388e-01
+GO:0060836	lymphatic endothelial cell differentiation	7.218320e-02
+GO:0005654	nucleoplasm	7.218320e-02
+GO:0009948	anterior/posterior axis specification	1.098198e-02
+GO:0005025	transforming growth factor beta receptor activity, type I	1.201765e-01
+GO:0014032	neural crest cell development	2.424783e-02
+GO:0001701	in utero embryonic development	1.161577e-01
+GO:0045747	positive regulation of Notch signaling pathway	5.889465e-02
+GO:0045595	regulation of cell differentiation	1.098198e-02
+GO:0007398	ectoderm development	2.424783e-02
+GO:0003272	endocardial cushion formation	1.784020e-01
+GO:2000369	regulation of clathrin-dependent endocytosis	5.889465e-02
+GO:0045746	negative regulation of Notch signaling pathway	1.723580e-02
+GO:0004674	protein serine/threonine kinase activity	2.512543e-01
+GO:1990782	protein tyrosine kinase binding	7.218320e-02
+GO:0048382	mesendoderm development	2.424783e-02
+GO:0055010	ventricular cardiac muscle tissue morphogenesis	8.982910e-02
+GO:0043539	protein serine/threonine kinase activator activity	9.190989e-02
+GO:1901145	mesenchymal cell apoptotic process involved in nephron morphogenesis	1.723580e-02
+GO:0030858	positive regulation of epithelial cell differentiation	1.201277e-01
+GO:0072104	glomerular capillary formation	1.098198e-02
+GO:0030224	monocyte differentiation	1.098198e-02
+GO:0019211	phosphatase activator activity	9.190989e-02
+GO:0035612	AP-2 adaptor complex binding	5.889465e-02
+GO:1905314	semi-lunar valve development	7.218320e-02
+GO:0031648	protein destabilization	9.190989e-02
+GO:0043410	positive regulation of MAPK cascade	9.190989e-02
+GO:0003210	cardiac atrium formation	9.190989e-02
+GO:0005509	calcium ion binding	3.991779e-02
+GO:0042487	regulation of odontogenesis of dentin-containing tooth	1.028919e-01
+GO:0060586	multicellular organismal-level iron ion homeostasis	7.259154e-02
+GO:0001657	ureteric bud development	5.788856e-02
+GO:0045669	positive regulation of osteoblast differentiation	3.850789e-01
+GO:0007389	pattern specification process	8.649208e-02
+GO:0007500	mesodermal cell fate determination	1.098198e-02
+GO:0008083	growth factor activity	5.761389e-01
+GO:0002244	hematopoietic progenitor cell differentiation	1.098198e-02
+GO:0061298	retina vasculature development in camera-type eye	7.218320e-02
+GO:0003186	tricuspid valve morphogenesis	9.643103e-02
+GO:0060841	venous blood vessel development	7.218320e-02
+GO:0060442	branching involved in prostate gland morphogenesis	1.098198e-02
+GO:0009791	post-embryonic development	1.098198e-02
+GO:0051150	regulation of smooth muscle cell differentiation	1.098198e-02
+GO:0048598	embryonic morphogenesis	3.522981e-02
+GO:0019838	growth factor binding	7.218320e-02
+GO:1905072	cardiac jelly development	1.028919e-01
+GO:0060038	cardiac muscle cell proliferation	8.982910e-02
+GO:0045843	negative regulation of striated muscle tissue development	1.098198e-02
+GO:1901331	positive regulation of odontoblast differentiation	1.028919e-01
+GO:0004222	metalloendopeptidase activity	3.991779e-02
+GO:0042803	protein homodimerization activity	2.424783e-02
+GO:0051145	smooth muscle cell differentiation	1.098198e-02
+GO:0003323	type B pancreatic cell development	1.285820e-01
+GO:0006955	immune response	9.683938e-02
+GO:0050673	epithelial cell proliferation	3.522981e-02
+GO:0060449	bud elongation involved in lung branching	1.098198e-02
+GO:2001237	negative regulation of extrinsic apoptotic signaling pathway	1.098198e-02
+GO:0070244	negative regulation of thymocyte apoptotic process	1.098198e-02
+GO:0010634	positive regulation of epithelial cell migration	7.218320e-02
+GO:0045666	positive regulation of neuron differentiation	1.927192e-01
+GO:0005576	extracellular region	6.058097e-01
+GO:0035019	somatic stem cell population maintenance	2.424783e-02
+GO:0055007	cardiac muscle cell differentiation	1.028919e-01
+GO:0021983	pituitary gland development	3.522981e-02
+GO:0009617	response to bacterium	9.190989e-02
+GO:0042475	odontogenesis of dentin-containing tooth	1.443755e-01
+GO:0060687	regulation of branching involved in prostate gland morphogenesis	2.821778e-02
+GO:0021998	neural plate mediolateral regionalization	2.424783e-02
+GO:0098821	BMP receptor activity	1.923597e-01
+GO:0007492	endoderm development	3.522981e-02
+GO:1900106	positive regulation of hyaluranon cable assembly	1.723580e-02
+GO:0010467	gene expression	1.028919e-01
+GO:1905292	regulation of neural crest cell differentiation	2.424783e-02
+GO:0030282	bone mineralization	9.190989e-02
+GO:0003149	membranous septum morphogenesis	1.098198e-02
+GO:0044297	cell body	7.218320e-02
+GO:0039706	co-receptor binding	1.028919e-01
+GO:1902895	positive regulation of miRNA transcription	1.271397e-01
+GO:0060298	positive regulation of sarcomere organization	8.982910e-02
+GO:0045786	negative regulation of cell cycle	1.201277e-01
+GO:0001759	organ induction	1.098198e-02
+GO:0090194	negative regulation of glomerulus development	1.098198e-02
+GO:0001550	ovarian cumulus expansion	9.592864e-02
+GO:0048392	intermediate mesodermal cell differentiation	1.098198e-02
+GO:0060592	mammary gland formation	1.098198e-02
+GO:0003007	heart morphogenesis	3.522981e-02
+GO:0061035	regulation of cartilage development	1.098198e-02
+GO:0001893	maternal placenta development	7.218320e-02
+GO:0048812	neuron projection morphogenesis	1.723580e-02
+GO:0048368	lateral mesoderm development	2.424783e-02
+GO:0045778	positive regulation of ossification	1.750751e-01
+GO:0033612	receptor serine/threonine kinase binding	8.982910e-02
+GO:0031982	vesicle	2.903410e-01
+GO:0045599	negative regulation of fat cell differentiation	9.190989e-02
+GO:0001501	skeletal system development	5.599043e-02
+GO:0000166	nucleotide binding	2.512543e-01
+GO:0045165	cell fate commitment	1.028919e-01
+GO:0003171	atrioventricular valve development	2.424783e-02
+GO:0021953	central nervous system neuron differentiation	1.201765e-01
+GO:0001756	somitogenesis	2.424783e-02
+GO:0030539	male genitalia development	1.176000e-01
+GO:0002062	chondrocyte differentiation	2.230683e-01
+GO:0060347	heart trabecula formation	8.982910e-02
+GO:0005905	clathrin-coated pit	7.218320e-02
+GO:0050768	negative regulation of neurogenesis	4.148363e-02
+GO:0072133	metanephric mesenchyme morphogenesis	1.723580e-02
+GO:0042056	chemoattractant activity	1.098198e-02
+GO:0035051	cardiocyte differentiation	9.190989e-02
+GO:0048568	embryonic organ development	2.424783e-02
+GO:0060684	epithelial-mesenchymal cell signaling	1.098198e-02
+GO:0016362	activin receptor activity, type II	7.218320e-02
+GO:0043235	receptor complex	1.923597e-01
+GO:0048701	embryonic cranial skeleton morphogenesis	1.098198e-02
+GO:0048762	mesenchymal cell differentiation	1.091457e-01
+GO:0060235	lens induction in camera-type eye	1.098198e-02
+GO:0072138	mesenchymal cell proliferation involved in ureteric bud development	9.190989e-02
+GO:0060502	epithelial cell proliferation involved in lung morphogenesis	1.098198e-02
+GO:0048589	developmental growth	2.424783e-02
+GO:0042491	inner ear auditory receptor cell differentiation	1.098198e-02
+GO:0048333	mesodermal cell differentiation	1.098198e-02
+GO:0035990	tendon cell differentiation	1.098198e-02
+GO:0002043	blood vessel endothelial cell proliferation involved in sprouting angiogenesis	4.065276e-02
+GO:0021502	neural fold elevation formation	6.224425e-02
+GO:0003184	pulmonary valve morphogenesis	1.098198e-02
+GO:0032349	positive regulation of aldosterone biosynthetic process	7.259154e-02
+GO:0060317	cardiac epithelial to mesenchymal transition	9.190989e-02
+GO:0010718	positive regulation of epithelial to mesenchymal transition	1.201277e-01
+GO:0010628	positive regulation of gene expression	4.749080e-01
+GO:1900159	positive regulation of bone mineralization involved in bone maturation	9.190989e-02
+GO:0045662	negative regulation of myoblast differentiation	1.098198e-02
+GO:0008233	peptidase activity	3.991779e-02
+GO:0003331	positive regulation of extracellular matrix constituent secretion	9.190989e-02
+GO:0046332	SMAD binding	1.201765e-01
+GO:0060413	atrial septum morphogenesis	7.218320e-02
+GO:0001649	osteoblast differentiation	4.747351e-01
+GO:0030900	forebrain development	1.098198e-02
+GO:0043010	camera-type eye development	1.069106e-01
+GO:0003129	heart induction	1.028919e-01
+GO:0000122	negative regulation of transcription by RNA polymerase II	1.754834e-01
+GO:0060976	coronary vasculature development	1.098198e-02
+GO:0048596	embryonic camera-type eye morphogenesis	1.723580e-02
+GO:1903392	negative regulation of adherens junction organization	7.259154e-02
+GO:0016787	hydrolase activity	3.991779e-02
+GO:0001880	Mullerian duct regression	2.424783e-02
+GO:0003344	pericardium morphogenesis	6.224425e-02
+GO:0002053	positive regulation of mesenchymal cell proliferation	2.424783e-02
+GO:2000005	negative regulation of metanephric S-shaped body morphogenesis	1.098198e-02
+GO:0042802	identical protein binding	1.428097e-01
+GO:0030512	negative regulation of transforming growth factor beta receptor signaling pathway	9.190989e-02
+GO:0030326	embryonic limb morphogenesis	2.821778e-02
+GO:0070487	monocyte aggregation	1.723580e-02
+GO:0003197	endocardial cushion development	8.316518e-02
+GO:0060425	lung morphogenesis	1.098198e-02
+GO:0060043	regulation of cardiac muscle cell proliferation	2.424783e-02
+GO:0042118	endothelial cell activation	2.967078e-02
+GO:0030018	Z disc	8.982910e-02
+GO:0001934	positive regulation of protein phosphorylation	1.750751e-01
+GO:0009887	animal organ morphogenesis	1.091457e-01
+GO:2000138	positive regulation of cell proliferation involved in heart morphogenesis	8.982910e-02
+GO:2000772	regulation of cellular senescence	2.424783e-02
+GO:0001707	mesoderm formation	1.246488e-01
+GO:0007275	multicellular organism development	4.743665e-01
+GO:0001658	branching involved in ureteric bud morphogenesis	1.028919e-01
+GO:0030513	positive regulation of BMP signaling pathway	1.098198e-02
+GO:0030500	regulation of bone mineralization	5.889465e-02
+GO:1905312	positive regulation of cardiac neural crest cell migration involved in outflow tract morphogenesis	2.821778e-02
+GO:0007435	salivary gland morphogenesis	1.723580e-02
+GO:0012501	programmed cell death	1.098198e-02
+GO:0010613	positive regulation of cardiac muscle hypertrophy	8.982910e-02
+GO:0007219	Notch signaling pathway	9.190989e-02
+GO:0001503	ossification	3.845374e-01
+GO:0061626	pharyngeal arch artery morphogenesis	1.074130e-01
+GO:0042325	regulation of phosphorylation	1.723580e-02
+GO:0060688	regulation of morphogenesis of a branching structure	1.098198e-02
+GO:0060438	trachea development	1.098198e-02
+GO:0097065	anterior head development	4.500845e-02
+GO:0009790	embryo development	9.190989e-02
+GO:0005179	hormone activity	8.982910e-02
+GO:0030336	negative regulation of cell migration	8.982910e-02
+GO:0045839	negative regulation of mitotic nuclear division	2.821778e-02
+GO:0003133	endodermal-mesodermal cell signaling	9.190989e-02
+GO:0048842	positive regulation of axon extension involved in axon guidance	7.218320e-02
+GO:0030225	macrophage differentiation	1.098198e-02
+GO:0045893	positive regulation of DNA-templated transcription	3.117291e-01
+GO:0048352	paraxial mesoderm structural organization	2.424783e-02
+GO:0045892	negative regulation of DNA-templated transcription	1.201277e-01
+GO:0008285	negative regulation of cell population proliferation	1.651361e-01
+GO:0048663	neuron fate commitment	1.098198e-02
+GO:0060710	chorio-allantoic fusion	6.224425e-02
+GO:0050769	positive regulation of neurogenesis	9.190989e-02
+GO:0048745	smooth muscle tissue development	1.098198e-02
+GO:0043065	positive regulation of apoptotic process	1.201277e-01
+GO:0060440	trachea formation	1.098198e-02
+GO:0048660	regulation of smooth muscle cell proliferation	1.098198e-02
+GO:0033690	positive regulation of osteoblast proliferation	9.190989e-02
+GO:0043231	intracellular membrane-bounded organelle	9.190989e-02
+GO:0021904	dorsal/ventral neural tube patterning	1.098198e-02
+GO:0016740	transferase activity	2.512543e-01
+GO:0001935	endothelial cell proliferation	7.218320e-02
+GO:1900006	positive regulation of dendrite development	6.224425e-02
+GO:0005901	caveola	9.643103e-02
+GO:1902462	positive regulation of mesenchymal stem cell proliferation	1.098198e-02
+GO:0003014	renal system process	1.098198e-02
+GO:0048662	negative regulation of smooth muscle cell proliferation	1.640931e-01
+GO:0007281	germ cell development	1.051784e-01
+GO:0048856	anatomical structure development	1.098198e-02
+GO:0060363	cranial suture morphogenesis	1.098198e-02
+GO:0001822	kidney development	1.906384e-01
+GO:0033085	negative regulation of T cell differentiation in thymus	1.098198e-02
+GO:0048711	positive regulation of astrocyte differentiation	9.190989e-02
+GO:0009880	embryonic pattern specification	1.723580e-02
+GO:0045665	negative regulation of neuron differentiation	1.723580e-02
+GO:0060173	limb development	7.218320e-02
+GO:0072040	negative regulation of mesenchymal cell apoptotic process involved in nephron morphogenesis	1.723580e-02
+GO:0010894	negative regulation of steroid biosynthetic process	1.369183e-01
+GO:2000353	positive regulation of endothelial cell apoptotic process	1.098198e-02
+GO:0070374	positive regulation of ERK1 and ERK2 cascade	1.325626e-01
+GO:0030308	negative regulation of cell growth	1.620123e-01
+GO:0010524	positive regulation of calcium ion transport into cytosol	1.098198e-02
+GO:2000048	negative regulation of cell-cell adhesion mediated by cadherin	7.259154e-02
+GO:0051042	negative regulation of calcium-independent cell-cell adhesion	9.190989e-02
+GO:0072577	endothelial cell apoptotic process	7.218320e-02
+GO:0005886	plasma membrane	2.842696e-01
+GO:0048286	lung alveolus development	8.316518e-02
+GO:0009952	anterior/posterior pattern specification	9.643103e-02
+GO:0006366	transcription by RNA polymerase II	1.028919e-01
+GO:0010453	regulation of cell fate commitment	1.098198e-02
+GO:0035137	hindlimb morphogenesis	2.424783e-02
+GO:0060433	bronchus development	1.098198e-02
+GO:0021537	telencephalon development	1.028919e-01
+GO:0055015	ventricular cardiac muscle cell development	8.982910e-02
+GO:0045944	positive regulation of transcription by RNA polymerase II	4.427829e-01
+GO:0008237	metallopeptidase activity	3.991779e-02
+GO:0042698	ovulation cycle	9.592864e-02
+GO:1905285	fibrous ring of heart morphogenesis	2.424783e-02
+GO:0055117	regulation of cardiac muscle contraction	8.982910e-02
+GO:0048708	astrocyte differentiation	9.190989e-02
+GO:0072125	negative regulation of glomerular mesangial cell proliferation	2.821778e-02
+GO:0031433	telethonin binding	8.982910e-02
+GO:0001974	blood vessel remodeling	7.218320e-02
+GO:0072200	negative regulation of mesenchymal cell proliferation involved in ureter development	1.098198e-02
+GO:0090191	negative regulation of branching involved in ureteric bud morphogenesis	1.098198e-02
+GO:0005634	nucleus	5.889465e-02
+GO:0010596	negative regulation of endothelial cell migration	8.982910e-02
+GO:0050731	positive regulation of peptidyl-tyrosine phosphorylation	7.259154e-02
+GO:1904238	pericyte cell differentiation	1.098198e-02
+GO:0032991	protein-containing complex	9.190989e-02
+GO:0045765	regulation of angiogenesis	2.967078e-02
+GO:0061047	positive regulation of branching involved in lung morphogenesis	1.098198e-02
+GO:0030509	BMP signaling pathway	5.495872e-01
+GO:0048018	receptor ligand activity	9.190989e-02
+GO:0033088	negative regulation of immature T cell proliferation in thymus	1.098198e-02
+GO:0072134	nephrogenic mesenchyme morphogenesis	1.723580e-02
+GO:0031290	retinal ganglion cell axon guidance	9.592864e-02
+GO:0030424	axon	7.218320e-02
+GO:0003277	apoptotic process involved in endocardial cushion morphogenesis	1.098198e-02
+GO:0060512	prostate gland morphogenesis	1.098198e-02
+GO:0048704	embryonic skeletal system morphogenesis	1.098198e-02
+GO:0042305	specification of segmental identity, mandibular segment	1.098198e-02
+GO:0007512	adult heart development	8.982910e-02
+GO:0090336	positive regulation of brown fat cell differentiation	1.723580e-02
+GO:0001837	epithelial to mesenchymal transition	9.190989e-02
+GO:0003139	secondary heart field specification	1.098198e-02
+GO:0032880	regulation of protein localization	2.967078e-02
+GO:0014069	postsynaptic density	7.218320e-02
+GO:0031666	positive regulation of lipopolysaccharide-mediated signaling pathway	7.259154e-02
+GO:0050679	positive regulation of epithelial cell proliferation	1.528298e-01
+GO:0060928	atrioventricular node cell development	2.424783e-02
+GO:0005912	adherens junction	7.218320e-02
+GO:0003198	epithelial to mesenchymal transition involved in endocardial cushion formation	1.098198e-02
+GO:0019904	protein domain specific binding	9.190989e-02
+GO:0009897	external side of plasma membrane	2.424783e-02
+GO:0061384	heart trabecula morphogenesis	6.224425e-02
+GO:0005515	protein binding	4.996759e-01
+GO:0032092	positive regulation of protein binding	1.028919e-01
+GO:0007179	transforming growth factor beta receptor signaling pathway	3.062828e-01
+GO:0001525	angiogenesis	3.522981e-02
+GO:0010614	negative regulation of cardiac muscle hypertrophy	8.982910e-02
+GO:0010595	positive regulation of endothelial cell migration	1.098198e-02
+GO:0060441	epithelial tube branching involved in lung morphogenesis	1.098198e-02
+GO:0060896	neural plate pattern specification	2.424783e-02
+GO:0048646	anatomical structure formation involved in morphogenesis	2.821778e-02
+GO:0008270	zinc ion binding	3.991779e-02
+GO:0030316	osteoclast differentiation	9.190989e-02
+GO:0060411	cardiac septum morphogenesis	6.224425e-02
+GO:0071281	cellular response to iron ion	7.259154e-02
+GO:1905295	regulation of neural crest cell fate specification	2.424783e-02
+GO:0048661	positive regulation of smooth muscle cell proliferation	1.098198e-02
+GO:0071407	cellular response to organic cyclic compound	9.190989e-02
+GO:0010594	regulation of endothelial cell migration	2.967078e-02
+GO:0034116	positive regulation of heterotypic cell-cell adhesion	1.723580e-02
+GO:0007165	signal transduction	9.419640e-02
+GO:0016301	kinase activity	2.512543e-01
+GO:0060503	bud dilation involved in lung branching	1.098198e-02
+GO:0003215	cardiac right ventricle morphogenesis	3.522981e-02
+GO:0045296	cadherin binding	7.218320e-02
+GO:0060840	artery development	7.218320e-02
+GO:0072136	metanephric mesenchymal cell proliferation involved in metanephros development	1.723580e-02
+GO:0031012	extracellular matrix	2.967078e-02
+GO:0001666	response to hypoxia	9.190989e-02
+GO:0030177	positive regulation of Wnt signaling pathway	9.190989e-02
+GO:0030335	positive regulation of cell migration	1.028919e-01
+GO:1904707	positive regulation of vascular associated smooth muscle cell proliferation	2.424783e-02
+GO:0072179	nephric duct formation	1.098198e-02
+GO:0045600	positive regulation of fat cell differentiation	9.190989e-02
+GO:0042482	positive regulation of odontogenesis	9.190989e-02
+GO:0009925	basal plasma membrane	7.218320e-02
+GO:0072197	ureter morphogenesis	1.098198e-02
+GO:0009986	cell surface	2.781700e-01
+GO:0001843	neural tube closure	1.098198e-02
+GO:1902731	negative regulation of chondrocyte proliferation	7.218320e-02
+GO:0048754	branching morphogenesis of an epithelial tube	1.723580e-02
+GO:0003148	outflow tract septum morphogenesis	1.074130e-01
+GO:0007283	spermatogenesis	9.419640e-02
+GO:0030324	lung development	3.522981e-02
+GO:0048715	negative regulation of oligodendrocyte differentiation	1.098198e-02
+GO:0007399	nervous system development	2.424783e-02
+GO:0051216	cartilage development	5.047139e-01
+GO:0060412	ventricular septum morphogenesis	9.643103e-02
+GO:0006468	protein phosphorylation	2.512543e-01
+GO:0007178	transmembrane receptor protein serine/threonine kinase signaling pathway	1.923597e-01
+GO:0043407	negative regulation of MAP kinase activity	9.190989e-02
+GO:0030902	hindbrain development	6.224425e-02
+GO:0003161	cardiac conduction system development	2.424783e-02
+GO:0001944	vasculature development	1.098198e-02
+GO:0032331	negative regulation of chondrocyte differentiation	1.098198e-02
+GO:0060914	heart formation	2.424783e-02
+GO:0048839	inner ear development	1.215807e-01
+GO:0043068	positive regulation of programmed cell death	1.098198e-02
+GO:0005201	extracellular matrix structural constituent	2.967078e-02
+GO:0016485	protein processing	3.991779e-02
+GO:0002063	chondrocyte development	7.218320e-02
+GO:0048339	paraxial mesoderm development	2.424783e-02
+GO:0007155	cell adhesion	8.982910e-02
+GO:0045214	sarcomere organization	8.982910e-02
+GO:0002320	lymphoid progenitor cell differentiation	1.098198e-02
+GO:0055020	positive regulation of cardiac muscle fiber development	1.098198e-02
+GO:0045603	positive regulation of endothelial cell differentiation	8.357352e-02
+GO:0060045	positive regulation of cardiac muscle cell proliferation	1.140769e-01
+GO:0035239	tube morphogenesis	1.723580e-02
+GO:0005125	cytokine activity	5.761389e-01
+GO:0060445	branching involved in salivary gland morphogenesis	1.723580e-02
+GO:0001958	endochondral ossification	8.357352e-02
+GO:0001541	ovarian follicle development	1.098198e-02
+GO:0051091	positive regulation of DNA-binding transcription factor activity	9.190989e-02
+GO:0035116	embryonic hindlimb morphogenesis	1.098198e-02
+GO:2000007	negative regulation of metanephric comma-shaped body morphogenesis	1.098198e-02
+GO:0030949	positive regulation of vascular endothelial growth factor receptor signaling pathway	1.098198e-02
+GO:0045601	regulation of endothelial cell differentiation	2.424783e-02
+GO:0003252	negative regulation of cell proliferation involved in heart valve morphogenesis	7.218320e-02
+GO:0003151	outflow tract morphogenesis	1.074130e-01
+GO:0042306	regulation of protein import into nucleus	1.098198e-02
+GO:2000726	negative regulation of cardiac muscle cell differentiation	9.190989e-02
+GO:0005794	Golgi apparatus	3.991779e-02
+GO:0014912	negative regulation of smooth muscle cell migration	2.424783e-02
+GO:0006029	proteoglycan metabolic process	9.190989e-02
+GO:0060021	roof of mouth development	2.424783e-02
+GO:0019208	phosphatase regulator activity	5.889465e-02
+GO:0004675	transmembrane receptor protein serine/threonine kinase activity	1.923597e-01
+GO:0003223	ventricular compact myocardium morphogenesis	2.424783e-02
+GO:0001568	blood vessel development	1.128360e-01
+GO:0003177	pulmonary valve development	7.218320e-02
+GO:0032915	positive regulation of transforming growth factor beta2 production	2.424783e-02
+GO:0032332	positive regulation of chondrocyte differentiation	7.259154e-02
+GO:0035054	embryonic heart tube anterior/posterior pattern specification	9.190989e-02
+GO:0032348	negative regulation of aldosterone biosynthetic process	1.369183e-01
+GO:0060041	retina development in camera-type eye	9.592864e-02
+GO:0004888	transmembrane signaling receptor activity	9.592864e-02
+GO:0070368	positive regulation of hepatocyte differentiation	1.098198e-02
+GO:1905222	atrioventricular canal morphogenesis	9.190989e-02
+GO:0009953	dorsal/ventral pattern formation	1.600943e-01
+GO:0070700	BMP receptor binding	2.504233e-01
+GO:0003085	negative regulation of systemic arterial blood pressure	7.218320e-02
+GO:0043583	ear development	4.500845e-02
+GO:0016607	nuclear speck	5.889465e-02
+GO:0070724	BMP receptor complex	9.190989e-02
+GO:0004672	protein kinase activity	2.512543e-01
+GO:0060272	embryonic skeletal joint morphogenesis	2.821778e-02
+GO:0005524	ATP binding	2.512543e-01
+GO:0048738	cardiac muscle tissue development	1.344274e-01
+GO:0030182	neuron differentiation	7.259154e-02
+GO:0031668	cellular response to extracellular stimulus	7.259154e-02
+GO:0060429	epithelium development	1.098198e-02
+GO:1900182	positive regulation of protein localization to nucleus	1.098198e-02
+GO:0048468	cell development	1.723580e-02
+GO:1902043	positive regulation of extrinsic apoptotic signaling pathway via death domain receptors	9.592864e-02
+GO:0005024	transforming growth factor beta receptor activity	1.681118e-01
+GO:0030514	negative regulation of BMP signaling pathway	2.967078e-02
+GO:0016020	membrane	1.923597e-01
+GO:0003181	atrioventricular valve morphogenesis	1.640931e-01
+GO:0043117	positive regulation of vascular permeability	7.259154e-02
+GO:0003180	aortic valve morphogenesis	1.098198e-02
+GO:0032924	activin receptor signaling pathway	8.982910e-02
+GO:0006954	inflammatory response	2.604301e-01
+GO:0045606	positive regulation of epidermal cell differentiation	1.098198e-02
+GO:0010922	positive regulation of phosphatase activity	9.190989e-02
+GO:0001946	lymphangiogenesis	7.218320e-02
+GO:0030501	positive regulation of bone mineralization	3.850789e-01
+GO:1905069	allantois development	6.224425e-02
+GO:0051148	negative regulation of muscle cell differentiation	1.883409e-01
+GO:0060485	mesenchyme development	1.091457e-01
+GO:0034599	cellular response to oxidative stress	1.098198e-02
+GO:0010976	positive regulation of neuron projection development	1.098198e-02
+GO:0035912	dorsal aorta morphogenesis	2.424783e-02
+GO:0003176	aortic valve development	1.640931e-01
+GO:0055009	atrial cardiac muscle tissue morphogenesis	8.982910e-02
+GO:1902894	negative regulation of miRNA transcription	1.098198e-02
+GO:1903242	regulation of cardiac muscle hypertrophy in response to stress	8.982910e-02
+GO:0006703	estrogen biosynthetic process	9.592864e-02
+GO:0062023	collagen-containing extracellular matrix	8.682437e-02
+GO:0060129	thyroid-stimulating hormone-secreting cell differentiation	9.190989e-02
+GO:0007507	heart development	2.169688e-01
+GO:0045906	negative regulation of vasoconstriction	7.218320e-02
+GO:0055008	cardiac muscle tissue morphogenesis	9.190989e-02
+GO:0030855	epithelial cell differentiation	1.723580e-02
+GO:0046872	metal ion binding	2.322775e-01
+GO:0008283	cell population proliferation	2.821778e-02
+GO:0036305	ameloblast differentiation	1.201277e-01
+GO:0003150	muscular septum morphogenesis	1.098198e-02
+GO:0030154	cell differentiation	4.804661e-01
+GO:0005615	extracellular space	6.058097e-01
+GO:0070372	regulation of ERK1 and ERK2 cascade	1.098198e-02
+GO:0030425	dendrite	1.923597e-01
+GO:1904414	positive regulation of cardiac ventricle development	2.424783e-02
+GO:0010468	regulation of gene expression	1.098198e-02
+GO:0001938	positive regulation of endothelial cell proliferation	8.357352e-02
+GO:0060128	corticotropin hormone secreting cell differentiation	9.190989e-02
+GO:0048593	camera-type eye morphogenesis	2.821778e-02
+GO:0098590	plasma membrane region	7.218320e-02
+GO:1900745	positive regulation of p38MAPK cascade	1.028919e-01
+GO:0048706	embryonic skeletal system development	1.098198e-02
+GO:0001656	metanephros development	1.098198e-02
+GO:0042476	odontogenesis	1.098198e-02
+GO:0001654	eye development	1.967380e-01
+GO:2000065	negative regulation of cortisol biosynthetic process	1.369183e-01
+GO:2000636	positive regulation of primary miRNA processing	1.098198e-02
+GO:0014898	cardiac muscle hypertrophy in response to stress	1.028919e-01
+GO:0007411	axon guidance	1.723580e-02
+GO:0035993	deltoid tuberosity development	1.098198e-02
+GO:0060037	pharyngeal system development	6.224425e-02
+GO:0050680	negative regulation of epithelial cell proliferation	1.098198e-02
+GO:0060513	prostatic bud formation	1.098198e-02
+GO:0008284	positive regulation of cell population proliferation	1.479003e-01
+GO:0006879	intracellular iron ion homeostasis	7.259154e-02
+GO:0043025	neuronal cell body	1.923597e-01
+GO:0071549	cellular response to dexamethasone stimulus	1.098198e-02
+GO:0006355	regulation of DNA-templated transcription	9.190989e-02
+GO:1903672	positive regulation of sprouting angiogenesis	2.967078e-02
+GO:0043569	negative regulation of insulin-like growth factor receptor signaling pathway	1.369183e-01
+GO:0032967	positive regulation of collagen biosynthetic process	1.098198e-02
