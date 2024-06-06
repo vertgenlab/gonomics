@@ -206,7 +206,6 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 
 	queryCopy := queries
 	bed.AllToMidpoint(queries)
-	log.Print(len(queryCopy))
 
 	for i := range queries {
 		queryOverlaps = interval.Query(tree, queries[i], "any")
@@ -277,10 +276,12 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 				//calculations to determine the enrichment and p-value for each GO term in the input dataset
 				ontologiesIndex[len(overlapProb)-1] = i
 				//this represents a mu that is equivalent to the number of bases of query that overlaps a GO term divided by the size of the genome
-				overlapProb = append(overlapProb, float64(queryOntOverlapLen[i])/float64(totalBases))
+				//overlapProb = append(overlapProb, float64(queryOntOverlapLen[i])/float64(totalBases))
 				//this mu would be if the query bases were randomly distributed in the genome, we want the
 				//probability that a random base is both a query and a given ontology
 				//overlapProb = append(overlapProb, proportionsForTerms[i]*(float64(queryBases)/float64(totalBases)))
+				//this calculation represents if both the queries and the bases for the GO term were randomly distributed, whats the probability they overlap
+				overlapProb = append(overlapProb, proportionsForTerms[i]*float64(len(queries)))
 				mu = overlapProb[len(overlapProb)-1]
 				mus = append(mus, mu)
 				sigma = math.Sqrt(mu * (1 - mu))
