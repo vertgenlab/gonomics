@@ -1,6 +1,6 @@
 // Command Group: "SAM Tools"
 
-// Calculates genome coverage as the quotient of aligned bases in a sequencing dataset to the total length of ungapped genomic regions in the reference genome
+// Generates a count histogram of genome coverage.
 package main
 
 import (
@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/fit"
@@ -22,17 +23,17 @@ type Settings struct {
 	Verbose       int
 }
 
-// samCoverage calculates genome coverage as the quotient of aligned bases in a sequencing dataset to the total length of ungapped genomic regions in the reference genome.
+// samCoverage generates a count histogram of genome coverage.
 func samCoverage(s Settings) {
 	out := fileio.EasyCreate(s.OutFile)
-	fmt.Fprintf(out, "Coverage\tPileups\tGroup\n")
+	_, err := fmt.Fprintf(out, "Coverage\tPileups\tGroup\n")
+	exception.PanicOnErr(err)
 	data, header := sam.GoReadToChan(s.SamFileName)
 	piles := sam.GoPileup(data, header, false, nil, nil)
 	histogram := make([]int, 30)
 	totalCount := 0
 
 	for p := range piles {
-		//if else structure to calculate pile depth
 		depth := TotalDepth(p, s.CountNinDepth)
 		if depth >= len(histogram) {
 			// extend histogram to the length of depth
@@ -45,14 +46,16 @@ func samCoverage(s Settings) {
 	}
 	lambda := fit.PoissonHistogram(histogram)
 	for i, pileups := range histogram {
-		fmt.Fprintf(out, "%v\t%v\tEmpirical\n", i, pileups)
+		_, err = fmt.Fprintf(out, "%v\t%v\tEmpirical\n", i, pileups)
+		exception.PanicOnErr(err)
 		y, outlier := numbers.PoissonDist(i, lambda, false)
 		if !outlier {
-			fmt.Fprintf(out, "%v\t%.6g\tExpected\n", i, y*float64(totalCount))
+			_, err = fmt.Fprintf(out, "%v\t%.6g\tExpected\n", i, y*float64(totalCount))
+			exception.PanicOnErr(err)
 		}
 	}
 	if s.Verbose > 0 {
-		fmt.Printf("lambda:%v\n", lambda)
+		log.Printf("lambda:%v\n", lambda)
 	}
 	out.Close()
 }
@@ -68,9 +71,9 @@ func TotalDepth(p sam.Pile, countNinDepth bool) int {
 
 func usage() {
 	fmt.Print(
-		"samCoverage - Calculates genome coverage as the quotient of aligned bases in a sequencing dataset to the total length of ungapped genomic regions in the reference genome.\n" +
+		"samCoverage - Generates a count histogram of genome coverage.\n" +
 			"Usage:\n" +
-			"samCoverage input.sam nogap.bed outfile.txt\n" +
+			"samCoverage input.sam outfile.txt\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -78,7 +81,7 @@ func usage() {
 func main() {
 	var countNinDepth *bool = flag.Bool("countNinDepth", true, "If true, count 'N' reads towards total depth of pileups.")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints. Verbose in this program reports Poisson parameter lambda.")
-	var expectedNumArgs int = 3
+	var expectedNumArgs int = 2
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()

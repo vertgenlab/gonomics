@@ -1,11 +1,11 @@
 package fit
 
 import (
-	"fmt"
 	"log"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
@@ -155,9 +155,10 @@ var PoissonHistogramTests = []struct {
 }
 
 func TestPoissonHistogram(t *testing.T) {
+	epsilon := 1e-6
 	for _, v := range PoissonHistogramTests {
 		outputLambda := PoissonHistogram(v.InHist)
-		if fmt.Sprintf("%e", outputLambda) != fmt.Sprintf("%e", v.ExpectedLambda) {
+		if !numbers.ApproxEqual(outputLambda, v.ExpectedLambda, epsilon) {
 			t.Errorf("Error in PoissonHistogram")
 		}
 	}

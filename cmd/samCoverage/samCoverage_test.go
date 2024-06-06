@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -65,8 +63,7 @@ func TestSamCoverage(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in samCoverage")
 		} else {
-			err := os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.MustRemove(v.OutFile)
 		}
 	}
 }
