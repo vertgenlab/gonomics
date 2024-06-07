@@ -281,10 +281,12 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 				//probability that a random base is both a query and a given ontology
 				//overlapProb = append(overlapProb, proportionsForTerms[i]*(float64(queryBases)/float64(totalBases)))
 				//this calculation represents if both the queries and the bases for the GO term were randomly distributed, whats the probability they overlap
+				//normal approximation from binomial calculating mu = n*p
 				overlapProb = append(overlapProb, proportionsForTerms[i]*float64(len(queries)))
 				mu = overlapProb[len(overlapProb)-1]
 				mus = append(mus, mu)
-				sigma = math.Sqrt(mu * (1 - mu))
+				//normal approximation of binomial to calculate sigma = square root of n*p*(1-p)
+				sigma = math.Sqrt(mu * (1 - proportionsForTerms[i]))
 				sigmas = append(sigmas, sigma)
 				//currP, err = numbers.LogNormalRightTailCDF(float64(kCache[i]), mu, math.Sqrt(mu*(1-mu)))
 				//exception.PanicOnErr(err)
