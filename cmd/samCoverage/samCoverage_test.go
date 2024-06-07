@@ -27,43 +27,62 @@ rm myRandSeq.fa
 */
 
 var SamCoverageTests = []struct {
-	InFile        string
-	OutFile       string
-	CountNinDepth bool
-	Verbose       int
-	ExpectedFile  string
+	InFile           string
+	OutHistFile      string
+	StatSummaryFile  string
+	HighEndFilter    float64
+	CountNinDepth    bool
+	Verbose          int
+	ExpectedHistFile string
+	ExpectedStatFile string
 }{
 	{InFile: "testdata/test1.bam",
-		OutFile:       "testdata/tmp.test1.txt",
-		CountNinDepth: false,
-		Verbose:       0,
-		ExpectedFile:  "testdata/expected.test1.txt"},
+		OutHistFile:      "testdata/tmp.test1.hist.txt",
+		StatSummaryFile:  "testdata/tmp.test1.stats.txt",
+		HighEndFilter:    0.1,
+		CountNinDepth:    false,
+		Verbose:          0,
+		ExpectedHistFile: "testdata/expected.test1.hist.txt",
+		ExpectedStatFile: "testdata/expected.test1.stats.txt"},
 	{InFile: "testdata/test2.bam",
-		OutFile:       "testdata/tmp.test2.txt",
-		CountNinDepth: false,
-		Verbose:       0,
-		ExpectedFile:  "testdata/expected.test2.txt"},
+		OutHistFile:      "testdata/tmp.test2.hist.txt",
+		StatSummaryFile:  "testdata/tmp.test2.stats.txt",
+		HighEndFilter:    0.5,
+		CountNinDepth:    false,
+		Verbose:          0,
+		ExpectedHistFile: "testdata/expected.test2.hist.txt",
+		ExpectedStatFile: "testdata/expected.test2.stats.txt"},
 	{InFile: "testdata/test3.bam",
-		OutFile:       "testdata/tmp.test3.txt",
-		CountNinDepth: false,
-		Verbose:       0,
-		ExpectedFile:  "testdata/expected.test3.txt"},
+		OutHistFile:      "testdata/tmp.test3.hist.txt",
+		StatSummaryFile:  "testdata/tmp.test3.stats.txt",
+		HighEndFilter:    0.01,
+		CountNinDepth:    false,
+		Verbose:          0,
+		ExpectedHistFile: "testdata/expected.test3.hist.txt",
+		ExpectedStatFile: "testdata/expected.test3.stats.txt"},
 }
 
 func TestSamCoverage(t *testing.T) {
 	var s Settings
 	for _, v := range SamCoverageTests {
 		s = Settings{
-			SamFileName:   v.InFile,
-			OutFile:       v.OutFile,
-			CountNinDepth: v.CountNinDepth,
-			Verbose:       v.Verbose,
+			SamFileName:      v.InFile,
+			HistogramOutFile: v.OutHistFile,
+			StatSummaryFile:  v.StatSummaryFile,
+			HighEndFilter:    v.HighEndFilter,
+			CountNinDepth:    v.CountNinDepth,
+			Verbose:          v.Verbose,
 		}
 		samCoverage(s)
-		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+		if !fileio.AreEqual(v.OutHistFile, v.ExpectedHistFile) {
 			t.Errorf("Error in samCoverage")
 		} else {
-			fileio.MustRemove(v.OutFile)
+			fileio.MustRemove(v.OutHistFile)
+		}
+		if !fileio.AreEqual(v.StatSummaryFile, v.ExpectedStatFile) {
+			t.Errorf("Error in samCoverage")
+		} else {
+			fileio.MustRemove(v.StatSummaryFile)
 		}
 	}
 }

@@ -17,16 +17,19 @@ import (
 )
 
 type Settings struct {
-	SamFileName   string
-	OutFile       string
-	CountNinDepth bool
-	Verbose       int
+	SamFileName      string
+	HistogramOutFile string
+	StatSummaryFile  string
+	HighEndFilter    float64
+	CountNinDepth    bool
+	Verbose          int
 }
 
 // samCoverage generates a count histogram of genome coverage.
 func samCoverage(s Settings) {
-	out := fileio.EasyCreate(s.OutFile)
-	_, err := fmt.Fprintf(out, "Coverage\tPileups\tGroup\n")
+	outHist := fileio.EasyCreate(s.HistogramOutFile)
+	statSummary := fileio.EasyCreate(s.StatSummaryFile)
+	_, err := fmt.Fprintf(outHist, "Coverage\tPileups\tGroup\n")
 	exception.PanicOnErr(err)
 	data, header := sam.GoReadToChan(s.SamFileName)
 	piles := sam.GoPileup(data, header, false, nil, nil)
@@ -45,19 +48,23 @@ func samCoverage(s Settings) {
 		totalCount++
 	}
 	lambda := fit.PoissonHistogram(histogram)
+	coverageThreshold := ThresholdCalc(s.HighEndFilter, histogram, float64(totalCount))
+	fmt.Fprintf(statSummary, "Lambda\t%v\nCoverageThreshold\t%v\n", lambda, coverageThreshold)
 	for i, pileups := range histogram {
-		_, err = fmt.Fprintf(out, "%v\t%v\tEmpirical\n", i, pileups)
+		_, err = fmt.Fprintf(outHist, "%v\t%v\tEmpirical\n", i, pileups)
 		exception.PanicOnErr(err)
 		y, outlier := numbers.PoissonDist(i, lambda, false)
 		if !outlier {
-			_, err = fmt.Fprintf(out, "%v\t%.6g\tExpected\n", i, y*float64(totalCount))
+			_, err = fmt.Fprintf(outHist, "%v\t%.6g\tExpected\n", i, y*float64(totalCount))
 			exception.PanicOnErr(err)
 		}
 	}
 	if s.Verbose > 0 {
-		log.Printf("lambda:%v\n", lambda)
+		log.Printf("Lambda: %v\n", lambda)
+		log.Printf("Coverage Threshold for High-End Filter: %v\n", coverageThreshold)
 	}
-	out.Close()
+	outHist.Close()
+	statSummary.Close()
 }
 
 // TotalDepth adds up the counts for all the bases at the given pileup and returns the total count as the depth
@@ -69,11 +76,23 @@ func TotalDepth(p sam.Pile, countNinDepth bool) int {
 	return depth
 }
 
+// Threshold Calc determines the coverage value associated with the filter threshold as a proportion (e.g. 0.001)
+func ThresholdCalc(threshold float64, covHistogram []int, totalCount float64) int {
+	targetNum := totalCount - totalCount*threshold
+	observations := totalCount
+	index := int(len(covHistogram) - 1)
+	for observations > targetNum {
+		observations -= float64(covHistogram[index])
+		index--
+	}
+	return index
+}
+
 func usage() {
 	fmt.Print(
 		"samCoverage - Generates a count histogram of genome coverage.\n" +
 			"Usage:\n" +
-			"samCoverage input.sam outfile.txt\n" +
+			"samCoverage input.sam histogram.txt statSummary.txt\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -81,7 +100,8 @@ func usage() {
 func main() {
 	var countNinDepth *bool = flag.Bool("countNinDepth", true, "If true, count 'N' reads towards total depth of pileups.")
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints. Verbose in this program reports Poisson parameter lambda.")
-	var expectedNumArgs int = 2
+	var highEndFilter *float64 = flag.Float64("highEndFilter", 0.001, "Percent threshold from right end of distribution to be filtered out")
+	var expectedNumArgs int = 3
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -93,13 +113,16 @@ func main() {
 	}
 
 	samFileName := flag.Arg(0)
-	outFile := flag.Arg(1)
+	outHistFile := flag.Arg(1)
+	outStatFile := flag.Arg(2)
 
 	s := Settings{
-		SamFileName:   samFileName,
-		OutFile:       outFile,
-		CountNinDepth: *countNinDepth,
-		Verbose:       *verbose,
+		SamFileName:      samFileName,
+		HistogramOutFile: outHistFile,
+		StatSummaryFile:  outStatFile,
+		HighEndFilter:    *highEndFilter,
+		CountNinDepth:    *countNinDepth,
+		Verbose:          *verbose,
 	}
 
 	samCoverage(s)

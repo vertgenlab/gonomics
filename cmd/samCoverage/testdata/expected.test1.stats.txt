@@ -1,0 +1,2 @@
+Lambda	1.2129380053908356
+CoverageThreshold	1
