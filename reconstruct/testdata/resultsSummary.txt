@@ -1,120 +1,48 @@
 Name	TreeIndex	NodeName	Inaccuracy
-GtrSimJukesRecon	0	root	0.0197
-GtrSimJukesRecon	0	Child_6	0.0048
-GtrSimJukesRecon	0	Child_3	0.0025
-GtrSimJukesRecon	1	root	0.0255
-GtrSimJukesRecon	1	Child_20	0.002
-GtrSimJukesRecon	1	Child_8	0.0013
-GtrSimJukesRecon	1	Child_7	0.0022
-GtrSimJukesRecon	1	Child_19	0.0051
-GtrSimJukesRecon	1	Child_18	0.0052
-GtrSimJukesRecon	1	Child_16	0.0051
-GtrSimJukesRecon	1	Child_17	0.007
-GtrSimJukesRecon	1	Child_14	0.0016
-GtrSimJukesRecon	1	Child_13	0.0025
-GtrSimJukesRecon	2	root	0.0187
-GtrSimJukesRecon	2	Child_10	0.0019
-GtrSimJukesRecon	2	Child_9	0.0049
-GtrSimJukesRecon	2	Child_6	0.007
-GtrSimJukesRecon	2	Child_3	0.0097
-GtrSimJukesRecon	3	root	0.0194
-GtrSimJukesRecon	3	Child_8	0.0033
-GtrSimJukesRecon	3	Child_5	0.005
-GtrSimJukesRecon	3	Child_7	0.003
-GtrSimJukesRecon	4	root	0.0141
-GtrSimJukesRecon	4	Child_16	0.0005
-GtrSimJukesRecon	4	Child_12	0.0006
-GtrSimJukesRecon	4	Child_7	0.0004
-GtrSimJukesRecon	4	Child_11	0.0005
-GtrSimJukesRecon	4	Child_15	0.0041
-GtrSimJukesRecon	4	Child_14	0.0023
-GtrSimJukesRecon	4	Child_13	0.0034
-GtrSimJukesRecon	5	root	0.0153
-GtrSimJukesRecon	5	Child_8	0.0051
-GtrSimJukesRecon	5	Child_7	0.0024
-GtrSimJukesRecon	5	Child_3	0.0039
-GtrSimJukesRecon	6	root	0.0245
-GtrSimJukesRecon	6	Child_14	0.0046
-GtrSimJukesRecon	6	Child_12	0.0038
-GtrSimJukesRecon	6	Child_13	0.0035
-GtrSimJukesRecon	6	Child_10	0.0008
-GtrSimJukesRecon	6	Child_9	0.004
-GtrSimJukesRecon	6	Child_5	0.0016
-GtrSimJukesRecon	7	root	0.0235
-GtrSimJukesRecon	7	Child_14	0.0064
-GtrSimJukesRecon	7	Child_12	0.0023
-GtrSimJukesRecon	7	Child_6	0.0016
-GtrSimJukesRecon	7	Child_11	0.003
-GtrSimJukesRecon	7	Child_9	0.0019
-GtrSimJukesRecon	7	Child_13	0.0025
-GtrSimJukesRecon	8	root	0.0385
-GtrSimJukesRecon	8	Child_16	0.0041
-GtrSimJukesRecon	8	Child_12	0.0013
-GtrSimJukesRecon	8	Child_15	0.0058
-GtrSimJukesRecon	8	Child_13	0.0019
-GtrSimJukesRecon	8	Child_10	0.0006
-GtrSimJukesRecon	8	Child_9	0.0014
-GtrSimJukesRecon	8	Child_8	0.0029
-GtrSimJukesRecon	9	root	0.0125
-GtrSimJukesRecon	9	Child_14	0.0017
-GtrSimJukesRecon	9	Child_9	0.003
-GtrSimJukesRecon	9	Child_8	0.0028
-GtrSimJukesRecon	9	Child_5	0.0008
-GtrSimJukesRecon	9	Child_13	0.0008
-GtrSimJukesRecon	9	Child_11	0.001
-GtrSimJukesRecon	10	root	0.0189
-GtrSimJukesRecon	10	Child_11	0.0014
-GtrSimJukesRecon	10	Child_10	0.0009
-GtrSimJukesRecon	10	Child_8	0.0014
-GtrSimJukesRecon	10	Child_6	0.0016
-GtrSimJukesRecon	10	Child_5	0.0011
-GtrSimJukesRecon	11	root	0.0387
-GtrSimJukesRecon	11	Child_8	0.0053
-GtrSimJukesRecon	11	Child_5	0.0051
-GtrSimJukesRecon	11	Child_4	0.0042
-GtrSimJukesRecon	12	root	0.0496
-GtrSimJukesRecon	12	Child_7	0.0075
-GtrSimJukesRecon	12	Child_5	0.0036
-GtrSimJukesRecon	12	Child_4	0.0059
-GtrSimJukesRecon	13	root	0.0252
-GtrSimJukesRecon	13	Child_8	0.0026
-GtrSimJukesRecon	13	Child_5	0.0016
-GtrSimJukesRecon	13	Child_3	0.0012
-GtrSimJukesRecon	14	root	0.0093
-GtrSimJukesRecon	14	Child_40	0.0054
-GtrSimJukesRecon	14	Child_20	0.0026
-GtrSimJukesRecon	14	Child_19	0.0064
-GtrSimJukesRecon	14	Child_39	0.0026
-GtrSimJukesRecon	14	Child_38	0.0028
-GtrSimJukesRecon	14	Child_37	0.002
-GtrSimJukesRecon	14	Child_36	0.0011
-GtrSimJukesRecon	14	Child_33	0.002
-GtrSimJukesRecon	14	Child_29	0.0006
-GtrSimJukesRecon	14	Child_17	0.0045
-GtrSimJukesRecon	14	Child_7	0.0037
-GtrSimJukesRecon	14	Child_35	0.0032
-GtrSimJukesRecon	14	Child_32	0.0042
-GtrSimJukesRecon	14	Child_28	0.0043
-GtrSimJukesRecon	14	Child_23	0.0041
-GtrSimJukesRecon	14	Child_27	0.0022
-GtrSimJukesRecon	14	Child_26	0.0033
-GtrSimJukesRecon	14	Child_25	0.0011
-GtrSimJukesRecon	14	Child_31	0.0026
-GtrSimJukesRecon	15	root	0.0539
-GtrSimJukesRecon	15	Child_11	0.0126
-GtrSimJukesRecon	15	Child_10	0.0022
-GtrSimJukesRecon	15	Child_9	0.0044
-GtrSimJukesRecon	15	Child_8	0.0018
-GtrSimJukesRecon	15	Child_7	0.0017
-GtrSimJukesRecon	16	root	0.0223
-GtrSimJukesRecon	16	Child_16	0.0027
-GtrSimJukesRecon	16	Child_14	0.0024
-GtrSimJukesRecon	16	Child_6	0.0033
-GtrSimJukesRecon	16	Child_13	0.0024
-GtrSimJukesRecon	16	Child_15	0.0025
-GtrSimJukesRecon	16	Child_12	0.0018
-GtrSimJukesRecon	16	Child_10	0.0021
-GtrSimJukesRecon	17	root	0.0305
-GtrSimJukesRecon	17	Child_12	0.003
-GtrSimJukesRecon	17	Child_7	0.0049
-G
+GtrSimJukesRecon	root	0.0197
+GtrSimJukesRecon	Child_6	0.0048
+GtrSimJukesRecon	Child_3	0.0025
+GtrSimGtrRecon	root	0.0439
+GtrSimGtrRecon	Child_4	0.0038
+GtrSimDefaultRecon	root	0.0361
+GtrSimDefaultRecon	Child_9	0.0034
+GtrSimDefaultRecon	Child_8	0.0032
+GtrSimDefaultRecon	Child_6	0.0031
+GtrSimDefaultRecon	Child_5	0.0042
+JukesSimJukesRecon	root	0.0185
+JukesSimJukesRecon	Child_24	0.0034
+JukesSimJukesRecon	Child_22	0.0015
+JukesSimJukesRecon	Child_19	0.0016
+JukesSimJukesRecon	Child_21	0.0016
+JukesSimJukesRecon	Child_16	0.0025
+JukesSimJukesRecon	Child_12	0.0024
+JukesSimJukesRecon	Child_23	0.0033
+JukesSimJukesRecon	Child_13	0.001
+JukesSimJukesRecon	Child_10	0.0011
+JukesSimJukesRecon	Child_5	0.0034
+JukesSimJukesRecon	Child_9	0.0057
+JukesSimJukesRecon	Child_16
+JukesSimGtrRecon	root	0.017
+JukesSimGtrRecon	Child_30	0.0015
+JukesSimGtrRecon	Child_27	0.0051
+JukesSimGtrRecon	Child_26	0.0044
+JukesSimGtrRecon	Child_23	0.0038
+JukesSimGtrRecon	Child_22	0.0032
+JukesSimGtrRecon	Child_10	0.0036
+JukesSimGtrRecon	Child_21	0.0033
+JukesSimGtrRecon	Child_18	0.0017
+JukesSimGtrRecon	Child_15	0.0077
+JukesSimGtrRecon	Child_14	0.0078
+JukesSimGtrRecon	Child_6	0.0046
+JukesSimGtrRecon	Child_25	0.0017
+JukesSimGtrRecon	Child_29	0.004
+JukesSimGtrRecon	Child_12	0.0029
+JukesSimGtrRecon	Child_25
+JukesSimDefaultRecon	root	0.0262
+JukesSimDefaultRecon	Child_5	0.0018
+JukesSimDefaultRecon	Child_4	0.0032
+JukesSimDefaultRecon	Child_4
+TransitionSimTransitionRecon	root	0.0207
+TransitionSimTransitionRecon	Child_5	0.0025
+TransitionSimTransitionRecon	Child_4	0.0037
+TransitionSimTransitionRecon	Child_5

@@ -45,7 +45,7 @@ func ReconstructSeq(newickInput string, fastaInput string, outputFilename string
 	var treeFastas []fasta.Fasta
 
 	for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
-		reconstruct.LoopNodes(tree, i, "", 0, false, 0, false)
+		reconstruct.LoopNodes(tree, i, "", "", 0, false, 0, false, "", nil)
 	}
 	for j := 0; j < len(leaves); j++ {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
@@ -64,6 +64,7 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 	//TODO: this code will need to change drastically for sequences of varying lengths.
 	//The loop through the sequence is restricted by the length of a single fasta and the tot calculation will need to calculate the total number of bps
 	//ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
+	//TODO: add option to reconstruct pdna nodes
 	var err error
 	SimulateEvolve(rootFastaFile, treeFile, gp, simOutFile, leafOutFile)
 	ReconstructSeq(treeFile, leafOutFile, reconOutFile)
@@ -107,7 +108,7 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 
 func usage() {
 	fmt.Print(
-		"SimRecon takes in a root fasta file, a genePred, and a tree. It simulates evolution along the tree, performs reconstruction based on the leaf nodes of the tree and then calculates accuracy at each node.\n" +
+		"SimRecon takes in a root fasta file, a genePred, and a tree. It simulates evolution along the tree, performs reconstruction based on the leaf nodes of the tree and then calculates accuracy at each node. Currently no option exists to reconstruct a pfasta node.\n" +
 			"simRecon [-option] <rootFile.fasta> <treeFile.txt> <genePred.gp> <simOutFile.fasta> <leafOutFile.fasta> <reconOutFile.fasta> <accuracyOutFile.txt>\n" +
 			"options:\n")
 	flag.PrintDefaults()

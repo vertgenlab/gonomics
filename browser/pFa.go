@@ -2,12 +2,12 @@ package browser
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
 	"unicode/utf8"
-	"github.com/vertgenlab/gonomics/fasta/pFasta"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/exception"
 )
 
 // PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
@@ -57,7 +57,7 @@ func PFaVisualizer(infile string, outfile string, start int, end int, startOfAli
 
 			if endOfAlignment {
 				end = len(records[0].Seq)
-			} 
+			}
 
 			_, err = fmt.Fprintf(out, "Start: %d. End: %d. %s: %d.", start, end, formatting, formatNum)
 			exception.PanicOnErr(err)
@@ -73,8 +73,8 @@ func PFaVisualizer(infile string, outfile string, start int, end int, startOfAli
 
 				if endOfAlignment {
 					end = len(records[desiredSeqIdx].Seq)
-				} 
-	
+				}
+
 				_, err = fmt.Fprintf(out, "Start: %d. End: %d. %s: %d.", start, end, formatting, formatNum)
 				exception.PanicOnErr(err)
 

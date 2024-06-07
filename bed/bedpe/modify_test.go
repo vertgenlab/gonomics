@@ -9,7 +9,7 @@ import (
 func TestContactsToMidpoints(t *testing.T) {
 	var records []BedPe
 	records = Read("testdata/BedPeFileTest.bedpe")
-	contactsToMidpoints(records)
+	ContactsToMidpoints(records)
 	Write("testdata/temp.ContactMidpoints.bedpe", records)
 
 	equal := fileio.AreEqual("testdata/expectedContactsMidpoints.bedpe", "testdata/temp.ContactMidpoints.bedpe")

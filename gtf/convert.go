@@ -98,12 +98,14 @@ func GenesToPromoterBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo, up
 	return answer
 }
 
-// GenesToBedFirstTwoCodonBases takes a map[string[*Gene
+// GenesToBedFirstTwoCodonBases takes a map[string]*Gene and returns a []bed.Bed containing the first two bases
+// of each codon. The result will be returned in coordinate sorted order.
 func GenesToBedFirstTwoCodonBases(genes map[string]*Gene) []bed.Bed {
 	var answer = make([]bed.Bed, 0)
 	for currGene := range genes {
 		answer = append(answer, geneToBedFirstTwoCodonBases(*genes[currGene])...)
 	}
+	bed.SortByCoord(answer)
 	return answer
 }
 

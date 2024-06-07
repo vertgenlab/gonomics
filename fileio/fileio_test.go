@@ -1,6 +1,9 @@
 package fileio
 
 import (
+	"io"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -48,5 +51,51 @@ func TestNextRealLine(t *testing.T) {
 func TestEqual(t *testing.T) {
 	if !AreEqual(testfile, testfile) || !AreEqualIgnoreComments(testfile, testfile) {
 		t.Errorf("problem with equal")
+	}
+}
+
+func TestMustCreateEmptyFilenameError(t *testing.T) {
+	if os.Getenv("TEST_FATAL") != "1" {
+		return
+	}
+	// Will cause log.Fatal in this test context
+	MustCreate("")
+}
+
+func TestStdin(t *testing.T) {
+	testCases := []string{
+		"Gonomics fileio stdin mock",
+		"",                 // Empty string
+		"\nHello\nWorld\n", // Multiple lines
+		"Secret input with special characters !@#$%^&*()_+",
+	}
+
+	for _, input := range testCases {
+		mockStdin, err := os.CreateTemp("", "mockStdin")
+		if err != nil {
+			t.Fatalf("Error: Failed to create temporary file: %v", err)
+		}
+		defer mockStdin.Close()
+		defer MustRemove(mockStdin.Name())
+		if _, err := mockStdin.WriteString(input); err != nil {
+			t.Fatalf("Error: Failed to write simulated input: %v", err)
+		}
+		if _, err := mockStdin.Seek(0, io.SeekStart); err != nil {
+			t.Fatalf("Error: Failed to seek to the start: %v", err)
+		}
+		os.Stdin = mockStdin
+
+		file := MustOpen("/dev/stdin")
+		defer file.Close()
+
+		var reader strings.Builder
+
+		if _, err := io.Copy(&reader, file); err != nil {
+			t.Fatalf("Error: Failed to read from simulated stdin: %v", err)
+		}
+		if reader.String() != input {
+			t.Errorf("Error: Mismatch for input %q. Expected: %q, got %q", input, input, reader.String())
+		}
+
 	}
 }
