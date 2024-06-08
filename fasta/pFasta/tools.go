@@ -2,6 +2,7 @@ package pFasta
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 
 	"github.com/vertgenlab/gonomics/bed"
@@ -91,4 +92,65 @@ func Sample(input []PFasta, chrom string) fasta.Fasta {
 	}
 
 	return answer
+}
+
+// faToPfa returns a pFasta representation of the given Fasta sequence
+func faToPfa(input fasta.Fasta, start int, end int) PFasta {
+	answer := PFasta{Name: input.Name, Seq: make([]pDna.Float32Base, end-start)}
+	if end == -1 {
+		end = len(input.Seq)
+	}
+
+	fasta.ToUpper(input)
+
+	for idx, base := range input.Seq[start:end] {
+		if base == dna.A {
+			answer.Seq[idx] = pDna.Float32Base{A: 1, C: 0, G: 0, T: 0}
+		} else if base == dna.C {
+			answer.Seq[idx] = pDna.Float32Base{A: 0, C: 1, G: 0, T: 0}
+		} else if base == dna.G {
+			answer.Seq[idx] = pDna.Float32Base{A: 0, C: 0, G: 1, T: 0}
+		} else if base == dna.T {
+			answer.Seq[idx] = pDna.Float32Base{A: 0, C: 0, G: 0, T: 1}
+		} else if base == dna.N {
+			answer.Seq[idx] = pDna.Float32Base{A: 0, C: 0, G: 0.25, T: 0.25}
+		} else if base == dna.Gap {
+			log.Fatalf("Must specify a sequence without gaps.")
+		}
+	}
+
+	return answer
+}
+
+// faToPfa returns a pFasta representation of the given Fasta sequence
+func multiFaToPfa(input []fasta.Fasta, start int, end int, chrom string) PFasta {
+	chromInInput := false
+	var answer PFasta
+	for _, seq := range input {
+		if seq.Name == chrom {
+			chromInInput = true
+			answer = faToPfa(seq, start, end)
+		}
+	}
+
+	if !chromInInput {
+		log.Fatalf("Error: input sequence name does not match requested chrom.")
+	}
+
+	return answer
+}
+
+// delete this: vcf 1-indexed
+// af = allele freq
+// // vcfToPfa returns a pFasta representation of the given VCF sequence
+func vcfToPfa(inputVCF []vcf.Vcf, inputFa fasta.Fasta) PFasta {
+	answer := faToPfa(inputFa, 0, -1)
+
+	var vcfRecords <-chan vcf.Vcf
+
+	return answer
+}
+
+func vcfSamplesToPdnaBase(sample vcf.Sample) pDna.Float32Base {
+	//
 }
