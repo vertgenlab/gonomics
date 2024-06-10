@@ -59,7 +59,7 @@ func ReadToChan(inputFile string, send chan<- Interval) {
 			send <- val
 		}
 	default:
-		log.Fatalf("ERROR: file type of %s not supported by interval ReadToChan", inputFile)
+		log.Fatalf("Error: file type of %s not supported by interval ReadToChan", inputFile)
 	}
 	close(send)
 }
