@@ -1,6 +1,7 @@
 package bed
 
 import (
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 )
@@ -110,4 +111,27 @@ func MergeHighMem(records []Bed, mergeAdjacent bool, keepAllNames bool) []Bed {
 	}
 	outList = append(outList, currentMax)
 	return outList
+}
+
+func BedsWithNameSet(regions []Bed, names []string) []Bed {
+	var answer []Bed
+
+	for r := range regions {
+		for n := range names {
+			if regions[r].Name == names[n] {
+				answer = append(answer, regions[r])
+			}
+		}
+	}
+	return answer
+}
+
+func ReadChromSizesToBed(in map[string]chromInfo.ChromInfo) []Bed {
+	var answer []Bed
+	currBed := Bed{Chrom: "", ChromStart: 0, ChromEnd: 0, FieldsInitialized: 3}
+	for s := range in {
+		currBed.ChromEnd = in[s].Size
+		answer = append(answer, currBed)
+	}
+	return answer
 }

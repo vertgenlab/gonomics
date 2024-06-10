@@ -135,20 +135,59 @@ func NormalRightIntegral(x float64, mu float64, sigma float64) float64 {
 	return DefiniteIntegral(f, mu+200*sigma, x)
 }
 
+// LogNormalRightTailCDF computes log(erfc(z / sqrt(2))) for normal distribution tail
 func LogNormalRightTailCDF(x, mu, sigma float64) (float64, error) {
-	z := (x - mu) / sigma
-	logErfc := logspace.Divide(math.Log(z), math.Log(math.Sqrt2))
-	logHalf := math.Log(0.5)
-	result := logHalf + logErfc
+	if sigma <= 0 {
+		return math.NaN(), fmt.Errorf("sigma must be positive. Received sigma: %e", sigma)
+	}
+
+	z := logspace.Divide(logspace.Subtract(math.Log(x), math.Log(mu)), math.Log(sigma))
+	stableZ := -z
+	log.Print(stableZ)
+	var stable float64
+
+	if stableZ < -8.0 {
+		stable = -0.5*stableZ*stableZ - math.Log(-stableZ) - 0.91893853320467274178 // Use asymptotic expansion
+	} else {
+		stable = math.Log(0.5 * math.Erfc(stableZ/math.Sqrt2))
+	}
+
+	result := math.Log(2) + stable
 
 	if math.IsInf(result, 0) {
-		return result, fmt.Errorf("overflow detected result: %e, x: %e, mu: %e, sigma: %e, z: %e, logErfc: %e", result, x, mu, sigma, z, logErfc)
+		return result, fmt.Errorf("overflow detected. result: %e, x: %e, mu: %e, sigma: %e, z: %e", result, x, mu, sigma, z)
 	}
 	if result == math.Inf(-1) {
-		return result, fmt.Errorf("underflow detected result: %e, x: %e, mu: %e, sigma: %e, z: %e, logErfc: %e", result, x, mu, sigma, z, logErfc)
+		return result, fmt.Errorf("underflow detected. result: %e, x: %e, mu: %e, sigma: %e, z: %e", result, x, mu, sigma, z)
+	}
+	if math.IsNaN(result) {
+		return result, fmt.Errorf("NaN detected. result: %e, x: %e, mu: %e, sigma: %e, z: %e", result, x, mu, sigma, z)
 	}
 	return result, nil
 }
+
+//func LogNormalRightTailCDF(x, mu, sigma float64) (float64, error) {
+//	var stable float64
+//	z := logspace.Divide(logspace.Subtract(math.Log(x), math.Log(mu)), math.Log(sigma))
+//	stableZ := -z
+//	if stableZ < -8.0 {
+//		stable = -0.5*stableZ*stableZ - math.Log(-z) - 0.91893853320467274178 // Use asymptotic expansion
+//	} else {
+//		stable = math.Log(0.5 * math.Erfc(-z/math.Sqrt2))
+//	}
+//	result := math.Log(2) + stable
+//
+//	if math.IsInf(result, 0) {
+//		return result, fmt.Errorf("overflow detected. result: %e, x: %e, mu: %e, sigma: %e, z: %e", result, x, mu, sigma, z)
+//	}
+//	if result == math.Inf(-1) {
+//		return result, fmt.Errorf("underflow detected. result: %e, x: %e, mu: %e, sigma: %e, z: %e", result, x, mu, sigma, z)
+//	}
+//	if math.IsNaN(result) {
+//		return result, fmt.Errorf("NaN detected. result: %e, x: %e, mu: %e, sigma: %e, z: %e", result, x, mu, sigma, z)
+//	}
+//	return result, nil
+//}
 
 // NormalAdaptiveIntegral returns the integral under a normal probability distribution with mean mu and standard deviation sigma from a specified left and right bound.
 func NormalAdaptiveIntegral(left string, right string, mu float64, sigma float64) float64 {

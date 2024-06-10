@@ -10,8 +10,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
-	"github.com/vertgenlab/gonomics/numbers"
-
 	//"github.com/vertgenlab/gonomics/interval/lift"
 	//"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/ontology/gaf"
@@ -264,9 +262,9 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	//exception.PanicOnErr(err)
 
 	var mu, sigma float64
-	var currP float64
+	//var currP float64
 	var mus, sigmas []float64
-	var pvals []float64
+	//var pvals []float64
 	if enrichments {
 		proportionsForTerms = termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
 		out := fileio.EasyCreate(name + ".termProportions.txt")
@@ -290,9 +288,9 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 				//normal approximation of binomial to calculate sigma = square root of n*p*(1-p)
 				sigma = math.Sqrt(mu * (1 - proportionsForTerms[i]))
 				sigmas = append(sigmas, sigma)
-				currP = numbers.NormalRightIntegral(float64(kCache[i]), mu, math.Sqrt(mu*(1-mu)))
+				//currP = numbers.NormalRightIntegral(float64(kCache[i]), mu, math.Sqrt(mu*(1-mu)))
 				//exception.PanicOnErr(err)
-				pvals = append(pvals, currP)
+				//pvals = append(pvals, currP)
 			}
 		}
 
