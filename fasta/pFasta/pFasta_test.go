@@ -32,7 +32,7 @@ var WriteTests = []struct {
 	Records   []PFasta
 	Precision float32
 }{
-	{OutFile: "out.test.pFa",
+	{OutFile: "testdata/out.test.pFa",
 		Records: []PFasta{
 			{Name: "chr1",
 				Seq: []pDna.Float32Base{
@@ -76,7 +76,7 @@ var WriteTests = []struct {
 		Precision: 1e-3, // float16 for writing is quite inaccurate, this fails at 1e-4
 	},
 	{
-		OutFile:   "out.test.pFa",
+		OutFile:   "testdata/out.test.pFa",
 		Records:   []PFasta{randSeq(100000)},
 		Precision: 1e-2,
 	},
