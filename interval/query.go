@@ -1,7 +1,7 @@
 package interval
 
 import (
-	"log"
+	"fmt"
 	"path"
 
 	"github.com/vertgenlab/gonomics/axt"
@@ -59,7 +59,7 @@ func ReadToChan(inputFile string, send chan<- Interval) {
 			send <- val
 		}
 	default:
-		log.Fatalf("Error: file type of %s not supported by interval ReadToChan", inputFile)
+		panic(fmt.Errorf("Error: file type of %s not supported by interval ReadToChan", inputFile))
 	}
 	close(send)
 }

@@ -1,6 +1,11 @@
 package interval
 
 import (
+	"bytes"
+	"fmt"
+	"log"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/axt"
@@ -217,11 +222,6 @@ func TestReadToChanVcf(t *testing.T) {
 	fileio.EasyRemove(vcfFile)
 }
 
-// I like the idea, but can only recover from panic, not fatal.
-// For gonomics style I think a fatal is most appropriate for interval.ReadToChan
-// Ideally it would return the error, but we have not really opted for that style in
-// gonomics, though I would be open to an initiative to change that.
-/*
 func TestReadToChanUnknownFileType(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -253,4 +253,3 @@ func TestReadToChanUnknownFileType(t *testing.T) {
 		t.Log("log.Fatalf called with expected message - Test Passed!")
 	}
 }
-*/
