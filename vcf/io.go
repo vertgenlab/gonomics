@@ -61,13 +61,13 @@ func processVcfLine(line string) Vcf {
 	var err error
 	data := strings.Split(line, "\t")
 	if len(data) < 8 {
-		log.Panicf("Error when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
+		log.Panicf("Error: when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
 	}
 
 	curr.Chr = data[0]
 	curr.Pos, err = strconv.Atoi(data[1])
 	if err != nil {
-		log.Panicf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
+		log.Panicf("Error: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
 	}
 	curr.Id = data[2]
 	curr.Ref = data[3]
@@ -76,7 +76,7 @@ func processVcfLine(line string) Vcf {
 	if data[5] != "." {
 		curr.Qual, err = strconv.ParseFloat(data[5], 64)
 		if err != nil {
-			log.Panicf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
+			log.Panicf("Error: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
 		}
 	}
 	curr.Filter = data[6]
@@ -120,6 +120,7 @@ func parseSamples(samples []string, format []string, line string) []Sample {
 func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 	var alleleId int64
 	var err error
+	// TODO: Consider reducing allocation of string.Builder variable to further improve performance.
 	if gt == "." || gt == "./." {
 		return nil, nil
 	}
@@ -141,7 +142,7 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 			}
 			alleleId, err = strconv.ParseInt(text[i], 10, 16)
 			if err != nil {
-				log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to an int16 in the following line\n%s\n", text[i], line)
+				log.Fatalf("Error: VCF reading\nCould not convert '%s' to an int16 in the following line\n%s\n", text[i], line)
 			}
 			alleles = append(alleles, int16(alleleId))
 		} else { // is phase info

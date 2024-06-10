@@ -10,6 +10,7 @@ import (
 
 // String implements the fmt.Stringer interface for easy printing of Vcf with the fmt package.
 func (v Vcf) String() string {
+	// TODO: Consider reducing allocation of string.Builder variable to further improve performance.
 	var buf strings.Builder
 	buf.Grow(256) // Pre-allocate some space for efficiency.
 
@@ -46,9 +47,11 @@ func (s Sample) String() string {
 		buf.WriteByte('.')
 		return buf.String()
 	}
+	// TODO: Improve handling of '.' and/or './.' to differentiate between no genotype vs. no data.
 	if s.Alleles == nil {
 		buf.WriteByte('.')
 	} else {
+		// TODO: Error check to ensure phase info matches number of alleles
 		for i := 0; i < len(s.Alleles); i++ {
 			if i > 0 && i < len(s.Phase) {
 				buf.WriteByte(PhasedToByte(s.Phase[i]))
@@ -56,7 +59,10 @@ func (s Sample) String() string {
 			buf.WriteString(strconv.Itoa(int(s.Alleles[i])))
 		}
 	}
-	if len(s.FormatData) > 1 {
+	if len(s.FormatData) > 0 {
+		if s.FormatData[0] != "" {
+			buf.WriteByte(':')
+		}
 		buf.WriteString(strings.Join(s.FormatData, ":"))
 	}
 

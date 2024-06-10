@@ -110,11 +110,38 @@ func TestSample_String(t *testing.T) {
 	}{
 		{
 			sample:   Sample{Alleles: []int16{0, 1}, Phase: []bool{false, true}, FormatData: []string{"GT", "DP"}},
-			expected: "0|1GT:DP",
+			expected: "0|1:GT:DP",
 		},
 		{
 			sample:   Sample{Alleles: nil, Phase: nil, FormatData: nil},
 			expected: ".",
+		},
+	}
+	for _, s := range tests {
+		result := s.sample.String()
+		if result != s.expected {
+			t.Errorf("Error: String() = %q, want %q", result, s.expected)
+		}
+
+	}
+}
+
+func TestDoubleDigitAlleles(t *testing.T) {
+	tests := []struct {
+		sample   Sample
+		expected string
+	}{
+		{
+			sample:   Sample{Alleles: []int16{1, 50, 20, 100, 999}, Phase: []bool{false, true, false, false, true}, FormatData: []string{"GT", "DP"}},
+			expected: "1|50/20/100|999:GT:DP",
+		},
+		{
+			sample:   Sample{Alleles: []int16{999}, Phase: []bool{false}, FormatData: []string{"GT"}},
+			expected: "999:GT",
+		},
+		{
+			sample:   Sample{Alleles: []int16{1, 50, 20, 100, 999, 848, 2343, 453}, Phase: []bool{false, true, false, false, true, false, true, true}, FormatData: []string{"GT", "DP"}},
+			expected: "1|50/20/100|999/848|2343|453:GT:DP",
 		},
 	}
 	for _, s := range tests {

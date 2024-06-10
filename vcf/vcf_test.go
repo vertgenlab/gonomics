@@ -30,7 +30,7 @@ func TestReadToChan(t *testing.T) {
 func TestWriteAndRead(t *testing.T) {
 	var actual []Vcf
 	for _, test := range readWriteTests {
-		tempFile := "tmp"
+		tempFile := "testdata/tmp.vcf"
 		actual, _ = Read(test.filename)
 		Write(tempFile, actual)
 		alpha, _ := Read(tempFile)
@@ -65,9 +65,9 @@ func BenchmarkWrite(b *testing.B) {
 	b.ReportAllocs()
 	records, _ := Read("testdata/test.vcf")
 	for i := 0; i < b.N; i++ {
-		Write("testdata/tmp", records)
+		Write("testdata/tmp.vcf", records)
 	}
-	os.Remove("testdata/tmp")
+	os.Remove("testdata/tmp.vcf")
 }
 
 func BenchmarkWriteGzip(b *testing.B) {
