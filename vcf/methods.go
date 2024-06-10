@@ -59,7 +59,7 @@ func (s Sample) String() string {
 			buf.WriteString(strconv.Itoa(int(s.Alleles[i])))
 		}
 	}
-	if len(s.FormatData) > 0 {
+	if len(s.FormatData) > 1 {
 		if s.FormatData[0] != "" {
 			buf.WriteByte(':')
 		}
