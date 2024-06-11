@@ -4,9 +4,12 @@ package cigar
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
+	"strconv"
+	"strings"
 	"unicode"
+
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // Cigar contains information on the runLength, operation, and DNA sequence associated with a particular cigar character.
@@ -44,19 +47,23 @@ func NumDeletions(input []Cigar) int {
 }
 
 // ToString converts a slice of Cigar structs to a string for producing readable outputs for files or standard out.
-func ToString(c []Cigar) string {
-	if len(c) == 0 {
+func ToString(cigars []Cigar) string {
+	if len(cigars) == 0 {
 		return "*"
 	}
-	var output string = ""
-	for _, v := range c {
-		if v.Op == '*' {
-			output = "*"
+
+	var buf strings.Builder
+	for _, c := range cigars {
+		if c.Op == '*' {
+			buf.WriteByte('*')
 			break
+		} else {
+			buf.Write(strconv.AppendUint(make([]byte, 0, 10), uint64(c.RunLength), 10))
+			buf.WriteByte(byte(c.Op))
 		}
-		output += fmt.Sprintf("%v%c", v.RunLength, v.Op)
+
 	}
-	return output
+	return buf.String()
 }
 
 // FromString parses an input string into a slice of Cigar structs.

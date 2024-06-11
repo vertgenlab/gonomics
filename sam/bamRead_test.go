@@ -125,8 +125,9 @@ func equalExceptExtra(a, b []Sam) bool {
 	return true
 }
 
-const bigBam string = "/Users/danielsnellings/Desktop/10k.bam"
-const bigSam string = "/Users/danielsnellings/Desktop/10k.sam"
+const bigBam string = "testdata/peak.bam"
+
+// const bigSam string = "testdata/peak.sam" <- variable unused
 
 func BenchmarkBamOpenClose(b *testing.B) {
 	for i := 0; i < b.N; i++ {

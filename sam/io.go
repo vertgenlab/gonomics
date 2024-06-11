@@ -435,7 +435,7 @@ func WriteToFileHandle(file io.Writer, aln Sam) {
 	if bamWriter, ok := file.(*BamWriter); ok {
 		WriteToBamFileHandle(bamWriter, aln, 0)
 	} else {
-		_, err := fmt.Fprintln(file, ToString(aln))
+		_, err := fmt.Fprintln(file, aln.String())
 		exception.PanicOnErr(err)
 	}
 }

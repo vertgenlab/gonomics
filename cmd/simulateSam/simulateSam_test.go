@@ -132,8 +132,8 @@ func TestSimulateSam(t *testing.T) {
 				for i := range bamA {
 					if !sam.Equal(bamA[i], bamB[i]) {
 						t.Error("Error: problem simulating bam")
-						fmt.Printf("Observed:\n%s\n", sam.ToString(bamA[i]))
-						fmt.Printf("Expected:\n%s\n", sam.ToString(bamB[i]))
+						fmt.Printf("Observed:\n%s\n", bamA[i].String())
+						fmt.Printf("Expected:\n%s\n", bamB[i].String())
 					}
 				}
 			}

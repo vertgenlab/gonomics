@@ -3,7 +3,8 @@
 package sam
 
 import (
-	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/cigar"
@@ -65,26 +66,72 @@ type Header struct {
 }
 
 // String converts Sam to a string to satisfy the fmt.Stringer interface.
+
 func (s Sam) String() string {
-	return ToString(s)
-}
+	var buf strings.Builder
 
-// ToString converts an Sam struct to a tab delimited string per file specs.
-func ToString(aln Sam) string {
-	var answer string
 	var err error
-	if len(aln.unparsedExtra) > 0 {
-		aln, err = parseExtra(aln)
+	if len(s.unparsedExtra) > 0 {
+		s, err = parseExtra(s)
 		exception.PanicOnErr(err)
-		aln.Extra = parsedExtraToString(&aln)
+		s.Extra = parsedExtraToString(&s)
+	}
+	buf.WriteString(s.QName)
+	buf.WriteByte('\t')
+
+	buf.WriteString(strconv.Itoa(int(s.Flag)))
+	buf.WriteByte('\t')
+
+	buf.WriteString(s.RName)
+	buf.WriteByte('\t')
+
+	buf.WriteString(strconv.Itoa(int(s.Pos)))
+	buf.WriteByte('\t')
+
+	buf.WriteString(strconv.Itoa(int(s.MapQ)))
+	buf.WriteByte('\t')
+
+	buf.WriteString(cigar.ToString(s.Cigar))
+	buf.WriteByte('\t')
+
+	buf.WriteString(s.RNext)
+	buf.WriteByte('\t')
+	buf.WriteString(strconv.Itoa(int(s.PNext)))
+	buf.WriteByte('\t')
+
+	buf.WriteString(strconv.Itoa(int(s.TLen)))
+	buf.WriteByte('\t')
+
+	buf.WriteString(dna.BasesToString(s.Seq))
+	buf.WriteByte('\t')
+
+	buf.WriteString(s.Qual)
+
+	if s.Extra != "" {
+		buf.WriteByte('\t')
+		buf.WriteString(s.Extra)
 	}
 
-	if aln.Extra == "" {
-		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s",
-			aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual)
-	} else {
-		answer = fmt.Sprintf("%s\t%d\t%s\t%d\t%d\t%s\t%s\t%d\t%d\t%s\t%s\t%s",
-			aln.QName, aln.Flag, aln.RName, aln.Pos, aln.MapQ, cigar.ToString(aln.Cigar), aln.RNext, aln.PNext, aln.TLen, dna.BasesToString(aln.Seq), aln.Qual, aln.Extra)
-	}
-	return answer
+	return buf.String()
 }
+
+// 	buf.WriteString(s.Qual)
+
+// 	if len(s.unparsedExtra) > 0 {
+//         var err error
+//         s, err = parseExtra(s)
+//         if err != nil {
+//             // Handle the error gracefully, perhaps by logging or using a default value
+//             // For now, let's just skip the extra field
+//             fmt.Printf("Error parsing extra fields: %v\n", err)
+//         } else {
+//             extraStr := parsedExtraToString(&s)
+//             if extraStr != "" {
+//                 buf.WriteByte('\t')
+//                 buf.WriteString(extraStr)
+//             }
+//         }
+//     }
+
+// 	return buf.String()
+// }

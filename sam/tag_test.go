@@ -2,10 +2,11 @@ package sam
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 func TestTags(t *testing.T) {

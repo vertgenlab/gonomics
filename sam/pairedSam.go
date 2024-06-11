@@ -2,9 +2,10 @@ package sam
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 // SamPE is struct that contains 2 paired end Sam entries as well as a slice of Sam that represents all supplementary
@@ -82,19 +83,19 @@ func parseReads(tmpSlice []Sam) SamPE {
 // WriteSamPeToFileHandle writes a both reads and any supplementary alignments from a SamPE struct to a fileio EasyWriter
 // TODO: Add bam writing functionality
 func WriteSamPeToFileHandle(file io.Writer, pe SamPE) {
-	_, err := fmt.Fprintln(file, ToString(pe.R1))
+	_, err := fmt.Fprintln(file, pe.R1.String())
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintln(file, ToString(pe.R2))
+	_, err = fmt.Fprintln(file, pe.R2.String())
 	exception.PanicOnErr(err)
 	if len(pe.SupR1) != 0 {
 		for i := range pe.SupR1 {
-			_, err = fmt.Fprintln(file, ToString(pe.SupR1[i]))
+			_, err = fmt.Fprintln(file, pe.SupR1[i].String())
 			exception.PanicOnErr(err)
 		}
 	}
 	if len(pe.SupR2) != 0 {
 		for i := range pe.SupR2 {
-			_, err = fmt.Fprintln(file, ToString(pe.SupR2[i]))
+			_, err = fmt.Fprintln(file, pe.SupR2[i].String())
 			exception.PanicOnErr(err)
 		}
 	}

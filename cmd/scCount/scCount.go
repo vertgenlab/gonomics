@@ -8,6 +8,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
+	"sort"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -15,10 +20,6 @@ import (
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
-	"io"
-	"log"
-	"sort"
-	"strings"
 )
 
 func scCount(s Settings) {
@@ -65,7 +66,7 @@ func scCount(s Settings) {
 		}
 		if len(overlap) > 1 {
 			//TODO: Some transcripts overlap, but we can figure out from exon lines which gene to assign a read to.
-			log.Fatalf("The following input SAM record maps to multiple genes in the gtf file:\n%v.", sam.ToString(i))
+			log.Fatalf("The following input SAM record maps to multiple genes in the gtf file:\n%v.", i.String())
 		}
 		currGene = getGeneName(overlap[0].(*gtf.Gene))
 		if dna.BasesToString(sc.Bx) != currRow.Bx {
