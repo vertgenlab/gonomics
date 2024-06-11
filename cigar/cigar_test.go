@@ -35,6 +35,24 @@ func TestToString(t *testing.T) {
 	}
 }
 
+func TestEmptyCigar(t *testing.T) {
+	var null []Cigar = nil
+	var expected string = "*"
+
+	if ToString(null) != expected {
+		t.Errorf("Expected: '*', Got: %q", ToString(null))
+	}
+}
+
+func TestUnmappedCigar(t *testing.T) {
+	var unmapped []Cigar = []Cigar{{RunLength: 0, Op: '*'}}
+	var expected string = "*"
+
+	if ToString(unmapped) != expected {
+		t.Errorf("Expected: '*', Got: %q", ToString(unmapped))
+	}
+}
+
 func isEqual(a Cigar, b Cigar) bool {
 	return (a.RunLength == b.RunLength && a.Op == b.Op)
 }
