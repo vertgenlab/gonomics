@@ -28,69 +28,69 @@ func Read(filename string) BigWig {
 // We currently support only reading bbi headers in LittleEndian.
 func readBbiHeader(file *fileio.EasyReader) BbiHeader {
 	var header = BbiHeader{}
-	decodeBinaryField(file, &header.Magic)
+	fileio.DecodeBinaryField(file, &header.Magic)
 	if header.Magic == bigWigMagicBigEndian {
 		log.Fatalf("Error: bigWig file appears to be in big endian. Current functionality only supports little endian bigWig files.\n")
 	}
 	if header.Magic != bigWigMagic {
 		log.Fatalf("Error: bigWig magic was not as expected. Found: %v. Expected: %v.\n", header.Magic, bigWigMagic)
 	}
-	decodeBinaryField(file, &header.Version)
-	decodeBinaryField(file, &header.ZoomLevels)
-	decodeBinaryField(file, &header.ChromosomeTreeOffset)
-	decodeBinaryField(file, &header.FullDataOffset)
-	decodeBinaryField(file, &header.FullIndexOffset)
-	decodeBinaryField(file, &header.FieldCount)
+	fileio.DecodeBinaryField(file, &header.Version)
+	fileio.DecodeBinaryField(file, &header.ZoomLevels)
+	fileio.DecodeBinaryField(file, &header.ChromosomeTreeOffset)
+	fileio.DecodeBinaryField(file, &header.FullDataOffset)
+	fileio.DecodeBinaryField(file, &header.FullIndexOffset)
+	fileio.DecodeBinaryField(file, &header.FieldCount)
 	if header.FieldCount != 0 {
 		log.Fatalf("Error: bigWig header fieldCount field must be zero. Found: %v.\n", header.FieldCount)
 	}
-	decodeBinaryField(file, &header.DefinedFieldCount)
+	fileio.DecodeBinaryField(file, &header.DefinedFieldCount)
 	if header.DefinedFieldCount != 0 {
 		log.Fatalf("Error: bigWig header definedFieldCount field must be zero. Found: %v.\n", header.DefinedFieldCount)
 	}
-	decodeBinaryField(file, &header.AutoSqlOffset)
+	fileio.DecodeBinaryField(file, &header.AutoSqlOffset)
 	if header.AutoSqlOffset != 0 {
 		log.Fatalf("Error: bigWig header AutoSeqlOffset field must be zero. Found: %v.\n", header.AutoSqlOffset)
 	}
-	decodeBinaryField(file, &header.TotalSummaryOffset)
-	decodeBinaryField(file, &header.UncompressBufferSize)
-	decodeBinaryField(file, &header.ExtensionOffset)
+	fileio.DecodeBinaryField(file, &header.TotalSummaryOffset)
+	fileio.DecodeBinaryField(file, &header.UncompressBufferSize)
+	fileio.DecodeBinaryField(file, &header.ExtensionOffset)
 	return header
 }
 
 func readZoomHeader(file *fileio.EasyReader) ZoomHeader {
 	var answer = ZoomHeader{}
-	decodeBinaryField(file, &answer.ReductionLevel)
-	decodeBinaryField(file, &answer.Reserved)
-	decodeBinaryField(file, &answer.DataOffset)
-	decodeBinaryField(file, &answer.IndexOffset)
+	fileio.DecodeBinaryField(file, &answer.ReductionLevel)
+	fileio.DecodeBinaryField(file, &answer.Reserved)
+	fileio.DecodeBinaryField(file, &answer.DataOffset)
+	fileio.DecodeBinaryField(file, &answer.IndexOffset)
 	return answer
 }
 
 func readTotalSummary(file *fileio.EasyReader) TotalSummaryBlock {
 	var answer = TotalSummaryBlock{}
-	decodeBinaryField(file, &answer.BasesCovered)
-	decodeBinaryField(file, &answer.MinVal)
-	decodeBinaryField(file, &answer.MaxVal)
-	decodeBinaryField(file, &answer.SumData)
-	decodeBinaryField(file, &answer.SumSquares)
+	fileio.DecodeBinaryField(file, &answer.BasesCovered)
+	fileio.DecodeBinaryField(file, &answer.MinVal)
+	fileio.DecodeBinaryField(file, &answer.MaxVal)
+	fileio.DecodeBinaryField(file, &answer.SumData)
+	fileio.DecodeBinaryField(file, &answer.SumSquares)
 	return answer
 }
 
 func readChromTreeHeader(file *fileio.EasyReader) ChromTreeHeader {
 	var answer = ChromTreeHeader{}
-	decodeBinaryField(file, &answer.Magic)
+	fileio.DecodeBinaryField(file, &answer.Magic)
 	if answer.Magic == chromTreeMagicBigEndian {
 		log.Fatalf("Error: bigWig package found a big endian chromosome tree header. Currently our package only supports little endian bigWig files.\n")
 	}
 	if answer.Magic != chromTreeMagic {
 		log.Fatalf("Error: Expected to find chromosome tree magic number (2026540177) in file. Found: %v.\n", answer.Magic)
 	}
-	decodeBinaryField(file, &answer.BlockSize)
-	decodeBinaryField(file, &answer.KeySize)
-	decodeBinaryField(file, &answer.ValSize)
-	decodeBinaryField(file, &answer.ItemCount)
-	decodeBinaryField(file, &answer.Reserved)
+	fileio.DecodeBinaryField(file, &answer.BlockSize)
+	fileio.DecodeBinaryField(file, &answer.KeySize)
+	fileio.DecodeBinaryField(file, &answer.ValSize)
+	fileio.DecodeBinaryField(file, &answer.ItemCount)
+	fileio.DecodeBinaryField(file, &answer.Reserved)
 	if answer.Reserved != 0 {
 		log.Fatalf("Error: expected chromosome tree header reserved field to be equal to 0. Found: %v.\n", answer.Reserved)
 	}
@@ -108,34 +108,27 @@ func readChromTreeNodes(file *fileio.EasyReader, header ChromTreeHeader) []Chrom
 	for numItems < int(header.ItemCount) {
 		// first we make a Node and read the node header
 		currNode = ChromTreeNode{}
-		decodeBinaryField(file, &currNode.IsLeaf)
-		decodeBinaryField(file, &currNode.Reserved)
-		decodeBinaryField(file, &currNode.Count)
+		fileio.DecodeBinaryField(file, &currNode.IsLeaf)
+		fileio.DecodeBinaryField(file, &currNode.Reserved)
+		fileio.DecodeBinaryField(file, &currNode.Count)
 
 		for countIdx = 0; countIdx < currNode.Count; countIdx++ {
 			currItem = ChromTreeItem{}
 			// first we parse the key (same for leaf and non-leaf nodes, and comes first)
 			currItem.Key = make([]byte, header.KeySize)
 			for currByteCounter = 0; currByteCounter < header.KeySize; currByteCounter++ {
-				decodeBinaryField(file, &currItem.Key[currByteCounter])
+				fileio.DecodeBinaryField(file, &currItem.Key[currByteCounter])
 			}
 			if currNode.IsLeaf {
-				decodeBinaryField(file, &currItem.ChromId)
-				decodeBinaryField(file, &currItem.ChromSize)
+				fileio.DecodeBinaryField(file, &currItem.ChromId)
+				fileio.DecodeBinaryField(file, &currItem.ChromSize)
 			} else {
-				decodeBinaryField(file, &currItem.ChildOffset)
+				fileio.DecodeBinaryField(file, &currItem.ChildOffset)
 			}
 			currNode.Items = append(currNode.Items, currItem)
 			numItems++
 		}
 		answer = append(answer, currNode)
 	}
-
 	return answer
-}
-
-// decodeBinaryField reads binary data from an input *fileio.EasyReader to a variable.
-func decodeBinaryField(file *fileio.EasyReader, data any) {
-	err := binary.Read(file, binary.LittleEndian, data)
-	exception.PanicOnErr(err)
 }

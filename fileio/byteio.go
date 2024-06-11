@@ -3,6 +3,7 @@ package fileio
 import (
 	"bufio"
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -164,4 +165,10 @@ func IntSliceToString(nums []int) string {
 // IntToString converts an int to a string.
 func IntToString(i int) string {
 	return fmt.Sprintf("%d", i)
+}
+
+// DecodeBinaryField reads binary data from an input *EasyReader to a variable.
+func DecodeBinaryField(file *EasyReader, data any) {
+	err := binary.Read(file, binary.LittleEndian, data)
+	exception.PanicOnErr(err)
 }
