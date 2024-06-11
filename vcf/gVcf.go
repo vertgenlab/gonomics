@@ -1,7 +1,6 @@
 package vcf
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/vertgenlab/gonomics/dna"
@@ -40,18 +39,18 @@ func ChromPosToUInt64(chrom int, start int) uint64 {
 
 // PrintSampleNames takes a vcf header and prints the sample names from the "#CHROM" line
 func PrintSampleNames(header Header) string {
-	var ans string = ""
+	var builder strings.Builder
 	for _, line := range header.Text {
 		if strings.HasPrefix(line, "#CHROM") {
-			//starts at first sample column
 			words := strings.Split(line, "\t")
 			for i := 9; i < len(words); i++ {
-				ans += fmt.Sprintf("%s\n", words[i])
+				builder.WriteString(words[i])
+				builder.WriteByte('\n')
 			}
-			return ans
+			return builder.String()
 		}
 	}
-	return ans
+	return ""
 }
 
 // GetAltBases converts a slice of DNA sequenes encoded as strings into a slice
@@ -64,12 +63,12 @@ func GetAltBases(words []string) [][]dna.Base {
 	return answer
 }
 
-// PhasedToString returns "|" when true and "/" otherwise.
-func PhasedToString(phased bool) string {
+// PhasedToByte returns '|' when true and '/' otherwise.
+func PhasedToByte(phased bool) byte {
 	if phased {
-		return "|"
+		return '|'
 	} else {
-		return "/"
+		return '/'
 	}
 }
 
@@ -84,35 +83,13 @@ func ReorderSampleColumns(input Vcf, samples []int16) Vcf {
 }
 
 // SamplesToString has been deprecated
-func SamplesToString(sample []Sample) string {
-	var answer string = ""
-	for i := 0; i < len(sample); i++ {
+func SamplesToString(samples []Sample) string {
+	var builder strings.Builder
+	for i, sample := range samples {
 		if i > 0 {
-			answer += "\t" + sampleToString(sample[i])
-		} else {
-			answer += sampleToString(sample[i])
+			builder.WriteByte('\t')
 		}
+		builder.WriteString(sample.String())
 	}
-	return answer
-}
-
-// sampleToString uses just an array of Sample structs to write to a string for simple gVCFs with just the allele info in notes.
-func sampleToString(s Sample) string {
-	var answer string
-	if s.FormatData == nil {
-		return "."
-	}
-	if s.Alleles == nil {
-		answer = "."
-	} else {
-		answer += fmt.Sprintf("%d", s.Alleles[0])
-		for i := 1; i < len(s.Phase); i++ {
-			answer += fmt.Sprintf("%s%d", PhasedToString(s.Phase[i]), s.Alleles[i])
-		}
-	}
-	if len(s.FormatData) > 1 {
-		answer = answer + strings.Join(s.FormatData, ":")
-	}
-
-	return answer
+	return builder.String()
 }
