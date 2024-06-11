@@ -3,14 +3,12 @@ package sam
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os/exec"
 	"testing"
 
-	//bgBam "github.com/biogo/hts/bam"
-	//bgSam "github.com/biogo/hts/sam".
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 const bamTestfile string = "../bgzf/testdata/test.bam"
@@ -161,34 +159,17 @@ func BenchmarkGonomicsBamRead(b *testing.B) {
 			if err == io.EOF {
 				break
 			}
-			fmt.Fprint(ioutil.Discard, s)
+			_, err = fmt.Fprint(io.Discard, s)
+			exception.PanicOnErr(err)
 		}
 		r.Close()
 	}
 }
 
-//func BenchmarkBiogoBamRead(b *testing.B) {
-//	for i := 0; i < b.N; i++ {
-//		file, _ := os.Open(bigBam)
-//		r, _ := bgBam.NewReader(file, 0)
-//		var s *bgSam.Record
-//		var err error
-//		for {
-//			s, err = r.Read()
-//			if err == io.EOF {
-//				break
-//			}
-//			fmt.Fprint(ioutil.Discard, s)
-//		}
-//		r.Close()
-//		file.Close()
-//	}
-//}
-
 func BenchmarkSamtoolsBamRead(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		cmd := exec.Command("samtools", "view", bigBam)
-		cmd.Stdout = ioutil.Discard
+		cmd.Stdout = io.Discard
 
 		b.StartTimer()
 		err := cmd.Run()
@@ -198,17 +179,3 @@ func BenchmarkSamtoolsBamRead(b *testing.B) {
 		b.StopTimer()
 	}
 }
-
-//func BenchmarkPrint(b *testing.B) {
-//	var a uint32 = 10
-//	for i := 0; i < b.N; i++ {
-//		print(a)
-//	}
-//}
-//
-//func BenchmarkFmtPrint(b *testing.B) {
-//	var a uint32 = 10
-//	for i := 0; i < b.N; i++ {
-//		fmt.Print(a)
-//	}
-//}

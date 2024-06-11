@@ -5,23 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 )
 
 func TestBamWriter(t *testing.T) {
-	var err error
-	err = testFile("testdata/small.sam")
+	var err error = testFile("testdata/small.sam")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestBamWriterAuxTags(t *testing.T) {
-	var err error
-	err = testFile("testdata/auxTagTest.sam")
+	var err error = testFile("testdata/auxTagTest.sam")
 	if err != nil {
 		t.Error(err)
 	}
@@ -43,7 +40,7 @@ func testFile(file string) error {
 		return err
 	}
 
-	f, err := ioutil.TempFile("testdata", "tmp*.bam")
+	f, err := os.CreateTemp("testdata", "tmp*.bam")
 	if err != nil {
 		return err
 	}
@@ -59,10 +56,7 @@ func testFile(file string) error {
 	var i int
 	for actualRecord := range actualData {
 		if actualRecord.String() != data[i].String() {
-			fmt.Println(actualRecord)
-			fmt.Println(data[i])
-			fmt.Println()
-			return errors.New("issue with writing sam as bam")
+			return fmt.Errorf("issue with writing sam as bam, record = %s, expected = %s ", actualRecord.String(), data[i].String())
 		}
 		i++
 	}
