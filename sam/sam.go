@@ -66,72 +66,48 @@ type Header struct {
 }
 
 // String converts Sam to a string to satisfy the fmt.Stringer interface.
-
 func (s Sam) String() string {
-	var buf strings.Builder
-
 	var err error
 	if len(s.unparsedExtra) > 0 {
 		s, err = parseExtra(s)
 		exception.PanicOnErr(err)
 		s.Extra = parsedExtraToString(&s)
 	}
+
+	var buf strings.Builder
+	buf.Grow(256)
+	var cache []byte = make([]byte, 0, 10)
+
 	buf.WriteString(s.QName)
 	buf.WriteByte('\t')
-
 	buf.WriteString(strconv.Itoa(int(s.Flag)))
 	buf.WriteByte('\t')
-
 	buf.WriteString(s.RName)
 	buf.WriteByte('\t')
 
-	buf.WriteString(strconv.Itoa(int(s.Pos)))
+	buf.Write(strconv.AppendUint(cache, uint64(s.Pos), 10))
+	cache = cache[:0]
 	buf.WriteByte('\t')
-
-	buf.WriteString(strconv.Itoa(int(s.MapQ)))
+	buf.Write(strconv.AppendUint(cache, uint64(s.MapQ), 10))
+	cache = cache[:0]
 	buf.WriteByte('\t')
 
 	buf.WriteString(cigar.ToString(s.Cigar))
 	buf.WriteByte('\t')
-
 	buf.WriteString(s.RNext)
 	buf.WriteByte('\t')
-	buf.WriteString(strconv.Itoa(int(s.PNext)))
-	buf.WriteByte('\t')
 
+	buf.Write(strconv.AppendUint(cache, uint64(s.PNext), 10))
+	buf.WriteByte('\t')
 	buf.WriteString(strconv.Itoa(int(s.TLen)))
 	buf.WriteByte('\t')
-
 	buf.WriteString(dna.BasesToString(s.Seq))
 	buf.WriteByte('\t')
-
 	buf.WriteString(s.Qual)
 
 	if s.Extra != "" {
 		buf.WriteByte('\t')
 		buf.WriteString(s.Extra)
 	}
-
 	return buf.String()
 }
-
-// 	buf.WriteString(s.Qual)
-
-// 	if len(s.unparsedExtra) > 0 {
-//         var err error
-//         s, err = parseExtra(s)
-//         if err != nil {
-//             // Handle the error gracefully, perhaps by logging or using a default value
-//             // For now, let's just skip the extra field
-//             fmt.Printf("Error parsing extra fields: %v\n", err)
-//         } else {
-//             extraStr := parsedExtraToString(&s)
-//             if extraStr != "" {
-//                 buf.WriteByte('\t')
-//                 buf.WriteString(extraStr)
-//             }
-//         }
-//     }
-
-// 	return buf.String()
-// }
