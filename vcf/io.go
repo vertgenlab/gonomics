@@ -2,12 +2,13 @@ package vcf
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
 	"io"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/vertgenlab/gonomics/exception"
 
 	"github.com/vertgenlab/gonomics/fileio"
 )
@@ -60,13 +61,13 @@ func processVcfLine(line string) Vcf {
 	var err error
 	data := strings.Split(line, "\t")
 	if len(data) < 8 {
-		log.Panicf("Error when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
+		log.Panicf("Error: when reading this vcf line:\n%s\nExpecting at least 8 columns", line)
 	}
 
 	curr.Chr = data[0]
 	curr.Pos, err = strconv.Atoi(data[1])
 	if err != nil {
-		log.Panicf("ERROR: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
+		log.Panicf("Error: VCF reading\nCould not convert '%s' to an integer in the following line\n%s\n", data[1], line)
 	}
 	curr.Id = data[2]
 	curr.Ref = data[3]
@@ -75,7 +76,7 @@ func processVcfLine(line string) Vcf {
 	if data[5] != "." {
 		curr.Qual, err = strconv.ParseFloat(data[5], 64)
 		if err != nil {
-			log.Panicf("ERROR: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
+			log.Panicf("Error: VCF reading\nCould not convert '%s' to a float in the following line\n%s\n", data[5], line)
 		}
 	}
 	curr.Filter = data[6]
@@ -119,6 +120,7 @@ func parseSamples(samples []string, format []string, line string) []Sample {
 func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 	var alleleId int64
 	var err error
+	// TODO: Consider reducing allocation of string.Builder variable to further improve performance.
 	if gt == "." || gt == "./." {
 		return nil, nil
 	}
@@ -140,7 +142,7 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 			}
 			alleleId, err = strconv.ParseInt(text[i], 10, 16)
 			if err != nil {
-				log.Fatalf("ERROR: VCF reading\nCould not convert '%s' to an int16 in the following line\n%s\n", text[i], line)
+				log.Fatalf("Error: VCF reading\nCould not convert '%s' to an int16 in the following line\n%s\n", text[i], line)
 			}
 			alleles = append(alleles, int16(alleleId))
 		} else { // is phase info
@@ -164,16 +166,19 @@ func parseGenotype(gt string, line string) (alleles []int16, phase []bool) {
 
 // splitGenotype splits each elements of the GT field into a slice of elements (e.g. 1/1 becomes []string{"1", "/", "1").
 func splitGenotype(gt string) []string {
-	answer := make([]string, 0, len(gt))
+	var answer []string
+	var builder strings.Builder
+
 	for i := 0; i < len(gt); i++ {
 		if gt[i] == '/' || gt[i] == '|' {
-			answer = append(answer, gt[:i])
+			answer = append(answer, builder.String())
 			answer = append(answer, string(gt[i]))
-			gt = gt[i+1:]
-			i = 0
+			builder.Reset()
+		} else {
+			builder.WriteByte(gt[i])
 		}
 	}
-	answer = append(answer, gt)
+	answer = append(answer, builder.String())
 	return answer
 }
 
@@ -186,40 +191,16 @@ func NextVcf(reader *fileio.EasyReader) (Vcf, bool) {
 	return processVcfLine(line), false
 }
 
-// FormatToString converts the []string Format struct into a string by concatenating with a colon delimiter.
-func FormatToString(format []string) string {
-	if len(format) == 0 {
-		return ""
-	}
-	var answer = format[0]
-	for i := 1; i < len(format); i++ {
-		answer = answer + ":" + format[i]
-	}
-	return answer
-}
-
 // TODO(craiglowe): Look into unifying WriteVcfToFileHandle and WriteVcf and benchmark speed. geno bool variable determines whether to print notes or genotypes.
 func WriteVcfToFileHandle(file io.Writer, input []Vcf) {
-	var err error
 	for i := 0; i < len(input); i++ {
-		//DEBUG:fmt.Printf("Notes: %s\n", input[i].Notes)
-		if len(input[i].Format) == 0 {
-			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info)
-		} else {
-			_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input[i].Chr, input[i].Pos, input[i].Id, input[i].Ref, strings.Join(input[i].Alt, ","), input[i].Qual, input[i].Filter, input[i].Info, FormatToString(input[i].Format), SamplesToString(input[i].Samples))
-		}
-		exception.PanicOnErr(err)
+		WriteVcf(file, input[i])
 	}
 }
 
 // WriteVcf writes an individual Vcf struct to an io.Writer.
-func WriteVcf(file io.Writer, input Vcf) {
-	var err error
-	if len(input.Format) == 0 {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info)
-	} else {
-		_, err = fmt.Fprintf(file, "%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", input.Chr, input.Pos, input.Id, input.Ref, strings.Join(input.Alt, ","), input.Qual, input.Filter, input.Info, FormatToString(input.Format), SamplesToString(input.Samples))
-	}
+func WriteVcf(writer io.Writer, record Vcf) {
+	_, err := fmt.Fprint(writer, record.String())
 	exception.PanicOnErr(err)
 }
 
@@ -227,20 +208,7 @@ func WriteVcf(file io.Writer, input Vcf) {
 func Write(filename string, data []Vcf) {
 	file := fileio.EasyCreate(filename)
 	WriteVcfToFileHandle(file, data)
-	err := file.Close()
-	exception.PanicOnErr(err)
-}
-
-// PrintVcf prints every line of a []Vcf.
-func PrintVcf(data []Vcf) {
-	for i := 0; i < len(data); i++ {
-		PrintSingleLine(data[i])
-	}
-}
-
-// PrintSingleLine prints an individual Vcf line.
-func PrintSingleLine(data Vcf) {
-	fmt.Printf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", data.Chr, data.Pos, data.Id, data.Ref, strings.Join(data.Alt, ","), data.Qual, data.Filter, data.Info, data.Format, SamplesToString(data.Samples))
+	exception.PanicOnErr(file.Close())
 }
 
 // IsVcfFile checks suffix of filename to confirm if the file is a vcf formatted file.
