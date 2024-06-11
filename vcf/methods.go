@@ -16,7 +16,7 @@ func (v Vcf) String() string {
 
 	buf.WriteString(v.Chr)
 	buf.WriteByte('\t')
-	buf.WriteString(strconv.Itoa(v.Pos))
+	buf.Write(strconv.AppendUint(make([]byte, 0, 10), uint64(v.Pos), 10))
 	buf.WriteByte('\t')
 	buf.WriteString(v.Id)
 	buf.WriteByte('\t')
