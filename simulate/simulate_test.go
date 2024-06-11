@@ -22,7 +22,7 @@ var RandGeneTests = []struct {
 }
 
 func TestRandGene(t *testing.T) {
-	rand.Seed(1)
+	rand.NewSource(1)
 	for _, test := range RandGeneTests {
 		a := RandGene(test.name, test.length, test.GC)
 		if len(a[0].Seq) != test.length {
@@ -42,11 +42,12 @@ var MutateSeqTests = []struct {
 }
 
 func TestMutateGene(t *testing.T) {
-	rand.Seed(1)
+
+	rng := rand.New(rand.New(rand.NewSource(1)))
 	for _, test := range MutateSeqTests {
 		seq := fasta.Read(test.sequence)
 		bases := seq[0].Seq
-		a := MutateGene(bases, test.branchLength, test.gp, true)
+		a := MutateGene(bases, test.branchLength, test.gp, true, rng)
 		if len(bases) != len(a) {
 			t.Errorf("Expected same length sequences. Original: %v \n Ending: %v", len(bases), len(a))
 		}

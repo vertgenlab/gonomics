@@ -3,15 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"os"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/simulate"
-	"log"
-	"math/rand"
-	"os"
 )
 
 // NonCodingSettings defines usage settings for the simulateEvol nonCoding subcommand.
@@ -90,7 +91,7 @@ func parseNonCodingArgs() {
 // A Newick tree file can be provided. Alternatively, one can be generated with a user-specified number of
 // nodes and Gamma-distribute random branch lengths.
 func NonCoding(s NonCodingSettings) {
-	rand.Seed(s.SetSeed)
+	src := rand.NewSource(s.SetSeed)
 	var answer []fasta.Fasta
 	var root *expandedTree.ETree
 	var err error
@@ -121,7 +122,7 @@ func NonCoding(s NonCodingSettings) {
 		root.Fasta = &records[0]
 		root.Name = "root"
 	} else {
-		root.Fasta = &fasta.Fasta{Name: "root", Seq: simulate.RandIntergenicSeq(s.GcContent, s.LenSeq)}
+		root.Fasta = &fasta.Fasta{Name: "root", Seq: simulate.RandIntergenicSeq(s.GcContent, s.LenSeq, src)}
 	}
 	exception.PanicOnErr(err)
 	root = simulate.NonCoding(root, s.SubstitutionMatrixFile, s.UnitBranchLength)

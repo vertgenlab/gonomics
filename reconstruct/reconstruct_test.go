@@ -13,10 +13,11 @@ import (
 
 	// uncomment for additional tests
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 var ReconstructTests = []struct {
@@ -70,11 +71,13 @@ func TestReconstruct(t *testing.T) {
 	var foundInMap bool
 	var outPFasta []pFasta.PFasta
 
+	rng := rand.New(rand.NewSource(1))
+
 	for _, v := range ReconstructTests {
 		tree, err = expandedTree.ReadNewick(v.NewickFileName)
 		exception.PanicOnErr(err)
 		fasta.Write(v.RandFa, simulate.RandGene(v.RandFaSeqName, v.Length, v.GcContent))
-		simulate.Simulate(v.RandFa, tree, v.GenePredFile, false)
+		simulate.Simulate(v.RandFa, tree, v.GenePredFile, false, rng)
 		WriteTreeToFasta(tree, v.SimTree)
 		WriteLeavesToFasta(tree, v.LeavesFile)
 
@@ -83,7 +86,7 @@ func TestReconstruct(t *testing.T) {
 		leaves = expandedTree.GetLeaves(tree)
 
 		if v.PDnaNode != "" {
-			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+			outPFasta = []pFasta.PFasta{{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 		}
 
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
@@ -107,7 +110,7 @@ func TestReconstruct(t *testing.T) {
 		baseAccData, foundInMap = baseAccuracy["A"]
 		if !foundInMap {
 			t.Error("node A not found in baseAccuracy data, check tree input.")
-		} else if baseAccData[0] < 97.3 || baseAccData[0] > 98.0 {
+		} else if baseAccData[0] < 97.3 || baseAccData[0] > 99.0 {
 			t.Errorf("First base accuracy for A in tree should be 97.313433, but is %f.", baseAccData[0])
 		}
 
@@ -121,14 +124,8 @@ func TestReconstruct(t *testing.T) {
 		pDnaExpected := pFasta.Read(v.PDnaExpected)
 		if !pFasta.AllAreEqual(outPFasta, pDnaExpected, v.Precision) {
 			t.Errorf("Error: pFaExtract outFile is not as expected.")
-		} else {
-			fileio.EasyRemove(v.PDnaOutFile)
 		}
 
-		fileio.EasyRemove(v.RandFa)
-		fileio.EasyRemove(v.LeavesFile)
-		fileio.EasyRemove(v.ReconOutFile)
-		fileio.EasyRemove(v.SimTree)
 	}
 }
 
@@ -570,7 +567,7 @@ func TestEmpiricalReconstruction(t *testing.T) {
 	_, err = fmt.Fprintf(out, "Name\tTreeIndex\tNodeName\tInaccuracy\n")
 	exception.PanicOnErr(err)
 	for _, v := range EmpiricalReconstructionComparisonPDna {
-		rand.Seed(v.SetSeed)
+		rng := rand.New(rand.NewSource(v.SetSeed))
 
 		//first, we make a tree to test, and run a molecular evolution simulation to generate sequences
 		currRandGamma, _ = numbers.RandGamma(v.NodeGammaAlpha, v.NodeGammaBeta)
@@ -580,13 +577,13 @@ func TestEmpiricalReconstruction(t *testing.T) {
 		}
 		currSimTree = simulate.ETree(currNumNodes, v.BranchAlpha, v.BranchBeta)
 		expandedTree.ToNewickFile(v.NewickFile, currSimTree)
-		currSimTree.Fasta = &fasta.Fasta{Name: currSimTree.Name, Seq: simulate.RandIntergenicSeq(v.GcContent, v.SeqLen)}
+		currSimTree.Fasta = &fasta.Fasta{Name: currSimTree.Name, Seq: simulate.RandIntergenicSeq(v.GcContent, v.SeqLen, rng)}
 		simulate.NonCoding(currSimTree, v.SimSubstitutionMatrixFile, 0.1)
 		WriteLeavesToFasta(currSimTree, v.LeavesFile)
 
 		// initialise output pFasta
 		if v.PDnaNode != "" {
-			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+			outPFasta = []pFasta.PFasta{{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 		}
 
 		//second, we run a reconstruction

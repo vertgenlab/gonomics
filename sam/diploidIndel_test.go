@@ -1,6 +1,8 @@
 package sam
 
-import "testing"
+import (
+	"testing"
+)
 
 var DiploidIndelCallFromPileTests = []struct {
 	P                 Pile
@@ -89,6 +91,7 @@ func TestDiploidIndelCallFromPile(t *testing.T) {
 	var emptyCache = make([][]float64, 0)
 	var actualInsertion DiploidInsertion
 	var actualDeletion DiploidDeletion
+
 	for _, v := range DiploidIndelCallFromPileTests {
 		priorCache = MakeDiploidIndelPriorCache(v.Kappa, v.Delta)
 		actualInsertion = DiploidInsertionCallFromPile(v.P, priorCache, emptyCache, emptyCache, v.Epsilon)

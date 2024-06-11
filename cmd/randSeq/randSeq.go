@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"time"
 
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -15,11 +16,19 @@ import (
 )
 
 func randSeq(outFile string, GC float64, numSeq int, lenSeq int, setSeed int64) {
-	rand.Seed(setSeed)
+	var src rand.Source
+	if setSeed != -1 {
+		src = rand.NewSource(setSeed) // Use the specified seed
+	} else {
+		src = rand.NewSource(time.Now().UnixNano()) // Use current time as seed
+	}
+
+	rng := rand.New(src) // Create a new Rand object
+
 	file := fileio.EasyCreate(outFile)
 	defer file.Close()
 	for i := 0; i < numSeq; i++ {
-		fasta.WriteFasta(file, fasta.Fasta{Name: fmt.Sprintf("Sequence_%v", i), Seq: simulate.RandIntergenicSeq(GC, lenSeq)}, 50)
+		fasta.WriteFasta(file, fasta.Fasta{Name: fmt.Sprintf("Sequence_%v", i), Seq: simulate.RandIntergenicSeq(GC, lenSeq, rng)}, 50)
 	}
 }
 

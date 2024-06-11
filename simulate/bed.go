@@ -1,13 +1,15 @@
 package simulate
 
 import (
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // GoSimulateBed takes a searchSpace (represented by a noGap.bed input file, here as a parsed struct) and generates a
 // number of regions (regionCount) of a specified length (regionLength) and sends the simulated regions to an output chan.
-func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-chan bed.Bed {
+func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int, src rand.Source) <-chan bed.Bed {
 	var Length, tmp, chromWindows int
 	var totalWindows int
 	c := make(chan bed.Bed, 1000)
@@ -20,11 +22,12 @@ func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-c
 			totalWindows = totalWindows + (Length - regionLength + 1)
 		}
 	}
+	r := rand.New(src)
 
 	//this function generates new bed regions and sends them to a channel.
 	go func() {
 		for i := 0; i < regionCount; i++ {
-			tmp = numbers.RandIntInRange(0, totalWindows)
+			tmp = numbers.RandIntInRangeSrc(0, totalWindows, r)
 			for j := 0; j < len(searchSpace); j++ {
 				Length = searchSpace[j].ChromEnd - searchSpace[j].ChromStart
 				chromWindows = Length - regionLength + 1

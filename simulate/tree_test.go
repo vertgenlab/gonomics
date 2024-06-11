@@ -2,10 +2,11 @@ package simulate
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/expandedTree"
 	"math/rand"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/expandedTree"
 )
 
 var ETreeTests = []struct {

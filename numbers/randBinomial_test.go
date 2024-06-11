@@ -24,6 +24,7 @@ func TestRandBinomial(t *testing.T) {
 	var currAlias BinomialAlias
 	var variates []int
 	var i int
+
 	for _, v := range RandBinomialTests {
 		currAlias = MakeBinomialAlias(v.N, v.P)
 		variates = make([]int, v.VariateCount)

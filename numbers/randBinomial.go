@@ -20,6 +20,7 @@ type BinomialAlias struct {
 // a pre-generated BinomialAlias struct, which can be made for
 // a specified binomial distribution with 'MakeBinomialAlias'.
 func RandBinomial(alias BinomialAlias) int {
+
 	index := RandIntInRange(0, len(alias.Probability))
 	if rand.Float64() < alias.Probability[index] {
 		return index

@@ -79,6 +79,7 @@ func TestHaploidCallFromPile(t *testing.T) {
 		PointFiveMinusEpsilonOverThreePlusLambdaOverTwo:  []float64{},
 		PointFiveMinusEpsilonOverThree:                   []float64{},
 	}
+
 	for _, v := range HaploidCallFromPileTests {
 		haploidBasePriorCache = MakeHaploidBasePriorCache(v.Delta, v.Gamma)
 		haploidIndelPriorCache = MakeHaploidIndelPriorCache(v.Delta, v.Kappa)

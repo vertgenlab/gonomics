@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
@@ -23,7 +24,8 @@ func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile
 	exception.FatalOnErr(err)
 	var fastas []fasta.Fasta
 	var leafFastas []fasta.Fasta
-	simulate.Simulate(rootFastaFile, tree, gp, false)
+	rng := rand.New(rand.New(rand.NewSource(1)))
+	simulate.Simulate(rootFastaFile, tree, gp, false, rng)
 	nodes := expandedTree.GetTree(tree)
 
 	for i := 0; i < len(nodes); i++ {

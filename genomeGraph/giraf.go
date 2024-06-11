@@ -2,13 +2,14 @@ package genomeGraph
 
 import (
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
-	"math/rand"
 )
 
 func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []*giraf.Giraf {
@@ -19,7 +20,6 @@ func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []
 	if readLen > totalBases { // not a perfect check, but best we can do without a search algorithm
 		log.Fatal("Cannot request more bases than is present in graph")
 	}
-	rand.Seed(randSeed)
 
 	for len(answer) < numReads {
 		nodeIdx, pos := RandLocationFast(graph, totalBases)
@@ -101,7 +101,6 @@ func RandSomaticMutations(graph *GenomeGraph, reads []*giraf.Giraf, numSomaticSN
 	var mutationNode, mutationPos []uint32
 	var nodeIdx uint32
 	var pos, readPos uint32
-	rand.Seed(randSeed)
 
 	for i := 0; i < numSomaticSNV; i++ {
 		nodeIdx, pos = RandLocationFast(graph, totalBases)

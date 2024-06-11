@@ -13,8 +13,8 @@ import (
 // the answer structs, ans and mlt.
 // The cacheStruct contains cached values for the prior and likelihood functions, and refPos is required to update the
 // appropriate positions in mlt.
-func diploidInsertion(ans AnswerStruct, mlt MultiFaStruct, cacheStruct CacheStruct, p sam.Pile, refPos int, s BuildSettings) (AnswerStruct, MultiFaStruct, CacheStruct, int) {
-	var currRand = rand.Float64()
+func diploidInsertion(ans AnswerStruct, mlt MultiFaStruct, cacheStruct CacheStruct, p sam.Pile, refPos int, s BuildSettings, seed *rand.Rand) (AnswerStruct, MultiFaStruct, CacheStruct, int) {
+	var currRand = seed.Float64()
 	var i int
 	var currInsertion sam.DiploidInsertion
 	var currInsertionSeqs [][]dna.Base

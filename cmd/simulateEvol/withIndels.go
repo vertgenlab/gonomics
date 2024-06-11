@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/simulate"
 	"log"
 	"math/rand"
 	"os"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/simulate"
 )
 
 type WithIndelsSettings struct {
@@ -89,7 +90,7 @@ func WithIndels(s WithIndelsSettings) {
 	if s.BranchLength < 0 || s.BranchLength > 1 {
 		log.Fatalf("The branchLength argument must be a value between 0 and 1.")
 	}
-	rand.Seed(s.SetSeed)
-	outFasta := simulate.WithIndels(s.FastaFile, s.BranchLength, s.PropIndels, s.Lambda, s.GcContent, s.TransitionBias, s.VcfOutFile, s.QName)
+	rng := rand.New(rand.NewSource(s.SetSeed))
+	outFasta := simulate.WithIndels(s.FastaFile, s.BranchLength, s.PropIndels, s.Lambda, s.GcContent, s.TransitionBias, s.VcfOutFile, s.QName, rng)
 	fasta.Write(s.OutFile, outFasta)
 }

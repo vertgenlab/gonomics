@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"os"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"math/rand"
-	"os"
 )
 
 func buildUsage(buildFlags *flag.FlagSet) {
@@ -148,7 +149,7 @@ func parseBuildArgs() {
 // samAssemblerBuild is the primary function of the samAssembler build cmd. It creates reference-guided pseudoassemblies
 // from aligned short reads.
 func samAssemblerBuild(s BuildSettings) {
-	rand.Seed(s.SetSeed)
+
 	var i, refPos, positionsToSkip, haploidBases int
 	var haploidStrand bool // haploidStrand is true when the haploid bases are on the first strand (deletion on second strand)
 	var currChrom string
@@ -161,6 +162,7 @@ func samAssemblerBuild(s BuildSettings) {
 	var currRand float64
 
 	preCheck(s)
+	seed := rand.New(rand.NewSource(s.SetSeed))
 
 	// initialize caches for likelihood and priors.
 	var cacheStruct CacheStruct
@@ -261,7 +263,7 @@ func samAssemblerBuild(s BuildSettings) {
 			// First we handle the base call for the current pile
 			diploidBaseCall = sam.DiploidBaseCallFromPile(p, refMap[currChrom][refPos], cacheStruct.DiploidBasePriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, cacheStruct.AncientLikelihoodCache, s.Epsilon, s.Lambda)
 			currDiploidBases = sam.DiploidBaseToBases(diploidBaseCall)
-			currRand = rand.Float64()
+			currRand = seed.Float64()
 			if currRand < 0.5 {
 				ans.AnswerA[ans.CurrFaIndex].Seq[ans.AnswerAPos] = currDiploidBases[0]
 				ans.AnswerB[ans.CurrFaIndex].Seq[ans.AnswerBPos] = currDiploidBases[1]
@@ -274,7 +276,7 @@ func samAssemblerBuild(s BuildSettings) {
 			ans = advanceAnswerPos(ans)
 
 			// Now we handle diploid insertion calls in a helper function
-			ans, mlt, cacheStruct, refPos = diploidInsertion(ans, mlt, cacheStruct, p, refPos, s)
+			ans, mlt, cacheStruct, refPos = diploidInsertion(ans, mlt, cacheStruct, p, refPos, s, seed)
 
 			// Now we handle diploid deletion calls
 			mlt, cacheStruct, refPos, haploidStrand, currPloidy, haploidBases, positionsToSkip = diploidDeletion(mlt, cacheStruct, p, refMap, refPos, currChrom, s)

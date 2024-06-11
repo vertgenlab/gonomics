@@ -16,9 +16,10 @@ import (
 )
 
 func simulateBed(regionCount int, simLength int, noGapFile string, outFile string, setSeed int64) {
-	rand.Seed(setSeed)
+	rand.NewSource(setSeed)
 	noGap := bed.Read(noGapFile)
-	c := simulate.GoSimulateBed(noGap, regionCount, simLength)
+	seed := rand.New(rand.NewSource(setSeed))
+	c := simulate.GoSimulateBed(noGap, regionCount, simLength, seed)
 	out := fileio.EasyCreate(outFile)
 	var err error
 

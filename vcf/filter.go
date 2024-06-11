@@ -149,7 +149,7 @@ func IsNotWeakToStrongOrStrongToWeak(v Vcf) bool {
 }
 
 // SampleVcf takes a set of Vcf records and returns a random subset of variants to an output VCF file. Can also retain a random subset of alleles from gVCF data (diploid, does not break allele pairs).
-func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) ([]Vcf, Header) {
+func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int, src rand.Source) ([]Vcf, Header) {
 	var sampleList []string
 	if len(header.Text) > 0 {
 		sampleList = HeaderGetSampleList(header)
@@ -157,8 +157,9 @@ func SampleVcf(records []Vcf, header Header, numVariants int, numSamples int) ([
 	if numVariants > len(records) {
 		log.Fatalf("The Number of requested sampled variants is greater than the Number of variants in the input file.")
 	}
+	rng := rand.New(src)
 	//Shuffle the vcf records, our subset will be composed to the first entries in the shuffled order.
-	rand.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
+	rng.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
 	records = records[:numVariants] //keep only as many results as specified
 	if numSamples > 0 {
 		if numSamples > len(records[0].Samples) {

@@ -48,9 +48,10 @@ GC Content = %v`, set.PopSize, set.GenomeSize, set.NumGen, set.MutRate, set.RFit
 	if set.Verbose {
 		fmt.Printf("Relative fitness landscape is\n%v\n", relFitArray)
 	}
+	src := rand.NewSource(1)
 
 	// Main function that loops through all generation, individual, and site
-	simulateAllGeneration(curFasta, nextFasta, relFitArray, allFreq, set)
+	simulateAllGeneration(curFasta, nextFasta, relFitArray, allFreq, set, src)
 
 	if set.Verbose {
 		fmt.Printf("Ancestral alleles are\n%v\n", ancestralAlleles)
@@ -113,9 +114,11 @@ func makeInitialPop(set popgen.WrightFisherSettings) ([]fasta.Fasta, []fasta.Fas
 	nextFasta := make([]fasta.Fasta, set.PopSize)
 	var i int
 
+	src := rand.NewSource(1)
+
 	// Case I: No ancestral allele is specified. Random generate sequence.
 	if set.AncestralAllele == "" {
-		initialSeq := simulate.RandIntergenicSeq(set.GcContent, set.GenomeSize)
+		initialSeq := simulate.RandIntergenicSeq(set.GcContent, set.GenomeSize, src)
 		for i = 0; i < set.PopSize; i++ {
 			curFasta[i].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(i))
 			curFasta[i].Seq = make([]dna.Base, set.GenomeSize)
@@ -275,7 +278,7 @@ func makeFitnessArray(initSeq []dna.Base, set popgen.WrightFisherSettings) [][]f
 /*
 simulateAllGeneration() simulates the changes in allele frequencies through all generation, all individual, and all site.
 */
-func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relFitArray [][]float64, allFreq [][][]float64, set popgen.WrightFisherSettings) {
+func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relFitArray [][]float64, allFreq [][][]float64, set popgen.WrightFisherSettings, src rand.Source) {
 	var t, s, b, p int
 	var r float64
 	// This slice contains new frequencies of each allele after they are resampled based on relative fitness
@@ -283,7 +286,7 @@ func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relF
 	normFactorArray := make([]float64, set.GenomeSize) // Normalizing factor for the new frequencies (sum = 1)
 	// Set the initial normalizing factor (generation 0)
 	updateNormFactorArray(0, relFitArray, allFreq, normFactorArray)
-
+	rng := rand.New(src)
 	// 1st loop through every generation
 	for t = 1; t <= set.NumGen; t++ {
 		// 2nd loop through every base
@@ -298,7 +301,7 @@ func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relF
 			for p = 0; p < set.PopSize; p++ {
 				// Determines which chromosome from previous generation that pth individual inherits from?
 				// The probability is based on the frequency of the corresponding allele.
-				r = rand.Float64()
+				r = rng.Float64()
 
 				if r < samplingPQRS[0] {
 					nextFasta[p].Seq[s] = dna.A
@@ -312,7 +315,7 @@ func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relF
 
 				// If random float generated is less than the set mutation rate, mutate the base (random)
 				if rand.Float64() < set.MutRate {
-					nextFasta[p].Seq[s] = mutate(nextFasta[p].Seq[s], set.GcContent)
+					nextFasta[p].Seq[s] = mutate(nextFasta[p].Seq[s], set.GcContent, rng)
 				}
 			}
 		}
@@ -400,11 +403,11 @@ func sumSlice(slice []float64) float64 {
 There exists the similar function in simulate.go, but that function doesn't allow
 me to choose GC content (it was set to 0.41 by default and not mutable).
 */
-func mutate(originalBase dna.Base, GC float64) dna.Base {
-	newBase := simulate.ChooseRandomBase(GC)
+func mutate(originalBase dna.Base, GC float64, seed *rand.Rand) dna.Base {
+	newBase := simulate.ChooseRandomBase(GC, seed)
 
 	for newBase == originalBase {
-		newBase = simulate.ChooseRandomBase(GC)
+		newBase = simulate.ChooseRandomBase(GC, seed)
 	}
 	return newBase
 }

@@ -44,7 +44,7 @@ var samConsensusTests = []struct {
 }
 
 func TestSamConsensus(t *testing.T) {
-	rand.Seed(1)
+	rand.NewSource(1)
 	var err error
 	var s Settings
 	for _, v := range samConsensusTests {

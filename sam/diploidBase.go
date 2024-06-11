@@ -1,14 +1,15 @@
 package sam
 
 import (
+	"log"
+	"math"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
-	"math"
-	"strings"
 )
 
 type DiploidBase byte

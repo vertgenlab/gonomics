@@ -35,7 +35,8 @@ type Settings struct {
 }
 
 func simulateSam(s Settings) {
-	rand.Seed(s.SetSeed)
+
+	rng := rand.New(rand.NewSource(s.SetSeed))
 	ref := fasta.Read(s.RefFile)
 	out := fileio.EasyCreate(s.OutFile)
 	header := sam.GenerateHeader(fasta.ToChromInfo(ref), nil, sam.Unsorted, sam.None)
@@ -57,7 +58,7 @@ func simulateSam(s Settings) {
 
 	var readsPerContig = getReadsPerContig(ref, s.NumReads, s.Coverage, s.ReadLength)
 	for i := range ref {
-		simulate.IlluminaPairedSam(ref[i].Name, ref[i].Seq, readsPerContig[i], s.ReadLength, s.FragmentLength, s.FragmentStdDev, s.FlatError, s.AncientErrorRate, flatBinomialAlias, ancientBinomialAlias, s.GeometricParam, out, bw, bamOutput, deaminationDistributionSlice)
+		simulate.IlluminaPairedSam(ref[i].Name, ref[i].Seq, readsPerContig[i], s.ReadLength, s.FragmentLength, s.FragmentStdDev, s.FlatError, s.AncientErrorRate, flatBinomialAlias, ancientBinomialAlias, s.GeometricParam, out, bw, bamOutput, deaminationDistributionSlice, rng)
 	}
 
 	var err error
