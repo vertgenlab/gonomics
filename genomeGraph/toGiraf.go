@@ -15,7 +15,6 @@ import (
 )
 
 func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, settings *GraphSettings, matrix *MatrixAln, seedPool *sync.Pool, dnaPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper, seedBuildHelper *seedHelper) *giraf.Giraf {
-
 	var currBest giraf.Giraf = giraf.Giraf{
 		QName:     read.Name,
 		QStart:    0,
@@ -38,8 +37,11 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	seeds := seedPool.Get().(*memoryPool)
 	seeds.Hits = seeds.Hits[:0]
 	seeds.Worker = seeds.Worker[:0]
+
+	settings.MaxMatch, settings.MinMatch, settings.LeastSevereMismatch, settings.LeastSevereMatchMismatchChange = MismatchStats(settings.ScoreMatrix)
+
 	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, settings.TileSize, sk.perfectScore, settings.ScoreMatrix, seeds.Hits, seeds.Worker, seedBuildHelper)
-	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(queryLen), 100, 90, -196, -296); i++ {
+	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(queryLen), settings); i++ {
 		sk.currSeed = seeds.Hits[i]
 		sk.tailSeed = *getLastPart(&sk.currSeed)
 		if sk.currSeed.PosStrand {

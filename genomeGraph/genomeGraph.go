@@ -40,12 +40,16 @@ type Edge struct {
 
 // GraphSettings is a struct containing alignment configs to iset for running graph alignments
 type GraphSettings struct {
-	ScoreMatrix    [][]int64
-	GapPenalty     int64
-	OpenGapPenalty int64
-	Extention      int
-	TileSize       int
-	StepSize       int
+	ScoreMatrix                    [][]int64
+	GapPenalty                     int64
+	OpenGapPenalty                 int64
+	Extention                      int
+	TileSize                       int
+	StepSize                       int
+	MaxMatch                       int64
+	MinMatch                       int64
+	LeastSevereMismatch            int64
+	LeastSevereMatchMismatchChange int64
 }
 
 // Annotation struct is an uint64 encoding of allele id, starting position on linear reference and variant on node
