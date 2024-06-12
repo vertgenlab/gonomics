@@ -25,7 +25,7 @@ func scoreSeedSeq(seq []dna.Base, start uint32, end uint32, scoreMatrix [][]int6
 	return score
 }
 
-func scoreSeedFastqBig(seed *SeedDev, read fastq.FastqBig, scoreMatrix [][]int64) int64 {
+func scoreSeedFastqBig(seed *Seed, read fastq.FastqBig, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
 	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
 		if seed.PosStrand {
@@ -37,7 +37,7 @@ func scoreSeedFastqBig(seed *SeedDev, read fastq.FastqBig, scoreMatrix [][]int64
 	return score
 }
 
-func scoreSeedPart(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
+func scoreSeedPart(seed *Seed, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
 	for i := seed.QueryStart; i < seed.QueryStart+seed.Length; i++ {
 		score += scoreMatrix[read.Seq[i]][read.Seq[i]]
@@ -45,7 +45,7 @@ func scoreSeedPart(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64
 	return score
 }
 
-func scoreSeed(seed *SeedDev, read fastq.Fastq, scoreMatrix [][]int64) int64 {
+func scoreSeed(seed *Seed, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	var score int64 = 0
 	for ; seed != nil; seed = seed.NextPart {
 		score += scoreSeedPart(seed, read, scoreMatrix)

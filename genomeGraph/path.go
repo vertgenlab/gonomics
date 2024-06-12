@@ -3,12 +3,13 @@ package genomeGraph
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
-	"strings"
 )
 
 func PathToSeq(p giraf.Path, genome *GenomeGraph) []dna.Base {
@@ -209,7 +210,7 @@ func PathToString(allPaths []uint32) string {
 	return s
 }
 
-func getSeedPath(seed *SeedDev) []uint32 {
+func getSeedPath(seed *Seed) []uint32 {
 	var path []uint32 = []uint32{seed.TargetId}
 	if seed.NextPart == nil {
 		return path
