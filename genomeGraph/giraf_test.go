@@ -1,7 +1,6 @@
 package genomeGraph
 
 import (
-	"fmt"
 	"log"
 	"testing"
 
@@ -146,7 +145,7 @@ func TestRandGiraf(t *testing.T) {
 		log.Fatalln("Reads do not match")
 	}
 
-	fmt.Println("Sequences Match")
+	t.Logf("Sequences Match")
 
 	RandSomaticMutations(MakeTestGraph(), reads, 1, 0.75, seed)
 
@@ -154,7 +153,7 @@ func TestRandGiraf(t *testing.T) {
 		log.Fatalln("Problem with simulating somatic mutations")
 	}
 
-	fmt.Println("Somatic Mutations Generated Correctly")
+	t.Logf("Somatic Mutations Generated Correctly")
 
 	/*
 		for i := 0; i < len(reads); i++ {
