@@ -4,20 +4,11 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
 )
-
-func calcExtension(seq []dna.Base) int64 {
-	var maxScore int64 = 0
-	for bases := 0; bases < len(seq); bases++ {
-		maxScore += align.HumanChimpTwoScoreMatrix[seq[bases]][seq[bases]]
-	}
-	return maxScore/600 + int64(len(seq))
-}
 
 func LocalView(samLine *sam.Sam, ref []*Node) string {
 	var seqOne, seqTwo bytes.Buffer
