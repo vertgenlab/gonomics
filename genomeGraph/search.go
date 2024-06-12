@@ -131,16 +131,10 @@ func resetScoreKeeper(sk scoreKeeper) {
 }
 
 func getLeftTargetBases(n *Node, extension int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
-	//var availableBases int = len(seq) + refEnd
-	//var targetLength int = common.Min(availableBases, extension)
-	//var basesToTake int = targetLength - len(seq)
 	return append(append(ans, n.Seq[refEnd-numbers.Min(len(seq)+refEnd, extension)-len(seq):refEnd]...), seq...)
 }
 
 func getRightBases(n *Node, extension int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
-	//var availableBases int = len(seq) + len(n.Seq) - start
-	//var targetLength int = common.Min(availableBases, extension)
-	//var basesToTake int = targetLength - len(seq)
 	return append(append(ans, seq...), n.Seq[start:start+numbers.Min(len(seq)+len(n.Seq)-start, extension)-len(seq)]...)
 }
 
@@ -161,19 +155,19 @@ func rightBasesFromTwoBit(n *Node, extension int, start int, seq []dna.Base, ans
 	return append(append(ans, seq...), dnaTwoBit.GetFrag(n.SeqTwoBit, start, start+basesToTake)...)
 }*/
 
-func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint32, extension int, read []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
-	//if len(seq) >= extension {
-	//	log.Fatalf("Error: left traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extension=%d.\n", len(seq), extension)
-	//}
+func LeftAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, extension int, query []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
-	s.Seq = getLeftTargetBases(n, extension, refEnd, seq, s.Seq)
+	s.Seq = getLeftTargetBases(n, extension, start, seq, s.Seq)
 	s.Path = make([]uint32, len(currentPath))
+	
 	copy(s.Path, currentPath)
 	AddPath(s.Path, n.Id)
-	if len(seq)+refEnd >= extension || len(n.Prev) == 0 {
-		sk.leftScore, sk.leftAlignment, sk.targetStart, sk.queryStart = LeftDynamicAln(s.Seq, read, scores, matrix, -600, dynamicScore)
-		sk.targetStart = refEnd - len(s.Seq) - len(seq) + sk.targetStart
+
+	currLen := len(seq)
+	if currLen+start >= extension || len(n.Prev) == 0 {
+		sk.leftScore, sk.leftAlignment, sk.targetStart, sk.queryStart = LeftDynamicAln(s.Seq, query, scores, matrix, -600, dynamicScore)
+		sk.targetStart = start - len(s.Seq) - currLen + sk.targetStart
 		sk.leftPath = s.Path
 		pool.Put(s)
 		return sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath
@@ -181,11 +175,11 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 		//A very negative number
 		sk.leftScore = math.MinInt64
 		for _, i := range n.Prev {
-			dynamicScore.route, s.currScore, s.targetStart, s.queryStart, s.Path = LeftAlignTraversal(i.Dest, s.Seq, len(i.Dest.Seq), s.Path, extension, read, scores, matrix, sk, dynamicScore, pool)
+			dynamicScore.route, s.currScore, s.targetStart, s.queryStart, s.Path = LeftAlignTraversal(i.Dest, s.Seq, len(i.Dest.Seq), s.Path, extension, query, scores, matrix, sk, dynamicScore, pool)
 			if s.currScore > sk.leftScore {
 				sk.leftScore = s.currScore
 				sk.leftAlignment = dynamicScore.route
-				sk.targetStart = refEnd - len(s.Seq) - len(seq) + s.targetStart
+				sk.targetStart = start - len(s.Seq) - currLen + s.targetStart
 				sk.queryStart = s.queryStart
 				sk.leftPath = s.Path
 			}
@@ -197,24 +191,21 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 	}
 }
 
-func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, extension int, read []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
-	//if len(seq) >= extension {
-	//	log.Fatalf("Error: right traversal, the length=%d of DNA sequence in previous nodes should not be enough to satisfy the desired extension=%d.\n", len(seq), extension)
-	//}
+func RightAlignTraversal(n *Node, seq []dna.Base, end int, currentPath []uint32, extension int, query []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
-	s.Seq = getRightBases(n, extension, start, seq, s.Seq)
+	s.Seq = getRightBases(n, extension, end, seq, s.Seq)
 	s.Path = make([]uint32, len(currentPath))
 	copy(s.Path, currentPath)
-	if len(seq)+len(n.Seq)-start >= extension || len(n.Next) == 0 {
-		sk.rightScore, sk.rightAlignment, sk.targetEnd, sk.queryEnd = RightDynamicAln(s.Seq, read, scoreMatrix, matrix, -600, dynamicScore)
+	if len(seq)+len(n.Seq)-end >= extension || len(n.Next) == 0 {
+		sk.rightScore, sk.rightAlignment, sk.targetEnd, sk.queryEnd = RightDynamicAln(s.Seq, query, scoreMatrix, matrix, -600, dynamicScore)
 		sk.rightPath = s.Path
 		pool.Put(s)
-		return sk.rightAlignment, sk.rightScore, sk.targetEnd + start, sk.queryEnd, sk.rightPath
+		return sk.rightAlignment, sk.rightScore, sk.targetEnd + end, sk.queryEnd, sk.rightPath
 	} else {
 		sk.rightScore = math.MinInt64
 		for _, i := range n.Next {
-			dynamicScore.route, s.currScore, s.targetEnd, s.queryEnd, s.Path = RightAlignTraversal(i.Dest, s.Seq, 0, s.Path, extension, read, scoreMatrix, matrix, sk, dynamicScore, pool)
+			dynamicScore.route, s.currScore, s.targetEnd, s.queryEnd, s.Path = RightAlignTraversal(i.Dest, s.Seq, 0, s.Path, extension, query, scoreMatrix, matrix, sk, dynamicScore, pool)
 			if s.currScore > sk.rightScore {
 				sk.rightScore = s.currScore
 				sk.rightAlignment = dynamicScore.route
@@ -225,7 +216,7 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 		}
 		pool.Put(s)
 		cigar.ReverseBytesCigar(sk.rightAlignment)
-		return sk.rightAlignment, sk.rightScore, sk.targetEnd + start, sk.queryEnd, sk.rightPath
+		return sk.rightAlignment, sk.rightScore, sk.targetEnd + end, sk.queryEnd, sk.rightPath
 	}
 }
 
