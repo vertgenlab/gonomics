@@ -50,11 +50,12 @@ var WithIndelsTests = []struct {
 }
 
 func TestWithIndels(t *testing.T) {
-	rand.Seed(-1)
+	seed := rand.New(rand.New(rand.NewSource(-1)))
+
 	var err error
 	var records []fasta.Fasta
 	for _, v := range WithIndelsTests {
-		records = WithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.TransitionBias, v.VcfOutFile, v.QName)
+		records = WithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.TransitionBias, v.VcfOutFile, v.QName, seed)
 		fasta.Write(v.OutFastaFile, records)
 		if !fileio.AreEqual(v.OutFastaFile, v.ExpectedFastaFile) {
 			t.Errorf("Error in SimulateWithIndels. Output fasta was not as expected.")
@@ -65,9 +66,6 @@ func TestWithIndels(t *testing.T) {
 		if v.VcfOutFile != "" {
 			if !fileio.AreEqual(v.VcfOutFile, v.ExpectedVcfFile) {
 				t.Errorf("Error in SimulateWithIndels. Output vcf was not as expected.")
-			} else {
-				err = os.Remove(v.VcfOutFile)
-				exception.PanicOnErr(err)
 			}
 		}
 	}

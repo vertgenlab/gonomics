@@ -16,10 +16,10 @@ import (
 // RandIntergenicSeq makes a randomly generated DNA sequence by drawing from a distribution with a specified GC content.
 // Unlike RandGene, it does not have to be divisible by 3.
 // The inputs are the expected GC content and the desired length of the output sequence.
-func RandIntergenicSeq(GcContent float64, lenSeq int) []dna.Base {
+func RandIntergenicSeq(GcContent float64, lenSeq int, rng *rand.Rand) []dna.Base {
 	var answer []dna.Base = make([]dna.Base, lenSeq)
 	for i := range answer {
-		answer[i] = ChooseRandomBase(GcContent)
+		answer[i] = ChooseRandomBase(GcContent, rng)
 	}
 	return answer
 }
@@ -40,7 +40,7 @@ const bufferSize = 10_000_000
 // vcfOutFile specifies an optional (empty string disables this option) return that records all variants made during the simulated mutation process.
 // transitionBias specifies the expected value of the ratio of transitions to transversions in the output sequence.
 // qName sets the suffix for the output query fasta name.
-func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, transitionBias float64, vcfOutFile string, qName string) []fasta.Fasta {
+func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, transitionBias float64, vcfOutFile string, qName string, rng *rand.Rand) []fasta.Fasta {
 	var answer = make([]fasta.Fasta, 2)
 	var emptyRoomInBuffer = bufferSize
 	var currRand, currRand2, currRand3 float64
@@ -77,7 +77,7 @@ func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambd
 					if transitionBias != 1 {
 						answer[1].Seq[outputPos] = changeBaseTransitionBias(records[0].Seq[inputPos], transitionBias)
 					} else {
-						answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+						answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos], rng)
 					}
 					currAlt = []dna.Base{answer[1].Seq[outputPos]}
 				} else {
@@ -134,7 +134,7 @@ func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambd
 					if transitionBias != 1 {
 						answer[1].Seq[outputPos] = changeBaseTransitionBias(records[0].Seq[inputPos], transitionBias)
 					} else {
-						answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+						answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos], rng)
 					}
 					currAlt = []dna.Base{answer[1].Seq[outputPos]}
 				} else {
@@ -158,7 +158,7 @@ func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambd
 				indelPos = 0
 				for indelPos < length {
 					answer[0].Seq[outputPos] = dna.Gap
-					answer[1].Seq[outputPos] = ChooseRandomBase(gcContent)
+					answer[1].Seq[outputPos] = ChooseRandomBase(gcContent, rng)
 					currAlt = append(currAlt, answer[1].Seq[outputPos])
 					outputPos++
 					emptyRoomInBuffer--
@@ -178,7 +178,7 @@ func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambd
 				if transitionBias != 1 {
 					answer[1].Seq[outputPos] = changeBaseTransitionBias(records[0].Seq[inputPos], transitionBias)
 				} else {
-					answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+					answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos], rng)
 				}
 				currRef = []dna.Base{records[0].Seq[inputPos]}
 				currAlt = []dna.Base{answer[1].Seq[outputPos]}

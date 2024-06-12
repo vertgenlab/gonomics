@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/rand"
+	"time"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -66,6 +68,7 @@ func diploidInsertionString(i DiploidInsertion) string {
 // Epsilon defines the misclassification rate parameter.
 func DiploidInsertionCallFromPile(p Pile, priorCache []float64, homozygousIndelCache [][]float64, heterozygousIndelCache [][]float64, epsilon float64) DiploidInsertion {
 	var iTot int
+	seed :=  rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	var aCount = p.CountF[dna.A] + p.CountR[dna.A]
 	var cCount = p.CountF[dna.C] + p.CountR[dna.C]
@@ -147,7 +150,7 @@ func DiploidInsertionCallFromPile(p Pile, priorCache []float64, homozygousIndelC
 		answer = append(answer, DiploidInsertion{Type: IaB, Ia: IaKey, Ib: IbKey})
 	}
 
-	return answer[numbers.RandIntInRange(0, len(answer))] //if two insertion genotypes have the same posterior probability, pick one at random
+	return answer[numbers.RandIntInRange(0, len(answer), seed)] //if two insertion genotypes have the same posterior probability, pick one at random
 }
 
 // DeletionType encodes the deletion genotype state, which can be one of the four constant values explained below.
@@ -188,6 +191,7 @@ func diploidDeletionString(i DiploidDeletion) string {
 // Epsilon defines the misclassification rate parameter.
 func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCache [][]float64, heterozygousIndelCache [][]float64, epsilon float64) DiploidDeletion {
 	var dTot int
+	seed :=  rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	var aCount = p.CountF[dna.A] + p.CountR[dna.A]
 	var cCount = p.CountF[dna.C] + p.CountR[dna.C]
@@ -263,7 +267,7 @@ func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCa
 		answer = append(answer, DiploidDeletion{Type: DaB, Da: DaKey, Db: DbKey})
 	}
 
-	return answer[numbers.RandIntInRange(0, len(answer))] //if two insertion genotypes have the same posterior probability, pick one at random
+	return answer[numbers.RandIntInRange(0, len(answer), seed)] //if two insertion genotypes have the same posterior probability, pick one at random
 }
 
 // homozygousIndelLikelihoodExpression is a helper function of DiploidInsertionCallFromPile and DiploidDeletionCallFromPile

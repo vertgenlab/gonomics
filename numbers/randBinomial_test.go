@@ -1,7 +1,6 @@
 package numbers
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -26,22 +25,31 @@ func TestRandBinomial(t *testing.T) {
 	var i int
 	for _, v := range RandBinomialTests {
 		currAlias = MakeBinomialAlias(v.N, v.P)
+		// Generate a large number of samples
 		variates = make([]int, v.VariateCount)
-		for i = range v.ExpectedProb {
-			if fmt.Sprintf("%.6g", currAlias.Probability[i]) != fmt.Sprintf("%.6g", v.ExpectedProb[i]) {
-				t.Errorf("Error: RandBinomial produced an incorrect alias probability vector.\nExpected: %v.\nFound: %v.\n", v.ExpectedProb, currAlias.Probability)
-			}
+		// Check if the number of elements in Probability and Alias slices are correct
+		if len(currAlias.Probability) != v.N+1 {
+			t.Errorf("Error: RandBinomial produced incorrect number of probabilities in the alias probability vector.\nExpected: %d.\nFound: %d.\n", v.N+1, len(currAlias.Probability))
 		}
-		for i = range v.ExpectedAlias {
+		if len(currAlias.Alias) != v.N+1 {
+			t.Errorf("Error: RandBinomial produced incorrect number of aliases.\nExpected: %d.\nFound: %d.\n", v.N+1, len(currAlias.Alias))
+		}
+		// Check probabilities and aliases
+		for i = 0; i < v.N+1; i++ {
+			if !ApproxEqual(currAlias.Probability[i], v.ExpectedProb[i], 0.000001) { // Use a tolerance for floating-point comparison
+				t.Errorf("Error: RandBinomial produced an incorrect alias probability at index %d.\nExpected: %v.\nFound: %v.\n", i, v.ExpectedProb[i], currAlias.Probability[i])
+			}
 			if v.ExpectedAlias[i] != currAlias.Alias[i] {
-				t.Errorf("Error: RandBinomial produced an incorrect alias index.\nExpected: %v.\nFound: %v.\n", v.ExpectedAlias, currAlias.Alias)
+				t.Errorf("Error: RandBinomial produced an incorrect alias index at index %d.\nExpected: %v.\nFound: %v.\n", i, v.ExpectedAlias[i], currAlias.Alias[i])
 			}
 		}
 
-		// print variates for plotting
-		for i = range variates {
+		for i = 0; i < len(variates); i++ {
 			variates[i] = RandBinomial(currAlias)
-			// fmt.Println(variates[i])
+			if variates[i] < 0 || variates[i] > v.N {
+				t.Errorf("Error: RandBinomial produced a variate outside the valid range [0, %d]: %d\n", v.N, variates[i])
+			}
+
 		}
 	}
 }

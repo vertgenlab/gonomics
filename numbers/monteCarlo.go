@@ -4,6 +4,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"time"
 )
 
 // SampleInverseNormal returns a simulated value from a normal distribution.
@@ -60,13 +61,14 @@ func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f
 	var x, y float64
 	var currBin int
 	var currLeft, currRight float64
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < maxIteration; i++ {
 		currBin = chooseBin(sumHeights, binHeights)
 		currLeft = xLeft + float64(currBin)*stepSize
 		currRight = currLeft + stepSize
-		x = RandFloat64InRange(currLeft, currRight)
+		x = RandFloat64InRange(currLeft, currRight, seed)
 		y = f(x)
-		if RandFloat64InRange(0.0, binHeights[currBin]) < y {
+		if RandFloat64InRange(0.0, binHeights[currBin], seed) < y {
 			return x
 		}
 	}
@@ -76,7 +78,8 @@ func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f
 
 // chooseBin picks which bin should be used for the FastRejectionSampler, where the choice of bin is weighted by its relative contribution to the overall integral of f.
 func chooseBin(sumHeights float64, binHeights []float64) int {
-	var rand float64 = rand.Float64()
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var rand float64 = seed.Float64()
 	var cumulative float64 = 0.0
 	for i := 0; i < len(binHeights); i++ {
 		cumulative += binHeights[i] / sumHeights
@@ -90,11 +93,12 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 
 // RejectionSample returns simulated values from an arbitrary function between a specified left and right bound using a simple rejection sampling method.
 func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64) float64, maxIteration int) float64 {
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var x, y float64
 	for i := 0; i < maxIteration; i++ {
-		x = RandFloat64InRange(xLeft, xRight) //rand float64 in range xleft to xright
+		x = RandFloat64InRange(xLeft, xRight, seed) //rand float64 in range xleft to xright
 		y = f(x)
-		if RandFloat64InRange(0.0, yMax) < y {
+		if RandFloat64InRange(0.0, yMax, seed) < y {
 			return y
 		}
 	}
@@ -105,13 +109,15 @@ func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64
 // BoundedRejectionSample returns a rejection sample of a function f using a bounding function boundingSampler between a specified left and right bound.
 func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int) (float64, float64) {
 	var xSampler, ySampler, y float64
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	for i := 0; i < maxIteration; i++ {
 		xSampler, ySampler = boundingSampler()
 		y = f(xSampler)
 		if y > ySampler {
 			log.Fatalf("BoundedRejectionSample: function was not a valid bounding function, ySampler is greater than y. xSampler: %e. ySampler: %e. y: %e.", xSampler, ySampler, y)
 		}
-		if RandFloat64InRange(0.0, ySampler) < y {
+		if RandFloat64InRange(0.0, ySampler, seed) < y {
 			return xSampler, y
 		}
 	}

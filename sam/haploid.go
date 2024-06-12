@@ -2,6 +2,8 @@ package sam
 
 import (
 	"math"
+	"math/rand"
+	"time"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -27,6 +29,8 @@ func HaploidCallFromPile(p Pile, refBase dna.Base, epsilon float64, lambda float
 	var nCount = p.CountF[dna.N] + p.CountR[dna.N]
 	var N = aCount + cCount + gCount + tCount + nCount // this is the read depth for the pile
 	var maxPosterior, currPosterior float64
+
+	seed :=  rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	if refBase != dna.N { //if we have a real base, we'll calculate posteriors.
 		var maxBase = []dna.Base{dna.A}
@@ -75,7 +79,7 @@ func HaploidCallFromPile(p Pile, refBase dna.Base, epsilon float64, lambda float
 		} else if currPosterior == maxPosterior {
 			maxBase = append(maxBase, dna.T)
 		}
-		answer.Base = maxBase[numbers.RandIntInRange(0, len(maxBase))]
+		answer.Base = maxBase[numbers.RandIntInRange(0, len(maxBase), seed)]
 	}
 
 	//next we evaluate haploid insertion. We only consider Ia

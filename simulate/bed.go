@@ -1,6 +1,9 @@
 package simulate
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/numbers"
 )
@@ -11,6 +14,8 @@ func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-c
 	var Length, tmp, chromWindows int
 	var totalWindows int
 	c := make(chan bed.Bed, 1000)
+
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	//count total viable windows
 	for i := 0; i < len(searchSpace); i++ {
@@ -24,7 +29,7 @@ func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-c
 	//this function generates new bed regions and sends them to a channel.
 	go func() {
 		for i := 0; i < regionCount; i++ {
-			tmp = numbers.RandIntInRange(0, totalWindows)
+			tmp = numbers.RandIntInRange(0, totalWindows, seed)
 			for j := 0; j < len(searchSpace); j++ {
 				Length = searchSpace[j].ChromEnd - searchSpace[j].ChromStart
 				chromWindows = Length - regionLength + 1

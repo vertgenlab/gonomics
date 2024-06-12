@@ -1,14 +1,17 @@
 package sam
 
 import (
+	"log"
+	"math"
+	"math/rand"
+	"strings"
+	"time"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
-	"math"
-	"strings"
 )
 
 type DiploidBase byte
@@ -122,6 +125,8 @@ func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, h
 	var maxDiploid []DiploidBase
 	var maxPosterior float64
 
+	seed :=  rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	switch refBase {
 	case dna.A:
 		maxDiploid = []DiploidBase{AA}
@@ -171,7 +176,7 @@ func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, h
 		}
 	}
 
-	return maxDiploid[numbers.RandIntInRange(0, len(maxDiploid))] // if two genotypes have the same posterior density, pick one at random.
+	return maxDiploid[numbers.RandIntInRange(0, len(maxDiploid), seed)] // if two genotypes have the same posterior density, pick one at random.
 }
 
 // baseLikelihood is a helper function of DiploidBaseCallFromPile. For a given genotype (geno), and given counts for the

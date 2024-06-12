@@ -2,6 +2,8 @@ package sam
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -47,6 +49,7 @@ func (c Consensus) String() string {
 // An insertion is called as the consensus if the count number for the max insertion if
 // maxCount > insertionThreshold * (total counts to bases).
 func PileConsensus(p Pile, substitutionsOnly bool, insertionThreshold float64) Consensus {
+	seed :=  rand.New(rand.NewSource(1))
 	// first we check if consensus is a base
 	var max int = p.CountF[dna.A] + p.CountR[dna.A]
 	tiedConsensus := make([]Consensus, 1)
@@ -60,7 +63,7 @@ func PileConsensus(p Pile, substitutionsOnly bool, insertionThreshold float64) C
 		if max < 1 {
 			return Consensus{Type: Undefined}
 		}
-		return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))] //we don't need to check the length because this wil return tiedConsensus[0] even if length is 1.
+		return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus), seed)] //we don't need to check the length because this wil return tiedConsensus[0] even if length is 1.
 	} else {
 		max, tiedConsensus = getMaxDeletion(p, max, tiedConsensus)
 		if max < 1 {
@@ -94,6 +97,8 @@ func getMaxInsertion(p Pile, tiedConsensus []Consensus, InsThreshold float64) Co
 	var totalBaseCounts = p.CountF[0] + p.CountF[1] + p.CountF[2] + p.CountF[3] + p.CountR[0] + p.CountR[1] + p.CountR[2] + p.CountR[3] + deletionSum
 	var insertionThreshold = int(InsThreshold * float64(totalBaseCounts))
 	var maxInsertionScore, deletionScore = 0, 0
+
+	seed :=  rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	for i := range p.InsCountF {
 		seenOnPosStrand[i] = 1
@@ -163,7 +168,7 @@ func getMaxInsertion(p Pile, tiedConsensus []Consensus, InsThreshold float64) Co
 			}
 		}
 	}
-	return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))]
+	return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus), seed)]
 }
 
 // helper function of PileConsensus, finds the max deletion in a Pile struct.
