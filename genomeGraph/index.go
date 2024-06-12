@@ -1,7 +1,6 @@
 package genomeGraph
 
 import (
-	//	"github.com/vertgenlab/gonomics/fastq"
 	"log"
 	"sort"
 
@@ -42,47 +41,6 @@ func indexGenomeIntoMapHelper(prevSeq []dna.Base, currNode *Node, locationCode u
 	} else {
 		for edgeIdx := 0; edgeIdx < len(currNode.Next); edgeIdx++ {
 			indexGenomeIntoMapHelper(append(prevSeq, currNode.Seq...), currNode.Next[edgeIdx].Dest, locationCode, seedLen, seedMap)
-		}
-	}
-}
-
-func indexGenomeIntoSlice(genome []Node, seedLen int, seedStep int) [][]uint64 {
-	if seedLen < 2 || seedLen > 16 {
-		log.Fatalf("Error: seed length needs to be greater than 1 and less than 17.  Got: %d\n", seedLen)
-	}
-	var sliceSize int
-	sliceSize = 1 << uint(seedLen*2)
-	answer := make([][]uint64, sliceSize)
-	var seqCode, locationCode uint64
-	var nodeIdx, pos int
-	//var seqScratch []dna.Base = make([]dna.Base, seedLen)
-	for nodeIdx = 0; nodeIdx < len(genome); nodeIdx++ {
-		for pos = 0; pos < len(genome[nodeIdx].Seq)-seedLen+1; pos += seedStep {
-			if dna.CountBaseInterval(genome[nodeIdx].Seq, dna.N, pos, pos+seedLen) == 0 {
-				seqCode = dnaToNumber(genome[nodeIdx].Seq, pos, pos+seedLen)
-				answer[seqCode] = append(answer[seqCode], ChromAndPosToNumber(nodeIdx, pos))
-			}
-		}
-		for ; pos < len(genome[nodeIdx].Seq); pos += seedStep {
-			locationCode = ChromAndPosToNumber(nodeIdx, pos)
-			for edgeIdx := 0; edgeIdx < len(genome[nodeIdx].Next); edgeIdx++ {
-				indexGenomeIntoSliceHelper(genome[nodeIdx].Seq[pos:], genome[nodeIdx].Next[edgeIdx].Dest, locationCode, seedLen, answer)
-			}
-		}
-	}
-	return answer
-}
-
-func indexGenomeIntoSliceHelper(prevSeq []dna.Base, currNode *Node, locationCode uint64, seedLen int, seedSlice [][]uint64) {
-	if len(prevSeq)+len(currNode.Seq) >= seedLen {
-		currSeq := append(prevSeq, currNode.Seq[0:(seedLen-len(prevSeq))]...)
-		if dna.CountBaseInterval(currSeq, dna.N, 0, seedLen) == 0 {
-			seqCode := dnaToNumber(currSeq, 0, seedLen)
-			seedSlice[seqCode] = append(seedSlice[seqCode], locationCode)
-		}
-	} else {
-		for edgeIdx := 0; edgeIdx < len(currNode.Next); edgeIdx++ {
-			indexGenomeIntoSliceHelper(append(prevSeq, currNode.Seq...), currNode.Next[edgeIdx].Dest, locationCode, seedLen, seedSlice)
 		}
 	}
 }

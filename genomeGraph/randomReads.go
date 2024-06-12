@@ -2,12 +2,14 @@ package genomeGraph
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/fastq"
+
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
 )
 
 func RandomPairedReads(genome *GenomeGraph, readLength int, numReads int, numChanges int) []fastq.PairedEnd {
