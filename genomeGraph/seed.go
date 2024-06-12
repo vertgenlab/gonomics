@@ -10,7 +10,6 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-
 type Seed struct {
 	TargetId    uint32
 	TargetStart uint32
@@ -127,7 +126,6 @@ func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart Seed) [
 	}
 	return answer
 }
-
 
 // seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int64 = 0, 0.
 func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []Seed, tempSeeds []Seed, seedBuildHelper *seedHelper) []Seed {

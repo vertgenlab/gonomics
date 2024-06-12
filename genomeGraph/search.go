@@ -131,11 +131,13 @@ func resetScoreKeeper(sk scoreKeeper) {
 }
 
 func getLeftTargetBases(n *Node, extension int, refEnd int, seq []dna.Base, ans []dna.Base) []dna.Base {
-	return append(append(ans, n.Seq[refEnd-numbers.Min(len(seq)+refEnd, extension)-len(seq):refEnd]...), seq...)
+	currLen := len(seq)
+	return append(append(ans, n.Seq[refEnd-numbers.Min(currLen+refEnd, extension)-currLen:refEnd]...), seq...)
 }
 
 func getRightBases(n *Node, extension int, start int, seq []dna.Base, ans []dna.Base) []dna.Base {
-	return append(append(ans, seq...), n.Seq[start:start+numbers.Min(len(seq)+len(n.Seq)-start, extension)-len(seq)]...)
+	currLen := len(seq)
+	return append(append(ans, seq...), n.Seq[start:start+numbers.Min(currLen+len(n.Seq)-start, extension)-len(seq)]...)
 }
 
 /*
@@ -155,18 +157,18 @@ func rightBasesFromTwoBit(n *Node, extension int, start int, seq []dna.Base, ans
 	return append(append(ans, seq...), dnaTwoBit.GetFrag(n.SeqTwoBit, start, start+basesToTake)...)
 }*/
 
-func LeftAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, extension int, query []dna.Base, scores [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
+func LeftAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, query []dna.Base, config *GraphSettings, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
-	s.Seq = getLeftTargetBases(n, extension, start, seq, s.Seq)
+	s.Seq = getLeftTargetBases(n, config.Extention, start, seq, s.Seq)
 	s.Path = make([]uint32, len(currentPath))
-	
+
 	copy(s.Path, currentPath)
 	AddPath(s.Path, n.Id)
 
 	currLen := len(seq)
-	if currLen+start >= extension || len(n.Prev) == 0 {
-		sk.leftScore, sk.leftAlignment, sk.targetStart, sk.queryStart = LeftDynamicAln(s.Seq, query, scores, matrix, -600, dynamicScore)
+	if currLen+start >= config.Extention || len(n.Prev) == 0 {
+		sk.leftScore, sk.leftAlignment, sk.targetStart, sk.queryStart = LeftDynamicAln(s.Seq, query, config.ScoreMatrix, matrix, -600, dynamicScore)
 		sk.targetStart = start - len(s.Seq) - currLen + sk.targetStart
 		sk.leftPath = s.Path
 		pool.Put(s)
@@ -175,7 +177,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32
 		//A very negative number
 		sk.leftScore = math.MinInt64
 		for _, i := range n.Prev {
-			dynamicScore.route, s.currScore, s.targetStart, s.queryStart, s.Path = LeftAlignTraversal(i.Dest, s.Seq, len(i.Dest.Seq), s.Path, extension, query, scores, matrix, sk, dynamicScore, pool)
+			dynamicScore.route, s.currScore, s.targetStart, s.queryStart, s.Path = LeftAlignTraversal(i.Dest, s.Seq, len(i.Dest.Seq), s.Path, query, config, matrix, sk, dynamicScore, pool)
 			if s.currScore > sk.leftScore {
 				sk.leftScore = s.currScore
 				sk.leftAlignment = dynamicScore.route
@@ -191,21 +193,21 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32
 	}
 }
 
-func RightAlignTraversal(n *Node, seq []dna.Base, end int, currentPath []uint32, extension int, query []dna.Base, scoreMatrix [][]int64, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
+func RightAlignTraversal(n *Node, seq []dna.Base, end int, currentPath []uint32, query []dna.Base, config *GraphSettings, matrix *MatrixAln, sk scoreKeeper, dynamicScore dynamicScoreKeeper, pool *sync.Pool) ([]cigar.ByteCigar, int64, int, int, []uint32) {
 	s := pool.Get().(*dnaPool)
 	s.Seq, s.Path = s.Seq[:0], s.Path[:0]
-	s.Seq = getRightBases(n, extension, end, seq, s.Seq)
+	s.Seq = getRightBases(n, config.Extention, end, seq, s.Seq)
 	s.Path = make([]uint32, len(currentPath))
 	copy(s.Path, currentPath)
-	if len(seq)+len(n.Seq)-end >= extension || len(n.Next) == 0 {
-		sk.rightScore, sk.rightAlignment, sk.targetEnd, sk.queryEnd = RightDynamicAln(s.Seq, query, scoreMatrix, matrix, -600, dynamicScore)
+	if len(seq)+len(n.Seq)-end >= config.Extention || len(n.Next) == 0 {
+		sk.rightScore, sk.rightAlignment, sk.targetEnd, sk.queryEnd = RightDynamicAln(s.Seq, query, config, matrix, dynamicScore)
 		sk.rightPath = s.Path
 		pool.Put(s)
 		return sk.rightAlignment, sk.rightScore, sk.targetEnd + end, sk.queryEnd, sk.rightPath
 	} else {
 		sk.rightScore = math.MinInt64
 		for _, i := range n.Next {
-			dynamicScore.route, s.currScore, s.targetEnd, s.queryEnd, s.Path = RightAlignTraversal(i.Dest, s.Seq, 0, s.Path, extension, query, scoreMatrix, matrix, sk, dynamicScore, pool)
+			dynamicScore.route, s.currScore, s.targetEnd, s.queryEnd, s.Path = RightAlignTraversal(i.Dest, s.Seq, 0, s.Path, query, config, matrix, sk, dynamicScore, pool)
 			if s.currScore > sk.rightScore {
 				sk.rightScore = s.currScore
 				sk.rightAlignment = dynamicScore.route
@@ -222,16 +224,17 @@ func RightAlignTraversal(n *Node, seq []dna.Base, end int, currentPath []uint32,
 
 func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gapPen int64, dynamicScore dynamicScoreKeeper) (int64, []cigar.ByteCigar, int, int) {
 	resetDynamicScore(dynamicScore)
-	for dynamicScore.i = 0; dynamicScore.i < len(alpha)+1; dynamicScore.i++ {
+	columns, rows := len(alpha), len(beta)
+	for dynamicScore.i = 0; dynamicScore.i < columns+1; dynamicScore.i++ {
 		matrix.m[dynamicScore.i][0] = 0
 	}
 
-	for dynamicScore.j = 0; dynamicScore.j < len(beta)+1; dynamicScore.j++ {
+	for dynamicScore.j = 0; dynamicScore.j < rows+1; dynamicScore.j++ {
 		matrix.m[0][dynamicScore.j] = 0
 	}
 
-	for dynamicScore.i = 1; dynamicScore.i < len(alpha)+1; dynamicScore.i++ {
-		for dynamicScore.j = 1; dynamicScore.j < len(beta)+1; dynamicScore.j++ {
+	for dynamicScore.i = 1; dynamicScore.i < columns+1; dynamicScore.i++ {
+		for dynamicScore.j = 1; dynamicScore.j < rows+1; dynamicScore.j++ {
 			matrix.m[dynamicScore.i][dynamicScore.j], matrix.trace[dynamicScore.i][dynamicScore.j] = cigar.ByteMatrixTrace(matrix.m[dynamicScore.i-1][dynamicScore.j-1]+scores[alpha[dynamicScore.i-1]][beta[dynamicScore.j-1]], matrix.m[dynamicScore.i][dynamicScore.j-1]+gapPen, matrix.m[dynamicScore.i-1][dynamicScore.j]+gapPen)
 			if matrix.m[dynamicScore.i][dynamicScore.j] < 0 {
 				matrix.m[dynamicScore.i][dynamicScore.j] = 0
@@ -239,7 +242,7 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix 
 		}
 	}
 
-	for dynamicScore.i, dynamicScore.j, dynamicScore.routeIdx = len(alpha), len(beta), 0; matrix.m[dynamicScore.i][dynamicScore.j] > 0; {
+	for dynamicScore.i, dynamicScore.j, dynamicScore.routeIdx = columns, rows, 0; matrix.m[dynamicScore.i][dynamicScore.j] > 0; {
 		if len(dynamicScore.route) == 0 {
 			dynamicScore.route = append(dynamicScore.route, cigar.ByteCigar{RunLen: 1, Op: matrix.trace[dynamicScore.i][dynamicScore.j]})
 		} else if dynamicScore.route[dynamicScore.routeIdx].Op == matrix.trace[dynamicScore.i][dynamicScore.j] {
@@ -249,35 +252,36 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix 
 			dynamicScore.routeIdx++
 		}
 		switch matrix.trace[dynamicScore.i][dynamicScore.j] {
-		case 'M':
+		case cigar.Match:
 			dynamicScore.i, dynamicScore.j = dynamicScore.i-1, dynamicScore.j-1
-		case 'I':
+		case cigar.Insertion:
 			dynamicScore.j -= 1
-		case 'D':
+		case cigar.Deletion:
 			dynamicScore.i -= 1
 		default:
 			log.Fatalf("Error: unexpected traceback %c\n", matrix.trace[dynamicScore.i][dynamicScore.j])
 		}
 	}
-	return matrix.m[len(alpha)][len(beta)], dynamicScore.route, dynamicScore.i, dynamicScore.j
+	return matrix.m[columns][rows], dynamicScore.route, dynamicScore.i, dynamicScore.j
 }
 
-func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix *MatrixAln, gapPen int64, dynamicScore dynamicScoreKeeper) (int64, []cigar.ByteCigar, int, int) {
+func RightDynamicAln(alpha []dna.Base, beta []dna.Base, config *GraphSettings, matrix *MatrixAln, dynamicScore dynamicScoreKeeper) (int64, []cigar.ByteCigar, int, int) {
+	columns, rows := len(alpha)+1, len(beta)+1
 	resetDynamicScore(dynamicScore)
 	var maxI int
 	var maxJ int
-	for dynamicScore.i = 0; dynamicScore.i < len(alpha)+1; dynamicScore.i++ {
-		for dynamicScore.j = 0; dynamicScore.j < len(beta)+1; dynamicScore.j++ {
+	for dynamicScore.i = 0; dynamicScore.i < columns; dynamicScore.i++ {
+		for dynamicScore.j = 0; dynamicScore.j < rows; dynamicScore.j++ {
 			if dynamicScore.i == 0 && dynamicScore.j == 0 {
 				matrix.m[dynamicScore.i][dynamicScore.j] = 0
 			} else if dynamicScore.i == 0 {
-				matrix.m[dynamicScore.i][dynamicScore.j] = matrix.m[dynamicScore.i][dynamicScore.j-1] + gapPen
-				matrix.trace[dynamicScore.i][dynamicScore.j] = 'I'
+				matrix.m[dynamicScore.i][dynamicScore.j] = matrix.m[dynamicScore.i][dynamicScore.j-1] + config.GapPenalty
+				matrix.trace[dynamicScore.i][dynamicScore.j] = cigar.Insertion
 			} else if dynamicScore.j == 0 {
-				matrix.m[dynamicScore.i][dynamicScore.j] = matrix.m[dynamicScore.i-1][dynamicScore.j] + gapPen
-				matrix.trace[dynamicScore.i][dynamicScore.j] = 'D'
+				matrix.m[dynamicScore.i][dynamicScore.j] = matrix.m[dynamicScore.i-1][dynamicScore.j] + config.GapPenalty
+				matrix.trace[dynamicScore.i][dynamicScore.j] = cigar.Deletion
 			} else {
-				matrix.m[dynamicScore.i][dynamicScore.j], matrix.trace[dynamicScore.i][dynamicScore.j] = cigar.ByteMatrixTrace(matrix.m[dynamicScore.i-1][dynamicScore.j-1]+scores[alpha[dynamicScore.i-1]][beta[dynamicScore.j-1]], matrix.m[dynamicScore.i][dynamicScore.j-1]+gapPen, matrix.m[dynamicScore.i-1][dynamicScore.j]+gapPen)
+				matrix.m[dynamicScore.i][dynamicScore.j], matrix.trace[dynamicScore.i][dynamicScore.j] = cigar.ByteMatrixTrace(matrix.m[dynamicScore.i-1][dynamicScore.j-1]+config.ScoreMatrix[alpha[dynamicScore.i-1]][beta[dynamicScore.j-1]], matrix.m[dynamicScore.i][dynamicScore.j-1]+config.GapPenalty, matrix.m[dynamicScore.i-1][dynamicScore.j]+config.GapPenalty)
 			}
 			if matrix.m[dynamicScore.i][dynamicScore.j] > dynamicScore.currMax {
 				dynamicScore.currMax = matrix.m[dynamicScore.i][dynamicScore.j]
@@ -296,11 +300,11 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix
 			dynamicScore.routeIdx++
 		}
 		switch matrix.trace[dynamicScore.i][dynamicScore.j] {
-		case 'M':
+		case cigar.Match:
 			dynamicScore.i, dynamicScore.j = dynamicScore.i-1, dynamicScore.j-1
-		case 'I':
+		case cigar.Insertion:
 			dynamicScore.j -= 1
-		case 'D':
+		case cigar.Deletion:
 			dynamicScore.i -= 1
 		default:
 			log.Fatalf("Error: unexpected traceback with %c\n", matrix.trace[dynamicScore.i][dynamicScore.j])

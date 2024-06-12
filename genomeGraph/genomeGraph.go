@@ -3,15 +3,16 @@ package genomeGraph
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"io"
-	"log"
-	"strings"
 )
 
 // GenomeGraph struct contains a slice of Nodes.
@@ -35,6 +36,16 @@ type Node struct {
 type Edge struct {
 	Dest *Node
 	Prob float32
+}
+
+// GraphSettings is a struct containing alignment configs to iset for running graph alignments
+type GraphSettings struct {
+	ScoreMatrix    [][]int64
+	GapPenalty     int64
+	OpenGapPenalty int64
+	Extention      int
+	TileSize       int
+	StepSize       int
 }
 
 // Annotation struct is an uint64 encoding of allele id, starting position on linear reference and variant on node
