@@ -167,11 +167,7 @@ func pathPrettyString(graphPath string) string {
 }
 
 func AddPath(allPaths []uint32, newPath uint32) []uint32 {
-	if len(allPaths) == 0 {
-		allPaths = append(allPaths, newPath)
-	} else if allPaths[len(allPaths)-1] == newPath {
-		return allPaths
-	} else {
+	if len(allPaths) == 0 || allPaths[len(allPaths)-1] != newPath {
 		allPaths = append(allPaths, newPath)
 	}
 	return allPaths
@@ -180,13 +176,17 @@ func AddPath(allPaths []uint32, newPath uint32) []uint32 {
 func CatPaths(currPaths []uint32, newPaths []uint32) []uint32 {
 	if len(newPaths) == 0 {
 		return currPaths
-	} else if len(currPaths) == 0 {
-		return newPaths
-	} else {
-		currPaths = AddPath(currPaths, newPaths[0])
-		currPaths = append(currPaths, newPaths[1:]...)
-		return currPaths
 	}
+	if len(currPaths) == 0 {
+		return newPaths
+	}
+
+	currPaths = AddPath(currPaths, newPaths[0])
+	answer := make([]uint32, len(currPaths)+len(newPaths)-1)
+	copy(answer, currPaths)
+	copy(answer[len(currPaths):], newPaths[1:])
+
+	return answer
 }
 
 func reversePath(alpha []uint32) {

@@ -1,6 +1,7 @@
 package cigar
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -40,6 +41,73 @@ func TestToUint32(t *testing.T) {
 		}
 	}
 }
+
+func TestSoftClipBases(t *testing.T) {
+	testCases := []struct {
+		name         string
+		front        int
+		lengthOfRead int
+		cig          []ByteCigar
+		expected     []ByteCigar
+	}{
+		{
+			name:         "No Soft Clipping",
+			front:        0,
+			lengthOfRead: 10,
+			cig:          []ByteCigar{{RunLen: 10, Op: 'M'}},
+			expected:     []ByteCigar{{RunLen: 10, Op: 'M'}}, // No change
+		},
+		{
+			name:         "Soft Clip at Front",
+			front:        3,
+			lengthOfRead: 10,
+			cig:          []ByteCigar{{RunLen: 7, Op: 'M'}},
+			expected:     []ByteCigar{{RunLen: 3, Op: 'S'}, {RunLen: 7, Op: 'M'}},
+		},
+		{
+			name:         "Soft Clip at End",
+			front:        0,
+			lengthOfRead: 10,
+			cig:          []ByteCigar{{RunLen: 5, Op: 'M'}},
+			expected:     []ByteCigar{{RunLen: 5, Op: 'M'}, {RunLen: 5, Op: 'S'}},
+		},
+		{
+			name:         "Soft Clip at Both Ends",
+			front:        2,
+			lengthOfRead: 10,
+			cig:          []ByteCigar{{RunLen: 4, Op: 'M'}},
+			expected:     []ByteCigar{{RunLen: 2, Op: 'S'}, {RunLen: 4, Op: 'M'}, {RunLen: 4, Op: 'S'}},
+		},
+		{
+			name:         "Multiple CIGAR Ops",
+			front:        1,
+			lengthOfRead: 15,
+			cig: []ByteCigar{
+				{RunLen: 3, Op: 'M'},
+				{RunLen: 2, Op: 'I'},
+				{RunLen: 5, Op: 'D'},
+			},
+			expected: []ByteCigar{
+				{RunLen: 1, Op: 'S'},
+				{RunLen: 3, Op: 'M'},
+				{RunLen: 2, Op: 'I'},
+				{RunLen: 5, Op: 'D'},
+				{RunLen: 9, Op: 'S'}, // 15 - 1 - 3 - 2 - 5 = 4
+			},
+		},
+		// Add more test cases as needed to cover edge cases and different combinations
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := ByteCigarToString(SoftClipBases(tc.front, tc.lengthOfRead, tc.cig))
+			if strings.Compare(result, ByteCigarToString(tc.expected)) != 0 {
+				t.Errorf("Test Case %s: Expected %s, but got %s\n", tc.name, ByteCigarToString(tc.expected), result)
+			}
+		})
+	}
+}
+
 func BenchmarkCigarBytesToString(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
