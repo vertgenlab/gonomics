@@ -49,7 +49,8 @@ func samCoverage(s Settings) {
 	}
 	lambda := fit.PoissonHistogram(histogram)
 	coverageThreshold := ThresholdCalc(s.HighEndFilter, histogram, float64(totalCount))
-	fmt.Fprintf(statSummary, "Lambda\t%v\nCoverageThreshold\t%v\n", lambda, coverageThreshold)
+	_, err = fmt.Fprintf(statSummary, "Lambda\t%v\nCoverageThreshold\t%v\n", lambda, coverageThreshold)
+	exception.PanicOnErr(err)
 	for i, pileups := range histogram {
 		_, err = fmt.Fprintf(outHist, "%v\t%v\tEmpirical\n", i, pileups)
 		exception.PanicOnErr(err)
