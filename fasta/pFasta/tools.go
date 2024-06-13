@@ -123,10 +123,11 @@ func faToPfa(input fasta.Fasta, start int, end int) PFasta {
 }
 
 // faToPfa returns a pFasta representation of the given Fasta sequence
-func multiFaToPfa(input []fasta.Fasta, start int, end int, chrom string) PFasta {
+func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFasta {
+	inputFa := fasta.Read(inputFaFilename)
 	chromInInput := false
 	var answer PFasta
-	for _, seq := range input {
+	for _, seq := range inputFa {
 		if seq.Name == chrom {
 			chromInInput = true
 			answer = faToPfa(seq, start, end)
@@ -140,17 +141,73 @@ func multiFaToPfa(input []fasta.Fasta, start int, end int, chrom string) PFasta 
 	return answer
 }
 
-// delete this: vcf 1-indexed
-// af = allele freq
-// // vcfToPfa returns a pFasta representation of the given VCF sequence
-func vcfToPfa(inputVCF []vcf.Vcf, inputFa fasta.Fasta) PFasta {
-	answer := faToPfa(inputFa, 0, -1)
-
+// vcfToPfa returns a pFasta representation of the given VCF sequence, only accepts single sequence Fasta
+func VcfToPfa(inVcfFilename string, inputFaFilename string) PFasta {
 	var vcfRecords <-chan vcf.Vcf
+
+	inputFa := fasta.Read(inputFaFilename)
+	answer := faToPfa(inputFa[0], 0, -1)
+
+	vcfRecords, _ = vcf.GoReadToChan(inVcfFilename)
+
+	for v := range vcfRecords {
+		if !(vcf.IsBiallelic(v) && vcf.IsSubstitution(v)) {
+			log.Fatal("Error: currently we only handle biallelic substitutions\n")
+		}
+
+		if inputFa[0].Seq[v.Pos-1] != dna.StringToBase(v.Ref) {
+			log.Fatal("Error: base in fasta didn't match ref base from VCF record\n")
+		}
+
+		answer.Seq[v.Pos-1] = vcfSampleToPdnaBase(v.Samples, v.Ref, v.Alt[0])
+	}
 
 	return answer
 }
 
-func vcfSamplesToPdnaBase(sample vcf.Sample) pDna.Float32Base {
-	//
+// vcfSampleToPdnaBase calculates the distribution of samples at a position
+func vcfSampleToPdnaBase(samples []vcf.Sample, ref string, alt string) pDna.Float32Base {
+	// can i just assume that everything only has 2 alleles and multiple len(samples)*2
+	totalSamples := 0
+	refCount := 0
+	altCount := 1
+	for _, s := range samples {
+		for _, p := range s.Alleles {
+			if p == 0 {
+				refCount += 1
+			} else if p == 1 {
+				altCount += 1
+			} else {
+				fmt.Print("Second allele.")
+			}
+			totalSamples += 1
+		}
+	}
+
+	var answer pDna.Float32Base
+	if ref == "A" {
+		answer.A = float32(refCount) / float32(totalSamples)
+	} else if alt == "A" {
+		answer.A = float32(altCount) / float32(totalSamples)
+	}
+
+	if ref == "C" {
+		answer.C = float32(refCount) / float32(totalSamples)
+	} else if alt == "C" {
+		answer.C = float32(altCount) / float32(totalSamples)
+	}
+
+	if ref == "G" {
+		answer.G = float32(refCount) / float32(totalSamples)
+	} else if alt == "G" {
+		answer.G = float32(altCount) / float32(totalSamples)
+	}
+
+	if ref == "T" {
+		answer.T = float32(refCount) / float32(totalSamples)
+	} else if alt == "T" {
+		answer.T = float32(altCount) / float32(totalSamples)
+	}
+
+	return answer
 }
