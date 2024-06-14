@@ -63,10 +63,8 @@ type ByteWriter struct {
 
 // NewByteReader initializes a ByteReader for given filename, supporting p/gzip.
 func NewByteReader(filename string) *ByteReader {
-	file := MustOpen(filename)
-
 	reader := &ByteReader{
-		File:   file,
+		File:   MustOpen(filename),
 		Buffer: &bytes.Buffer{},
 		bufPool: sync.Pool{
 			New: func() interface{} { return make([]byte, defaultBufSize) },
@@ -74,12 +72,12 @@ func NewByteReader(filename string) *ByteReader {
 	}
 	if IsGzip(reader.File) {
 		var err error
-		reader.internalGzip, err = pgzip.NewReader(file)
+		reader.internalGzip, err = pgzip.NewReader(reader.File)
 		exception.PanicOnErr(err)
 
 		reader.Reader = bufio.NewReader(reader.internalGzip)
 	} else {
-		reader.Reader = bufio.NewReader(file)
+		reader.Reader = bufio.NewReader(reader.File)
 	}
 	reader.buf = reader.getBuffer()
 	return reader
