@@ -73,11 +73,11 @@ func NewByteReader(filename string) *ByteReader {
 		},
 	}
 	if IsGzip(reader.File) {
-		gzReader, err := pgzip.NewReader(file)
+		var err error
+		reader.internalGzip, err = pgzip.NewReader(file)
 		exception.PanicOnErr(err)
 
-		reader.internalGzip = gzReader
-		reader.Reader = bufio.NewReader(gzReader)
+		reader.Reader = bufio.NewReader(reader.internalGzip)
 	} else {
 		reader.Reader = bufio.NewReader(file)
 	}
