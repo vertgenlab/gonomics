@@ -3,13 +3,13 @@ package fileio
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
+	"unicode/utf8"
 
 	"github.com/klauspost/pgzip"
 	"github.com/vertgenlab/gonomics/exception"
@@ -28,12 +28,25 @@ type ByteReader struct {
 	Buffer       *bytes.Buffer
 }
 
-// Read implements io.Reader, reading data into b from the file or gzip stream.
-func (reader *ByteReader) Read(b []byte) (n int, err error) {
-	if reader.internalGzip != nil {
-		return reader.internalGzip.Read(b)
-	}
-	return reader.Reader.Read(b)
+type ByteWriter struct {
+	// Basic Fields
+	wr     io.Writer
+	buf    []byte
+	n      int
+	err    error
+	closed bool
+
+	// Synchronization Fields
+	mtx                sync.Mutex
+	inChunkedWriteMode bool
+	noChunkedWrite     *sync.Cond
+	notFlushing        *sync.Cond
+	chunkedWriter      *sync.Cond
+
+	// Buffer Management Fields
+	nFlush  int
+	flushAt int
+	bufPool sync.Pool
 }
 
 // NewByteReader initializes a ByteReader for given filename, supporting p/gzip.
@@ -55,6 +68,35 @@ func NewByteReader(filename string) *ByteReader {
 		reader.Reader = bufio.NewReader(file)
 	}
 	return reader
+}
+
+// NewWriter returns a new Writer whose buffer has the default size.
+func NewByteWriter(filename string) *ByteWriter {
+	file := MustCreate(filename)
+	return NewByteWriterSize(file, defaultBufSize)
+}
+
+// NewByteWriterSize returns a new ByteWriter with a buffer of at least the specified size.
+func NewByteWriterSize(w io.Writer, size int) *ByteWriter {
+	if size <= 0 {
+		size = defaultBufSize
+	}
+	if size < utf8.UTFMax {
+		size = utf8.UTFMax
+	}
+	m := new(sync.Mutex)
+	writer := &ByteWriter{
+		wr:             w,
+		buf:            make([]byte, size),
+		flushAt:        2 * size,
+		noChunkedWrite: sync.NewCond(m),
+		notFlushing:    sync.NewCond(m),
+		chunkedWriter:  sync.NewCond(m),
+		bufPool: sync.Pool{
+			New: func() interface{} { return make([]byte, size) },
+		},
+	}
+	return writer
 }
 
 // ReadLine reads a line into Buffer, indicating if more lines are available.
@@ -107,31 +149,6 @@ func bytesToBuffer(reader *ByteReader) *bytes.Buffer {
 	}
 	exception.PanicOnErr(err)
 	return reader.Buffer
-}
-
-// Close closes the internal File and gzip Reader if present.
-func (br *ByteReader) Close() error {
-	var gzErr, fileErr error
-	if br.internalGzip != nil {
-		gzErr = br.internalGzip.Close()
-	}
-	if br.File != nil {
-		fileErr = br.File.Close()
-	} else {
-		return errors.New("no file found")
-	}
-
-	switch { // Handle error returns. Priority is gzErr > fileErr
-	case gzErr != nil:
-		return gzErr
-
-	case fileErr != nil:
-		log.Println("WARNING: attempted to close file, but file already closed")
-		return nil
-
-	default:
-		return nil
-	}
 }
 
 // StringToIntSlice converts comma-separated strings to int slices.
