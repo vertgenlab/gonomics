@@ -10,6 +10,8 @@ import (
 	"os"
 	"sync"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 var bufsizes = []int{
@@ -91,6 +93,70 @@ func BenchmarkEasyReaderGz(b *testing.B) {
 		reader = EasyOpen("testdata/big.fa.gz")
 		for _, done = EasyNextLine(reader); !done; _, done = EasyNextLine(reader) {
 		}
+	}
+}
+
+func BenchmarkByteWriterGz(b *testing.B) {
+
+	reader := NewByteReader("testdata/big.fa.gz")
+	gz := "testdata/byte.gz"
+	defer reader.Close()
+
+	// Read and store data from the original GZ file
+	var originalData [][]byte
+	for line, done := ReadLine(reader); !done; line, done = ReadLine(reader) {
+		originalData = append(originalData, line.Bytes())
+	}
+	writer := NewByteWriter(gz)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		for _, line := range originalData {
+			_, err := writer.Write(line)
+			exception.PanicOnErr(err)
+		}
+		exception.PanicOnErr(writer.Flush())
+
+	}
+
+}
+func TestByteWriterGz(t *testing.T) {
+	reader := NewByteReader("testdata/big.fa.gz")
+	gz := "testdata/byte.gz"
+	defer reader.Close()
+
+	// Read and store data from the original GZ file
+	var originalData [][]byte
+	for line, done := ReadLine(reader); !done; line, done = ReadLine(reader) {
+		originalData = append(originalData, line.Bytes())
+	}
+
+	// Write the data to a new GZ file
+	writer := NewByteWriter(gz)
+	for _, line := range originalData {
+		_, err := writer.Write(line)
+		exception.PanicOnErr(err)
+	}
+	writer.Close() // Ensure the GZ file is properly closed
+
+	// Read the data back from the newly created GZ file
+	result := NewByteReader(gz)
+	defer result.Close()
+	var writtenData [][]byte
+
+	for line, done := ReadLine(result); !done; line, done = ReadLine(result) {
+		writtenData = append(writtenData, line.Bytes())
+	}
+
+	if len(originalData) == len(writtenData) {
+		for i := 0; i < len(writtenData); i++ {
+			if string(originalData[i]) != string(writtenData[i]) {
+				t.Logf("Error: %q != %q", originalData[i], writtenData[i])
+			}
+		}
+	} else {
+		t.Logf("Error: size of results do not match %d != %d", len(originalData), len(writtenData))
 	}
 }
 

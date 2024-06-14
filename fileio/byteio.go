@@ -49,10 +49,8 @@ type ByteWriter struct {
 	notFlushing        *sync.Cond
 	chunkedWriter      *sync.Cond
 
-	// Goroutine for gzip compression and writing
+	// pgzip compression and writing
 	internalGzip *pgzip.Writer
-	writeCh      chan []byte
-	wg           sync.WaitGroup
 }
 
 // NewByteReader initializes a ByteReader for given filename, supporting p/gzip.
@@ -103,12 +101,11 @@ func NewByteWriterSize(w io.Writer, size int) *ByteWriter {
 // NewWriter returns a new Writer whose buffer has the default size.
 func NewByteWriter(filename string) *ByteWriter {
 	file := MustCreate(filename)
-
 	writer := NewByteWriterSize(file, defaultBufSize)
 
 	if strings.HasSuffix(filename, ".gz") {
 		writer.internalGzip = pgzip.NewWriter(file)
-		NewByteWriterSize(writer.internalGzip, defaultBufSize)
+		writer.Writer = NewByteWriterSize(writer.internalGzip, defaultBufSize)
 	}
 	// TODO: pgzip Writer to write gzip files
 	return writer
