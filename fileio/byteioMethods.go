@@ -2,41 +2,64 @@ package fileio
 
 import (
 	"errors"
+	"fmt"
 	"io"
-	"log"
 )
 
 // Read implements io.Reader, reading data into b from the file or gzip stream.
-func (reader *ByteReader) Read(b []byte) (n int, err error) {
-	if reader.internalGzip != nil {
-		return reader.internalGzip.Read(b)
+func (br *ByteReader) Read(b []byte) (n int, err error) {
+	if br.internalGzip != nil {
+		return br.internalGzip.Read(b) // GZIP handling
 	}
-	return reader.Reader.Read(b)
+
+	// Non-GZIP reading with pooling
+	for len(b) > 0 {
+		if len(br.buf) > 0 {
+			// Data available in existing buffer
+			copied := copy(b, br.buf)
+			br.buf = br.buf[copied:]
+			b = b[copied:]
+			n += copied
+		} else {
+			// Buffer empty, get a new one from the pool
+			if br.buf != nil {
+				br.bufPool.Put(br.buf) // Return the old buffer to the pool
+			}
+			br.buf = br.bufPool.Get().([]byte)
+			nr, err := br.Reader.Read(br.buf)
+			if nr > 0 {
+				copied := copy(b, br.buf)
+				br.buf = br.buf[copied:]
+				b = b[copied:]
+				n += copied
+			}
+			if err != nil {
+				return n, err
+			}
+		}
+	}
+	return n, nil
 }
 
 // Close closes the internal File and gzip Reader if present.
 func (br *ByteReader) Close() error {
-	var gzErr, fileErr error
-	if br.internalGzip != nil {
-		gzErr = br.internalGzip.Close()
-	}
-	if br.File != nil {
-		fileErr = br.File.Close()
-	} else {
+	if br.File == nil {
 		return errors.New("no file found")
 	}
 
-	switch { // Handle error returns. Priority is gzErr > fileErr
-	case gzErr != nil:
-		return gzErr
-
-	case fileErr != nil:
-		log.Println("WARNING: attempted to close file, but file already closed")
-		return nil
-
-	default:
-		return nil
+	var err error
+	if br.internalGzip != nil {
+		err = br.internalGzip.Close()
 	}
+
+	if fileErr := br.File.Close(); fileErr != nil {
+		if err != nil {
+			return fmt.Errorf("multiple errors: gzip: %w, file: %w", err, fileErr)
+		}
+		err = fmt.Errorf("closing file: %w", fileErr) // Wrap the file error for clarity
+	}
+
+	return err
 }
 
 // Write writes the contents of p into the buffer.
@@ -271,9 +294,19 @@ func (b *ByteWriter) Buffered() int {
 	return b.n
 }
 
+// getBuffer retrieves a xbuffer from the pool.
+func (b *ByteReader) getBuffer() []byte {
+	return b.bufPool.Get().([]byte)
+}
+
 // getBuffer retrieves a buffer from the pool.
 func (b *ByteWriter) getBuffer() []byte {
 	return b.bufPool.Get().([]byte)
+}
+
+// putBuffer returns a buffer to the pool.
+func (b *ByteReader) putBuffer(buf []byte) {
+	b.bufPool.Put(buf)
 }
 
 // putBuffer returns a buffer to the pool.

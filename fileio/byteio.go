@@ -21,12 +21,20 @@ const (
 
 // ByteReader wraps bufio.Reader for efficient byte-level file parsing.
 type ByteReader struct {
-	*bufio.Reader
-	File         *os.File
+	*bufio.Reader // Embedding io.Writer
+	File          *os.File
+
+	// Buffer Management Fields
+	buf     []byte
+	Buffer  *bytes.Buffer
+	bufPool sync.Pool
+
+	// pgzip compression and writing
 	internalGzip *pgzip.Reader
-	line         []byte
-	Buffer       *bytes.Buffer
 }
+
+// ByteWriter provides buffered writing with enhanced concurrency support, optional
+// pgzip compression, and buffer pooling for efficient memory management.
 
 type ByteWriter struct {
 	io.Writer // Embedding io.Writer
@@ -60,9 +68,11 @@ func NewByteReader(filename string) *ByteReader {
 	reader := &ByteReader{
 		File:   file,
 		Buffer: &bytes.Buffer{},
+		bufPool: sync.Pool{
+			New: func() interface{} { return make([]byte, defaultBufSize) },
+		},
 	}
-
-	if strings.HasSuffix(filename, ".gz") {
+	if IsGzip(reader.File) {
 		gzReader, err := pgzip.NewReader(file)
 		exception.PanicOnErr(err)
 
@@ -71,6 +81,7 @@ func NewByteReader(filename string) *ByteReader {
 	} else {
 		reader.Reader = bufio.NewReader(file)
 	}
+	reader.buf = reader.getBuffer()
 	return reader
 }
 
@@ -111,35 +122,37 @@ func NewByteWriter(filename string) *ByteWriter {
 	return writer
 }
 
-// ReadLine reads a line into Buffer, indicating if more lines are available.
-func ReadLine(reader *ByteReader) (*bytes.Buffer, bool) {
-	reader.Buffer.Reset() // Reset buffer for new line reading
+// ReadLine reads a buf into Buffer, indicating if more lines are available.
+func ReadLine(br *ByteReader) (*bytes.Buffer, bool) {
+	br.Buffer.Reset() // Reset buffer for new line reading
+
 	var err error
-	for reader.line, err = reader.ReadSlice('\n'); err == nil || err == bufio.ErrBufferFull || err == io.EOF; reader.line, err = reader.ReadSlice('\n') {
+	for br.buf, err = br.ReadSlice('\n'); err == nil || err == bufio.ErrBufferFull || err == io.EOF; br.buf, err = br.ReadSlice('\n') {
 		if err != nil && err != bufio.ErrBufferFull {
 			if err == io.EOF {
-				return reader.Buffer, true // End of file reached
+				return br.Buffer, true // End of file reached
 			}
 			exception.PanicOnErr(err) // Handle unexpected errors
 		}
+
 		// Write the read part to the buffer, handling both partial and complete lines
-		if len(reader.line) > 0 && reader.line[len(reader.line)-1] == '\n' {
+		if len(br.buf) > 0 && br.buf[len(br.buf)-1] == '\n' {
 			// Check for carriage return before newline and adjust accordingly
-			if len(reader.line) > 1 && reader.line[len(reader.line)-2] == '\r' {
-				_, err = reader.Buffer.Write(reader.line[:len(reader.line)-2])
+			if len(br.buf) > 1 && br.buf[len(br.buf)-2] == '\r' {
+				_, err = br.Buffer.Write(br.buf[:len(br.buf)-2])
 			} else {
-				_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
+				_, err = br.Buffer.Write(br.buf[:len(br.buf)-1])
 			}
 			exception.PanicOnErr(err)
 			if err == nil {
-				return reader.Buffer, false
+				return br.Buffer, false
 			}
 		} else {
-			_, err = reader.Buffer.Write(reader.line)
+			_, err = br.Buffer.Write(br.buf)
 			exception.PanicOnErr(err)
 		}
 	}
-	return reader.Buffer, false
+	return br.Buffer, false
 }
 
 // CatchErrThrowEOF handles EOF errors silently and panics on others.
@@ -151,23 +164,23 @@ func CatchErrThrowEOF(err error) {
 	}
 }
 
-// bytesToBuffer returns a pointer to Buffer containing reader.line.
+// bytesToBuffer returns a pointer to Buffer containing reader.buf.
 func bytesToBuffer(reader *ByteReader) *bytes.Buffer {
 	var err error
-	if reader.line[len(reader.line)-2] == '\r' {
-		_, err = reader.Buffer.Write(reader.line[:len(reader.line)-2])
+	if reader.buf[len(reader.buf)-2] == '\r' {
+		_, err = reader.Buffer.Write(reader.buf[:len(reader.buf)-2])
 	} else {
-		_, err = reader.Buffer.Write(reader.line[:len(reader.line)-1])
+		_, err = reader.Buffer.Write(reader.buf[:len(reader.buf)-1])
 	}
 	exception.PanicOnErr(err)
 	return reader.Buffer
 }
 
 // StringToIntSlice converts comma-separated strings to int slices.
-func StringToIntSlice(line string) []int {
-	work := strings.Split(line, ",")
+func StringToIntSlice(buf string) []int {
+	work := strings.Split(buf, ",")
 	var sliceSize int = len(work)
-	if line[len(line)-1] == ',' {
+	if buf[len(buf)-1] == ',' {
 		sliceSize--
 	}
 	var answer []int = make([]int, sliceSize)
