@@ -6,6 +6,15 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
+// Copy makes a copy of the fasta struct and the associated slice of dna so that
+// modifying one will not also modify the other
+func Copy(a Fasta) Fasta {
+	var ans Fasta
+	ans = Fasta{a.Name, make([]dna.Base, len(a.Seq))}
+	copy(ans.Seq, a.Seq)
+	return ans
+}
+
 // Remove fasta record with index i from slice of fasta.
 func Remove(slice []Fasta, i int) []Fasta {
 	return append(slice[:i], slice[i+1:]...)

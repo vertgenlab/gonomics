@@ -16,30 +16,35 @@ func multiFaExtract(s Settings) {
 	var ans []fasta.Fasta
 	records := fasta.Read(s.InFile)
 	if s.Bed == "" {
-		if !(s.Start < s.End) {
-			log.Fatalf("Invalid arguments, start must be lower than end")
-		}
-		ans = extractMultiHelper(records, s.Start, s.End)
-		if s.RemoveGaps {
-			ans = fasta.RemoveGaps(ans)
-		}
+		ans = extractMultiHelper(records, s.Start, s.End, s.RemoveGaps, false)
 		fasta.Write(s.OutFile, ans)
 	} else {
 		bedChan := bed.GoReadToChan(s.Bed)
 		for b := range bedChan {
-			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd)
-			if s.RemoveGaps {
-				ans = fasta.RemoveGaps(ans)
+			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd, s.RemoveGaps, b.Strand == bed.Negative)
+			if b.FieldsInitialized >= 4 {
+				fasta.Write(fmt.Sprintf("%s.fa", b.Name), ans)
+			} else {
+				fasta.Write(fmt.Sprintf("%s.%d.%d.fa", b.Chrom, b.ChromStart, b.ChromEnd), ans)
 			}
-			fasta.Write(fmt.Sprintf("%s.%d.%d.fa", b.Chrom, b.ChromStart, b.ChromEnd), ans)
 		}
 	}
 }
 
-func extractMultiHelper(records []fasta.Fasta, start int, end int) []fasta.Fasta {
+func extractMultiHelper(records []fasta.Fasta, start int, end int, removeGaps bool, revComp bool) []fasta.Fasta {
 	var ans = make([]fasta.Fasta, len(records))
+	if !(start < end) {
+		log.Fatalf("Invalid arguments, start must be lower than end. start=%d end=%d\n", start, end)
+	}
 	for i := range records {
 		ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPos(records[0], start), fasta.RefPosToAlnPos(records[0], end), records[i].Name)
+		if revComp {
+			ans[i] = fasta.Copy(ans[i])
+			fasta.ReverseComplement(ans[i])
+		}
+	}
+	if removeGaps {
+		ans = fasta.RemoveGaps(ans)
 	}
 	return ans
 }
