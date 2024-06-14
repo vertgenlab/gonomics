@@ -8,10 +8,23 @@ import (
 
 // Read implements io.Reader, reading data into b from the file or gzip stream.
 func (br *ByteReader) Read(b []byte) (n int, err error) {
-	if br.internalGzip != nil {
-		return br.internalGzip.Read(b) // GZIP handling
+	// Buffer empty, get a new one from the pool
+	if br.buf != nil {
+		br.putBuffer(br.buf) // Return the old buffer to the pool
 	}
+	br.buf = br.getBuffer()
+	defer br.putBuffer(br.buf)
+	// GZIP reading with pooling
+	if br.internalGzip != nil {
+		n, err = br.internalGzip.Read(br.buf)
+		if err != nil {
+			return n, err
+		}
 
+		// Copy decompressed data from tempBuf into the provided buffer 'b'
+		n = copy(b, br.buf[:n])
+		return n, nil
+	}
 	// Non-GZIP reading with pooling
 	for len(b) > 0 {
 		if len(br.buf) > 0 {
@@ -21,11 +34,7 @@ func (br *ByteReader) Read(b []byte) (n int, err error) {
 			b = b[copied:]
 			n += copied
 		} else {
-			// Buffer empty, get a new one from the pool
-			if br.buf != nil {
-				br.bufPool.Put(br.buf) // Return the old buffer to the pool
-			}
-			br.buf = br.bufPool.Get().([]byte)
+
 			nr, err := br.Reader.Read(br.buf)
 			if nr > 0 {
 				copied := copy(b, br.buf)
