@@ -29,10 +29,16 @@ type ByteReader struct {
 }
 
 type ByteWriter struct {
-	// Basic Fields
-	wr     io.Writer
-	buf    []byte
-	n      int
+	io.Writer // Embedding io.Writer
+
+	// Buffer Management Fields
+	buf     []byte
+	n       int
+	flushAt int
+	nFlush  int
+	bufPool sync.Pool
+
+	// Error Handling
 	err    error
 	closed bool
 
@@ -43,10 +49,10 @@ type ByteWriter struct {
 	notFlushing        *sync.Cond
 	chunkedWriter      *sync.Cond
 
-	// Buffer Management Fields
-	nFlush  int
-	flushAt int
-	bufPool sync.Pool
+	// Goroutine for gzip compression and writing
+	internalGzip *pgzip.Writer
+	writeCh      chan []byte
+	wg           sync.WaitGroup
 }
 
 // NewByteReader initializes a ByteReader for given filename, supporting p/gzip.
@@ -70,12 +76,6 @@ func NewByteReader(filename string) *ByteReader {
 	return reader
 }
 
-// NewWriter returns a new Writer whose buffer has the default size.
-func NewByteWriter(filename string) *ByteWriter {
-	file := MustCreate(filename)
-	return NewByteWriterSize(file, defaultBufSize)
-}
-
 // NewByteWriterSize returns a new ByteWriter with a buffer of at least the specified size.
 func NewByteWriterSize(w io.Writer, size int) *ByteWriter {
 	if size <= 0 {
@@ -85,8 +85,8 @@ func NewByteWriterSize(w io.Writer, size int) *ByteWriter {
 		size = utf8.UTFMax
 	}
 	m := new(sync.Mutex)
-	writer := &ByteWriter{
-		wr:             w,
+	bw := &ByteWriter{
+		Writer:         w,
 		buf:            make([]byte, size),
 		flushAt:        2 * size,
 		noChunkedWrite: sync.NewCond(m),
@@ -96,6 +96,21 @@ func NewByteWriterSize(w io.Writer, size int) *ByteWriter {
 			New: func() interface{} { return make([]byte, size) },
 		},
 	}
+	bw.buf = bw.getBuffer()
+	return bw
+}
+
+// NewWriter returns a new Writer whose buffer has the default size.
+func NewByteWriter(filename string) *ByteWriter {
+	file := MustCreate(filename)
+
+	writer := NewByteWriterSize(file, defaultBufSize)
+
+	if strings.HasSuffix(filename, ".gz") {
+		writer.internalGzip = pgzip.NewWriter(file)
+		NewByteWriterSize(writer.internalGzip, defaultBufSize)
+	}
+	// TODO: pgzip Writer to write gzip files
 	return writer
 }
 

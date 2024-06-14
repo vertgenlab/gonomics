@@ -2,9 +2,11 @@ package fileio
 
 import (
 	"bytes"
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
@@ -329,6 +331,54 @@ func TestWriteStringWithLongString(t *testing.T) {
 	}
 }
 
+// TestGzipWrite tests writing data to a gzip file using ByteWriter.
+func TestGzipWrite(t *testing.T) {
+	filename := "test_output.gz"
+	writer := NewByteWriter(filename)
+
+	// Data to be written
+	data := "This is a test line.\n"
+
+	// Write data to the writer
+	_, err := writer.Write([]byte(data))
+	if err != nil {
+		t.Fatalf("Write failed: %v", err)
+	}
+	// Flush the writer to ensure all data is written
+	err = writer.Flush()
+	if err != nil {
+		t.Fatalf("Flush failed: %v", err)
+	}
+
+	// Close the writer
+	err = writer.Close()
+	if err != nil {
+		t.Fatalf("Close failed: %v", err)
+	}
+
+	// Read the gzip file and verify its contents
+	file, err := os.Open(filename)
+	if err != nil {
+		t.Fatalf("Failed to open gzip file: %v", err)
+	}
+	defer file.Close()
+	defer os.Remove(filename)
+
+	gz, err := gzip.NewReader(file)
+	if err != nil {
+		t.Fatalf("Failed to create gzip reader: %v", err)
+	}
+	defer gz.Close()
+
+	content, err := ioutil.ReadAll(gz)
+	if err != nil {
+		t.Fatalf("Failed to read gzip content: %v", err)
+	}
+
+	if string(content) != data {
+		t.Fatalf("Expected %q, got %q", data, string(content))
+	}
+}
 func BenchmarkEasyWriter(b *testing.B) {
 	filename := "benchmark_easywriter_test.txt"
 	data := []byte("This is a benchmark test line.\n") // Data to write

@@ -41,6 +41,9 @@ func (br *ByteReader) Close() error {
 
 // Write writes the contents of p into the buffer.
 func (b *ByteWriter) Write(p []byte) (nn int, err error) {
+	if b.internalGzip != nil {
+		return b.internalGzip.Write(p)
+	}
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
 	if b.closed {
@@ -56,7 +59,7 @@ func (b *ByteWriter) Write(p []byte) (nn int, err error) {
 
 		var n int
 		if b.n == 0 {
-			n, b.err = b.wr.Write(p)
+			n, b.err = b.Writer.Write(p)
 		} else {
 			n = copy(b.buf[b.n:], p)
 			b.n += n
@@ -101,6 +104,9 @@ func (b *ByteWriter) WriteByte(c byte) error {
 
 // WriteString writes a string.
 func (b *ByteWriter) WriteString(s string) (int, error) {
+	if b.internalGzip != nil {
+		return b.internalGzip.Write([]byte(s))
+	}
 	nn := 0
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
@@ -133,6 +139,9 @@ func (b *ByteWriter) WriteString(s string) (int, error) {
 
 // Close flushes any buffered data and releases resources.
 func (b *ByteWriter) Close() error {
+	if b.internalGzip != nil {
+		return b.internalGzip.Close()
+	}
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
 
@@ -201,7 +210,7 @@ func (b *ByteWriter) flush(need int) error {
 			mtxReleased = true
 		}
 
-		n, err := b.wr.Write(b.buf[:b.nFlush])
+		n, err := b.Writer.Write(b.buf[:b.nFlush])
 		if n < b.nFlush && err == nil {
 			err = io.ErrShortWrite
 		}
@@ -249,7 +258,7 @@ func (b *ByteWriter) Reset(w io.Writer) {
 
 	b.err = nil
 	b.n = 0
-	b.wr = w
+	b.Writer = w
 	b.nFlush = 0
 
 	b.notFlushing.Signal()
