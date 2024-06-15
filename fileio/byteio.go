@@ -19,7 +19,7 @@ const (
 	defaultBufSize = 4096
 )
 
-// ByteReader embedding bufio.Reader with internal buffering management avoiding excessive allocations.
+// ByteReader is a bufio.Reader with internal buffering management avoiding excessive allocations.
 type ByteReader struct {
 	*bufio.Reader // Embedding *ufio.Reader
 	File          *os.File
