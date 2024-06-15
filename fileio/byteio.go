@@ -19,9 +19,9 @@ const (
 	defaultBufSize = 4096
 )
 
-// ByteReader wraps bufio.Reader for efficient byte-level file parsing.
+// ByteReader embedding bufio.Reader with internal buffering management avoiding excessive allocations.
 type ByteReader struct {
-	*bufio.Reader // Embedding io.Writer
+	*bufio.Reader // Embedding *ufio.Reader
 	File          *os.File
 
 	// Buffer Management Fields
@@ -63,24 +63,22 @@ type ByteWriter struct {
 
 // NewByteReader initializes a ByteReader for given filename, supporting p/gzip.
 func NewByteReader(filename string) *ByteReader {
-	reader := &ByteReader{
+	br := &ByteReader{
 		File:   MustOpen(filename),
 		Buffer: &bytes.Buffer{},
 		bufPool: sync.Pool{
 			New: func() interface{} { return make([]byte, defaultBufSize) },
 		},
 	}
-	if IsGzip(reader.File) {
+	if IsGzip(br.File) {
 		var err error
-		reader.internalGzip, err = pgzip.NewReader(reader.File)
+		br.internalGzip, err = pgzip.NewReader(br.File)
 		exception.PanicOnErr(err)
-
-		reader.Reader = bufio.NewReader(reader.internalGzip)
+		br.Reader = bufio.NewReader(br.internalGzip)
 	} else {
-		reader.Reader = bufio.NewReader(reader.File)
+		br.Reader = bufio.NewReader(br.File)
 	}
-	reader.buf = reader.getBuffer()
-	return reader
+	return br
 }
 
 // NewByteWriterSize returns a new ByteWriter with a buffer of at least the specified size.
@@ -110,14 +108,13 @@ func NewByteWriterSize(w io.Writer, size int) *ByteWriter {
 // NewWriter returns a new Writer whose buffer has the default size.
 func NewByteWriter(filename string) *ByteWriter {
 	file := MustCreate(filename)
-	writer := NewByteWriterSize(file, defaultBufSize)
+	bw := NewByteWriterSize(file, defaultBufSize)
 
-	if strings.HasSuffix(filename, ".gz") {
-		writer.internalGzip = pgzip.NewWriter(file)
-		writer.Writer = NewByteWriterSize(writer.internalGzip, defaultBufSize)
+	if strings.HasSuffix(filename, "gz") {
+		bw.internalGzip = pgzip.NewWriter(file)
+		bw.Writer = NewByteWriterSize(bw.internalGzip, defaultBufSize)
 	}
-	// TODO: pgzip Writer to write gzip files
-	return writer
+	return bw
 }
 
 // ReadLine reads a buf into Buffer, indicating if more lines are available.
@@ -160,18 +157,6 @@ func CatchErrThrowEOF(err error) {
 	} else {
 		exception.PanicOnErr(err)
 	}
-}
-
-// bytesToBuffer returns a pointer to Buffer containing reader.buf.
-func bytesToBuffer(reader *ByteReader) *bytes.Buffer {
-	var err error
-	if reader.buf[len(reader.buf)-2] == '\r' {
-		_, err = reader.Buffer.Write(reader.buf[:len(reader.buf)-2])
-	} else {
-		_, err = reader.Buffer.Write(reader.buf[:len(reader.buf)-1])
-	}
-	exception.PanicOnErr(err)
-	return reader.Buffer
 }
 
 // StringToIntSlice converts comma-separated strings to int slices.

@@ -8,25 +8,26 @@ import (
 
 // Read implements io.Reader, reading data into b from the file or gzip stream.
 func (br *ByteReader) Read(b []byte) (n int, err error) {
-	// Buffer empty, get a new one from the pool
-	if br.buf != nil {
-		br.putBuffer(br.buf) // Return the old buffer to the pool
-	}
-	br.buf = br.getBuffer()
-	defer br.putBuffer(br.buf)
 	// GZIP reading with pooling
 	if br.internalGzip != nil {
-		n, err = br.internalGzip.Read(br.buf)
+		// Read decompressed data into a temporary buffer
+		unzipBuf := br.getBuffer()   // Get a buffer from the pool
+		defer br.putBuffer(unzipBuf) // Return it to the pool later
+		n, err = br.internalGzip.Read(unzipBuf)
 		if err != nil {
 			return n, err
 		}
-
 		// Copy decompressed data from tempBuf into the provided buffer 'b'
-		n = copy(b, br.buf[:n])
+		n = copy(b, unzipBuf[:n])
 		return n, nil
 	}
 	// Non-GZIP reading with pooling
 	for len(b) > 0 {
+		// Buffer empty, get a new one from the pool
+		if br.buf != nil {
+			br.putBuffer(br.buf) // Return the old buffer to the pool
+		}
+		br.buf = br.getBuffer()
 		if len(br.buf) > 0 {
 			// Data available in existing buffer
 			copied := copy(b, br.buf)
@@ -34,7 +35,6 @@ func (br *ByteReader) Read(b []byte) (n int, err error) {
 			b = b[copied:]
 			n += copied
 		} else {
-
 			nr, err := br.Reader.Read(br.buf)
 			if nr > 0 {
 				copied := copy(b, br.buf)
@@ -55,19 +55,16 @@ func (br *ByteReader) Close() error {
 	if br.File == nil {
 		return errors.New("no file found")
 	}
-
 	var err error
 	if br.internalGzip != nil {
 		err = br.internalGzip.Close()
 	}
-
 	if fileErr := br.File.Close(); fileErr != nil {
 		if err != nil {
 			return fmt.Errorf("multiple errors: gzip: %w, file: %w", err, fileErr)
 		}
 		err = fmt.Errorf("closing file: %w", fileErr) // Wrap the file error for clarity
 	}
-
 	return err
 }
 
@@ -82,13 +79,11 @@ func (b *ByteWriter) Write(p []byte) (nn int, err error) {
 		return 0, io.ErrClosedPipe
 	}
 	b.waitUntilNoChunkedWrite()
-
 	for len(p) > len(b.buf)-b.n && b.err == nil {
 		if !b.inChunkedWriteMode {
 			b.inChunkedWriteMode = true
 			defer b.endChunkedWrite()
 		}
-
 		var n int
 		if b.n == 0 {
 			n, b.err = b.Writer.Write(p)
@@ -100,11 +95,9 @@ func (b *ByteWriter) Write(p []byte) (nn int, err error) {
 		nn += n
 		p = p[n:]
 	}
-
 	if b.err != nil {
 		return nn, b.err
 	}
-
 	n := copy(b.buf[b.n:], p)
 	b.n += n
 	nn += n
@@ -143,11 +136,9 @@ func (b *ByteWriter) WriteString(s string) (int, error) {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
 	b.waitUntilNoChunkedWrite()
-
 	if b.err != nil {
 		return 0, b.err
 	}
-
 	for len(s) > len(b.buf)-b.n {
 		n := copy(b.buf[b.n:], s)
 		b.n += n
@@ -208,11 +199,9 @@ func (b *ByteWriter) Flush() error {
 // flush writes the buffered data to the underlying io.Writer.
 func (b *ByteWriter) flush(need int) error {
 	iAmChunked := b.inChunkedWriteMode
-
 	callerNeedMet := func() bool {
 		return b.n == 0 || (need > 0 && len(b.buf)-b.n >= need)
 	}
-
 	waitToFlush := func() bool {
 		waited := false
 		if iAmChunked {
@@ -228,46 +217,37 @@ func (b *ByteWriter) flush(need int) error {
 		}
 		return waited
 	}
-
 	for b.err == nil && !callerNeedMet() {
 		if waitToFlush() {
 			continue
 		}
-
 		b.nFlush = b.n
-
 		mtxReleased := false
 		if !iAmChunked && b.nFlush != len(b.buf) {
 			b.mtx.Unlock()
 			mtxReleased = true
 		}
-
 		n, err := b.Writer.Write(b.buf[:b.nFlush])
 		if n < b.nFlush && err == nil {
 			err = io.ErrShortWrite
 		}
-
 		if mtxReleased {
 			b.mtx.Lock()
 		}
-
 		if n > 0 && n < b.n {
 			copy(b.buf[:b.n-n], b.buf[n:b.n])
 		}
 		b.n -= n
 		b.err = err
 		b.nFlush = 0
-
 		if mtxReleased && b.inChunkedWriteMode {
 			b.chunkedWriter.Signal()
 			b.waitUntilNoChunkedWrite()
 		}
-
 		if need == 0 {
 			break
 		}
 	}
-
 	b.notFlushing.Signal()
 	return b.err
 }
@@ -283,16 +263,13 @@ func (b *ByteWriter) maybeAutoFlush() {
 func (b *ByteWriter) Reset(w io.Writer) {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
-
 	for b.err == nil && (b.nFlush != 0 || b.inChunkedWriteMode) {
 		b.notFlushing.Wait()
 	}
-
 	b.err = nil
 	b.n = 0
 	b.Writer = w
 	b.nFlush = 0
-
 	b.notFlushing.Signal()
 }
 
