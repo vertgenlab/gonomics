@@ -1,29 +1,27 @@
 package bigWig
 
-import (
-	"encoding/binary"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-)
-
-// the official documentation for the bigWig file format
+// Note that package bigWig is written to parse bigWig format version 4.
+// specs for version 4 are found in this file: https://github.com/ucscGenomeBrowser/kent/blob/master/src/inc/bbiFile.h
+// the official documentation for the bigWig file format (version 3)
 // can be found in the supplementary materials of the following
 // publication:
 // Kent, W.J., et al. BigWig and BigBed: enabling browsing of large distributed
 //datasets. (2010) Bioinformatics, 26(17) 2204-2207.
 
-// specs for version 4 are found in this file: https://github.com/ucscGenomeBrowser/kent/blob/master/src/inc/bbiFile.h
-
-// this is the magic number for bigWig files
-const bigWigMagic = 2291137574         // little endian
-const bigWigMagicBigEndian = 654086024 // big endian, not supported by this package
+// these are the magic number for bigWig files
+const bigWigMagic = 2291137574             // little endian
+const bigWigMagicBigEndian = 654086024     // big endian, not supported by this package
+const chromTreeMagic = 2026540177          // little endian
+const chromTreeMagicBigEndian = 2441923192 // big endian is not supported by this package
 
 // BigWig represents the data of a BigWig file in a data structure.
 type BigWig struct {
 	BbiHeader         BbiHeader         // Contains high-level information about file and offsets to various parts of the file.
 	ZoomHeaders       []ZoomHeader      // One for each zoom level built into the file, as specified in the BbiHeader.
 	TotalSummaryBlock TotalSummaryBlock // Statistical summary of the entire file.
+	ChromTreeHeader   ChromTreeHeader   // Index of chromosomes, their sizes, unique IDs. B+ tree data structure.
+	ChromTreeNodes    []ChromTreeNode   // Nodes of the chromosome tree.
+	DataCount         uint32            // The number of sections in the bigWig.
 }
 
 // BbiHeader represents the bbi header of the bigWig data file and contains metadata and offset values for file navigation.
@@ -60,92 +58,45 @@ type TotalSummaryBlock struct {
 	SumSquares   float64 // Sum of all squares of values in the file.
 }
 
-// Read parses a BigWig struct from an input filename.
-func Read(filename string) BigWig {
-	var err error
-	var answer = BigWig{}
-	file := fileio.EasyOpen(filename)
-	answer.BbiHeader = readBbiHeader(file)
-	for currZoomLevel := 0; currZoomLevel < int(answer.BbiHeader.ZoomLevels); currZoomLevel++ {
-		answer.ZoomHeaders = append(answer.ZoomHeaders, readZoomHeader(file))
-	}
-	answer.TotalSummaryBlock = readTotalSummary(file)
-	err = file.Close()
-	exception.PanicOnErr(err)
-	return answer
+// ChromTreeHeader specifies the header for the Chromosome B+ tree header. It starts at the offset specified by
+// chromosomeTreeOffset in the common header.
+// This struct contains information about the structure of the chromosome tree nodes, which immediately follow this header
+// in the file.
+type ChromTreeHeader struct {
+	Magic     uint32 // expects 2026540177 (Little endian). Package throws error if big endian header is found.
+	BlockSize uint32 // Number of children per block (not byte size of the block).
+	KeySize   uint32 // Number of significant bytes in key. Minimum prefix size needed to distinguish one chromosome name from another.
+	ValSize   uint32 // Size of the value being indexed. Set to 8.
+	ItemCount uint64 // The number of chromosomes / contigs.
+	Reserved  uint64 // Reserved for future expansions. Must be 0 in bigWig.
 }
 
-// We currently support only reading bbi headers in LittleEndian.
-func readBbiHeader(file *fileio.EasyReader) BbiHeader {
-	var header = BbiHeader{}
-	err := binary.Read(file, binary.LittleEndian, &header.Magic)
-	exception.PanicOnErr(err)
-	if header.Magic == bigWigMagicBigEndian {
-		log.Fatalf("Error: bigWig file appears to be in big endian. Current functionality only supports little endian bigWig files.\n")
-	}
-	if header.Magic != bigWigMagic {
-		log.Fatalf("Error: bigWig magic was not as expected. Found: %v. Expected: %v.\n", header.Magic, bigWigMagic)
-	}
-	err = binary.Read(file, binary.LittleEndian, &header.Version)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &header.ZoomLevels)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &header.ChromosomeTreeOffset)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &header.FullDataOffset)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &header.FullIndexOffset)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &header.FieldCount)
-	exception.PanicOnErr(err)
-	if header.FieldCount != 0 {
-		log.Fatalf("Error: bigWig header fieldCount field must be zero. Found: %v.\n", header.FieldCount)
-	}
-	err = binary.Read(file, binary.LittleEndian, &header.DefinedFieldCount)
-	exception.PanicOnErr(err)
-	if header.DefinedFieldCount != 0 {
-		log.Fatalf("Error: bigWig header definedFieldCount field must be zero. Found: %v.\n", header.DefinedFieldCount)
-	}
-	err = binary.Read(file, binary.LittleEndian, &header.AutoSqlOffset)
-	exception.PanicOnErr(err)
-	if header.AutoSqlOffset != 0 {
-		log.Fatalf("Error: bigWig header AutoSeqlOffset field must be zero. Found: %v.\n", header.AutoSqlOffset)
-	}
-	err = binary.Read(file, binary.LittleEndian, &header.TotalSummaryOffset)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &header.UncompressBufferSize)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &header.ExtensionOffset)
-	exception.PanicOnErr(err)
-	return header
+// ChromTreeNode specifies the structure of nodes of the chromosome B+ tree. The first node immediately
+// follows the ChromTreeHeader in the binary file.
+type ChromTreeNode struct {
+	IsLeaf   bool            // true if leaf, false if non-leaf.
+	Reserved byte            // Reserved for future format expansion. Must be 0 in valid bigWig files.
+	Count    uint16          // Number of ChromTreeItems in the node.
+	Items    []ChromTreeItem // This contains all the items in the current node
 }
 
-func readZoomHeader(file *fileio.EasyReader) ZoomHeader {
-	var answer = ZoomHeader{}
-	var err error
-	err = binary.Read(file, binary.LittleEndian, &answer.ReductionLevel)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &answer.Reserved)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &answer.DataOffset)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &answer.IndexOffset)
-	exception.PanicOnErr(err)
-	return answer
+// ChromTreeItem contains information stored within a ChromTreeNode. Note that nodes are
+// either Leaf or Non-Leaf nodes, and some fields are used in only one type of node.
+type ChromTreeItem struct {
+	Key         []byte // This stores the first few characters of the chromosome name, padded with zeros where necessary. The length of this slice is defined by the KeySize value in ChromTreeHeader.
+	ChromId     uint32 // Leaf Only. Numerical ID for chromosome / contig.
+	ChromSize   uint32 // Leaf Only.Number of bases in chromosome / contig.
+	ChildOffset uint64 // Non-Leaf Only. Offset to child node.
 }
 
-func readTotalSummary(file *fileio.EasyReader) TotalSummaryBlock {
-	var answer = TotalSummaryBlock{}
-	var err error
-	err = binary.Read(file, binary.LittleEndian, &answer.BasesCovered)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &answer.MinVal)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &answer.MaxVal)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &answer.SumData)
-	exception.PanicOnErr(err)
-	err = binary.Read(file, binary.LittleEndian, &answer.SumSquares)
-	exception.PanicOnErr(err)
-	return answer
+// BinaryWigSectionHeader contains information stored in the header of each Wig segment in a bigWig file.
+type BinaryWigSectionHeader struct {
+	ChromId    uint32 // Numerical ID for chromosome/contig
+	ChromStart uint32 // Start position (0 based)
+	ChromEnd   uint32 // end of item. Equal to ChromStart + ItemSize
+	ItemStep   uint32 // Spaces between start of adjacent items in fixedStep sections.
+	ItemSpan   uint32 // Number of bases in item in fixedStep and varStep sections.
+	Type       uint8  // Section type. 1 for bedGraph, 2 for varStep, 3 for fixedStep.
+	Reserved   uint8  // Currently 0.
+	ItemCount  uint16 // Number of items in section.
 }
