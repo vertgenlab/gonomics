@@ -32,7 +32,7 @@ func VisualizeUsage(VisualizeFlags *flag.FlagSet) {
 		"Keyword 'START' for the start argument makes a visualization from the start of the pfasta.\n" +
 		"Keyword 'END' for the end argument makes a visualization until the end of the pfasta.\n" +
 		"Usage:\n" +
-		"PFaTools visualise in.pfa start end outDir.txt\n" +
+		"PFaTools visualize in.pfa start end outDir.txt\n" +
 		"options:\n")
 	VisualizeFlags.PrintDefaults()
 }

@@ -242,7 +242,7 @@ func printAllSetsTsv(out *fileio.EasyWriter, err error, record pFasta.PFasta, st
 	idx := start
 	if sigFigs == 0 {
 		// gives decimal places
-		for idx <= end {
+		for idx < end {
 			base := record.Seq[idx]
 			_, err = fmt.Fprintf(out, "%v\tA\t%.*f\n", idx, decimalPlaces, base.A)
 			exception.PanicOnErr(err)
