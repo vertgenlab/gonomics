@@ -33,7 +33,8 @@ type ByteReader struct {
 	internalGzip *pgzip.Reader
 }
 
-// ByteWriter provides buffered buffer pooling for enhanced concurrency support and efficient memory management with optional pgzip compression.
+// ByteWriter provides buffered buffer pooling for enhanced concurrency support, efficient memory management, and optional pgzip compression.
+
 type ByteWriter struct {
 	io.Writer // Embedding io.Writer
 
@@ -68,6 +69,7 @@ func NewByteReader(filename string) *ByteReader {
 			New: func() interface{} { return make([]byte, defaultBufSize) },
 		},
 	}
+
 	if IsGzip(br.File) {
 		var err error
 		br.internalGzip, err = pgzip.NewReader(br.File)
