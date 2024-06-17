@@ -21,7 +21,7 @@ const (
 
 // ByteReader is a bufio.Reader with internal buffering management avoiding excessive allocations.
 type ByteReader struct {
-	*bufio.Reader // Embedding *ufio.Reader
+	*bufio.Reader // Embedding *bufio.Reader
 	File          *os.File
 
 	// Buffer Management Fields
@@ -33,9 +33,7 @@ type ByteReader struct {
 	internalGzip *pgzip.Reader
 }
 
-// ByteWriter provides buffered writing with enhanced concurrency support, optional
-// pgzip compression, and buffer pooling for efficient memory management.
-
+// ByteWriter provides buffered buffer pooling for enhanced concurrency support and efficient memory management with optional pgzip compression.
 type ByteWriter struct {
 	io.Writer // Embedding io.Writer
 
@@ -101,7 +99,6 @@ func NewByteWriterSize(w io.Writer, size int) *ByteWriter {
 			New: func() interface{} { return make([]byte, size) },
 		},
 	}
-	bw.buf = bw.getBuffer()
 	return bw
 }
 
@@ -120,7 +117,6 @@ func NewByteWriter(filename string) *ByteWriter {
 // ReadLine reads a buf into Buffer, indicating if more lines are available.
 func ReadLine(br *ByteReader) (*bytes.Buffer, bool) {
 	br.Buffer.Reset() // Reset buffer for new line reading
-
 	var err error
 	for br.buf, err = br.ReadSlice('\n'); err == nil || err == bufio.ErrBufferFull || err == io.EOF; br.buf, err = br.ReadSlice('\n') {
 		if err != nil && err != bufio.ErrBufferFull {
@@ -129,7 +125,6 @@ func ReadLine(br *ByteReader) (*bytes.Buffer, bool) {
 			}
 			exception.PanicOnErr(err) // Handle unexpected errors
 		}
-
 		// Write the read part to the buffer, handling both partial and complete lines
 		if len(br.buf) > 0 && br.buf[len(br.buf)-1] == '\n' {
 			// Check for carriage return before newline and adjust accordingly
