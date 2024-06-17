@@ -1,11 +1,12 @@
 package browser
 
 import (
+	"testing"
+	
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"testing"
 )
 
 var PrintOneSetLinesTests = []struct {
@@ -284,10 +285,10 @@ var PFaVisualizerTsvTests = []struct {
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
 		OutFile:          "testdata/pfa_PFaVisualiserTsv_output_toy_2.txt",
-		Start:            4,
-		End:              21,
-		StartOfAlignment: false,
-		EndOfAlignment:   false,
+		Start:            0,
+		End:              -1,
+		StartOfAlignment: true,
+		EndOfAlignment:   true,
 		SigFigs:          0,
 		DecimalPlaces:    7,
 		LineLength:       5,
@@ -296,9 +297,9 @@ var PFaVisualizerTsvTests = []struct {
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
 		OutFile:          "testdata/pfa_PFaVisualiserTsv_output_toy_3.txt",
-		Start:            4,
-		End:              21,
-		StartOfAlignment: false,
+		Start:            0,
+		End:              6,
+		StartOfAlignment: true,
 		EndOfAlignment:   false,
 		SigFigs:          0,
 		DecimalPlaces:    4,
@@ -308,10 +309,10 @@ var PFaVisualizerTsvTests = []struct {
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_1.pfa",
 		OutFile:          "testdata/pfa_PFaVisualiserTsv_normalised_output_toy_1.txt",
-		Start:            6,
-		End:              13,
+		Start:            8,
+		End:              -1,
 		StartOfAlignment: false,
-		EndOfAlignment:   false,
+		EndOfAlignment:   true,
 		SigFigs:          2,
 		DecimalPlaces:    5,
 		LineLength:       4,
@@ -320,10 +321,10 @@ var PFaVisualizerTsvTests = []struct {
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_1.pfa",
 		OutFile:          "testdata/pfa_PFaVisualiserTsv_normalised_output_toy_2.txt",
-		Start:            6,
-		End:              13,
-		StartOfAlignment: false,
-		EndOfAlignment:   false,
+		Start:            0,
+		End:              -1,
+		StartOfAlignment: true,
+		EndOfAlignment:   true,
 		SigFigs:          0,
 		DecimalPlaces:    5,
 		LineLength:       4,
@@ -332,7 +333,7 @@ var PFaVisualizerTsvTests = []struct {
 	},
 	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_2.pfa",
 		OutFile:          "testdata/pfa_PFaVisualiserTsv_normalised_output_toy_3.txt",
-		Start:            6,
+		Start:            3,
 		End:              13,
 		StartOfAlignment: false,
 		EndOfAlignment:   false,
@@ -348,7 +349,7 @@ func TestPFaVisualizerTsv(t *testing.T) {
 	for _, testCase := range PFaVisualizerTsvTests {
 		PFaVisualizerTsv(testCase.InFile, testCase.OutFile, testCase.Start, testCase.End, testCase.StartOfAlignment, testCase.EndOfAlignment, testCase.SigFigs, testCase.DecimalPlaces, testCase.LineLength, testCase.SeqName)
 		if !fileio.AreEqual(testCase.OutFile, testCase.Expected) {
-			t.Errorf("Error: in browser. PFaVisualiserTsv test not as expected.")
+			t.Errorf("Error: in browser. PFaVisualiserTsv tests not as expected.")
 		} else {
 			fileio.EasyRemove(testCase.OutFile)
 		}

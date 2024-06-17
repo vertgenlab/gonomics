@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"os"
 	"testing"
 )
 
@@ -249,69 +250,75 @@ var VisualizeTsvTests = []struct {
 	DecimalPlaces    int
 	LineLength       int
 	Chrom            string
+	TsvOut			 bool
 	StartOfAlignment bool
 	EndOfAlignment   bool
 	ExpectedFile     string
 }{
 	{InFile: "testdata/test_visualize_input_1.pfa",
-		OutDir:           "testdata/test_visualize_output_default.txt",
+		OutDir:           "testdata/test_visualize_tsv_output_default.txt",
 		Start:            0,
 		End:              15,
 		SigFigs:          0,
 		DecimalPlaces:    5,
 		LineLength:       50,
 		Chrom:            "chr1butrllllllylong",
+		TsvOut:			  true,
 		StartOfAlignment: false,
 		EndOfAlignment:   false,
-		ExpectedFile:     "testdata/test_visualize_expected_default.txt",
+		ExpectedFile:     "testdata/test_visualize_tsv_expected_default.txt",
 	},
 	{InFile: "testdata/test_visualize_input_1.pfa",
-		OutDir:           "testdata/test_visualize_output_1.txt",
+		OutDir:           "testdata/test_visualize_tsv_output_1.txt",
 		Start:            0,
 		End:              -1,
 		SigFigs:          0,
 		DecimalPlaces:    15,
 		LineLength:       10,
 		Chrom:            "chr1butrllllllylong",
+		TsvOut:			  true,
 		StartOfAlignment: true,
 		EndOfAlignment:   true,
-		ExpectedFile:     "testdata/test_visualize_expected_1.txt",
+		ExpectedFile:     "testdata/test_visualize_tsv_expected_1.txt",
 	},
 	{InFile: "testdata/test_visualize_input_1.pfa",
-		OutDir:           "testdata/test_visualize_output_2.txt",
+		OutDir:           "testdata/test_visualize_tsv_output_2.txt",
 		Start:            0,
 		End:              20,
 		SigFigs:          0,
 		DecimalPlaces:    4,
 		LineLength:       7,
 		Chrom:            "chr1butrllllllylong",
+		TsvOut:			  true,
 		StartOfAlignment: true,
 		EndOfAlignment:   false,
-		ExpectedFile:     "testdata/test_visualize_expected_2.txt",
+		ExpectedFile:     "testdata/test_visualize_tsv_expected_2.txt",
 	},
 	{InFile: "testdata/test_visualize_input_2.pfa",
-		OutDir:           "testdata/test_visualize_output_3.txt",
+		OutDir:           "testdata/test_visualize_tsv_output_3.txt",
 		Start:            0,
 		End:              -1,
 		SigFigs:          10,
 		DecimalPlaces:    3,
 		LineLength:       50,
 		Chrom:            "",
+		TsvOut:			  true,
 		StartOfAlignment: false,
 		EndOfAlignment:   true,
-		ExpectedFile:     "testdata/test_visualize_expected_3.txt",
+		ExpectedFile:     "testdata/test_visualize_tsv_expected_3.txt",
 	},
 	{InFile: "testdata/test_visualize_normalized_input_1.pfa",
-		OutDir:           "testdata/test_visualize_normalized_output_1.txt",
+		OutDir:           "testdata/test_visualize_tsv_normalized_output_1.txt",
 		Start:            2,
 		End:              15,
 		SigFigs:          0,
 		DecimalPlaces:    1,
 		LineLength:       6,
 		Chrom:            "chr1",
+		TsvOut:			  true,
 		StartOfAlignment: false,
 		EndOfAlignment:   false,
-		ExpectedFile:     "testdata/test_visualize_normalized_expected_1.txt",
+		ExpectedFile:     "testdata/test_visualize_tsv_normalized_expected_1.txt",
 	},
 }
 
@@ -329,13 +336,14 @@ func TestVisualizeTsv(t *testing.T) {
 			DecimalPlaces:    testCase.DecimalPlaces,
 			LineLength:       testCase.LineLength,
 			Chrom:            testCase.Chrom,
+			TsvOut:			  testCase.TsvOut,
 			StartOfAlignment: testCase.StartOfAlignment,
 			EndOfAlignment:   testCase.EndOfAlignment,
 		}
 		pFaVisualize(s)
 
 		if !fileio.AreEqual(testCase.OutDir, testCase.ExpectedFile) {
-			t.Errorf("Error: pFaVisualise output not as expected.")
+			t.Errorf("Error: pFaVisualize --tsvOut=true output not as expected.")
 		} else {
 			err = os.Remove(testCase.OutDir)
 			exception.PanicOnErr(err)

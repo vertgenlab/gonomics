@@ -203,6 +203,8 @@ func PFaVisualizerTsv(infile string, outfile string, start int, end int, startOf
 			// pfa with 1 entry
 			if endOfAlignment {
 				end = len(records[0].Seq)
+			} else {
+				end += 1
 			}
 
 			_, err = fmt.Fprintf(out, "Position\tBase\tProbability\n")
@@ -236,10 +238,8 @@ func PFaVisualizerTsv(infile string, outfile string, start int, end int, startOf
 
 // printAllSetsTsv prints probability distribution of bases from pos start to pos end in record
 func printAllSetsTsv(out *fileio.EasyWriter, err error, record pFasta.PFasta, start int, end int, lineLength int, sigFigs int, decimalPlaces int) {
-	if end == -1 {
-		end = len(record.Seq)
-	}
 	idx := start
+	
 	if sigFigs == 0 {
 		// gives decimal places
 		for idx < end {
@@ -256,7 +256,7 @@ func printAllSetsTsv(out *fileio.EasyWriter, err error, record pFasta.PFasta, st
 		}
 	} else {
 		// gives sigfigs
-		for idx <= end {
+		for idx < end {
 			base := record.Seq[idx]
 			_, err = fmt.Fprintf(out, "%v\tA\t%.*f\n", idx, sigFigs-1, base.A)
 			exception.PanicOnErr(err)

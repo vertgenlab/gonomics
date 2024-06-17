@@ -29,6 +29,8 @@ type VisualizeSettings struct {
 // VisualizeUsage defines the usage statement for the pFaTools Visualize subcommand.
 func VisualizeUsage(VisualizeFlags *flag.FlagSet) {
 	fmt.Printf("pFaTools Visualize - Provides human-readable sequence from a given pFa.\n" +
+		"Start and end arguments are 0-indexed. The visualiser is inclusive of the start \n" +
+		"index, exclusive of the end index.\n" +
 		"Keyword 'START' for the start argument makes a visualization from the start of the pfasta.\n" +
 		"Keyword 'END' for the end argument makes a visualization until the end of the pfasta.\n" +
 		"Usage:\n" +
