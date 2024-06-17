@@ -1,6 +1,7 @@
 package fileio
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -104,5 +105,17 @@ func TestIntSliceToString(t *testing.T) {
 	answer := IntSliceToString(data)
 	if answer != expected {
 		t.Errorf("Error: problem converting int slice to string")
+	}
+}
+
+func TestDecodeBinaryField(t *testing.T) {
+	var input []byte = []byte{0xD2, 0x02, 0x96, 0x49}
+	var expected uint32 = 1234567890
+	reader := bytes.NewReader(input)
+	var decodedData uint32
+	DecodeLittleEndianBinaryField(reader, &decodedData)
+	// Check if the decoded data matches the test data
+	if decodedData != expected {
+		t.Errorf("Error: Decoded data does not match test data. %d != %d\n", decodedData, expected)
 	}
 }

@@ -167,8 +167,8 @@ func IntToString(i int) string {
 	return fmt.Sprintf("%d", i)
 }
 
-// DecodeBinaryField reads binary data from an input *EasyReader to a variable.
-func DecodeBinaryField(file *EasyReader, data any) {
+// DecodeLittleEndianBinaryField reads little endian binary data from an input *EasyReader to a variable.
+func DecodeLittleEndianBinaryField(file io.Reader, data any) {
 	err := binary.Read(file, binary.LittleEndian, data)
 	exception.PanicOnErr(err)
 }
