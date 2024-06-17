@@ -222,7 +222,7 @@ func ThreeWayFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter) {
 					{
 						Alleles:    []int16{1, 0},
 						Phase:      []bool{false, false},
-						FormatData: []string{"1/0"},
+						FormatData: []string{""},
 					},
 				}
 			} else if f[0].Seq[i] == f[1].Seq[i] && f[0].Seq[i] != f[2].Seq[i] { // 0/1; substitution at allele2 only
@@ -231,7 +231,7 @@ func ThreeWayFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter) {
 					{
 						Alleles:    []int16{0, 1},
 						Phase:      []bool{false, false},
-						FormatData: []string{"0/1"},
+						FormatData: []string{""},
 					},
 				}
 			} else if f[0].Seq[i] != f[1].Seq[i] && f[0].Seq[i] != f[2].Seq[i] && f[1].Seq[i] == f[2].Seq[i] { // 1/1; substitution at both allele1 and allele2, same alt
@@ -240,7 +240,7 @@ func ThreeWayFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter) {
 					{
 						Alleles:    []int16{1, 1},
 						Phase:      []bool{false, false},
-						FormatData: []string{"1/1"},
+						FormatData: []string{""},
 					},
 				}
 			} else if f[0].Seq[i] != f[1].Seq[i] && f[0].Seq[i] != f[2].Seq[i] && f[1].Seq[i] != f[2].Seq[i] { // 1/2; substitution at both allele1 and allele2, different alt
@@ -249,7 +249,7 @@ func ThreeWayFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter) {
 					{
 						Alleles:    []int16{1, 2},
 						Phase:      []bool{false, false},
-						FormatData: []string{"1/2"},
+						FormatData: []string{""},
 					},
 				}
 			}

@@ -1,8 +1,8 @@
 package vcf
 
 import (
-	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/vertgenlab/gonomics/dna"
@@ -10,12 +10,63 @@ import (
 
 // String implements the fmt.Stringer interface for easy printing of Vcf with the fmt package.
 func (v Vcf) String() string {
-	return fmt.Sprintf("%s\t%v\t%s\t%s\t%s\t%v\t%s\t%s\t%s\t%s\n", v.Chr, v.Pos, v.Id, v.Ref, strings.Join(v.Alt, ","), v.Qual, v.Filter, v.Info, v.Format, SamplesToString(v.Samples))
+	// TODO: Consider reducing allocation of string.Builder variable to further improve performance.
+	var buf strings.Builder
+	buf.Grow(256) // Pre-allocate some space for efficiency.
+
+	buf.WriteString(v.Chr)
+	buf.WriteByte('\t')
+	buf.WriteString(strconv.Itoa(v.Pos))
+	buf.WriteByte('\t')
+	buf.WriteString(v.Id)
+	buf.WriteByte('\t')
+	buf.WriteString(v.Ref)
+	buf.WriteByte('\t')
+	buf.WriteString(strings.Join(v.Alt, ","))
+	buf.WriteByte('\t')
+	buf.WriteString(strconv.FormatFloat(v.Qual, 'f', -1, 64))
+	buf.WriteByte('\t')
+	buf.WriteString(v.Filter)
+	buf.WriteByte('\t')
+	buf.WriteString(v.Info)
+
+	if len(v.Format) > 0 {
+		buf.WriteByte('\t')
+		buf.WriteString(strings.Join(v.Format, ":"))
+		buf.WriteByte('\t')
+		buf.WriteString(SamplesToString(v.Samples))
+	}
+	buf.WriteByte('\n')
+	return buf.String()
 }
 
 // String implements the fmt.Stringer interface for easy printing of Sample with the fmt package.
 func (s Sample) String() string {
-	return sampleToString(s)
+	var buf strings.Builder
+	if s.FormatData == nil {
+		buf.WriteByte('.')
+		return buf.String()
+	}
+	// TODO: Improve handling of '.' and/or './.' to differentiate between no genotype vs. no data.
+	if s.Alleles == nil {
+		buf.WriteByte('.')
+	} else {
+		// TODO: Error check to ensure phase info matches number of alleles
+		for i := 0; i < len(s.Alleles); i++ {
+			if i > 0 && i < len(s.Phase) {
+				buf.WriteByte(PhasedToByte(s.Phase[i]))
+			}
+			buf.WriteString(strconv.Itoa(int(s.Alleles[i])))
+		}
+	}
+	if len(s.FormatData) > 0 {
+		if s.FormatData[0] != "" {
+			buf.WriteByte(':')
+		}
+		buf.WriteString(strings.Join(s.FormatData, ":"))
+	}
+
+	return buf.String()
 }
 
 // GetChrom returns the chromosome that the variant is on.
