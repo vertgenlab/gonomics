@@ -67,6 +67,8 @@ func TestFaToPfa(t *testing.T) {
 		filename := fmt.Sprintf("testdata_tools/test_faToPfa_input_%d.fa", idx)
 		fasta.Write(filename, testCase.Input)
 
+		testOutput = MultiFaToPfa()
+
 		// faToPfa then sample(pfa) should return input fa
 	}
 }
