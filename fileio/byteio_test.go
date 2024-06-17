@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"runtime/pprof"
 	"sync"
 	"testing"
 
@@ -96,10 +97,32 @@ func BenchmarkEasyReaderGz(b *testing.B) {
 	}
 }
 
-func BenchmarkByteWriterGz(b *testing.B) {
-
+func BenchmarkEasyWriterReg(b *testing.B) {
 	reader := NewByteReader("testdata/big.fa.gz")
-	gz := "testdata/byte.gz"
+	gz := "testdata/byte.txt"
+	defer reader.Close()
+
+	// Read and store data from the original GZ file
+	var originalData [][]byte
+	for line, done := ReadLine(reader); !done; line, done = ReadLine(reader) {
+		originalData = append(originalData, line.Bytes())
+	}
+	writer := EasyCreate(gz)
+	defer writer.Close()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		for _, line := range originalData {
+			_, err := writer.Write(line)
+			exception.PanicOnErr(err)
+		}
+	}
+}
+
+func BenchmarkByteWriterReg(b *testing.B) {
+	reader := NewByteReader("testdata/big.fa.gz")
+	gz := "testdata/byte.txt"
 	defer reader.Close()
 
 	// Read and store data from the original GZ file
@@ -108,6 +131,21 @@ func BenchmarkByteWriterGz(b *testing.B) {
 		originalData = append(originalData, line.Bytes())
 	}
 	writer := NewByteWriter(gz)
+	cpuProfileFile, err := os.Create("cpu.pprof")
+	if err != nil {
+		b.Fatal("Could not create CPU profile: ", err)
+	}
+	defer cpuProfileFile.Close()
+
+	memProfileFile, err := os.Create("mem.pprof")
+	if err != nil {
+		b.Fatal("Could not create memory profile: ", err)
+	}
+	defer memProfileFile.Close()
+
+	// Start Profiling
+	pprof.StartCPUProfile(cpuProfileFile)
+	defer pprof.StopCPUProfile()
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -117,8 +155,8 @@ func BenchmarkByteWriterGz(b *testing.B) {
 			exception.PanicOnErr(err)
 		}
 		exception.PanicOnErr(writer.Flush())
-
 	}
+	pprof.WriteHeapProfile(memProfileFile)
 
 }
 func TestByteWriterGz(t *testing.T) {
