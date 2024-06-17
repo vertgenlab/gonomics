@@ -29,7 +29,7 @@ type Settings struct {
 func samCoverage(s Settings) {
 	outHist := fileio.EasyCreate(s.HistogramOutFile)
 	statSummary := fileio.EasyCreate(s.StatSummaryFile)
-	_, err := fmt.Fprintf(outHist, "Coverage\tPileups\tGroup\n")
+	_, err := fmt.Fprintf(outHist, "Coverage\tPileups\tGroup\tFilename\n")
 	exception.PanicOnErr(err)
 	data, header := sam.GoReadToChan(s.SamFileName)
 	piles := sam.GoPileup(data, header, false, nil, nil)
@@ -52,11 +52,11 @@ func samCoverage(s Settings) {
 	_, err = fmt.Fprintf(statSummary, "Lambda\t%v\nCoverageThreshold\t%v\n", lambda, coverageThreshold)
 	exception.PanicOnErr(err)
 	for i, pileups := range histogram {
-		_, err = fmt.Fprintf(outHist, "%v\t%v\tEmpirical\n", i, pileups)
+		_, err = fmt.Fprintf(outHist, "%v\t%v\tEmpirical\t%v\n", i, pileups, s.SamFileName)
 		exception.PanicOnErr(err)
 		y, outlier := numbers.PoissonDist(i, lambda, false)
 		if !outlier {
-			_, err = fmt.Fprintf(outHist, "%v\t%.6g\tExpected\n", i, y*float64(totalCount))
+			_, err = fmt.Fprintf(outHist, "%v\t%.6g\tExpected\t%v\n", i, y*float64(totalCount), s.SamFileName)
 			exception.PanicOnErr(err)
 		}
 	}
