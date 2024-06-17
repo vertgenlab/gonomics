@@ -1,13 +1,10 @@
-// Command Group: "WIG Tools"
-// Command Usage: "Identifies peaks in a WIG file"
-
-// Takes wig file and finds peaks
 package main
 
 import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
@@ -15,7 +12,7 @@ import (
 	"github.com/vertgenlab/gonomics/wig"
 )
 
-type Settings struct {
+type PeakSettings struct {
 	InWig        string
 	ChromSizes   string
 	OutBed       string
@@ -24,7 +21,46 @@ type Settings struct {
 	DefaultValue float64
 }
 
-func wigPeaks(s Settings) { //threshold is float64 because WigValue Value aka v2.Value is float64.
+func peakUsage(peakFlags *flag.FlagSet) {
+	fmt.Print("wigTools peaks - takes wig file and finds peaks\n" +
+		"Usage:\n" +
+		" wigTools peaks in.wig out.bed\n" +
+		"options:\n")
+	peakFlags.PrintDefaults()
+}
+
+func parsePeaksArgs() {
+	var expectedNumArgs int = 3
+	var err error
+	peakFlags := flag.NewFlagSet("peaks", flag.ExitOnError)
+	var peakThreshold *float64 = peakFlags.Float64("threshold", 20, "if number of reads >= threshold, start calling peak.")
+	var findMinima *bool = peakFlags.Bool("findMinima", false, "Report local minima peaks instead of maxima past the threshold.")
+	var defaultValue *float64 = peakFlags.Float64("missingValue", 0, "Specify the value for positions in the wig lacking information.")
+	err = peakFlags.Parse(os.Args[2:])
+	exception.PanicOnErr(err)
+	peakFlags.Usage = func() { peakUsage(peakFlags) }
+	if len(peakFlags.Args()) != expectedNumArgs {
+		peakFlags.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d.\n", expectedNumArgs, len(peakFlags.Args()))
+	}
+
+	inWig := peakFlags.Arg(0)
+	chromSizes := peakFlags.Arg(1)
+	outBed := peakFlags.Arg(2)
+
+	s := PeakSettings{
+		InWig:        inWig,
+		ChromSizes:   chromSizes,
+		OutBed:       outBed,
+		Threshold:    *peakThreshold,
+		FindMinima:   *findMinima,
+		DefaultValue: *defaultValue,
+	}
+
+	wigPeaks(s)
+}
+
+func wigPeaks(s PeakSettings) { //threshold is float64 because WigValue Value aka v2.Value is float64.
 	records := wig.Read(s.InWig, s.ChromSizes, s.DefaultValue) //type is []Wig, aka slice of Wig structs
 	var inPeak bool = false
 	var err error
@@ -72,44 +108,4 @@ func passThreshold(v2 float64, threshold float64, findMinima bool) bool {
 	} else {
 		return v2 >= threshold
 	}
-}
-
-func usage() {
-	fmt.Print(
-		"wigPeaks - takes wig file and finds peaks\n" +
-			"Usage:\n" +
-			" wigPeaks in.wig out.bed\n" +
-			"options:\n")
-	flag.PrintDefaults()
-}
-
-func main() {
-	var expectedNumArgs int = 3
-	var peakThreshold *float64 = flag.Float64("threshold", 20, "if number of reads >= threshold, start calling peak.")
-	var findMinima *bool = flag.Bool("findMinima", false, "Report local minima peaks instead of maxima past the threshold.")
-	var defaultValue *float64 = flag.Float64("missingValue", 0, "Specify the value for positions in the wig lacking information.")
-
-	flag.Usage = usage
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	flag.Parse()
-
-	if len(flag.Args()) != expectedNumArgs {
-		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
-	}
-
-	inWig := flag.Arg(0)
-	chromSizes := flag.Arg(1)
-	outBed := flag.Arg(2)
-
-	s := Settings{
-		InWig:        inWig,
-		ChromSizes:   chromSizes,
-		OutBed:       outBed,
-		Threshold:    *peakThreshold,
-		FindMinima:   *findMinima,
-		DefaultValue: *defaultValue,
-	}
-
-	wigPeaks(s)
 }
