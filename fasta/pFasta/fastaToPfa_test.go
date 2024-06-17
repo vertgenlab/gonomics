@@ -67,14 +67,6 @@ func TestFaToPfa(t *testing.T) {
 		filename := fmt.Sprintf("testdata_tools/test_faToPfa_input_%d.fa", idx)
 		fasta.Write(filename, testCase.Input)
 
-		//res := Extract(testCase.Input, testCase.Start, testCase.End, testCase.OutputName, testCase.Chrom, testCase.TakeCoords)
-		//
-		//if !IsEqual(res, testCase.Expected, testCase.Precision) {
-		//	t.Errorf("Error: in pFasta. Extract valid input test was not as expected.")
-		//}
-		//
-		//OutFile := "testdata_tools/test_extract_expected.pfa"
-		//records := []PFasta{res}
-		//Write(OutFile, records)
+		// faToPfa then sample(pfa) should return input fa
 	}
 }

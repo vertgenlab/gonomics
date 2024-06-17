@@ -1,10 +1,12 @@
 package pFasta
 
-import {
+import (
 	"fmt"
 	"testing"
-}
+)
 
 func TestVcfToPfa(t *testing.T) {
+	// 100 bp
+
 	fmt.print("Hi in vcf")
 }
