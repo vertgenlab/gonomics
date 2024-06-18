@@ -231,6 +231,9 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 	exception.PanicOnErr(err)
 }
 
+// distWindow takes 2 pDna sequences (aligned in a multi-pFa format), and window start and end positions as inputs.
+// The function calculates the Euclidean distance between the 2 pDna base vectors at the same position in the 2 pDna sequences for each position in the window.
+// The function returns both the slice containing all the distance calculations within the window, and the mean.
 func distWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, windowStart int, windowEnd int) (windowDist []float64, windowDistMean float64) {
 	var baseDist float64
 	var windowDistTotal = 0.0
@@ -246,6 +249,11 @@ func distWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, w
 	return windowDist, windowDistMean
 }
 
+// windowDistToDiv takes 2 pDna sequences (aligned in a multi-pFa format), window start and end positions, and a user-specified float64 threshold as inputs.
+// The function counts the number of divergences between the 2 pDna sequences within the window.
+// The rules for counting divergences are as follows:
+// Gaps are not counted as divergences.
+// If the Euclidean distance between the 2 pDna base vectors at the same position in the 2 pDna sequences is greater than the threshold, then a divergence is counted.
 func windowDistToDiv(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, windowStart int, windowEnd int, baseDistToDivThreshold float64) int {
 	var baseDist float64
 	var windowDistDiv = 0
@@ -264,6 +272,9 @@ func windowDistToDiv(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Ba
 	return windowDistDiv
 }
 
+// dotWindow takes 2 pDna sequences (aligned in a multi-pFa format), and window start and end positions as inputs.
+// The function calculates the dot product distance (1 - dot product) between the 2 pDna base vectors at the same position in the 2 pDna sequences for each position in the window.
+// The function returns both the slice containing all the distance calculations within the window, and the mean.
 func dotWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, windowStart int, windowEnd int) (windowDot []float64, windowDotMean float64) {
 	var baseDot float64
 	var windowDotTotal = 0.0
@@ -279,6 +290,11 @@ func dotWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, wi
 	return windowDot, windowDotMean
 }
 
+// windowDotToSubst takes 2 pDna sequences (aligned in a multi-pFa format), window start and end positions, and a user-specified float64 threshold as inputs.
+// The function counts the number of substitutions between the 2 pDna sequences within the window.
+// The rules for counting substitutions are as follows:
+// Gaps are not counted as substitutions.
+// If the dot product distance (1 - dot product) between the 2 pDna base vectors at the same position in the 2 pDna sequences is greater than the threshold, then a substitution is counted.
 func windowDotToSubst(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, windowStart int, windowEnd int, baseDotToSubstThreshold float64) int {
 	var baseDot float64
 	var windowDotSubst = 0

@@ -119,46 +119,29 @@ func Mag(d Float64Diff) float64 {
 	return math.Sqrt(math.Pow(d.A, 2) + math.Pow(d.C, 2) + math.Pow(d.G, 2) + math.Pow(d.T, 2))
 }
 
-// Dist returns a score for the distance that separates 2 pDNA bases
+// Dist returns a score for the Euclidean distance that separates 2 pDNA bases
 // The distance score is the magnitude of the vector that is the difference between the 2 pDNA bases' probability vectors
 // The distance score is a float64
 func Dist(p Float32Base, q Float32Base) float64 {
 	return Mag(Diff(p, q))
 }
 
-// Dot
+// Dot returns a score for the dot product of 2 pDNA base vectors
+// The dot product score is a float64
 func Dot(p Float32Base, q Float32Base) float64 {
 	return float64(p.A*q.A + p.C*q.C + p.G*q.G + p.T*q.T)
 }
 
-// DotSubstProb
-// Make sure input is probabilities not likelihoods
+// DotSubstProb returns a score for the probability of substitution between 2 pDNA base vectors
+// The substitution probability is calculated by 1 - dot product
+// Make sure the input are probabilities (probabilities of A, C, G, and T add up to 1),
+// not likelihoods (likelihoods of A, C, G, and T do not necessarily add up to 1) or gaps (probabilities of A, C, G, and T are 0, 0, 0, 0)
+// The dot product substitution probability score is a float64
 func DotSubstProb(p Float32Base, q Float32Base) float64 {
 	return 1 - Dot(p, q)
 }
 
-/*
-// MakeValid converts the likelihoods of each base at a position of a sequence into a pdna for that position
-func MakeValid(p Float32Base) Float32Base {
-	total := p.A + p.C + p.G + p.T
-	if total == 0 {
-		return Float32Base{
-			A: 0,
-			C: 0,
-			G: 0,
-			T: 0,
-		}
-	} else {
-		return Float32Base{
-			A: p.A / total,
-			C: p.C / total,
-			G: p.G / total,
-			T: p.T / total,
-		}
-	}
-}
-*/
-
+// DnaToPdna converts a dna base to a pDna base
 func DnaToPdna(base dna.Base) Float32Base {
 	var pbase Float32Base
 	switch base {
