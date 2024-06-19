@@ -25,7 +25,7 @@ func DetermineBin(numBins int, prob float64) int {
 }
 
 // DistributeCells takes in a slice of string that is created in parseBam that has a list of cellBarcodes and constructs. It will partition those cells and constructs into separate slices. The number of bins is a user-input variable
-func DistributeCells(s ScStarrSeqSettings, cellTypeSlice []Read, fromDB bool) [][]Read {
+func DistributeCells(s OutputSeqSettings, cellTypeSlice []Read, fromDB bool) [][]Read {
 	var currCell string
 	var bin, count int
 	var found bool
@@ -70,7 +70,7 @@ func DistributeCells(s ScStarrSeqSettings, cellTypeSlice []Read, fromDB bool) []
 }
 
 // DetermineIdealBins will determine how many bins should be used for the pseudobulk -binCells option.
-func DetermineIdealBins(s ScStarrSeqSettings, umiSlice []Read) int {
+func DetermineIdealBins(s OutputSeqSettings, umiSlice []Read) int {
 	var count, j int
 	var found, stop bool
 	var z, m string
@@ -118,7 +118,7 @@ func DetermineIdealBins(s ScStarrSeqSettings, umiSlice []Read) int {
 
 // BinnedPseudobulk is the psuedobulk function if the -binCells option is used. It adds an addition column to the dataframe corresponding to bin identity.
 // It will handle writing of the pseudobulk maps to the provided EasyWriter input.
-func BinnedPseudobulk(s ScStarrSeqSettings, inSlices [][]Read, out *fileio.EasyWriter) {
+func BinnedPseudobulk(s OutputSeqSettings, inSlices [][]Read, out *fileio.EasyWriter) {
 	var i string
 	var count float64
 	var found bool

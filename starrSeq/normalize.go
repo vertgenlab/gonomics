@@ -123,7 +123,7 @@ func NormScToNegativeCtrls(matrix []scStarrSeqMatrix, ncNorm string, numCellType
 
 // ParseGfpBam is similar to the parseBam function but handles bams containing GFP reads. This function also takes in a map of cellBx-cellType and an empty map containing each cellType
 // It returns a map that contains [cellType] = gfpReads
-func ParseGfpBam(s ScStarrSeqSettings, cellTypeMap map[string]string, clusterGFP map[string]int) ([]Read, map[string]int) {
+func ParseGfpBam(s OutputSeqSettings, cellTypeMap map[string]string, clusterGFP map[string]int) ([]Read, map[string]int) {
 	var bit int32
 	var cluster, cellBxFormat string
 	var gfpUmis []Read

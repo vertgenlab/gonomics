@@ -20,7 +20,7 @@ type ClusterKey struct {
 // SingleCellAnalysis will create a count for each construct in each cell type. This function takes in starrSeqSetting, a readSlice and some cell type info. It will create
 // an output file that has readCounts for each construct in each cell type present. It is compatible with input normalization and either transfection reporter transfection
 // cluster normalization or negative control cluster normalization
-func SingleCellAnalysis(s ScStarrSeqSettings, readSlice []Read, allConstructs []string, allCellTypes []string, cellTypeMap map[string]string, out *fileio.EasyWriter) {
+func SingleCellAnalysis(s OutputSeqSettings, readSlice []Read, allConstructs []string, allCellTypes []string, cellTypeMap map[string]string, out *fileio.EasyWriter) {
 	var cellType, j, m, toWrite string
 	var outMatrix []scStarrSeqMatrix
 	var outLine scStarrSeqMatrix

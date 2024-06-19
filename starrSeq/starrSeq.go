@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-type ScStarrSeqSettings struct {
+type OutputSeqSettings struct {
 	InFile               string
 	OutFile              string
 	InputNormalize       string
@@ -23,7 +23,6 @@ type ScStarrSeqSettings struct {
 	Bed                  string
 	NcNorm               string
 	DetermineBins        string
-	InputSequencing      string
 	SetSeed              int64
 	CountMatrix          string
 	NoOut                bool
@@ -33,7 +32,7 @@ type ScStarrSeqSettings struct {
 }
 
 type ReadSliceAnalysisSettings struct {
-	FuncSettings  ScStarrSeqSettings
+	FuncSettings  OutputSeqSettings
 	UmiBxSlice    []string
 	AllCellTypes  []string
 	AllConstructs []string
@@ -86,7 +85,7 @@ func ReadInputNormTable(inFile string) []InputNormFactor {
 }
 
 // UmiSaturation randomly subsets the whole bam file (10% to 100% of all reads) and calculates how many Reads are in those subests. The output is a tab delimited text file.
-func UmiSaturation(s ScStarrSeqSettings, umiBxSlice []string) {
+func UmiSaturation(s OutputSeqSettings, umiBxSlice []string) {
 	var perc, randNum float64
 	var j string
 	var count int
@@ -179,7 +178,7 @@ func ReadSliceAnalysis(r ReadSliceAnalysisSettings) {
 
 // ReadSliceToPseudobulk takes a settings struct slice of Read and returns a map of construct -- read counts. If an input normalization
 // table is present in the settings struct. The returned map will be input normalized
-func ReadSliceToPseudobulk(s ScStarrSeqSettings, readSlice []Read) map[string]float64 {
+func ReadSliceToPseudobulk(s OutputSeqSettings, readSlice []Read) map[string]float64 {
 	constructMap := make(map[string]float64)
 
 	for _, i := range readSlice {
@@ -191,7 +190,7 @@ func ReadSliceToPseudobulk(s ScStarrSeqSettings, readSlice []Read) map[string]fl
 	return constructMap
 }
 
-func validUMIs(s ScStarrSeqSettings, readSlice []Read) {
+func validUMIs(s OutputSeqSettings, readSlice []Read) {
 	outByRead := fileio.EasyCreate(s.ValidUmis)
 	if s.ScAnalysis != "" || s.CountMatrixCellTypes != "" {
 		for _, i := range readSlice {

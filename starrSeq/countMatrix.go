@@ -15,7 +15,7 @@ type line struct {
 }
 
 // MakeCountMatrix takes in a setting struct, a slice of Read and a list of all constructs if the form of a slice of string. It will handle all file creating and closing within the function
-func MakeCountMatrix(s ScStarrSeqSettings, readSlice []Read, allConstructs []string) {
+func MakeCountMatrix(s OutputSeqSettings, readSlice []Read, allConstructs []string) {
 	var header []string
 	var cell, cluster string
 	var norm bool = false
@@ -151,7 +151,7 @@ func MakeCountMatrix(s ScStarrSeqSettings, readSlice []Read, allConstructs []str
 	exception.PanicOnErr(err)
 }
 
-func writeLineToFileHandle(l line, out *fileio.EasyWriter, s ScStarrSeqSettings) {
+func writeLineToFileHandle(l line, out *fileio.EasyWriter, s OutputSeqSettings) {
 	var floatSlice []string
 	for _, i := range l.vals {
 		floatSlice = append(floatSlice, fmt.Sprintf("%f", i))

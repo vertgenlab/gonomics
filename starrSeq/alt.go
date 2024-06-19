@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Alt(s ScStarrSeqSettings) {
+func Alt(s OutputSeqSettings) {
 	var tree = make([]interval.Interval, 0)
 	var selectTree map[string]*interval.IntervalNode
 	var overlap []interval.Interval

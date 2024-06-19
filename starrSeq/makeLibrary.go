@@ -148,7 +148,7 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 	var oligoPools, pools [][]fasta.Fasta = [][]fasta.Fasta{}, [][]fasta.Fasta{}
 
 	o = fileio.EasyCreate(outDir + "/" + summaryFile)
-	fileio.WriteToFileHandle(o, "construct\tTm\toverlapBases\toligoSizeF\toligoSizeR\twithinRange\toverlapSize\tconstructSize\tGC%\tpool")
+	fileio.WriteToFileHandle(o, "construct\tTm\toverlapBases\toligoSizeF\toligoSizeR\twithinRange\toverlapSize\tconstructSize\tGC%\tpool\toverlapSequence")
 
 	for i := range constructs {
 		mid = len(constructs[i].Seq) / 2
@@ -158,8 +158,8 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 			idx, pools, oligoPools = distributeIntoPool(pools, oligoPools, constructs[i].Seq[mid-10:mid+10], minTemp)
 			oligoPools[idx] = append(oligoPools[idx], createOligos(constructs[i], mid+10, mid-10)...)
 			pools[idx] = append(pools[idx], constructs[i])
-			fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\ttrue\t20\t%d\t%f\t%c",
-				constructs[i].Name, Tm, mid-10, mid+10, mid+10, len(constructs[i].Seq)-mid+10, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[mid-10:mid+10]), idx+65))
+			fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\ttrue\t20\t%d\t%f\t%c\t%s",
+				constructs[i].Name, Tm, mid-10, mid+10, mid+10, len(constructs[i].Seq)-mid+10, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[mid-10:mid+10]), idx+65, dna.BasesToString(constructs[i].Seq[mid-10:mid+10])))
 			continue
 		}
 
@@ -189,16 +189,16 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 						idx, pools, oligoPools = distributeIntoPool(pools, oligoPools, constructs[i].Seq[down:up], minTemp)
 						oligoPools[idx] = append(oligoPools[idx], createOligos(constructs[i], up, down)...)
 						pools[idx] = append(pools[idx], constructs[i])
-						fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\t%t\t%d\t%d\t%f\t%c",
-							constructs[i].Name, newTm, down, up, up, len(constructs[i].Seq)-down, inRange, up-down, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[down:up]), idx+65))
+						fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\t%t\t%d\t%d\t%f\t%c\t%s",
+							constructs[i].Name, newTm, down, up, up, len(constructs[i].Seq)-down, inRange, up-down, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[down:up]), idx+65, dna.BasesToString(constructs[i].Seq[down:up])))
 						break
 					}
 				}
 				idx, pools, oligoPools = distributeIntoPool(pools, oligoPools, constructs[i].Seq[bestMid-10:bestMid+10], minTemp)
 				oligoPools[idx] = append(oligoPools[idx], createOligos(constructs[i], bestMid+10, bestMid-10)...)
 				pools[idx] = append(pools[idx], constructs[i])
-				fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\tfalse\t20\t%d\t%f\t%c",
-					constructs[i].Name, bestDeltaTm, bestMid-10, bestMid+10, bestMid+10, len(constructs[i].Seq)-bestMid+10, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[bestMid-10:bestMid+10]), idx+65))
+				fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\tfalse\t20\t%d\t%f\t%c\t%s",
+					constructs[i].Name, bestDeltaTm, bestMid-10, bestMid+10, bestMid+10, len(constructs[i].Seq)-bestMid+10, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[bestMid-10:bestMid+10]), idx+65, dna.BasesToString(constructs[i].Seq[bestMid-10:bestMid+10])))
 				break
 			}
 			inRange, Tm = checkTm(constructs[i], mid, minTemp, maxTemp)
@@ -206,8 +206,8 @@ func optimizeMeltingTemps(constructs []fasta.Fasta, minTemp, maxTemp float64, ma
 				idx, pools, oligoPools = distributeIntoPool(pools, oligoPools, constructs[i].Seq[mid-10:mid+10], minTemp)
 				oligoPools[idx] = append(oligoPools[idx], createOligos(constructs[i], mid+10, mid-10)...)
 				pools[idx] = append(pools[idx], constructs[i])
-				fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\ttrue\t20\t%d\t%f\t%c",
-					constructs[i].Name, Tm, mid-10, mid+10, mid+10, len(constructs[i].Seq)-mid+10, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[mid-10:mid+10]), idx+65))
+				fileio.WriteToFileHandle(o, fmt.Sprintf("%s\t%f\t%d-%d\t%d\t%d\ttrue\t20\t%d\t%f\t%c\t%s",
+					constructs[i].Name, Tm, mid-10, mid+10, mid+10, len(constructs[i].Seq)-mid+10, len(constructs[i].Seq), dna.GCContent(constructs[i].Seq[mid-10:mid+10]), idx+65, dna.BasesToString(constructs[i].Seq[mid-10:mid+10])))
 				pass = true
 				continue
 			} else {

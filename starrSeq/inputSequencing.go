@@ -10,9 +10,15 @@ import (
 	"sort"
 )
 
+type InputSeqSettings struct {
+	InSam   string
+	InBed   string
+	Outfile string
+}
+
 // ParseInputSequencingSam reads and parses an alignment file for an input library sequencing run. It creates a read-count map for all constructs in the provided bed file.
 // input sam file must be position sorted
-func ParseInputSequencingSam(s ScStarrSeqSettings) {
+func ParseInputSequencingSam(s InputSeqSettings) {
 	var tree = make([]interval.Interval, 0)
 	var bedSizeMap = make(map[string]int)
 	var countsMap = make(map[string]float64)
@@ -21,8 +27,8 @@ func ParseInputSequencingSam(s ScStarrSeqSettings) {
 	var counts float64
 	var currEntry sam.Sam
 
-	inChan, _ := sam.GoReadToChan(s.InFile)
-	bedEntries := bed.Read(s.InputSequencing)
+	inChan, _ := sam.GoReadToChan(s.InSam)
+	bedEntries := bed.Read(s.InBed)
 
 	for _, i := range bedEntries {
 		tree = append(tree, i)
@@ -67,7 +73,7 @@ func ParseInputSequencingSam(s ScStarrSeqSettings) {
 		counts, _ = countsMap[i]
 		countsMap[i] = counts / (float64(bedSizeMap[i]) / 500.0)
 	}
-	calculateNormFactor(countsMap, s.OutFile)
+	calculateNormFactor(countsMap, s.Outfile)
 }
 
 // calculateNormFactor takes a countsMap created in ReadInputSequencingSam and writes out a data frame with the name of the construct, counts per 500bp, percent abundance, and normalization factor
