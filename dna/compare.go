@@ -16,6 +16,17 @@ func compareBases(alpha Base, beta Base, ignoreCase bool) int {
 	}
 }
 
+//CompareSeqsWithRevComp will return 1 if the input sequences are identical (case-insensitive) or it will return 2 if the reverse compliment of one sequence is identical to the other sequence. It
+//will return -1 if the sequences or reverse compliments aren't equal
+func CompareSeqsWithRevComp(alpha, beta []Base) int {
+	if CompareSeqsIgnoreCase(alpha, beta) == 0 {
+		return 1
+	} else if CompareSeqsIgnoreCase(ReverseComplementAndCopy(alpha), beta) == 0 {
+		return 2
+	}
+	return -1
+}
+
 // compareSeqsIgnoreCase returns an integer defining the relationship between two input sequences.
 // Ignores gaps in the input sequences.
 func compareSeqsIgnoreGaps(alpha []Base, beta []Base, ignoreCase bool) int {
