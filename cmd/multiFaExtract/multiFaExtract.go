@@ -36,6 +36,7 @@ func multiFaExtract(s Settings) {
 	}
 }
 
+// move to package 
 func extractMultiHelper(records []fasta.Fasta, start int, end int) []fasta.Fasta {
 	var ans = make([]fasta.Fasta, len(records))
 	for i := range records {
