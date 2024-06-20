@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"reflect"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
-	"reflect"
 )
 
 // checks if input pFasta has a sequence with chrom as name and returns its index
@@ -155,100 +155,6 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 		log.Fatalf("Error: input sequence name does not match requested chrom.")
 	}
 	
-	return answer
-}
-
-// vcfToPfa returns a pFasta representation of the given VCF sequence, only accepts single sequence Fasta
-func VcfToPfa(inVcfFilename string, inputFaFilename string) PFasta {
-	// relax to not-biallelic
-	var vcfRecords <-chan vcf.Vcf
-
-	inputFa := fasta.Read(inputFaFilename)
-	answer := faToPfa(inputFa[0], 0, -1)
-
-	vcfRecords, _ = vcf.GoReadToChan(inVcfFilename)
-
-	for v := range vcfRecords {
-		if !(vcf.IsBiallelic(v) && vcf.IsSubstitution(v)) {
-			log.Fatal("Error: currently we only handle biallelic substitutions\n")
-		}
-
-		if inputFa[0].Seq[v.Pos-1] != dna.StringToBase(v.Ref) {
-			log.Fatal("Error: base in fasta didn't match ref base from VCF record\n")
-		}
-
-		answer.Seq[v.Pos-1] = vcfSampleToPdnaBase(v.Samples, v.Ref, v.Alt)
-	}
-
-	return answer
-}
-
-type alleleCounts struct {
-	A int
-	C int
-	G int
-	T int
-}
-
-func getFieldPointer(counts interface{}, fieldName string) *int {
-	v := reflect.ValueOf(counts).Elem()
-	field := v.FieldByName(fieldName)
-
-	if field.IsValid() && field.CanAddr() {
-		fieldPtr := field.Addr().Interface().(*int)
-		return fieldPtr
-	} else {
-		fmt.Printf("Invalid field: %s\n", fieldName)
-		return nil
-	}
-}
-
-// vcfSampleToPdnaBase calculates the distribution of samples at a position
-func vcfSampleToPdnaBase(samples []vcf.Sample, ref string, alts []string) pDna.Float32Base {
-	// can i just assume that everything only has 2 alleles and multiple len(samples)*2
-	// try to map it? idx in alts list = what base
-	// struct {A: 0, C: 0, G: 0, T: 0}
-	totalSamples := 2 * len(samples)
-
-	var counts alleleCounts
-	var mapping []*int
-
-	// map ref and alt alleles to counts
-	fieldPointer := getFieldPointer(&counts, ref)
-	if fieldPointer != nil {
-		mapping = append(mapping, fieldPointer)
-	}
-
-	for _, alt := range alts {
-		fieldPointer = getFieldPointer(&counts, alt)
-		if fieldPointer != nil {
-			mapping = append(mapping, fieldPointer)
-		}
-	}
-
-	for _, s := range samples {
-		for _, p := range s.Alleles {
-			if p == 0 {
-				*mapping[0] += 1
-			} else if p == 1 {
-				*mapping[1] += 1
-			} else if p == 2 {
-				*mapping[2] += 1
-			} else if p == 3 {
-				*mapping[3] += 1
-			} else {
-				log.Fatalf("Invalid allele value > 4.")
-			}
-			totalSamples += 1
-		}
-	}
-
-	var answer pDna.Float32Base
-	answer.A = float32(counts.A) / float32(totalSamples)
-	answer.C = float32(counts.C) / float32(totalSamples)
-	answer.G = float32(counts.G) / float32(totalSamples)
-	answer.T = float32(counts.T) / float32(totalSamples)
-
 	return answer
 }
 
