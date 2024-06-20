@@ -29,6 +29,8 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 // SingleVcf returns a single simulated Vcf record for a user-specified selection parameter alpha and genomic position.
 // There also needs to be parameters for the bounding function, where alpha, beta, and multiplier parameters of 0.001, 0.001, and 10000 are good
 // for most applications.
+// could try expanding this function to not hardcode A ref T alt?
+// check tests random gen (anything that's not the ref - there should be a simulate mutation function in simulate.go changeBase )
 func SingleVcf(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int) vcf.Vcf {
 	var genotype []vcf.Sample
 	var divergent bool

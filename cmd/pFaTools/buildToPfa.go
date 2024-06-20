@@ -18,12 +18,14 @@ type BuildToPfaSettings struct {
 	Start     int
 	End       int
 	Chrom     string
+	FastaFile string
 }
 
 // BuildToPfaUsage defines the usage statement for the pFaTools BuildToPfa subcommand.
 func BuildToPfaUsage(BuildToPfaFlags *flag.FlagSet) {
 	fmt.Printf("pFaTools BuildToPfa - Provides human-readable sequence from a given pFa.\n" +
 		"Keyword FASTA for inputType argument specifies that inFile is a Fasta.\n" +
+		"Keyword VCF for inputType argument specifies that inFile is a VCF.\n" +
 		"Usage:\n" +
 		"PFaTools buildToPfa inFile outDir.pfa inputType\n" +
 		"options:\n")
@@ -38,7 +40,7 @@ func parseBuildToPfaArgs() {
 	var start *int = BuildToPfaFlags.Int("start", 0, "Specify the position of the input sequence to begin build the pfa from. Defaults to 0.")
 	var end *int = BuildToPfaFlags.Int("end", -1, "Specify the position of the input sequence to end building the pfa at. Defaults to the end.")
 	var chrom *string = BuildToPfaFlags.String("chrom", "", "Specify the name of the sequence to build. Can be empty if only one sequence in input fasta.")
-
+	var fastaFile *string = BuildToPfaFlags.String("fastaFile", "", "Specify the name of a second input Fasta file.")
 	err = BuildToPfaFlags.Parse(os.Args[3:])
 	exception.PanicOnErr(err)
 	BuildToPfaFlags.Usage = func() { BuildToPfaUsage(BuildToPfaFlags) }
@@ -60,6 +62,7 @@ func parseBuildToPfaArgs() {
 		Start:     *start,
 		End:       *end,
 		Chrom:     *chrom,
+		FastaFile: *fastaFile,
 	}
 
 	pFaBuildToPfa(s)
@@ -69,6 +72,12 @@ func parseBuildToPfaArgs() {
 func pFaBuildToPfa(s BuildToPfaSettings) {
 	if strings.ToLower(s.InputType) == "fasta" {
 		records := []pFasta.PFasta{pFasta.MultiFaToPfa(s.InFile, s.Start, s.End, s.Chrom)}
+		pFasta.Write(s.OutDir, records)
+	} else if strings.ToLower(s.InputType) == "vcf" {
+		if s.FastaFile == "" {
+			log.Fatalf("Error: expecting a FastaFile argument.")
+		}
+		records := []pFasta.PFasta{pFasta.VcfToPfa(s.InFile, s.FastaFile)}
 		pFasta.Write(s.OutDir, records)
 	} else {
 		log.Fatalf("Requested format unavailable.")
