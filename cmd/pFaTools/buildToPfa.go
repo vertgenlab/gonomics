@@ -68,9 +68,6 @@ func parseBuildToPfaArgs() {
 // pFaBuildToPfa parses an input pFASTA file and converts the file according to user-defined settings.
 func pFaBuildToPfa(s BuildToPfaSettings) {
 	if strings.ToLower(s.InputType) == "fasta" {
-		if s.Chrom == "" {
-			log.Fatalf("Error: expecting a Chrom argument.")
-		}
 		records := []pFasta.PFasta{pFasta.MultiFaToPfa(s.InFile, s.Start, s.End, s.Chrom)}
 		pFasta.Write(s.OutDir, records)
 	} else {

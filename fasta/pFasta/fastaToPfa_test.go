@@ -14,18 +14,27 @@ var FaToPfaTests = []struct {
 	End            int
 	Chrom          string
 }{
-	{InputFilename: "testdata_tools/test_faToPfa_input_0.fa",
-	Start: 0,
-	End:   10,
-	Chrom: "chr1",},
-	{InputFilename: "testdata_tools/test_faToPfa_input_1.fa",
+	{
+		InputFilename: "testdata_tools/test_faToPfa_input_0.fa",
+		Start: 0,
+		End:   10,
+		Chrom: "chr1",
+	},{
+		InputFilename: "testdata_tools/test_faToPfa_input_0.fa",
+		Start: 0,
+		End:   10,
+		Chrom: "",
+	},{
+		InputFilename: "testdata_tools/test_faToPfa_input_1.fa",
 		Start: 0,
 		End:   -1,
-		Chrom: "chr1",},
-	{InputFilename: "testdata_tools/test_faToPfa_input_2.fa",
+		Chrom: "chr1",
+	},{
+		InputFilename: "testdata_tools/test_faToPfa_input_2.fa",
 		Start: 3,
 		End:   8,
-		Chrom: "chr1",},
+		Chrom: "chr1",
+	},
 }
 
 func TestFaToPfa(t *testing.T) {
@@ -34,7 +43,11 @@ func TestFaToPfa(t *testing.T) {
 		testOutput := MultiFaToPfa(v.InputFilename, v.Start, v.End, v.Chrom)
 		testInput := fasta.Read(v.InputFilename)
 
-		testSample := Sample([]PFasta{testOutput}, v.Chrom)
+		sampleChrom := v.Chrom
+		if sampleChrom == "" && len(testInput) == 1 {
+			sampleChrom = testInput[0].Name
+		}
+		testSample := Sample([]PFasta{testOutput}, sampleChrom)
 		sampleOutputFilename := fmt.Sprintf("testdata_tools/output_fa_%v.fa", idx)
 		fasta.Write(sampleOutputFilename, []fasta.Fasta{testSample})
 
@@ -43,7 +56,6 @@ func TestFaToPfa(t *testing.T) {
 
 		testTrue := false
 		for _, seq := range testInput {
-
 			end := v.End
 			if end == -1 {
 				end = len(seq.Seq)

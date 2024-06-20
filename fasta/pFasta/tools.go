@@ -15,7 +15,6 @@ import (
 func checkIfChromInPfasta(input []PFasta, chrom string) int {
 	chromInInput := false
 	var answer int
-
 	for inputIdx, inputpFa := range input {
 		if inputpFa.Name == chrom {
 			chromInInput = true
@@ -130,16 +129,29 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 	inputFa := fasta.Read(inputFaFilename)
 	chromInInput := false
 	var answer PFasta
-	for _, seq := range inputFa {
-		if seq.Name == chrom {
+
+	if len(inputFa) == 1 {
+		if chrom == "" || inputFa[0].Name == chrom {
 			chromInInput = true
-			answer = faToPfa(seq, start, end)
+			answer = faToPfa(inputFa[0], start, end)
+		}
+	} else {
+		if chrom == "" {
+			log.Fatalf("Error: expecting a Chrom argument for multifasta input.")
+		}
+
+		for _, seq := range inputFa {
+			if seq.Name == chrom {
+				chromInInput = true
+				answer = faToPfa(seq, start, end)
+				break
+			}
 		}
 	}
 
-	if !chromInInput {
+	if chromInInput == false {
 		log.Fatalf("Error: input sequence name does not match requested chrom.")
 	}
-
+	
 	return answer
 }
