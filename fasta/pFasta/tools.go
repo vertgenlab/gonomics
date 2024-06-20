@@ -2,12 +2,13 @@ package pFasta
 
 import (
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
-	"math/rand"
 )
 
 // checks if input pFasta has a sequence with chrom as name and returns its index
@@ -92,16 +93,20 @@ func Sample(input []PFasta, chrom string) fasta.Fasta {
 	return answer
 }
 
-// faToPfa returns a pFasta representation of the given Fasta sequence
+// faToPfa returns a pFasta representation of the given Fasta sequence, start inclusive, end exclusive
 func faToPfa(input fasta.Fasta, start int, end int) PFasta {
-	answer := PFasta{Name: input.Name, Seq: make([]pDna.Float32Base, end-start)}
 	if end == -1 {
 		end = len(input.Seq)
+	} else if end > len(input.Seq) {
+		log.Fatalf("Requested end argument (%v) out of range.", end)
 	}
 
-	fasta.ToUpper(input)
+	answer := PFasta{Name: input.Name, Seq: make([]pDna.Float32Base, end-start)}
 
-	for idx, base := range input.Seq[start:end] {
+	fasta.ToUpper(input)
+	var base dna.Base
+	var idx int
+	for idx, base = range input.Seq[start:end] {
 		if base == dna.A {
 			answer.Seq[idx] = pDna.Float32Base{A: 1, C: 0, G: 0, T: 0}
 		} else if base == dna.C {
