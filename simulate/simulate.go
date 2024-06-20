@@ -157,6 +157,8 @@ func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 	return base
 }
 
+// should we make a new function that mutates based on a given boundAlpha and boundBseta?
+
 // MutateGene takes a starting sequence, a branch length, and the gene structure of the starting sequence in the form of a genePred file, along with a flag
 // for if deletions should be allowed along with substitutions.  The function returns the evolved sequence.
 func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, deletions bool) []dna.Base {
