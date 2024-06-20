@@ -1,72 +1,77 @@
 package pFasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/dna/pDna"
-	"github.com/vertgenlab/gonomics/fasta"
 	"testing"
+	"fmt"
+	"os"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 var FaToPfaTests = []struct {
-	Input          []fasta.Fasta
+	InputFilename          string
 	Start          int
 	End            int
 	Chrom          string
-	ExpectedPfasta PFasta
-}{{Input: []fasta.Fasta{fasta.Fasta{Name: "chr1", Seq: dna.StringToBases("TCATGACCAG")}},
-	Start: 0,
-	End:   9,
-	Chrom: "chr1",
-	ExpectedPfasta: PFasta{Name: "chr1",
-		Seq: []pDna.Float32Base{
-			{A: 0, C: 0, G: 0, T: 1},
-			{A: 0, C: 1, G: 0, T: 0},
-			{A: 1, C: 0, G: 0, T: 0},
-			{A: 0, C: 0, G: 0, T: 1},
-			{A: 0, C: 0, G: 1, T: 0},
-			{A: 0, C: 0, G: 0, T: 0},
-			{A: 1, C: 0, G: 0, T: 0},
-			{A: 0, C: 1, G: 0, T: 0},
-			{A: 0, C: 1, G: 0, T: 0},
-			{A: 1, C: 0, G: 0, T: 0},
-			{A: 0, C: 0, G: 1, T: 0},
-		}}},
-	{Input: []fasta.Fasta{fasta.Fasta{Name: "chr2", Seq: dna.StringToBases("TACTCCCG")},
-		fasta.Fasta{Name: "chr1", Seq: dna.StringToBases("CGACGACTTTATCC")}},
+}{
+	{
+		InputFilename: "testdata_tools/test_faToPfa_input_0.fa",
 		Start: 0,
-		End:   6,
+		End:   10,
 		Chrom: "chr1",
-		ExpectedPfasta: PFasta{Name: "chr1",
-			Seq: []pDna.Float32Base{
-				{A: 0, C: 1, G: 0, T: 0},
-				{A: 0, C: 0, G: 1, T: 0},
-				{A: 1, C: 0, G: 0, T: 0},
-				{A: 0, C: 1, G: 0, T: 0},
-				{A: 0, C: 0, G: 1, T: 0},
-				{A: 1, C: 0, G: 0, T: 0},
-				{A: 0, C: 0, G: 0, T: 1},
-				{A: 0, C: 0, G: 0, T: 1},
-			}}},
-	{Input: []fasta.Fasta{fasta.Fasta{Name: "chr1", Seq: dna.StringToBases("TACTCCCG")},
-		fasta.Fasta{Name: "chr2", Seq: dna.StringToBases("CGACGACTTTATCC")}},
+	},{
+		InputFilename: "testdata_tools/test_faToPfa_input_0.fa",
+		Start: 0,
+		End:   10,
+		Chrom: "",
+	},{
+		InputFilename: "testdata_tools/test_faToPfa_input_1.fa",
+		Start: 0,
+		End:   -1,
+		Chrom: "chr1",
+	},{
+		InputFilename: "testdata_tools/test_faToPfa_input_2.fa",
 		Start: 3,
-		End:   7,
+		End:   8,
 		Chrom: "chr1",
-		ExpectedPfasta: PFasta{Name: "chr1",
-			Seq: []pDna.Float32Base{
-				{A: 0, C: 1, G: 1, T: 1},
-				{A: 0, C: 1, G: 0, T: 0},
-				{A: 0, C: 1, G: 0, T: 1},
-				{A: 0, C: 1, G: 0, T: 1},
-				{A: 0, C: 0, G: 1, T: 1},
-			}}},
+	},
 }
 
 func TestFaToPfa(t *testing.T) {
-	for idx, testCase := range FaToPfaTests {
-		filename := fmt.Sprintf("testdata_tools/test_faToPfa_input_%d.fa", idx)
-		fasta.Write(filename, testCase.Input)
+	var err error
+	for idx, v := range FaToPfaTests {
+		testOutput := MultiFaToPfa(v.InputFilename, v.Start, v.End, v.Chrom)
+		testInput := fasta.Read(v.InputFilename)
 
-		// faToPfa then sample(pfa) should return input fa
+		sampleChrom := v.Chrom
+		if sampleChrom == "" && len(testInput) == 1 {
+			sampleChrom = testInput[0].Name
+		}
+		testSample := Sample([]PFasta{testOutput}, sampleChrom)
+		sampleOutputFilename := fmt.Sprintf("testdata_tools/output_fa_%v.fa", idx)
+		fasta.Write(sampleOutputFilename, []fasta.Fasta{testSample})
+
+		outputFilename := fmt.Sprintf("testdata_tools/output_%v.pfa", idx)
+		Write(outputFilename, []PFasta{testOutput})
+
+		testTrue := false
+		for _, seq := range testInput {
+			end := v.End
+			if end == -1 {
+				end = len(seq.Seq)
+			}
+			extractedSeq := fasta.Extract(seq, v.Start, end, seq.Name)
+			if fasta.IsEqual(testSample, extractedSeq) {
+				testTrue = true
+				err = os.Remove(outputFilename)
+				exception.PanicOnErr(err)
+				err = os.Remove(sampleOutputFilename)
+				exception.PanicOnErr(err)
+			}
+		}
+
+		if !testTrue {
+			t.Errorf("Error: in faToPfa. Output not as expected.\n")
+		}
 	}
 }
