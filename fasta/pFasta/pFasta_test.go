@@ -1,9 +1,11 @@
 package pFasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna/pDna"
 	"math/rand"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/dna/pDna"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 func randSeq(length int) PFasta {
@@ -87,6 +89,8 @@ func TestWriteAndRead(t *testing.T) {
 		records = Read(v.OutFile)
 		if !AllAreEqual(records, v.Records, v.Precision) {
 			t.Errorf("Error: in pFasta. Write and read test was not as expected.\n")
+		} else {
+			fileio.MustRemove(v.OutFile)
 		}
 	}
 }
