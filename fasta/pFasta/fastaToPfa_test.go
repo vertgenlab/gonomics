@@ -60,11 +60,14 @@ func TestFaToPfa(t *testing.T) {
 
 		// compare all sequences in input fasta to testOutput
 		testTrue := false
+		ans := fasta.ExtractMultiHelper(testInput, v.Start, end)
+
 		for _, seq := range testInput {
 			end := v.End
 			if end == -1 {
 				end = len(seq.Seq)
 			}
+			
 			extractedSeq := fasta.Extract(seq, v.Start, end, seq.Name)
 			if fasta.IsEqual(testSample, extractedSeq) {
 				testTrue = true
