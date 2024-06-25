@@ -12,7 +12,6 @@ import (
 var faToPfaTests = []struct {
 	InFile       string
 	OutDir        string
-	InputType      string
 	Start      int
 	End        int
 	Chrom          string
@@ -20,28 +19,24 @@ var faToPfaTests = []struct {
 	{
 		InFile: "testdata/test_faToPfa_input_0.fa",
 		OutDir: "testdata/test_faToPfa_output_0.pfa",
-		InputType: "fasta",
 		Start: 0,
 		End: 10,
 		Chrom: "chr1",
 	}, {
 		InFile: "testdata/test_faToPfa_input_0.fa",
 		OutDir: "testdata/test_faToPfa_output_0_no_chr.pfa",
-		InputType: "fasta",
 		Start: 0,
 		End: 10,
 		Chrom: "",
 	}, {
 		InFile: "testdata/test_faToPfa_input_1.fa",
 		OutDir: "testdata/test_faToPfa_output_1.pfa",
-		InputType: "fasta",
 		Start: 0,
 		End: -1,
 		Chrom: "chr1",
 	}, {
 		InFile: "testdata/test_faToPfa_input_1.fa",
 		OutDir: "testdata/test_faToPfa_output_1.pfa",
-		InputType: "fasta",
 		Start: 0,
 		End: -1,
 		Chrom: "chr1",
@@ -50,18 +45,17 @@ var faToPfaTests = []struct {
 
 func TestFaToPfa(t *testing.T) {
 	var err error
-	var s BuildToPfaSettings
+	var s FaToPfaSettings
 	for idx, v := range faToPfaTests {
-		s = BuildToPfaSettings{
+		s = FaToPfaSettings{
 			InFile: v.InFile,
 			OutDir: v.OutDir,
-			InputType: v.InputType,
 			Start: v.Start,
 			End: v.End,
 			Chrom: v.Chrom,
 		}
 
-		pFaBuildToPfa(s)
+		pFaFaToPfa(s)
 
 		testInput := fasta.Read(v.InFile)
 
