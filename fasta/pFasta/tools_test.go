@@ -626,7 +626,7 @@ var SampleTests = []struct {
 
 func TestExtract(t *testing.T) {
 	for _, testCase := range ExtractTests {
-		InFile := "testdata_tools/test_extract_input.pfa"
+		InFile := "testdata/test_extract_input.pfa"
 		Write(InFile, testCase.Input)
 
 		res := Extract(testCase.Input, testCase.Start, testCase.End, testCase.OutputName, testCase.Chrom, testCase.TakeCoords)
@@ -635,7 +635,7 @@ func TestExtract(t *testing.T) {
 			t.Errorf("Error: in pFasta. Extract valid input test was not as expected.")
 		}
 
-		OutFile := "testdata_tools/test_extract_expected.pfa"
+		OutFile := "testdata/test_extract_expected.pfa"
 		records := []PFasta{res}
 		Write(OutFile, records)
 	}
@@ -643,9 +643,9 @@ func TestExtract(t *testing.T) {
 
 func TestExtractBed(t *testing.T) {
 	for caseIdx, testCase := range ExtractBedTests {
-		InFile := fmt.Sprintf("testdata_tools/test_extractbed_input_%v.pfa", caseIdx)
+		InFile := fmt.Sprintf("testdata/test_extractbed_input_%v.pfa", caseIdx)
 		Write(InFile, testCase.Input)
-		InRegion := fmt.Sprintf("testdata_tools/test_extractbed_input_region_%v.bed", caseIdx)
+		InRegion := fmt.Sprintf("testdata/test_extractbed_input_region_%v.bed", caseIdx)
 
 		bedInput := testCase.Region
 		bed.Write(InRegion, bedInput)
@@ -656,7 +656,7 @@ func TestExtractBed(t *testing.T) {
 			t.Errorf("Error: in pFasta. ExtractBed valid input test not as expected.\n")
 		}
 
-		OutFile := fmt.Sprintf("testdata_tools/test_extractbed_expected_%v.pfa", caseIdx)
+		OutFile := fmt.Sprintf("testdata/test_extractbed_expected_%v.pfa", caseIdx)
 		Write(OutFile, res)
 	}
 }
