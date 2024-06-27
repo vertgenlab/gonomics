@@ -40,26 +40,34 @@ var FaToPfaTests = []struct {
 func TestFaToPfa(t *testing.T) {
 	var err error
 	for idx, v := range FaToPfaTests {
+		//running function
 		testOutput := MultiFaToPfa(v.InputFilename, v.Start, v.End, v.Chrom)
+		outputFilename := fmt.Sprintf("testdata_tools/output_%v.pfa", idx)
+		Write(outputFilename, []PFasta{testOutput})
+
 		testInput := fasta.Read(v.InputFilename)
 
+		// sample to get fasta from pfasta
 		sampleChrom := v.Chrom
 		if sampleChrom == "" && len(testInput) == 1 {
 			sampleChrom = testInput[0].Name
 		}
+
+		// testOutput is 1-hot pFa, sampling from testOutput should return (subsequence of) input Fasta
 		testSample := Sample([]PFasta{testOutput}, sampleChrom)
 		sampleOutputFilename := fmt.Sprintf("testdata_tools/output_fa_%v.fa", idx)
 		fasta.Write(sampleOutputFilename, []fasta.Fasta{testSample})
 
-		outputFilename := fmt.Sprintf("testdata_tools/output_%v.pfa", idx)
-		Write(outputFilename, []PFasta{testOutput})
-
+		// compare all sequences in input fasta to testOutput
 		testTrue := false
+		ans := fasta.ExtractMultiHelper(testInput, v.Start, end)
+
 		for _, seq := range testInput {
 			end := v.End
 			if end == -1 {
 				end = len(seq.Seq)
 			}
+			
 			extractedSeq := fasta.Extract(seq, v.Start, end, seq.Name)
 			if fasta.IsEqual(testSample, extractedSeq) {
 				testTrue = true
