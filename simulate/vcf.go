@@ -45,3 +45,19 @@ func SingleVcf(alpha float64, numAlleles int, boundAlpha float64, boundBeta floa
 	}
 	return answer
 }
+
+// we wanted to have fasta as a second input to vcfToFile?
+func SingleVcfNotHardCoded(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int) vcf.Vcf {
+	var genotype []vcf.Sample
+	var divergent bool
+	var answer vcf.Vcf
+	genotype, divergent = popgen.SimulateGenotype(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier)
+	//most fields are hardcoded but can be filled in later
+	answer = vcf.Vcf{Chr: "chr1", Pos: pos, Id: ".", Ref: "A", Alt: []string{"T"}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
+	if divergent {
+		answer = vcf.AppendAncestor(answer, dna.StringToBases(answer.Alt[0]))
+	} else {
+		answer = vcf.AppendAncestor(answer, dna.StringToBases(answer.Ref))
+	}
+	return answer
+}
