@@ -1,11 +1,12 @@
 package browser
 
 import (
+	"testing"
+	
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"testing"
 )
 
 var PrintOneSetLinesTests = []struct {
@@ -114,6 +115,8 @@ func TestPrintOneSetLines(t *testing.T) {
 		exception.PanicOnErr(err)
 		if !fileio.AreEqual(testCase.Out, testCase.Expected) {
 			t.Errorf("Error: in browser. printOneSetLines test not as expected.")
+		} else {
+			fileio.EasyRemove(testCase.Out)
 		}
 	}
 }
@@ -151,126 +154,10 @@ func TestPrintAllSets(t *testing.T) {
 		exception.PanicOnErr(err)
 		if !fileio.AreEqual(testCase.OutFile, testCase.Expected) {
 			t.Errorf("Error: in browser. PrintAllSets test not as expected.")
+		} else {
+			fileio.EasyRemove(testCase.OutFile)
 		}
 	}
-
-	pFaInputnorm := "testdata/pfa_PFaVisualiser_normalised_input_toy_2.pfa"
-	Recordsnorm := []pFasta.PFasta{
-		{Name: "chr2",
-			Seq: []pDna.Float32Base{
-				{
-					A: 0.1,
-					C: 0.2,
-					G: 0.3,
-					T: 0.4}}},
-		{Name: "chr1butlikerealllllllllllllylong",
-			Seq: []pDna.Float32Base{
-				{
-					A: 0.20564,
-					C: 0.2865,
-					G: 0.38760,
-					T: 0.120224,
-				},
-				{
-					A: 0.323,
-					C: 0.42701,
-					G: 0.13029,
-					T: 0.1197,
-				},
-				{
-					A: 0.179326,
-					C: 0.278674,
-					G: 0.1535,
-					T: 0.3885,
-				},
-				{
-					A: 0.267992,
-					C: 0.13088,
-					G: 0.300928,
-					T: 0.3002,
-				},
-				{
-					A: 0.481059,
-					C: 0.124,
-					G: 0.091041,
-					T: 0.3039,
-				},
-				{
-					A: 0.26229,
-					C: 0.0668,
-					G: 0.13778,
-					T: 0.53313,
-				},
-				{
-					A: 0.00819,
-					C: 0.3783,
-					G: 0.36011,
-					T: 0.2534,
-				},
-				{
-					A: 0.4939,
-					C: 0.24142,
-					G: 0.1682,
-					T: 0.09648,
-				},
-				{
-					A: 0.20926,
-					C: 0.1164,
-					G: 0.486,
-					T: 0.18834,
-				},
-				{
-					A: 0.32963,
-					C: 0.11237,
-					G: 0.468,
-					T: 0.09,
-				},
-				{
-					A: 0.2,
-					C: 0.25104,
-					G: 0.35296,
-					T: 0.196,
-				},
-				{
-					A: 0.1074,
-					C: 0.41734,
-					G: 0.41726,
-					T: 0.058,
-				},
-				{
-					A: 0.05832,
-					C: 0.4439,
-					G: 0.05822,
-					T: 0.43956,
-				},
-				{
-					A: 0.339,
-					C: 0.1657,
-					G: 0.20771,
-					T: 0.28759,
-				},
-				{
-					A: 0.1182634,
-					C: 0.225737,
-					G: 0.172,
-					T: 0.484,
-				},
-				{
-					A: 0.13294,
-					C: 0.25065,
-					G: 0.36341,
-					T: 0.253,
-				},
-				{
-					A: 0.44,
-					C: 0.29766,
-					G: 0.1069,
-					T: 0.15544,
-				},
-			},
-		},
-	}
-	pFasta.Write(pFaInputnorm, Recordsnorm)
 }
 
 var PFaVisualizerTests = []struct {
@@ -364,6 +251,107 @@ func TestPFaVisualizer(t *testing.T) {
 		PFaVisualizer(testCase.InFile, testCase.OutFile, testCase.Start, testCase.End, testCase.StartOfAlignment, testCase.EndOfAlignment, testCase.SigFigs, testCase.DecimalPlaces, testCase.LineLength, testCase.SeqName)
 		if !fileio.AreEqual(testCase.OutFile, testCase.Expected) {
 			t.Errorf("Error: in browser. PFaVisualiser test not as expected.")
+		} else {
+			fileio.EasyRemove(testCase.OutFile)
+		}
+
+	}
+}
+
+var PFaVisualizerTsvTests = []struct {
+	InFile           string
+	OutFile          string
+	Start            int
+	End              int
+	StartOfAlignment bool
+	EndOfAlignment   bool
+	SigFigs          int
+	DecimalPlaces    int
+	LineLength       int
+	SeqName          string
+	Expected         string
+}{
+	{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
+		OutFile:          "testdata/pfa_PFaVisualiserTsv_output_toy_1.txt",
+		Start:            4,
+		End:              21,
+		StartOfAlignment: false,
+		EndOfAlignment:   false,
+		SigFigs:          4,
+		DecimalPlaces:    7,
+		LineLength:       5,
+		SeqName:          "chr1",
+		Expected:         "testdata/pfa_PFaVisualiserTsv_expected_toy_1.txt",
+	},
+	{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
+		OutFile:          "testdata/pfa_PFaVisualiserTsv_output_toy_2.txt",
+		Start:            0,
+		End:              -1,
+		StartOfAlignment: true,
+		EndOfAlignment:   true,
+		SigFigs:          0,
+		DecimalPlaces:    7,
+		LineLength:       5,
+		SeqName:          "chr1",
+		Expected:         "testdata/pfa_PFaVisualiserTsv_expected_toy_2.txt",
+	},
+	{InFile: "testdata/pfa_PFaVisualiser_input_toy_1.pfa",
+		OutFile:          "testdata/pfa_PFaVisualiserTsv_output_toy_3.txt",
+		Start:            0,
+		End:              6,
+		StartOfAlignment: true,
+		EndOfAlignment:   false,
+		SigFigs:          0,
+		DecimalPlaces:    4,
+		LineLength:       5,
+		SeqName:          "chr1",
+		Expected:         "testdata/pfa_PFaVisualiserTsv_expected_toy_3.txt",
+	},
+	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_1.pfa",
+		OutFile:          "testdata/pfa_PFaVisualiserTsv_normalised_output_toy_1.txt",
+		Start:            8,
+		End:              -1,
+		StartOfAlignment: false,
+		EndOfAlignment:   true,
+		SigFigs:          2,
+		DecimalPlaces:    5,
+		LineLength:       4,
+		SeqName:          "chr1",
+		Expected:         "testdata/pfa_PFaVisualiserTsv_normalised_expected_toy_1.txt",
+	},
+	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_1.pfa",
+		OutFile:          "testdata/pfa_PFaVisualiserTsv_normalised_output_toy_2.txt",
+		Start:            0,
+		End:              -1,
+		StartOfAlignment: true,
+		EndOfAlignment:   true,
+		SigFigs:          0,
+		DecimalPlaces:    5,
+		LineLength:       4,
+		SeqName:          "chr1",
+		Expected:         "testdata/pfa_PFaVisualiserTsv_normalised_expected_toy_2.txt",
+	},
+	{InFile: "testdata/pfa_PFaVisualiser_normalised_input_toy_2.pfa",
+		OutFile:          "testdata/pfa_PFaVisualiserTsv_normalised_output_toy_3.txt",
+		Start:            3,
+		End:              13,
+		StartOfAlignment: false,
+		EndOfAlignment:   false,
+		SigFigs:          2,
+		DecimalPlaces:    5,
+		LineLength:       4,
+		SeqName:          "chr1butlikerealllllllllllllylong",
+		Expected:         "testdata/pfa_PFaVisualiserTsv_normalised_expected_toy_3.txt",
+	},
+}
+
+func TestPFaVisualizerTsv(t *testing.T) {
+	for _, testCase := range PFaVisualizerTsvTests {
+		PFaVisualizerTsv(testCase.InFile, testCase.OutFile, testCase.Start, testCase.End, testCase.StartOfAlignment, testCase.EndOfAlignment, testCase.SigFigs, testCase.DecimalPlaces, testCase.LineLength, testCase.SeqName)
+		if !fileio.AreEqual(testCase.OutFile, testCase.Expected) {
+			t.Errorf("Error: in browser. PFaVisualiserTsv tests not as expected.")
+		} else {
+			fileio.EasyRemove(testCase.OutFile)
 		}
 	}
 }

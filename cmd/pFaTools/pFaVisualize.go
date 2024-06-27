@@ -23,15 +23,18 @@ type VisualizeSettings struct {
 	Chrom            string
 	StartOfAlignment bool
 	EndOfAlignment   bool
+	TsvOut           bool
 }
 
 // VisualizeUsage defines the usage statement for the pFaTools Visualize subcommand.
 func VisualizeUsage(VisualizeFlags *flag.FlagSet) {
 	fmt.Printf("pFaTools Visualize - Provides human-readable sequence from a given pFa.\n" +
+		"Start and end arguments are 0-indexed. The visualiser is inclusive of the start \n" +
+		"index, exclusive of the end index.\n" +
 		"Keyword 'START' for the start argument makes a visualization from the start of the pfasta.\n" +
 		"Keyword 'END' for the end argument makes a visualization until the end of the pfasta.\n" +
 		"Usage:\n" +
-		"PFaTools visualise in.pfa start end outDir.txt\n" +
+		"PFaTools visualize in.pfa start end outDir.txt\n" +
 		"options:\n")
 	VisualizeFlags.PrintDefaults()
 }
@@ -45,6 +48,7 @@ func parseVisualizeArgs() {
 	var decimalPlaces *int = VisualizeFlags.Int("decimal", 5, "Specify the number of decimal places to round to. Should be between 1 and 15. Note that decimal places more to the right will accrue larger floating point error.")
 	var lineLength *int = VisualizeFlags.Int("lineLength", 50, "Sets length of each alignment line.")
 	var chrom *string = VisualizeFlags.String("chrom", "", "Specify the name of the sequence to display. Can be empty if only one sequence in input pfasta.")
+	var tsvOut *bool = VisualizeFlags.Bool("tsvOut", false, "Specify if user wants R-ready output (true). Defaults to false.")
 	var startOfAlignment bool = false
 	var endOfAlignment bool = false
 	var start int
@@ -86,6 +90,7 @@ func parseVisualizeArgs() {
 		Chrom:            *chrom,
 		StartOfAlignment: startOfAlignment,
 		EndOfAlignment:   endOfAlignment,
+		TsvOut:           *tsvOut,
 	}
 
 	pFaVisualize(s)
@@ -93,5 +98,9 @@ func parseVisualizeArgs() {
 
 // pFaVisualize parses an input pFASTA file and Visualizes the file according to user-defined settings.
 func pFaVisualize(s VisualizeSettings) {
-	browser.PFaVisualizer(s.InFile, s.OutDir, s.Start, s.End, s.StartOfAlignment, s.EndOfAlignment, s.SigFigs, s.DecimalPlaces, s.LineLength, s.Chrom)
+	if s.TsvOut {
+		browser.PFaVisualizerTsv(s.InFile, s.OutDir, s.Start, s.End, s.StartOfAlignment, s.EndOfAlignment, s.SigFigs, s.DecimalPlaces, s.LineLength, s.Chrom)
+	} else {
+		browser.PFaVisualizer(s.InFile, s.OutDir, s.Start, s.End, s.StartOfAlignment, s.EndOfAlignment, s.SigFigs, s.DecimalPlaces, s.LineLength, s.Chrom)
+	}
 }
