@@ -24,7 +24,7 @@ type PeakSettings struct {
 func peakUsage(peakFlags *flag.FlagSet) {
 	fmt.Print("wigTools peaks - takes wig file and finds peaks\n" +
 		"Usage:\n" +
-		" wigTools peaks in.wig out.bed\n" +
+		" wigTools peaks in.wig chrom.sizes out.bed\n" +
 		"options:\n")
 	peakFlags.PrintDefaults()
 }
