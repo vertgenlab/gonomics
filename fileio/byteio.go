@@ -3,7 +3,6 @@ package fileio
 import (
 	"bufio"
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"unicode/utf8"
+	"unsafe"
 
 	"github.com/klauspost/pgzip"
 	"github.com/vertgenlab/gonomics/exception"
@@ -24,6 +24,7 @@ const (
 type ByteReader struct {
 	*bufio.Reader // Embedding *bufio.Reader
 	File          *os.File
+	err error
 
 	// Buffer Management Fields
 	buf     []byte
@@ -34,32 +35,39 @@ type ByteReader struct {
 	internalGzip *pgzip.Reader
 }
 
-// ByteWriter provides buffered buffer pooling for enhanced concurrency support, efficient memory management, and optional pgzip compression.
-
 type ByteWriter struct {
-	io.Writer // Embedding io.Writer
+	// Protects all internal state
+	mtx *sync.Mutex
 
-	// Buffer Management Fields
-	buf     []byte
-	n       int
-	flushAt int
-	nFlush  int
+	err error
+	buf []byte
+	n   int
+	wr  *bufio.Writer
 	bufPool sync.Pool
 
-	// Error Handling
-	err    error
-	closed bool
-
-	// Synchronization Fields
-	mtx                sync.Mutex
+	// Whether a chunked write is in flight and Writer is in "chunked write mode"
 	inChunkedWriteMode bool
-	noChunkedWrite     *sync.Cond
-	notFlushing        *sync.Cond
-	chunkedWriter      *sync.Cond
+	// Condition variable for all goroutines waiting on a chunked write
+	noChunkedWrite *sync.Cond
 
-	// pgzip compression and writing
+	// Fields below are only used by flush() (and marginally by Reset()) to
+	// provide correct serialization of writes.
+
+	// Number of bytes currently being flushed from the start of buf. Only
+	// non-zero while a flush is in progress. Always <= n.
+	nFlush int
+	// Condition variable for all goroutines waiting to flush()
+	notFlushing *sync.Cond
+	// Condition variable that the only chunked writer is waiting on to flush()
+	chunkedWriter *sync.Cond
+
+	// Automatically flush when n > flushAt
+	flushAt int
+
 	internalGzip *pgzip.Writer
+	gzipPool sync.Pool
 }
+
 
 // NewByteReader initializes a ByteReader for given filename, supporting p/gzip.
 func NewByteReader(filename string) *ByteReader {
@@ -70,39 +78,15 @@ func NewByteReader(filename string) *ByteReader {
 			New: func() interface{} { return make([]byte, defaultBufSize) },
 		},
 	}
-
 	if IsGzip(br.File) {
-		var err error
-		br.internalGzip, err = pgzip.NewReader(br.File)
-		exception.PanicOnErr(err)
+		br.internalGzip, br.err = pgzip.NewReader(br.File)
+		exception.PanicOnErr(br.err)
 		br.Reader = bufio.NewReader(br.internalGzip)
 	} else {
 		br.Reader = bufio.NewReader(br.File)
 	}
+	br.buf = br.getBuffer()
 	return br
-}
-
-// NewByteWriterSize returns a new ByteWriter with a buffer of at least the specified size.
-func NewByteWriterSize(w io.Writer, size int) *ByteWriter {
-	if size <= 0 {
-		size = defaultBufSize
-	}
-	if size < utf8.UTFMax {
-		size = utf8.UTFMax
-	}
-	m := new(sync.Mutex)
-	bw := &ByteWriter{
-		Writer:         w,
-		buf:            make([]byte, size),
-		flushAt:        2 * size,
-		noChunkedWrite: sync.NewCond(m),
-		notFlushing:    sync.NewCond(m),
-		chunkedWriter:  sync.NewCond(m),
-		bufPool: sync.Pool{
-			New: func() interface{} { return make([]byte, size) },
-		},
-	}
-	return bw
 }
 
 // NewWriter returns a new Writer whose buffer has the default size.
@@ -111,9 +95,39 @@ func NewByteWriter(filename string) *ByteWriter {
 	bw := NewByteWriterSize(file, defaultBufSize)
 
 	if strings.HasSuffix(filename, "gz") {
-		bw.internalGzip = pgzip.NewWriter(file)
-		bw.Writer = NewByteWriterSize(bw.internalGzip, defaultBufSize)
+		bw.gzipPool = sync.Pool{ 
+			New: func() interface{} { return pgzip.NewWriter(nil) },
+		}
+		bw.internalGzip = bw.gzipPool.Get().(*pgzip.Writer)
+        bw.internalGzip.Reset(file)
 	}
+	return bw
+}
+
+
+// NewWriterSize returns a new Writer whose buffer has at least the specified
+// size. If the argument io.Writer is already a Writer with large enough size,
+// it returns the underlying Writer.
+func NewByteWriterSize(w io.Writer, size int) *ByteWriter {
+	if size <= 0 {
+		size = defaultBufSize
+	}
+	if size < utf8.UTFMax {
+		size = utf8.UTFMax
+	}
+	m := new(sync.Mutex)
+	bw:= &ByteWriter{
+		mtx:            m,
+		bufPool: sync.Pool{
+			New: func() interface{} { return make([]byte, defaultBufSize) },
+		},
+		wr:             bufio.NewWriter(w),
+		noChunkedWrite: sync.NewCond(m),
+		notFlushing:    sync.NewCond(m),
+		chunkedWriter:  sync.NewCond(m),
+		flushAt:        2 * size,
+	}
+	bw.buf = bw.getBuffer()
 	return bw
 }
 
@@ -121,6 +135,10 @@ func NewByteWriter(filename string) *ByteWriter {
 func ReadLine(br *ByteReader) (*bytes.Buffer, bool) {
 	br.Buffer.Reset() // Reset buffer for new line reading
 	var err error
+	if br.buf != nil {
+		br.putBuffer(br.buf)
+	}
+	br.buf = br.getBuffer()
 	for br.buf, err = br.ReadSlice('\n'); err == nil || err == bufio.ErrBufferFull || err == io.EOF; br.buf, err = br.ReadSlice('\n') {
 		if err != nil && err != bufio.ErrBufferFull {
 			if err == io.EOF {
@@ -147,6 +165,27 @@ func ReadLine(br *ByteReader) (*bytes.Buffer, bool) {
 	}
 	return br.Buffer, false
 }
+
+func NextByteLine(br *ByteReader) ([]byte, bool) {
+    line := br.getBuffer()
+    defer br.putBuffer(line)
+
+    for br.buf, br.err = br.ReadSlice('\n'); br.err == nil || br.err == bufio.ErrBufferFull || br.err == io.EOF; br.buf, br.err = br.ReadSlice('\n')  {
+        if br.err != nil && br.err != bufio.ErrBufferFull {
+            if br.err == io.EOF {
+                if len(br.buf) > 0 {
+                    line = append(line, br.buf...) // Append last partial line
+                }
+                return line, true // EOF reached (or no more complete lines)
+            } else {
+                exception.PanicOnErr(br.err)
+                return nil, true // Signal end of reading due to error
+            }
+        }
+    }
+	return bytes.TrimRight(append(line, br.buf...), "\r\n"), false
+}
+
 
 // CatchErrThrowEOF handles EOF errors silently and panics on others.
 func CatchErrThrowEOF(err error) {
@@ -189,8 +228,8 @@ func IntToString(i int) string {
 	return fmt.Sprintf("%d", i)
 }
 
-// DecodeLittleEndianBinaryField reads little endian binary data from an input io.Reader to a variable.
-func DecodeLittleEndianBinaryField(file io.Reader, data any) {
-	err := binary.Read(file, binary.LittleEndian, data)
-	exception.PanicOnErr(err)
+func StringToBytes(s string) []byte {
+	p := unsafe.StringData(s)
+	b := unsafe.Slice(p, len(s))
+	return b
 }
