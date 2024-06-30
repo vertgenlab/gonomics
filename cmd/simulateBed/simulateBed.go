@@ -15,9 +15,20 @@ import (
 	"github.com/vertgenlab/gonomics/simulate"
 )
 
-func simulateBed(regionCount int, simLength int, noGapFile string, outFile string, setSeed int64) {
+// bedStats returns the average region size and length in the input bed file
+func bedStats(bedFile string) (avg, length int) {
+	b := bed.Read(bedFile)
+	return bed.AverageSize(b), len(b)
+}
+
+func simulateBed(regionCount int, simLength int, matchedBed string, noGapFile string, outFile string, setSeed int64) {
 	rand.Seed(setSeed)
 	noGap := bed.Read(noGapFile)
+
+	if matchedBed != "" {
+		simLength, regionCount = bedStats(matchedBed)
+	}
+
 	c := simulate.GoSimulateBed(noGap, regionCount, simLength)
 	out := fileio.EasyCreate(outFile)
 	var err error
@@ -40,6 +51,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
+	var matchedBed *string = flag.String("matchedBed", "", "Simulate a bed file with the same number and average size of intervals as the input bed file.")
 	var Length *int = flag.Int("L", 1000, "Specifies the length of simulated regions.")
 	var regionCount *int = flag.Int("N", 10, "Specifies the number of simulated bed regions.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
@@ -57,5 +69,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	simulateBed(*regionCount, *Length, inFile, outFile, *setSeed)
+	simulateBed(*regionCount, *Length, *matchedBed, inFile, outFile, *setSeed)
 }
