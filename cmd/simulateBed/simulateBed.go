@@ -51,7 +51,8 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var matchedBed *string = flag.String("matchedBed", "", "Simulate a bed file with the same number and average size of intervals as the input bed file.")
+	var matchedBed *string = flag.String("matchedBed", "", "Simulate a bed file with the same number and average size of intervals as the input bed file. This option will"+
+		"override any inputs for -L or -N")
 	var Length *int = flag.Int("L", 1000, "Specifies the length of simulated regions.")
 	var regionCount *int = flag.Int("N", 10, "Specifies the number of simulated bed regions.")
 	var setSeed *int64 = flag.Int64("setSeed", -1, "Use a specific seed for the RNG.")
