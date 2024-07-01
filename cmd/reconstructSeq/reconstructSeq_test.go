@@ -21,6 +21,7 @@ var ReconstructSeqTests = []struct {
 	KeepAllSeq           bool
 	SubMatrix            bool
 	PDnaNode             string
+	PDnaNodeMulti        []string
 	PDnaOutFile          string
 	ExpectedPFile        string
 	Precision            float32
@@ -150,6 +151,22 @@ var ReconstructSeqTests = []struct {
 		HighestProbThreshold: 0,
 		KeepAllSeq:           true,
 	},
+	{NewickFile: "testdata/4d.genericNames.mod",
+		FastaFile:            "testdata/allPossible.oneHuman.fa",
+		OutFile:              "testdata/out.AllPossibleOneHuman.fa",
+		ExpectedFile:         "testdata/expected.AllPossibleOneHuman.fa",
+		BiasLeafName:         "",
+		BiasNodeName:         "",
+		NonBiasProbThreshold: 0,
+		BiasN:                false,
+		HighestProbThreshold: 0,
+		KeepAllSeq:           false,
+		SubMatrix:            false,
+		PDnaNodeMulti:        []string{"hca", "hga"},
+		PDnaOutFile:          "testdata/multi_hca_hga.pfa",
+		ExpectedPFile:        "testdata/multi_hca_hgaExpected.pfa",
+		Precision:            1e-3,
+	},
 }
 
 func TestReconstructSeq(t *testing.T) {
@@ -197,6 +214,7 @@ func TestReconstructSeq(t *testing.T) {
 			KeepAllSeq:           v.KeepAllSeq,
 			SubMatrix:            v.SubMatrix,
 			PDnaNode:             v.PDnaNode,
+			PDnaNodeMulti:        v.PDnaNodeMulti,
 			PDnaOutFile:          v.PDnaOutFile,
 		}
 		ReconstructSeq(s)
@@ -205,7 +223,7 @@ func TestReconstructSeq(t *testing.T) {
 		} else {
 			fileio.EasyRemove(v.OutFile)
 		}
-		if v.PDnaNode != "" {
+		if v.PDnaNode != "" || len(v.PDnaNodeMulti) > 0 {
 			expectedPFa := pFasta.Read(v.ExpectedPFile)
 			reconPFa := pFasta.Read(v.PDnaOutFile)
 			if !pFasta.AllAreEqual(expectedPFa, reconPFa, v.Precision) {
