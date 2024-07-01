@@ -110,7 +110,7 @@ func IsSelfOverlapping(b []Bed, verbose int) bool {
 	return false
 }
 
-// AverageSize returns the average interval size of a slice of Bed
+// AverageSize returns the average interval size of a slice of Bed, rounded to the nearest integer
 func AverageSize(b []Bed) int {
 	avg := float64(TotalSize(b)) / float64(len(b))
 	return int(math.Round(avg))
