@@ -52,14 +52,21 @@ func SingleVcf(alpha float64, numAlleles int, boundAlpha float64, boundBeta floa
 // VcfToFile generates simulated VCF data.  The inputs are alpha (the selection parameter), the number of sites,
 // the output filename, along with parameters for the bounding function for sampling.  Reasonable parameters
 // choices for boundAlpha, boundBeta, and boundMultiplier are 0.001, 0.001, and 10000.
-func VcfToFileWithFasta(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha float64, boundBeta float64, boundMultiplier float64, refFile fasta.Fasta) {
+func VcfToFileWithFasta(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha float64, boundBeta float64, boundMultiplier float64, refFile fasta.Fasta, hasRef bool) {
 	out := fileio.EasyCreate(outFile)
 	var current vcf.Vcf
 
 	//for each segregating site, we make a vcf entry and write out
-	for i := 0; i < numSites; i++ {
-		current = SingleVcf(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, i+1)
-		vcf.WriteVcf(out, current)
+	if hasRef {
+		for i := 0; i < numSites; i++ {
+			current = SingleVcfWithRef(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, i+1, refBase, hasRef)
+			vcf.WriteVcf(out, current)
+		}
+	} else {
+		for i := 0; i < numSites; i++ {
+			current = SingleVcf(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, i+1)
+			vcf.WriteVcf(out, current)
+		}
 	}
 
 	// pick some number of positions in sequence, use fasta as reference
@@ -71,7 +78,7 @@ func VcfToFileWithFasta(alpha float64, numAlleles int, numSites int, outFile str
 
 // we wanted to have fasta as a second input to vcfToFile?
 // andmake it not hardcoded? so the ref is from the fasta, and we randomly generate the alt based on the bound alpha/beta/multiplier?
-func SingleVcfNotHardCoded(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int) vcf.Vcf {
+func SingleVcfWithRef(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int, refBase dna.base) vcf.Vcf {
 	var genotype []vcf.Sample
 	var divergent bool
 	var answer vcf.Vcf
@@ -79,7 +86,7 @@ func SingleVcfNotHardCoded(alpha float64, numAlleles int, boundAlpha float64, bo
 	//most fields are hardcoded but can be filled in later
 	// already exists: ability to simulte llele frequencies based on allele distribution (boundalpha, boundbeta, boundmultiplier)
 	// using jukes-cantor (equal probability mutate to any other)
-	answer = vcf.Vcf{Chr: "chr1", Pos: pos, Id: ".", Ref: "A", Alt: []string{"T"}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
+	answer = vcf.Vcf{Chr: "chr1", Pos: pos, Id: ".", Ref: dna.BaseToString(refBase), Alt: []string{dna.BaseToString(changeBase(refBase))}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
 	if divergent {
 		answer = vcf.AppendAncestor(answer, dna.StringToBases(answer.Alt[0]))
 	} else {
