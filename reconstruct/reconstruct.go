@@ -316,10 +316,11 @@ func descendentBaseExists(node *expandedTree.ETree, pos int) {
 // The user may also specify a 'highestProbThreshold'. If the program is uncertain about ancestral reconstruction for a particular
 // node, this option will allow LoopNodes to return an 'N' for that node instead.
 // if subMatrix is true, mutation probabilities will be calculated from the tree's substitution matrix instead of from the branch length
-func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, biasNodeName string, nonBiasBaseThreshold float64, biasN bool, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaRecords []pFasta.PFasta) {
+func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, biasNodeName string, nonBiasBaseThreshold float64, biasN bool, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaNodeMulti []string, pDnaRecords []pFasta.PFasta, pDnaRecordsMulti []pFasta.PFasta) {
 	var fix []float64
 	var biasBase, answerBase dna.Base
 	var biasLeafNode *expandedTree.ETree
+	var answerBasePdna pDna.Float32Base
 
 	if biasLeafName != "" {
 		biasLeafNode = expandedTree.FindNodeName(root, biasLeafName)
@@ -346,18 +347,54 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, bias
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
 					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix))
 				}
+				if len(pDnaNodeMulti) > 0 {
+					for _, v := range pDnaNodeMulti {
+						if internalNodes[k].Fasta.Name == v {
+							answerBasePdna = LikelihoodsToPBase(fix)
+						}
+					}
+				}
 			} else {
 				answerBase = LikelihoodsToBase(fix, 0, dna.N, biasN, highestProbThreshold) //unbiased estimate
 				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
 					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix))
+				}
+				if len(pDnaNodeMulti) > 0 {
+					for _, v := range pDnaNodeMulti {
+						if internalNodes[k].Fasta.Name == v {
+							answerBasePdna = LikelihoodsToPBase(fix)
+						}
+					}
 				}
 
 			}
 		} else {
 			answerBase = dna.Gap
 			// don't add anything to pDnaOutfile
+			// if pDnaNodeMulti, need to add Gap to pDnaOutfile to retain multiFa alignment
+			if len(pDnaNodeMulti) > 0 {
+				for _, v := range pDnaNodeMulti {
+					if internalNodes[k].Fasta.Name == v {
+						answerBasePdna = pDna.Float32Base{
+							A: 0,
+							C: 0,
+							G: 0,
+							T: 0,
+						}
+					}
+				}
+			}
 		}
 
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)
+
+		// if pDnaNodeMulti, append pdna to the correct pFasta in []pFasta
+		if len(pDnaNodeMulti) > 0 {
+			for i, v := range pDnaNodeMulti {
+				if internalNodes[k].Fasta.Name == v {
+					pDnaRecordsMulti[i+1].Seq = append(pDnaRecordsMulti[i+1].Seq, answerBasePdna) // because pDnaRecordsMulti[0] is reference, append to pDnaRecordsMulti[i+1] sequence
+				}
+			}
+		}
 	}
 }
