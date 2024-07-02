@@ -36,7 +36,7 @@ func (v Vcf) String() string {
 		buf.WriteByte('\t')
 		buf.WriteString(SamplesToString(v.Samples))
 	}
-	buf.WriteByte('\n')
+	//buf.WriteByte('\n')
 	return buf.String()
 }
 
