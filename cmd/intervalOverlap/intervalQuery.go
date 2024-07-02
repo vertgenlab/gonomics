@@ -36,7 +36,7 @@ func mergeOutput(v queryAnswer) []string {
 	var toWrite []string
 	var str string
 	for i := range v.answer {
-		str = fmt.Sprintf("%v\t%v", v.answer[i], v.query)
+		str = fmt.Sprintf("%v\t%v", v.query, v.answer[i])
 		toWrite = append(toWrite, str)
 	}
 	return toWrite
