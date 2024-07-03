@@ -31,8 +31,6 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 // SingleVcf returns a single simulated Vcf record for a user-specified selection parameter alpha and genomic position.
 // There also needs to be parameters for the bounding function, where alpha, beta, and multiplier parameters of 0.001, 0.001, and 10000 are good
 // for most applications.
-// could try expanding this function to not hardcode A ref T alt?
-// check tests random gen (anything that's not the ref - there should be a simulate mutation function in simulate.go changeBase )
 func SingleVcf(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int) vcf.Vcf {
 	var genotype []vcf.Sample
 	var divergent bool
@@ -48,8 +46,7 @@ func SingleVcf(alpha float64, numAlleles int, boundAlpha float64, boundBeta floa
 	return answer
 }
 
-// NEW VERSION
-// VcfToFile generates simulated VCF data.  The inputs are alpha (the selection parameter), the number of sites,
+// VcfToFileWithFasta generates simulated VCF data.  The inputs are alpha (the selection parameter), the number of sites,
 // the output filename, along with parameters for the bounding function for sampling.  Reasonable parameters
 // choices for boundAlpha, boundBeta, and boundMultiplier are 0.001, 0.001, and 10000.
 func VcfToFileWithFasta(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha float64, boundBeta float64, boundMultiplier float64, refFile fasta.Fasta, hasRef bool) {
@@ -69,15 +66,11 @@ func VcfToFileWithFasta(alpha float64, numAlleles int, numSites int, outFile str
 		}
 	}
 
-	// pick some number of positions in sequence, use fasta as reference
-	// mutate to some other base than ref, 
 	var err error
 	err = out.Close()
 	exception.PanicOnErr(err)
 }
 
-// we wanted to have fasta as a second input to vcfToFile?
-// andmake it not hardcoded? so the ref is from the fasta, and we randomly generate the alt based on the bound alpha/beta/multiplier?
 func SingleVcfWithRef(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int, refBase dna.base) vcf.Vcf {
 	var genotype []vcf.Sample
 	var divergent bool

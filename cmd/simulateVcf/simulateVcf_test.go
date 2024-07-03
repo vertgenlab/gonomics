@@ -18,8 +18,11 @@ var SimulateVcfTests = []struct {
 	BoundAlpha      float64
 	BoundBeta       float64
 	BoundMultiplier float64
+	RefFile			string
+	HasRef			bool
 }{
 	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000},
+	{"testdata/expected.vcf", "testdata/out_2.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000, "", true},
 }
 
 func TestSimulateVcf(t *testing.T) {
@@ -35,6 +38,8 @@ func TestSimulateVcf(t *testing.T) {
 			BoundAlpha:      v.BoundAlpha,
 			BoundBeta:       v.BoundBeta,
 			BoundMultiplier: v.BoundMultiplier,
+			RefFile:		 v.RefFile,
+			HasRef:			 v.HasRef,
 		}
 		simulateVcf(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
