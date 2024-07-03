@@ -8,7 +8,8 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-// String implements the fmt.Stringer interface for easy printing of Vcf with the fmt package.
+// String implements the fmt.Stringer interface for easy printing of Vcf with the fmt package. No trailing newline character
+// is added to the end of the string
 func (v Vcf) String() string {
 	// TODO: Consider reducing allocation of string.Builder variable to further improve performance.
 	var buf strings.Builder
