@@ -200,7 +200,7 @@ func WriteVcfToFileHandle(file io.Writer, input []Vcf) {
 
 // WriteVcf writes an individual Vcf struct to an io.Writer.
 func WriteVcf(writer io.Writer, record Vcf) {
-	_, err := fmt.Fprint(writer, record.String())
+	_, err := fmt.Fprintf(writer, "%s\n", record.String())
 	exception.PanicOnErr(err)
 }
 
