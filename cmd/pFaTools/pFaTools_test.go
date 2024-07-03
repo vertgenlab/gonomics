@@ -250,7 +250,7 @@ var VisualizeTsvTests = []struct {
 	DecimalPlaces    int
 	LineLength       int
 	Chrom            string
-	TsvOut			 bool
+	TsvOut           bool
 	StartOfAlignment bool
 	EndOfAlignment   bool
 	ExpectedFile     string
@@ -263,7 +263,7 @@ var VisualizeTsvTests = []struct {
 		DecimalPlaces:    5,
 		LineLength:       50,
 		Chrom:            "chr1butrllllllylong",
-		TsvOut:			  true,
+		TsvOut:           true,
 		StartOfAlignment: false,
 		EndOfAlignment:   false,
 		ExpectedFile:     "testdata/test_visualize_tsv_expected_default.txt",
@@ -276,7 +276,7 @@ var VisualizeTsvTests = []struct {
 		DecimalPlaces:    15,
 		LineLength:       10,
 		Chrom:            "chr1butrllllllylong",
-		TsvOut:			  true,
+		TsvOut:           true,
 		StartOfAlignment: true,
 		EndOfAlignment:   true,
 		ExpectedFile:     "testdata/test_visualize_tsv_expected_1.txt",
@@ -289,7 +289,7 @@ var VisualizeTsvTests = []struct {
 		DecimalPlaces:    4,
 		LineLength:       7,
 		Chrom:            "chr1butrllllllylong",
-		TsvOut:			  true,
+		TsvOut:           true,
 		StartOfAlignment: true,
 		EndOfAlignment:   false,
 		ExpectedFile:     "testdata/test_visualize_tsv_expected_2.txt",
@@ -302,7 +302,7 @@ var VisualizeTsvTests = []struct {
 		DecimalPlaces:    3,
 		LineLength:       50,
 		Chrom:            "",
-		TsvOut:			  true,
+		TsvOut:           true,
 		StartOfAlignment: false,
 		EndOfAlignment:   true,
 		ExpectedFile:     "testdata/test_visualize_tsv_expected_3.txt",
@@ -315,7 +315,7 @@ var VisualizeTsvTests = []struct {
 		DecimalPlaces:    1,
 		LineLength:       6,
 		Chrom:            "chr1",
-		TsvOut:			  true,
+		TsvOut:           true,
 		StartOfAlignment: false,
 		EndOfAlignment:   false,
 		ExpectedFile:     "testdata/test_visualize_tsv_normalized_expected_1.txt",
@@ -336,7 +336,7 @@ func TestVisualizeTsv(t *testing.T) {
 			DecimalPlaces:    testCase.DecimalPlaces,
 			LineLength:       testCase.LineLength,
 			Chrom:            testCase.Chrom,
-			TsvOut:			  testCase.TsvOut,
+			TsvOut:           testCase.TsvOut,
 			StartOfAlignment: testCase.StartOfAlignment,
 			EndOfAlignment:   testCase.EndOfAlignment,
 		}
