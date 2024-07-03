@@ -57,7 +57,7 @@ func parseFaToPfaArgs() {
 		Chrom:  *chrom,
 	}
 
-	pFaFaToPfa(s)
+	faToPfa(s)
 }
 
 // faToPfa parses an input pFASTA file and converts the file according to user-defined settings.

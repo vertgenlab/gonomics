@@ -55,7 +55,7 @@ func TestFaToPfa(t *testing.T) {
 			Chrom:  v.Chrom,
 		}
 
-		pFaFaToPfa(s)
+		faToPfa(s)
 
 		testInput := fasta.Read(v.InFile)
 
