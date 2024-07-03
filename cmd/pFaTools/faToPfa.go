@@ -60,8 +60,8 @@ func parseFaToPfaArgs() {
 	pFaFaToPfa(s)
 }
 
-// pFaFaToPfa parses an input pFASTA file and converts the file according to user-defined settings.
-func pFaFaToPfa(s FaToPfaSettings) {
+// faToPfa parses an input pFASTA file and converts the file according to user-defined settings.
+func faToPfa(s FaToPfaSettings) {
 	records := []pFasta.PFasta{pFasta.MultiFaToPfa(s.InFile, s.Start, s.End, s.Chrom)}
 	pFasta.Write(s.OutDir, records)
 }
