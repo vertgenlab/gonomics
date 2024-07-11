@@ -21,8 +21,8 @@ var SimulateVcfTests = []struct {
 	RefFile			string
 	HasRef			bool
 }{
-	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000},
-	{"testdata/expected.vcf", "testdata/out_2.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000, "", true},
+	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000, "", false},
+	{"testdata/expected.vcf", "testdata/out_2.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000, "", false},
 }
 
 func TestSimulateVcf(t *testing.T) {
