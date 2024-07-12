@@ -19,7 +19,7 @@ import (
 
 func statCalc(s Settings) {
 	MultipleOptionErrorCheck(s.Normal, s.Binomial, s.Poisson, s.Beta, s.Gamma, s.SampleAfs, s.SampleBeta, s.SampleGamma, s.SampleNormal)
-	rand.New(rand.NewSource(s.SetSeed))
+	seed := rand.New(rand.NewSource(s.SetSeed))
 	var err error
 	out := fileio.EasyCreate(s.OutFile)
 	if s.Normal != "" {
@@ -159,7 +159,7 @@ func statCalc(s Settings) {
 		bins := parse.StringToInt(words[3])
 		xLeft := parse.StringToFloat64(words[4])
 		xRight := parse.StringToFloat64(words[5])
-		answer := popgen.StationaritySampler(alpha, numSamples, maxSampleDepth, bins, xLeft, xRight)
+		answer := popgen.StationaritySampler(alpha, numSamples, maxSampleDepth, bins, xLeft, xRight, seed)
 		for i := 0; i < len(answer); i++ {
 			_, err = fmt.Fprintf(out, "%e\n", answer[i])
 			exception.PanicOnErr(err)

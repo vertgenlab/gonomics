@@ -22,7 +22,7 @@ func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64
 
 	for i = 0; i < fatalCount; i++ {
 		count = 0
-		derivedFrequency, _ = numbers.BoundedRejectionSample(bound, f, 0.0, 1.0, maxIteration)
+		derivedFrequency, _ = numbers.BoundedRejectionSample(bound, f, 0.0, 1.0, maxIteration, seed)
 		for j := 0; j < n; j++ {
 			r = seed.Float64()
 			if r < derivedFrequency {
@@ -82,7 +82,7 @@ func SegSiteToAlleleArray(s *SegSite, seed *rand.Rand) []int16 {
 
 // StationaritySampler returns an allele frequency i out of n individuals sampled from a stationarity
 // distribution with selection parameter alpha.
-func StationaritySampler(alpha float64, samples int, maxSampleDepth int, bins int, xLeft float64, xRight float64) []float64 {
+func StationaritySampler(alpha float64, samples int, maxSampleDepth int, bins int, xLeft float64, xRight float64, seed *rand.Rand) []float64 {
 	f := AfsStationarityClosure(alpha)
-	return numbers.FastRejectionSampler(xLeft, xRight, f, bins, maxSampleDepth, samples)
+	return numbers.FastRejectionSampler(xLeft, xRight, f, bins, maxSampleDepth, samples, seed)
 }

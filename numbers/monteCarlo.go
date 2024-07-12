@@ -45,28 +45,28 @@ func InitializeFastRejectionSampler(xLeft float64, xRight float64, f func(float6
 // FastRejectionSampler returns simulated values from an a func(float64) float64 between a left and right value using an optimized rejection sampler
 // that divides the function support into discrete bins with optimized sampling heights.
 // maxSampleDepth triggers the log.Fatalf in the RejectionSample func, and samples is the number of values to be returned.
-func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64, bins int, maxSampleDepth int, samples int) []float64 {
+func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64, bins int, maxSampleDepth int, samples int, seed *rand.Rand) []float64 {
 	var answer []float64 = make([]float64, samples)
 	var stepSize float64 = (xRight - xLeft) / float64(bins)
 	binHeights, sumHeights := InitializeFastRejectionSampler(xLeft, xRight, f, bins)
 	for j := 0; j < samples; j++ {
-		answer[j] = RejectionSampleChooseBin(xLeft, xRight, stepSize, f, maxSampleDepth, sumHeights, binHeights)
+		answer[j] = RejectionSampleChooseBin(xLeft, xRight, stepSize, f, maxSampleDepth, sumHeights, binHeights, seed)
 	}
 	return answer
 }
 
 // RejectionSampleChooseBin is a helper function of FAstRejectionSampler.
-func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f func(float64) float64, maxIteration int, sumHeights float64, binHeights []float64) float64 {
+func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f func(float64) float64, maxIteration int, sumHeights float64, binHeights []float64, seed * rand.Rand) float64 {
 	var x, y float64
 	var currBin int
 	var currLeft, currRight float64
 	for i := 0; i < maxIteration; i++ {
-		currBin = chooseBin(sumHeights, binHeights)
+		currBin = chooseBin(sumHeights, binHeights, seed)
 		currLeft = xLeft + float64(currBin)*stepSize
 		currRight = currLeft + stepSize
-		x = RandFloat64InRange(currLeft, currRight)
+		x = RandFloat64InRange(currLeft, currRight, seed)
 		y = f(x)
-		if RandFloat64InRange(0.0, binHeights[currBin]) < y {
+		if RandFloat64InRange(0.0, binHeights[currBin], seed) < y {
 			return x
 		}
 	}
@@ -75,12 +75,12 @@ func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f
 }
 
 // chooseBin picks which bin should be used for the FastRejectionSampler, where the choice of bin is weighted by its relative contribution to the overall integral of f.
-func chooseBin(sumHeights float64, binHeights []float64) int {
-	var rand float64 = rand.Float64()
+func chooseBin(sumHeights float64, binHeights []float64, seed *rand.Rand) int {
+
 	var cumulative float64 = 0.0
 	for i := 0; i < len(binHeights); i++ {
 		cumulative += binHeights[i] / sumHeights
-		if cumulative > rand {
+		if cumulative > seed.Float64() {
 			return i
 		}
 	}
@@ -89,12 +89,12 @@ func chooseBin(sumHeights float64, binHeights []float64) int {
 }
 
 // RejectionSample returns simulated values from an arbitrary function between a specified left and right bound using a simple rejection sampling method.
-func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64) float64, maxIteration int) float64 {
+func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64) float64, maxIteration int, seed *rand.Rand) float64 {
 	var x, y float64
 	for i := 0; i < maxIteration; i++ {
-		x = RandFloat64InRange(xLeft, xRight) //rand float64 in range xleft to xright
+		x = RandFloat64InRange(xLeft, xRight, seed) //rand float64 in range xleft to xright
 		y = f(x)
-		if RandFloat64InRange(0.0, yMax) < y {
+		if RandFloat64InRange(0.0, yMax, seed) < y {
 			return y
 		}
 	}
@@ -103,7 +103,7 @@ func RejectionSample(xLeft float64, xRight float64, yMax float64, f func(float64
 }
 
 // BoundedRejectionSample returns a rejection sample of a function f using a bounding function boundingSampler between a specified left and right bound.
-func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int) (float64, float64) {
+func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(float64) float64, xLeft float64, xRight float64, maxIteration int, seed *rand.Rand) (float64, float64) {
 	var xSampler, ySampler, y float64
 	for i := 0; i < maxIteration; i++ {
 		xSampler, ySampler = boundingSampler()
@@ -111,7 +111,7 @@ func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(fl
 		if y > ySampler {
 			log.Fatalf("BoundedRejectionSample: function was not a valid bounding function, ySampler is greater than y. xSampler: %e. ySampler: %e. y: %e.", xSampler, ySampler, y)
 		}
-		if RandFloat64InRange(0.0, ySampler) < y {
+		if RandFloat64InRange(0.0, ySampler, seed) < y {
 			return xSampler, y
 		}
 	}
