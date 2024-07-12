@@ -13,9 +13,10 @@ import (
 // VcfToFile generates simulated VCF data.  The inputs are alpha (the selection parameter), the number of sites,
 // the output filename, along with parameters for the bounding function for sampling.  Reasonable parameters
 // choices for boundAlpha, boundBeta, and boundMultiplier are 0.001, 0.001, and 10000.
-func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha float64, boundBeta float64, boundMultiplier float64, seed *rand.Rand) {
+func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha float64, boundBeta float64, boundMultiplier float64, setSeed int64) {
 	out := fileio.EasyCreate(outFile)
 	var current vcf.Vcf
+	seed := rand.New(rand.NewSource(setSeed))
 
 	//for each segregating site, we make a vcf entry and write out
 	for i := 0; i < numSites; i++ {
