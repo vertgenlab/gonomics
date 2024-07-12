@@ -80,3 +80,37 @@ func TestRandGamma(t *testing.T) {
 		t.Errorf("Gamma distribution simulated variance outside acceptable range. Input : %e. Expected: %e. Accepted range: %f -- %f", var3, expectedVariance3, expectedVariance3*0.9, expectedVariance3*1.1)
 	}
 }
+
+func TestSampleInverseNormal(t *testing.T) {
+	// Seed the random number generator
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	// Parameters for the normal distribution
+	mu := 0.0
+	sigma := 1.0
+
+	// Generate a sample and check if it falls within a reasonable range
+	sample := SampleInverseNormal(mu, sigma, seed)
+	if sample < mu-5*sigma || sample > mu+5*sigma {
+		t.Errorf("Error: Sample %f is outside the expected range", sample)
+	}
+}
+
+func TestBetaSampler(t *testing.T) {
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
+	a, b := 2.0, 5.0
+
+	betaSampleFunc := BetaSampler(a, b, seed)
+
+	for i := 0; i < 10; i++ {
+		sample, dist := betaSampleFunc()
+		if sample < 0 || sample > 1 {
+			t.Errorf("Error: Sample %f is out of range [0, 1]", sample)
+		}
+		// Placeholder check for BetaDist
+		expectedDist := BetaDist(sample, a, b)
+		if dist != expectedDist {
+			t.Errorf("Error: Distribution value %f does not match expected %f", dist, expectedDist)
+		}
+	}
+}
