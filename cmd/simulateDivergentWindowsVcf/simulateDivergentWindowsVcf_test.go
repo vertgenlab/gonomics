@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var SimulateDivergentWindowsVcfTests = []struct {
@@ -58,15 +60,15 @@ func TestSimulateDivergentWindowsVcf(t *testing.T) {
 			LowerPercentile: v.LowerPercentile,
 		}
 		simulateDivergentWindowsVcf(s)
-		// if !fileio.AreEqual(v.ExpectedUpper, v.TmpUpper) {
-		// 	t.Errorf("Error in simulateDivergentWindowsVcf. Upper file does not match expected.")
-		// } else {
-		// 	fileio.EasyRemove(v.TmpUpper)
-		// }
-		// if !fileio.AreEqual(v.ExpectedLower, v.TmpLower) {
-		// 	t.Errorf("Error in simulateDivergentWindowsVcf. Lower file does not match expected.")
-		// } else {
-		// 	fileio.EasyRemove(v.TmpLower)
-		// }
+		if !fileio.AreEqual(v.ExpectedUpper, v.TmpUpper) {
+			t.Errorf("Error in simulateDivergentWindowsVcf. Upper file does not match expected.")
+		} else {
+			fileio.EasyRemove(v.TmpUpper)
+		}
+		if !fileio.AreEqual(v.ExpectedLower, v.TmpLower) {
+			t.Errorf("Error in simulateDivergentWindowsVcf. Lower file does not match expected.")
+		} else {
+			fileio.EasyRemove(v.TmpLower)
+		}
 	}
 }
