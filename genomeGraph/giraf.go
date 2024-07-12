@@ -2,13 +2,14 @@ package genomeGraph
 
 import (
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
-	"math/rand"
 )
 
 func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []*giraf.Giraf {
@@ -19,11 +20,11 @@ func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []
 	if readLen > totalBases { // not a perfect check, but best we can do without a search algorithm
 		log.Fatal("Cannot request more bases than is present in graph")
 	}
-	rand.Seed(randSeed)
+	seed := rand.New(rand.NewSource(randSeed))
 
 	for len(answer) < numReads {
-		nodeIdx, pos := RandLocationFast(graph, totalBases)
-		path, endPos, seq := RandPathFwd(graph, nodeIdx, pos, readLen)
+		nodeIdx, pos := RandLocationFast(graph, totalBases, seed)
+		path, endPos, seq := RandPathFwd(graph, nodeIdx, pos, readLen, seed)
 		strand := rand.Intn(2) == 0
 
 		if (len(seq) == readLen) && (dna.CountBaseInterval(seq, dna.N, 0, readLen) == 0) {
@@ -32,7 +33,7 @@ func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []
 				Nodes:  path,
 				TEnd:   int(endPos)}
 
-			qual, alnScore, mapQ := generateDiverseQuals(readLen)
+			qual, alnScore, mapQ := generateDiverseQuals(readLen, seed)
 
 			curr = &giraf.Giraf{
 				QName:     fmt.Sprintf("%d_%d_%d_%d_%c", path[0], pos+1, path[len(path)-1], endPos+1, parse.StrandToRune(strand)),
@@ -56,7 +57,7 @@ func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []
 	return answer
 }
 
-func generateDiverseQuals(readLen int) ([]uint8, int, uint8) {
+func generateDiverseQuals(readLen int, seed *rand.Rand) ([]uint8, int, uint8) {
 	answer := make([]uint8, readLen)
 	var alnScore int
 	var mapQ uint8
@@ -64,22 +65,22 @@ func generateDiverseQuals(readLen int) ([]uint8, int, uint8) {
 	scoreProb := rand.Intn(100)
 	switch {
 	case scoreProb == 0: // 1% of bases will have alnScore between 6k-8k, and mapQ below 5
-		alnScore = numbers.RandIntInRange(6000, 8000)
+		alnScore = numbers.RandIntInRange(6000, 8000, seed)
 		mapQ = uint8(rand.Intn(5))
 	case scoreProb < 10: // 10% of bases will have alnScore between 8k-10k, and mapQ below 15
-		alnScore = numbers.RandIntInRange(8000, 10000)
-		mapQ = uint8(numbers.RandIntInRange(5, 15))
+		alnScore = numbers.RandIntInRange(8000, 10000, seed)
+		mapQ = uint8(numbers.RandIntInRange(5, 15, seed))
 	case scoreProb < 20: // 20% of bases will have alnScore between 10k-15k, and mapQ below 30
-		alnScore = numbers.RandIntInRange(10000, 15000)
-		mapQ = uint8(numbers.RandIntInRange(15, 30))
+		alnScore = numbers.RandIntInRange(10000, 15000, seed)
+		mapQ = uint8(numbers.RandIntInRange(15, 30, seed))
 	default: // 80% of bases will have alnScore between 15k-20k, and mapQ below 40
-		alnScore = numbers.RandIntInRange(15000, 20000)
-		mapQ = uint8(numbers.RandIntInRange(30, 40))
+		alnScore = numbers.RandIntInRange(15000, 20000, seed)
+		mapQ = uint8(numbers.RandIntInRange(30, 40, seed))
 	}
 
 	for i := 0; i < readLen; i++ {
-		scoreProb := rand.Intn(100)
-		scoreBase := rand.Intn(10)
+		scoreProb := seed.Intn(100)
+		scoreBase := seed.Intn(10)
 
 		switch {
 		case scoreProb == 0: // 1% of bases will have qual < 10
@@ -101,10 +102,10 @@ func RandSomaticMutations(graph *GenomeGraph, reads []*giraf.Giraf, numSomaticSN
 	var mutationNode, mutationPos []uint32
 	var nodeIdx uint32
 	var pos, readPos uint32
-	rand.Seed(randSeed)
+	seed := rand.New(rand.NewSource(0))
 
 	for i := 0; i < numSomaticSNV; i++ {
-		nodeIdx, pos = RandLocationFast(graph, totalBases)
+		nodeIdx, pos = RandLocationFast(graph, totalBases, seed)
 		mutationNode = append(mutationNode, nodeIdx)
 		mutationPos = append(mutationPos, pos)
 		var mutantBase dna.Base = 4
@@ -124,14 +125,14 @@ func RandSomaticMutations(graph *GenomeGraph, reads []*giraf.Giraf, numSomaticSN
 					if mutantBase == 4 {
 						base := reads[j].Seq[readPos]
 						for {
-							mutantBase = dna.Base(rand.Intn(4))
+							mutantBase = dna.Base(seed.Intn(4))
 							if mutantBase != base {
 								break
 							}
 						}
 					}
 
-					randProb := float64(rand.Intn(100)) / 100
+					randProb := float64(seed.Intn(100)) / 100
 					if randProb <= AlleleFrequency {
 						reads[j].Seq[readPos] = mutantBase
 					}

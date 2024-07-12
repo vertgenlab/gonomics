@@ -1,8 +1,6 @@
 package genomeGraph
 
 import (
-	"fmt"
-	"log"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/cigar"
@@ -110,15 +108,15 @@ func MakeTestGraph() *GenomeGraph {
 
 // check struct generated with parameters reads := RandGiraf(MakeTestGraph(), 1, 4, seed).
 var check = giraf.Giraf{
-	QName:     "0_3_2_2_-",
+	QName:     "3_1_4_4_-",
 	QStart:    0,
 	QEnd:      4,
-	PosStrand: false,                                                    // rev strand, must reverse complement
-	Path:      giraf.Path{TStart: 2, Nodes: []uint32{0, 1, 2}, TEnd: 1}, // Nodes 0->1->2, start base 3, end base 1
+	PosStrand: false,                                                 // rev strand, must reverse complement
+	Path:      giraf.Path{TStart: 0, Nodes: []uint32{3, 4}, TEnd: 3}, // Nodes 0->1->2, start base 3, end base 1
 	Cigar:     []cigar.ByteCigar{{RunLen: 4, Op: 'M'}},
-	AlnScore:  16607,
+	AlnScore:  16675,
 	MapQ:      30,
-	Seq:       []dna.Base{3, 1, 2, 1}, // TCGC
+	Seq:       []dna.Base{dna.T, dna.T, dna.A, dna.A}, // TTAA
 	Qual:      []uint8{16, 38, 38, 36},
 	Notes:     nil}
 
@@ -131,30 +129,30 @@ func TestRandGiraf(t *testing.T) {
 	reads := RandGiraf(MakeTestGraph(), 10, 4, seed)
 
 	if reads[0].QName != check.QName {
-		log.Fatalln("Reads do not match")
+		t.Error("Reads do not match")
 	}
 	if reads[0].PosStrand != check.PosStrand {
-		log.Fatalln("Reads do not match")
+		t.Error("Reads do not match")
 	}
 	if reads[0].Path.TStart != check.Path.TStart ||
 		reads[0].Path.TEnd != check.Path.TEnd ||
 		reads[0].Path.Nodes[0] != check.Path.Nodes[0] ||
 		reads[0].Path.Nodes[len(reads[0].Path.Nodes)-1] != check.Path.Nodes[len(reads[0].Path.Nodes)-1] {
-		log.Fatalln("Reads do not match")
+		t.Error("Reads do not match")
 	}
 	if dna.CompareSeqsIgnoreCase(reads[0].Seq, check.Seq) == 1 {
-		log.Fatalln("Reads do not match")
+		t.Error("Reads do not match")
 	}
 
-	fmt.Println("Sequences Match")
+	t.Log("Sequences Match")
 
 	RandSomaticMutations(MakeTestGraph(), reads, 1, 0.75, seed)
 
-	if reads[0].Seq[1] != 1 {
-		log.Fatalln("Problem with simulating somatic mutations")
+	if reads[0].Seq[1] != dna.T {
+		t.Error("Problem with simulating somatic mutations")
 	}
 
-	fmt.Println("Somatic Mutations Generated Correctly")
+	t.Log("Somatic Mutations Generated Correctly")
 
 	/*
 		for i := 0; i < len(reads); i++ {

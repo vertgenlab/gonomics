@@ -97,7 +97,6 @@ func getMaxInsertion(p Pile, tiedConsensus []Consensus, InsThreshold float64) Co
 	var totalBaseCounts = p.CountF[0] + p.CountF[1] + p.CountF[2] + p.CountF[3] + p.CountR[0] + p.CountR[1] + p.CountR[2] + p.CountR[3] + deletionSum
 	var insertionThreshold = int(InsThreshold * float64(totalBaseCounts))
 	var maxInsertionScore, deletionScore = 0, 0
-	
 
 	for i := range p.InsCountF {
 		seenOnPosStrand[i] = 1

@@ -271,6 +271,7 @@ func sampleWithoutReplacement(data []float64, k int) []float64 {
 	seed := rand.New(rand.NewSource(0))
 	ans := make([]float64, k)
 	origSize := len(data)
+	
 	seed.Shuffle(origSize, func(i, j int) {
 		data[i], data[j] = data[j], data[i]
 	})
