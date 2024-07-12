@@ -3,10 +3,12 @@ package numbers
 import (
 	"math/rand"
 	"testing"
+	"time"
 )
 
+var seed *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 func TestRandIntInRange(t *testing.T) {
-	seed := rand.New(rand.NewSource(0))
 	n := 20
 	values := make([]int, n)
 	tests := []struct {
@@ -25,6 +27,26 @@ func TestRandIntInRange(t *testing.T) {
 			if v < interval.x || v > interval.y {
 				t.Errorf("Value %d is outside the expected range [%d, %d]", v, interval.x, interval.y)
 			}
+		}
+	}
+}
+
+func TestRandInt64InRange(t *testing.T) {
+	x, y := int64(10), int64(20)
+	for i := 0; i < 100; i++ {
+		result := RandInt64InRange(x, y, seed)
+		if result < x || result >= y {
+			t.Errorf("RandInt64InRange(%d, %d) = %d; want a value in range [%d, %d)", x, y, result, x, y)
+		}
+	}
+}
+
+func TestRandFloat64InRange(t *testing.T) {
+	x, y := float64(1.5), float64(3.5)
+	for i := 0; i < 100; i++ {
+		result := RandFloat64InRange(x, y, seed)
+		if result < x || result >= y {
+			t.Errorf("RandFloat64InRange(%f, %f) = %f; want a value in range [%f, %f)", x, y, result, x, y)
 		}
 	}
 }
