@@ -107,8 +107,27 @@ func TestBetaSampler(t *testing.T) {
 		if sample < 0 || sample > 1 {
 			t.Errorf("Error: Sample %f is out of range [0, 1]", sample)
 		}
-		// Placeholder check for BetaDist
+
 		expectedDist := BetaDist(sample, a, b)
+		if dist != expectedDist {
+			t.Errorf("Error: Distribution value %f does not match expected %f", dist, expectedDist)
+		}
+	}
+}
+
+func TestScaledBetaSampler(t *testing.T) {
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
+	a, b, multiplier := 2.0, 5.0, 1.5
+
+	scaledBetaSampleFunc := ScaledBetaSampler(a, b, multiplier, seed)
+
+	for i := 0; i < 10; i++ {
+		sample, dist := scaledBetaSampleFunc()
+		if sample < 0 || sample > 1 {
+			t.Errorf("Error: Sample %f is out of range [0, 1]", sample)
+		}
+
+		expectedDist := multiplier * BetaDist(sample, a, b)
 		if dist != expectedDist {
 			t.Errorf("Error: Distribution value %f does not match expected %f", dist, expectedDist)
 		}
