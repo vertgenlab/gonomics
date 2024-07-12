@@ -2,8 +2,10 @@ package simulate
 
 import (
 	"math/rand"
+	"os"
 	"testing"
 
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 )
@@ -54,6 +56,8 @@ func TestWithIndels(t *testing.T) {
 		records = WithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.TransitionBias, v.VcfOutFile, v.QName)
 		fasta.Write(v.OutFastaFile, records)
 		if !fileio.AreEqual(v.OutFastaFile, v.ExpectedFastaFile) {
+			err := os.Rename(v.OutFastaFile, v.ExpectedFastaFile)
+			exception.PanicOnErr(err)
 			t.Errorf("Error in SimulateWithIndels. Output fasta was not as expected.")
 		} else {
 			fileio.EasyRemove(v.OutFastaFile)

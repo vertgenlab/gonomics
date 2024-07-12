@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"runtime/pprof"
+	"time"
 
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
@@ -97,16 +98,17 @@ func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s Mc
 	var alphaPrime []float64
 	var prior, likelihood, muPrime, sigmaPrime float64
 	alphaPrime = make([]float64, len(t.alpha))
+	var seed *rand.Rand = rand.New(rand.NewSource(s.SetSeed))
 
 	if s.FixedSigma {
 		sigmaPrime = t.sigma
 	} else {
-		sigmaPrime = numbers.SampleInverseNormal(t.sigma, s.SigmaStep)
+		sigmaPrime = numbers.SampleInverseNormal(t.sigma, s.SigmaStep, seed)
 	}
 
-	muPrime = numbers.SampleInverseNormal(t.mu, s.MuStep)
+	muPrime = numbers.SampleInverseNormal(t.mu, s.MuStep, seed)
 	for i := range t.alpha {
-		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime)
+		alphaPrime[i] = numbers.SampleInverseNormal(muPrime, sigmaPrime, seed)
 	}
 	prior = priorProb(muPrime, sigmaPrime, s)
 
@@ -128,8 +130,9 @@ func GenerateCandidateThetaPrime(t Theta, data Afs, binomCache [][]float64, s Mc
 func InitializeTheta(m float64, sig float64, data Afs, binomCache [][]float64, s McmcSettings) Theta {
 	answer := Theta{mu: m, sigma: sig}
 	answer.alpha = make([]float64, len(data.Sites))
+	var seed *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := range data.Sites {
-		answer.alpha[i] = numbers.SampleInverseNormal(m, sig)
+		answer.alpha[i] = numbers.SampleInverseNormal(m, sig, seed)
 	}
 	answer.priorDensity = priorProb(answer.mu, answer.sigma, s)
 	if answer.priorDensity == math.Inf(-1) {

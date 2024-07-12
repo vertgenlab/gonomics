@@ -29,7 +29,7 @@ func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFra
 	}
 
 	for i := 0; i < numPairs; i++ {
-		fragmentSize = numbers.Max(readLen, int(numbers.SampleInverseNormal(float64(avgFragmentSize), avgFragmentStdDev)))
+		fragmentSize = numbers.Max(readLen, int(numbers.SampleInverseNormal(float64(avgFragmentSize), avgFragmentStdDev, seed)))
 		midpoint = numbers.RandIntInRange(0, len(ref), seed)
 		startFor = numbers.Max(midpoint-(fragmentSize/2), 0)
 		endRev = numbers.Min(midpoint+(fragmentSize/2), len(ref))

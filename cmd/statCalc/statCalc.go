@@ -203,7 +203,7 @@ func statCalc(s Settings) {
 		sigma := parse.StringToFloat64(words[1])
 		numSamples := parse.StringToInt(words[2])
 		for i := 0; i < numSamples; i++ {
-			_, err = fmt.Fprintf(out, "%e\n", numbers.SampleInverseNormal(mu, sigma))
+			_, err = fmt.Fprintf(out, "%e\n", numbers.SampleInverseNormal(mu, sigma, seed))
 			exception.PanicOnErr(err)
 		}
 	} else {

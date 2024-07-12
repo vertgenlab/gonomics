@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
 )
@@ -73,7 +71,6 @@ var SelectionMcmcTests = []struct {
 }
 
 func TestSelectionMcmc(t *testing.T) {
-	var err error
 	var s popgen.McmcSettings
 	for _, v := range SelectionMcmcTests {
 		s = popgen.McmcSettings{
@@ -99,8 +96,7 @@ func TestSelectionMcmc(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in selectionMcmc. Output did not match expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }

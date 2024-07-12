@@ -3,10 +3,8 @@ package simulate
 import (
 	"fmt"
 	"math/rand"
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 )
@@ -65,7 +63,6 @@ var IndelLengthTests = []struct {
 
 func TestIndelLength(t *testing.T) {
 	var variateCount = 10000
-	var err error
 	rand.New(rand.NewSource(23))
 	var lengths = make([]string, variateCount)
 	var i int
@@ -80,8 +77,7 @@ func TestIndelLength(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Stability error in IndelLengths.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }

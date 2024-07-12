@@ -7,8 +7,8 @@ import (
 )
 
 // SampleInverseNormal returns a simulated value from a normal distribution.
-func SampleInverseNormal(mu float64, sigma float64) float64 {
-	return rand.NormFloat64()*sigma + mu
+func SampleInverseNormal(mu float64, sigma float64, seed *rand.Rand) float64 {
+	return seed.NormFloat64()*sigma + mu
 }
 
 // InitializeFastRejectionSampler takes in the parameters of a rejection sampler and returns the binHeights and sumHeights variables.

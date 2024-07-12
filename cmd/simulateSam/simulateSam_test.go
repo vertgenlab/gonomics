@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"os"
 	"strings"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
 )
@@ -105,7 +102,6 @@ var SimulateSamTests = []struct {
 
 func TestSimulateSam(t *testing.T) {
 	var s Settings
-	var err error
 	var bamA, bamB []sam.Sam
 	for _, v := range SimulateSamTests {
 		s = Settings{
@@ -131,22 +127,18 @@ func TestSimulateSam(t *testing.T) {
 			} else {
 				for i := range bamA {
 					if !sam.Equal(bamA[i], bamB[i]) {
-						t.Error("Error: problem simulating bam")
-						fmt.Printf("Observed:\n%s\n", sam.ToString(bamA[i]))
-						fmt.Printf("Expected:\n%s\n", sam.ToString(bamB[i]))
+						t.Errorf("Error: problem simulating bam\nObserved:\n%s\nExpected:\n%s\n", sam.ToString(bamA[i]), sam.ToString(bamB[i]))
 					}
 				}
 			}
 			if !t.Failed() {
-				err = os.Remove(v.OutFile)
-				exception.PanicOnErr(err)
+				fileio.EasyRemove(v.OutFile)
 			}
 		} else {
 			if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 				t.Errorf("Error: Problem simulating sam.")
 			} else {
-				err = os.Remove(v.OutFile)
-				exception.PanicOnErr(err)
+				fileio.EasyRemove(v.OutFile)
 			}
 		}
 
@@ -154,8 +146,7 @@ func TestSimulateSam(t *testing.T) {
 			if !fileio.AreEqual(v.DeaminationDistribution, v.ExpectedDeaminationDistribution) {
 				t.Errorf("Error: deamination distribution file did not match expected.")
 			} else {
-				err = os.Remove(v.DeaminationDistribution)
-				exception.PanicOnErr(err)
+				fileio.EasyRemove(v.DeaminationDistribution)
 			}
 		}
 

@@ -3,14 +3,14 @@ package numbers
 import (
 	"math/rand"
 	"testing"
+	"time"
 )
 
 func TestRandExp(t *testing.T) {
 	expectedMean := 1.0
 	expectedVariance := 1.0
 
-	var input []float64
-	input = make([]float64, 100000)
+	var input []float64 = make([]float64, 100000)
 	for i := 0; i < 100000; i++ {
 		input[i], _ = RandExp()
 	}
@@ -47,7 +47,7 @@ func TestRandGamma(t *testing.T) {
 	list2 = make([]float64, 100000)
 	list3 = make([]float64, 100000)
 
-	seed := rand.New(rand.NewSource(0))
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	for i := 0; i < 100000; i++ {
 		list1[i], _ = RandGamma(alpha1, beta1, seed)

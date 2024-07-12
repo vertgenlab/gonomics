@@ -2,7 +2,6 @@ package simulate
 
 import (
 	"math/rand"
-	"os"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/exception"
@@ -13,20 +12,20 @@ import (
 )
 
 func TestSam(t *testing.T) {
-	var err error
+	output := "testdata/actual.sam"
+
 	seed := rand.New(rand.NewSource(1))
 	ref := fasta.Read("testdata/eng.fa")
-	out := fileio.EasyCreate("testdata/actual.sam")
+	out := fileio.EasyCreate(output)
 	var bw *sam.BamWriter
 	header := sam.GenerateHeader(fasta.ToChromInfo(ref), nil, sam.Unsorted, sam.None)
 	sam.WriteHeaderToFileHandle(out, header)
 	IlluminaPairedSam(ref[0].Name, ref[0].Seq, 100, 150, 500, 50, 0, 0, numbers.BinomialAlias{}, numbers.BinomialAlias{}, 0, out, bw, false, []int{}, seed)
-	err = out.Close()
-	exception.PanicOnErr(err)
-	if !fileio.AreEqual("testdata/actual.sam", "testdata/expected.sam") {
+
+	exception.PanicOnErr(out.Close())
+	if !fileio.AreEqual(output, "testdata/expected.sam") {
 		t.Errorf("Error in Sam simulation.")
 	} else {
-		err = os.Remove("testdata/actual.sam")
-		exception.PanicOnErr(err)
+		fileio.EasyRemove(output)
 	}
 }
