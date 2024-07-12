@@ -22,7 +22,7 @@ var RandGeneTests = []struct {
 }
 
 func TestRandGene(t *testing.T) {
-	rand.Seed(1)
+	rand.New(rand.NewSource(1))
 	for _, test := range RandGeneTests {
 		a := RandGene(test.name, test.length, test.GC)
 		if len(a[0].Seq) != test.length {
@@ -42,7 +42,7 @@ var MutateSeqTests = []struct {
 }
 
 func TestMutateGene(t *testing.T) {
-	rand.Seed(1)
+	rand.New(rand.NewSource(1))
 	for _, test := range MutateSeqTests {
 		seq := fasta.Read(test.sequence)
 		bases := seq[0].Seq
@@ -66,7 +66,7 @@ var IndelLengthTests = []struct {
 func TestIndelLength(t *testing.T) {
 	var variateCount = 10000
 	var err error
-	rand.Seed(23)
+	rand.New(rand.NewSource(23))
 	var lengths = make([]string, variateCount)
 	var i int
 

@@ -50,7 +50,7 @@ var WithIndelsTests = []struct {
 }
 
 func TestWithIndels(t *testing.T) {
-	rand.Seed(-1)
+	rand.New(rand.NewSource(-1))
 	var err error
 	var records []fasta.Fasta
 	for _, v := range WithIndelsTests {
