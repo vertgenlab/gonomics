@@ -24,7 +24,7 @@ func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64
 		count = 0
 		derivedFrequency, _ = numbers.BoundedRejectionSample(bound, f, 0.0, 1.0, maxIteration)
 		for j := 0; j < n; j++ {
-			r = rand.Float64()
+			r = seed.Float64()
 			if r < derivedFrequency {
 				count++
 			}
@@ -33,7 +33,7 @@ func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64
 			continue
 		}
 
-		r = rand.Float64()
+		r = seed.Float64()
 		if r < derivedFrequency {
 			divergent = true
 		} else {
@@ -55,7 +55,7 @@ func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float6
 	if divergent {
 		InvertSegSite(s)
 	}
-	alleleArray := SegSiteToAlleleArray(s)
+	alleleArray := SegSiteToAlleleArray(s, seed)
 	var d int
 	for c := 0; c < n; c += 2 {
 		d = c + 1
@@ -71,12 +71,12 @@ func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float6
 
 // SegSiteToAlleleArray is a helper function of SimulateGenotype that takes a SegSite, constructs and array of values with i values set to 1 and n-i values set to 0.
 // The array is then shuffled and returned.
-func SegSiteToAlleleArray(s *SegSite) []int16 {
+func SegSiteToAlleleArray(s *SegSite, seed *rand.Rand) []int16 {
 	var answer []int16 = make([]int16, s.N)
 	for j := 0; j < s.I; j++ {
 		answer[j] = 1
 	}
-	rand.Shuffle(len(answer), func(i, j int) { answer[i], answer[j] = answer[j], answer[i] })
+	seed.Shuffle(len(answer), func(i, j int) { answer[i], answer[j] = answer[j], answer[i] })
 	return answer
 }
 
