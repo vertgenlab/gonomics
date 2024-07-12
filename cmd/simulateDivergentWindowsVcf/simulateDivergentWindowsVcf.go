@@ -32,7 +32,7 @@ func simulateDivergentWindowsVcf(s Settings) {
 		log.Fatalf("LowerPercentile argument must be between one and zero.")
 	}
 
-	seed := rand.New(rand.NewSource(s.SetSeed))
+	rand.Seed(s.SetSeed)
 	var err error
 	var TotalSites []vcf.Vcf = make([]vcf.Vcf, s.NumTotalSites)
 	var windows []Window = make([]Window, s.NumWindows)
@@ -44,8 +44,8 @@ func simulateDivergentWindowsVcf(s Settings) {
 	for i := 0; i < s.NumWindows; i++ {
 		windows[i].Variants = make([]vcf.Vcf, s.NumWindowSites)
 		//Shuffle the vcf records, our subset will be composed to the first entries in the shuffled order.
-		seed.Seed(s.SetSeed * int64(i))
-		seed.Shuffle(len(TotalSites), func(i, j int) { TotalSites[i], TotalSites[j] = TotalSites[j], TotalSites[i] })
+		rand.Seed(s.SetSeed * int64(i))
+		rand.Shuffle(len(TotalSites), func(i, j int) { TotalSites[i], TotalSites[j] = TotalSites[j], TotalSites[i] })
 		copy(windows[i].Variants, TotalSites[:s.NumWindowSites]) //keep only as many results as specified
 		windows[i].NumDivergent = countDivergent(windows[i].Variants)
 	}
