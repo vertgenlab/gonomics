@@ -158,8 +158,8 @@ var SampleTests = []struct {
 
 func TestSample(t *testing.T) {
 	for _, testCase := range SampleTests {
-		rand.Seed(testCase.SetSeed)
-		observed := Sample(testCase.Input, testCase.Chrom)
+		seed := rand.New(rand.NewSource(testCase.SetSeed))
+		observed := Sample(testCase.Input, testCase.Chrom, seed)
 		if !fasta.IsEqual(observed, testCase.Expected) {
 			t.Errorf("Error: in pFasta. Sample valid input test not as expected.\n")
 		}

@@ -28,13 +28,13 @@ func checkIfChromInPfasta(input []PFasta, chrom string) int {
 }
 
 // Sample returns a new Fasta sampled from the given pFasta probability distribution
-func Sample(input []PFasta, chrom string) fasta.Fasta {
+func Sample(input []PFasta, chrom string, seed *rand.Rand) fasta.Fasta {
 	chromIdx := checkIfChromInPfasta(input, chrom)
 
 	var answer = fasta.Fasta{Name: input[chromIdx].Name, Seq: make([]dna.Base, len(input[chromIdx].Seq))}
 	var currRand float32
 	for inputIdx := range input[chromIdx].Seq {
-		currRand = rand.Float32()
+		currRand = seed.Float32()
 		if currRand < input[chromIdx].Seq[inputIdx].A {
 			answer.Seq[inputIdx] = dna.A
 		} else if currRand < (input[chromIdx].Seq[inputIdx].C + input[chromIdx].Seq[inputIdx].A) {

@@ -1,44 +1,44 @@
 package pFasta
 
 import (
-	"testing"
 	"fmt"
-	"os"
+	"math/rand"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var FaToPfaTests = []struct {
-	InputFilename          string
-	Start          int
-	End            int
-	Chrom          string
+	InputFilename string
+	Start         int
+	End           int
+	Chrom         string
 }{
 	{
 		InputFilename: "testdata/test_faToPfa_input_0.fa",
-		Start: 0,
-		End:   10,
-		Chrom: "chr1",
-	},{
+		Start:         0,
+		End:           10,
+		Chrom:         "chr1",
+	}, {
 		InputFilename: "testdata/test_faToPfa_input_0.fa",
-		Start: 0,
-		End:   10,
-		Chrom: "",
-	},{
+		Start:         0,
+		End:           10,
+		Chrom:         "",
+	}, {
 		InputFilename: "testdata/test_faToPfa_input_1.fa",
-		Start: 0,
-		End:   -1,
-		Chrom: "chr1",
-	},{
+		Start:         0,
+		End:           -1,
+		Chrom:         "chr1",
+	}, {
 		InputFilename: "testdata/test_faToPfa_input_2.fa",
-		Start: 3,
-		End:   8,
-		Chrom: "chr1",
+		Start:         3,
+		End:           8,
+		Chrom:         "chr1",
 	},
 }
 
 func TestFaToPfa(t *testing.T) {
-	var err error
 	for idx, v := range FaToPfaTests {
 		//running function
 		testOutput := MultiFaToPfa(v.InputFilename, v.Start, v.End, v.Chrom)
@@ -53,8 +53,10 @@ func TestFaToPfa(t *testing.T) {
 			sampleChrom = testInput[0].Name
 		}
 
+		seed := rand.New(rand.NewSource(1))
+
 		// testOutput is 1-hot pFa, sampling from testOutput should return (subsequence of) input Fasta
-		testSample := Sample([]PFasta{testOutput}, sampleChrom)
+		testSample := Sample([]PFasta{testOutput}, sampleChrom, seed)
 		sampleOutputFilename := fmt.Sprintf("testdata/output_fa_%v.fa", idx)
 		fasta.Write(sampleOutputFilename, []fasta.Fasta{testSample})
 
@@ -66,14 +68,12 @@ func TestFaToPfa(t *testing.T) {
 			if end == -1 {
 				end = len(seq.Seq)
 			}
-			
+
 			extractedSeq := fasta.Extract(seq, v.Start, end, seq.Name)
 			if fasta.IsEqual(testSample, extractedSeq) {
 				testTrue = true
-				err = os.Remove(outputFilename)
-				exception.PanicOnErr(err)
-				err = os.Remove(sampleOutputFilename)
-				exception.PanicOnErr(err)
+				fileio.EasyRemove(outputFilename)
+				fileio.EasyRemove(sampleOutputFilename)
 			}
 		}
 
