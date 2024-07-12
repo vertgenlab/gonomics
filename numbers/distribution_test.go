@@ -1,12 +1,11 @@
 package numbers
 
 import (
-	"fmt"
 	"math"
 	"testing"
 )
 
-//All expected values are calculated from online calculator tools or in the R programming language.
+// All expected values are calculated from online calculator tools or in the R programming language.
 
 func ExplicitBinomialDist(n int, k int, p float64) float64 {
 	return float64(BinomCoefficient(n, k)) * math.Pow(p, float64(k)) * math.Pow(1-p, float64(n-k))
@@ -19,13 +18,13 @@ func TestBinomialDist(t *testing.T) {
 	expected2, _ := BinomialDist(20, 20, 0.6, false)
 	input3 := ExplicitBinomialDist(20, 0, 0.6)
 	expected3, _ := BinomialDist(20, 0, 0.6, false)
-	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
+	if ApproxEqual(input1, expected1, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
-	if fmt.Sprintf("%e", input2) != fmt.Sprintf("%e", expected2) {
+	if ApproxEqual(input2, expected2, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input2, expected2)
 	}
-	if fmt.Sprintf("%e", input3) != fmt.Sprintf("%e", expected3) {
+	if ApproxEqual(input3, expected3, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input3, expected3)
 	}
 }
@@ -77,19 +76,19 @@ func TestBinomialSum(t *testing.T) {
 	var observed float64
 	for _, v := range BinomialSumTests {
 		observed = BinomialLeftSummation(v.N, v.K, v.P, false)
-		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedLeft) {
+		if ApproxEqual(observed, v.ExpectedLeft, defaultEpsilon) {
 			t.Errorf("Error: in BinomialSum Left Sum. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedLeft)
 		}
 		observed = BinomialRightSummation(v.N, v.K, v.P, false)
-		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedRight) {
+		if ApproxEqual(observed, v.ExpectedRight, defaultEpsilon) {
 			t.Errorf("Error: in BinomialSum Right Sum. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedRight)
 		}
 		observed = BinomialLeftSummation(v.N, v.K, v.P, true)
-		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedLeftLog) {
+		if ApproxEqual(observed, v.ExpectedLeftLog, defaultEpsilon) {
 			t.Errorf("Error: in BinomialSum Left Sum Logspace. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedLeftLog)
 		}
 		observed = BinomialRightSummation(v.N, v.K, v.P, true)
-		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedRightLog) {
+		if ApproxEqual(observed, v.ExpectedRightLog, defaultEpsilon) {
 			t.Errorf("Error: in BinomialSum Right Sum Logspace. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedRightLog)
 		}
 	}
@@ -100,10 +99,10 @@ func TestPoissonDist(t *testing.T) {
 	expected1 := 1.754674e-01
 	input2, _ := PoissonDist(0, 5, false)
 	expected2 := 6.737947e-03
-	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
+	if ApproxEqual(input1, expected1, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
-	if fmt.Sprintf("%e", input2) != fmt.Sprintf("%e", expected2) {
+	if ApproxEqual(input2, expected2, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input2, expected2)
 	}
 }
@@ -117,16 +116,16 @@ func TestPoissonSum(t *testing.T) {
 	expected3 := 2.378165e-01
 	input4 := PoissonRightSummation(0, 5)
 	expected4 := 1.000000e+00
-	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
+	if ApproxEqual(input1, expected1, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
-	if fmt.Sprintf("%e", input2) != fmt.Sprintf("%e", expected2) {
+	if ApproxEqual(input2, expected2, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input2, expected2)
 	}
-	if fmt.Sprintf("%e", input3) != fmt.Sprintf("%e", expected3) {
+	if ApproxEqual(input3, expected3, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input3, expected3)
 	}
-	if fmt.Sprintf("%e", input4) != fmt.Sprintf("%e", expected4) {
+	if ApproxEqual(input4, expected4, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input4, expected4)
 	}
 }
@@ -134,7 +133,7 @@ func TestPoissonSum(t *testing.T) {
 func TestNormalDist(t *testing.T) {
 	input := NormalDist(0, 0, 1)
 	expected := 3.989423e-01
-	if fmt.Sprintf("%e", input) != fmt.Sprintf("%e", expected) {
+	if ApproxEqual(input, expected, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input, expected)
 	}
 }
@@ -146,10 +145,10 @@ func TestNormalIntegral(t *testing.T) {
 	expected1 := 1.349890e-03
 	input2 := DefiniteIntegral(f, -200, -6)
 	expected2 := 6.389367e-10
-	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
+	if ApproxEqual(input1, expected1, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
-	if fmt.Sprintf("%e", input2) != fmt.Sprintf("%e", expected2) {
+	if ApproxEqual(input2, expected2, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input2, expected2)
 	}
 }
@@ -159,10 +158,10 @@ func TestBetaDist(t *testing.T) {
 	expected1 := 1.764000e+00
 	input2 := BetaDist(0, 2, 3)
 	expected2 := 0.000000e+00
-	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
+	if ApproxEqual(input1, expected1, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
-	if fmt.Sprintf("%e", input2) != fmt.Sprintf("%e", expected2) {
+	if ApproxEqual(input2, expected2, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input2, expected2)
 	}
 }
@@ -172,10 +171,10 @@ func TestBetaIntegral(t *testing.T) {
 	expected1 := 6.517000e-01
 	input2 := BetaLeftIntegral(0.3, 2, 3)
 	expected2 := 3.483000e-01
-	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
+	if ApproxEqual(input1, expected1, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
-	if fmt.Sprintf("%e", input2) != fmt.Sprintf("%e", expected2) {
+	if ApproxEqual(input2, expected2, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input2, expected2)
 	}
 }
@@ -185,10 +184,10 @@ func TestGammaDist(t *testing.T) {
 	expected1 := 1.804470e+00
 	input2 := GammaDist(3.5, 4, 2)
 	expected2 := 1.042585e-01
-	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
+	if ApproxEqual(input1, expected1, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
-	if fmt.Sprintf("%e", input2) != fmt.Sprintf("%e", expected2) {
+	if ApproxEqual(input2, expected2, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input2, expected2)
 	}
 }
@@ -199,10 +198,10 @@ func TestGammaIntegral(t *testing.T) {
 	expected1 := 8.487961e-01
 	input2 := GammaRightIntegral(8, 4, 2)
 	expected2 := 9.315161e-05
-	if fmt.Sprintf("%e", input1) != fmt.Sprintf("%e", expected1) {
+	if ApproxEqual(input1, expected1, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input1, expected1)
 	}
-	if fmt.Sprintf("%e", input2) != fmt.Sprintf("%e", expected2) {
+	if ApproxEqual(input2, expected2, defaultEpsilon) {
 		t.Errorf("Do not match. Input : %e. Expected: %e.", input2, expected2)
 	}
 }

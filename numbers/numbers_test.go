@@ -1,7 +1,6 @@
 package numbers
 
 import (
-	"fmt"
 	"math"
 	"testing"
 )
@@ -101,17 +100,17 @@ func TestBinomCoefficient(t *testing.T) {
 }
 
 func TestBinomCoefficientLog(t *testing.T) {
-	//first we see if we have consistency with the non-log version
+	// First we see if we have consistency with the non-log version
 	for _, test := range BinomCoefficientTests {
 		calculated := math.Exp(BinomCoefficientLog(test.n, test.k))
-		if fmt.Sprintf("%f", calculated) != fmt.Sprintf("%f", float64(test.answer)) {
+		if ApproxEqual(calculated, float64(test.answer), defaultEpsilon) {
 			t.Errorf("ForBinomialCoefficientLog(%d, %d) we would expect %f, but we got %f", test.n, test.k, float64(test.answer), calculated)
 		}
 	}
-	//now we test big numbers
+	// Now we test big numbers
 	for _, test := range BinomCoefficientLogTests {
 		calculated := BinomCoefficientLog(test.n, test.k)
-		if fmt.Sprintf("%f", calculated) != fmt.Sprintf("%f", test.answer) {
+		if ApproxEqual(calculated, test.answer, defaultEpsilon) {
 			t.Errorf("ForBinomialCoefficientLog(%d, %d) we would expected %f, but we got %f", test.n, test.k, test.answer, calculated)
 		}
 	}
