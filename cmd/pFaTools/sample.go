@@ -69,10 +69,10 @@ func parseSampleArgs() {
 // pFaSample parses an input pFASTA file and samples the file according to user-defined settings.
 func pFaSample(s SampleSettings) {
 	var err error
-	rand.New(rand.NewSource(s.SetSeed))
+	seed := rand.New(rand.NewSource(s.SetSeed))
 	for currSample := 0; currSample < s.NumSamples; currSample++ {
 		var outName = fmt.Sprintf("%s/sample_%v.fa", s.OutDir, currSample)
-		records := pFasta.Sample(pFasta.Read(s.InFile), s.Chrom)
+		records := pFasta.Sample(pFasta.Read(s.InFile), s.Chrom, seed)
 		out := fileio.EasyCreate(outName)
 		fasta.WriteFasta(out, records, 50)
 

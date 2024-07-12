@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
+	"math/rand"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
-	"os"
-	"testing"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var faToPfaTests = []struct {
@@ -44,8 +45,8 @@ var faToPfaTests = []struct {
 }
 
 func TestFaToPfa(t *testing.T) {
-	var err error
 	var s FaToPfaSettings
+	seed := rand.New(rand.NewSource(1))
 	for idx, v := range faToPfaTests {
 		s = FaToPfaSettings{
 			InFile: v.InFile,
@@ -64,7 +65,7 @@ func TestFaToPfa(t *testing.T) {
 			sampleChrom = testInput[0].Name
 		}
 
-		testSample := pFasta.Sample(pFasta.Read(v.OutDir), sampleChrom)
+		testSample := pFasta.Sample(pFasta.Read(v.OutDir), sampleChrom, seed)
 		sampleOutputFilename := fmt.Sprintf("testdata/output_fa_%v.fa", idx)
 		fasta.Write(sampleOutputFilename, []fasta.Fasta{testSample})
 
@@ -77,10 +78,8 @@ func TestFaToPfa(t *testing.T) {
 			extractedSeq := fasta.Extract(seq, v.Start, end, seq.Name)
 			if fasta.IsEqual(testSample, extractedSeq) {
 				testTrue = true
-				err = os.Remove(v.OutDir)
-				exception.PanicOnErr(err)
-				err = os.Remove(sampleOutputFilename)
-				exception.PanicOnErr(err)
+				fileio.EasyRemove(v.OutDir)
+				fileio.EasyRemove(sampleOutputFilename)
 			}
 		}
 
