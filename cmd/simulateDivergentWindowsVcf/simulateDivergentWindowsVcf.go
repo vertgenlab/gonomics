@@ -73,7 +73,6 @@ func simulateDivergentWindowsVcf(s Settings) {
 	exception.PanicOnErr(err)
 }
 
-
 // countDivergent returns the number of variants in a slice of Vcf structs that are in the divergent state.
 func countDivergent(v []vcf.Vcf) int {
 	var answer int = 0
