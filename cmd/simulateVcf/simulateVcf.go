@@ -13,8 +13,8 @@ import (
 )
 
 func simulateVcf(s Settings) {
-	rand.New(rand.NewSource(s.SetSeed))
-	simulate.VcfToFile(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier)
+	seed := rand.New(rand.NewSource(s.SetSeed))
+	simulate.VcfToFile(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, seed)
 }
 
 func usage() {

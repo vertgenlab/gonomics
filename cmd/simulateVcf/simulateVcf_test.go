@@ -36,6 +36,8 @@ func TestSimulateVcf(t *testing.T) {
 		simulateVcf(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in simulateVcf.")
+		} else {
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }

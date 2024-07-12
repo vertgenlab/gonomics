@@ -32,13 +32,13 @@ func simulateDivergentWindowsVcf(s Settings) {
 		log.Fatalf("LowerPercentile argument must be between one and zero.")
 	}
 
-	rand.Seed(s.SetSeed)
+	seed := rand.New(rand.NewSource(s.SetSeed))
 	var err error
 	var TotalSites []vcf.Vcf = make([]vcf.Vcf, s.NumTotalSites)
 	var windows []Window = make([]Window, s.NumWindows)
 
 	for i := 0; i < s.NumTotalSites; i++ {
-		TotalSites[i] = simulate.SingleVcf(s.Alpha, s.NumAlleles, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, i+1)
+		TotalSites[i] = simulate.SingleVcf(s.Alpha, s.NumAlleles, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, i+1, seed)
 	}
 
 	for i := 0; i < s.NumWindows; i++ {
