@@ -567,6 +567,7 @@ func TestEmpiricalReconstruction(t *testing.T) {
 	var currRandGamma float64
 	var currSimTree, currReconTree *expandedTree.ETree
 	var outPFasta []pFasta.PFasta
+	seed := rand.New(rand.NewSource(0))
 	out := fileio.EasyCreate("testdata/resultsSummary.txt")
 	_, err = fmt.Fprintf(out, "Name\tTreeIndex\tNodeName\tInaccuracy\n")
 	exception.PanicOnErr(err)
@@ -574,7 +575,7 @@ func TestEmpiricalReconstruction(t *testing.T) {
 		rand.New(rand.NewSource(v.SetSeed))
 
 		//first, we make a tree to test, and run a molecular evolution simulation to generate sequences
-		currRandGamma, _ = numbers.RandGamma(v.NodeGammaAlpha, v.NodeGammaBeta)
+		currRandGamma, _ = numbers.RandGamma(v.NodeGammaAlpha, v.NodeGammaBeta, seed)
 		currNumNodes = int(currRandGamma + 2) //ensure we have at least 2 nodes
 		if currNumNodes%2 == 0 {              //we want to sample only odd positive integers, this guarantees at lest 3 nodes
 			currNumNodes++

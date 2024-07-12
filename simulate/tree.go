@@ -2,10 +2,11 @@ package simulate
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/expandedTree"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/expandedTree"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // ETree produces a phylogenetic tree with a user-specified number of nodes and random gamma-distributed branch lengths,
@@ -31,10 +32,11 @@ func generateChildNodes(Up *expandedTree.ETree, gammaAlpha float64, gammaBeta fl
 	if numNodesToAdd < 2 {
 		return
 	}
-	currBranchLength, _ := numbers.RandGamma(gammaAlpha, gammaBeta)
+	seed := rand.New(rand.NewSource(0))
+	currBranchLength, _ := numbers.RandGamma(gammaAlpha, gammaBeta, seed)
 	newLeftChild := &expandedTree.ETree{Name: fmt.Sprintf("Child_%v", numNodesToAdd), Up: Up, BranchLength: currBranchLength}
 	Up.Left = newLeftChild
-	currBranchLength, _ = numbers.RandGamma(gammaAlpha, gammaBeta)
+	currBranchLength, _ = numbers.RandGamma(gammaAlpha, gammaBeta, seed)
 	newRightChild := &expandedTree.ETree{Name: fmt.Sprintf("Child_%v", numNodesToAdd-1), Up: Up, BranchLength: currBranchLength}
 	Up.Right = newRightChild
 	leaves = append(leaves, newLeftChild, newRightChild)

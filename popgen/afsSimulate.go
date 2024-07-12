@@ -17,7 +17,7 @@ func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64
 	var divergent bool
 	var count, i int
 
-	bound := numbers.ScaledBetaSampler(boundAlpha, boundBeta, boundMultiplier)
+	bound := numbers.ScaledBetaSampler(boundAlpha, boundBeta, boundMultiplier, seed)
 	f := AfsStationarityClosure(alpha)
 
 	for i = 0; i < fatalCount; i++ {

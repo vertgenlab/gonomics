@@ -172,7 +172,7 @@ func statCalc(s Settings) {
 		alpha := parse.StringToFloat64(words[0])
 		beta := parse.StringToFloat64(words[1])
 		numSamples := parse.StringToInt(words[2])
-		sampler := numbers.BetaSampler(alpha, beta)
+		sampler := numbers.BetaSampler(alpha, beta, seed)
 		var current float64
 		for i := 0; i < numSamples; i++ {
 			current, _ = sampler()
@@ -187,7 +187,7 @@ func statCalc(s Settings) {
 		alpha := parse.StringToFloat64(words[0])
 		beta := parse.StringToFloat64(words[1])
 		numSamples := parse.StringToInt(words[2])
-		sampler := numbers.GammaSampler(alpha, beta)
+		sampler := numbers.GammaSampler(alpha, beta, seed)
 		var current float64
 		for i := 0; i < numSamples; i++ {
 			current, _ = sampler()

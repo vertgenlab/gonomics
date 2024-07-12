@@ -20,7 +20,7 @@ const Ln4 float64 = 1.38629436112
 
 // RandBeta is the basic beta variate generator from Cheng 1978. Uses the BA algorithm, which is less optimized, but still runs effectively for my use case.
 // More optimized algorithms (with greater programming complexity) are described in the Cheng paper, and should be implemented (TODO) if required.
-func RandBeta(a float64, b float64) float64 {
+func RandBeta(a float64, b float64, seed *rand.Rand) float64 {
 	var alpha float64 = a + b
 	var beta, gamma, u1, u2, w, v float64
 	if Min(a, b) <= 1 {
@@ -31,8 +31,8 @@ func RandBeta(a float64, b float64) float64 {
 	gamma = a + 1.0/beta
 
 	for i := 0; i < MaxIterations; i++ {
-		u1 = rand.Float64()
-		u2 = rand.Float64()
+		u1 = seed.Float64()
+		u2 = seed.Float64()
 		v = beta * math.Log(u1/(1-u1))
 		w = a * math.Exp(v)
 

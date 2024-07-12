@@ -91,7 +91,7 @@ func parseNonCodingArgs() {
 // A Newick tree file can be provided. Alternatively, one can be generated with a user-specified number of
 // nodes and Gamma-distribute random branch lengths.
 func NonCoding(s NonCodingSettings) {
-	rand.New(rand.NewSource(s.SetSeed))
+	seed := rand.New(rand.NewSource(s.SetSeed))
 	var answer []fasta.Fasta
 	var root *expandedTree.ETree
 	var err error
@@ -111,7 +111,7 @@ func NonCoding(s NonCodingSettings) {
 		root = simulate.ETree(s.NumNodes, s.GammaAlpha, s.GammaBeta)
 	}
 	if s.UnitBranchLength < 0 {
-		s.UnitBranchLength, _ = numbers.RandGamma(s.GammaAlpha, s.GammaBeta)
+		s.UnitBranchLength, _ = numbers.RandGamma(s.GammaAlpha, s.GammaBeta, seed)
 	}
 	if s.FastaFile != "" {
 		records := fasta.Read(s.FastaFile)

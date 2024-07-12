@@ -56,7 +56,7 @@ func FastRejectionSampler(xLeft float64, xRight float64, f func(float64) float64
 }
 
 // RejectionSampleChooseBin is a helper function of FAstRejectionSampler.
-func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f func(float64) float64, maxIteration int, sumHeights float64, binHeights []float64, seed * rand.Rand) float64 {
+func RejectionSampleChooseBin(xLeft float64, xRight float64, stepSize float64, f func(float64) float64, maxIteration int, sumHeights float64, binHeights []float64, seed *rand.Rand) float64 {
 	var x, y float64
 	var currBin int
 	var currLeft, currRight float64
@@ -120,17 +120,17 @@ func BoundedRejectionSample(boundingSampler func() (float64, float64), f func(fl
 }
 
 // ScaledBetaSampler returns an instatiation of RandBeta where the returned density has been scaled by the input variable 'multiplier'.
-func ScaledBetaSampler(a float64, b float64, multiplier float64) func() (float64, float64) {
+func ScaledBetaSampler(a float64, b float64, multiplier float64, seed *rand.Rand) func() (float64, float64) {
 	return func() (float64, float64) {
-		answer := RandBeta(a, b)
+		answer := RandBeta(a, b, seed)
 		return answer, multiplier * BetaDist(answer, a, b)
 	}
 }
 
 // BetaSampler returns an instantiation of RandBeta for a specified a and b parameter.
-func BetaSampler(a float64, b float64) func() (float64, float64) {
+func BetaSampler(a float64, b float64, seed *rand.Rand) func() (float64, float64) {
 	return func() (float64, float64) {
-		answer := RandBeta(a, b)
+		answer := RandBeta(a, b, seed)
 		return answer, BetaDist(answer, a, b)
 	}
 }
@@ -138,7 +138,7 @@ func BetaSampler(a float64, b float64) func() (float64, float64) {
 // RandGamma returns a random x,y point drawn from a gamma distribution with parameters alpha and beta. y corresponds to the function density at that x value.
 // a > 1 uses the method from Marsaglia and Tsang 2000. Written for k, theta parameters, so the first step converts b to 1 / b to evaluate gamma in terms of alpha and beta parameters.
 // a < 1 uses the method from Ahrens, J.H. and Dieter, U. (1974). Computer methods for sampling from gamma, beta, poisson and binomial distributions. Computing, 12, 223-246.
-func RandGamma(a float64, b float64) (float64, float64) {
+func RandGamma(a float64, b float64, seed *rand.Rand) (float64, float64) {
 	if a < 0 || b < 0 {
 		log.Fatalf("Error: The gamma distribution is defined with alpha and beta parameters greater than zero.")
 	}
@@ -152,7 +152,7 @@ func RandGamma(a float64, b float64) (float64, float64) {
 		e1 := 0.36787944117144232159 //exp(-1), left as a constant to speed up computation
 		e := 1.0 + e1*a
 		for 1 > 0 { //repeat loop until breaks
-			p := e * rand.Float64()
+			p := e * seed.Float64()
 			rExp, _ = RandExp()
 			if p >= 1.0 {
 				x = -1 * math.Log((e-p)/a)
@@ -172,14 +172,14 @@ func RandGamma(a float64, b float64) (float64, float64) {
 	var d float64 = a - (1.0 / 3.0)
 	var c float64 = (1.0 / 3.0) / math.Sqrt(d)
 	for 1 > 0 {
-		x = rand.NormFloat64()
+		x = seed.NormFloat64()
 		v = 1.0 + c*x
 		for v <= 0 { //do while loop
-			x = rand.NormFloat64()
+			x = seed.NormFloat64()
 			v = 1.0 + c*x
 		}
 		v = v * v * v
-		u = rand.Float64()
+		u = seed.Float64()
 		if u < 1-0.0331*x*x*x*x {
 			break
 		}
@@ -191,8 +191,8 @@ func RandGamma(a float64, b float64) (float64, float64) {
 }
 
 // GammaSampler returns an instantiation of RandGamma for specified a and b parameters.
-func GammaSampler(a float64, b float64) func() (float64, float64) {
+func GammaSampler(a float64, b float64, seed *rand.Rand) func() (float64, float64) {
 	return func() (float64, float64) {
-		return RandGamma(a, b)
+		return RandGamma(a, b, seed)
 	}
 }

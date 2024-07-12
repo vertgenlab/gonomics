@@ -1,6 +1,7 @@
 package numbers
 
 import (
+	"math/rand"
 	"testing"
 )
 
@@ -46,10 +47,12 @@ func TestRandGamma(t *testing.T) {
 	list2 = make([]float64, 100000)
 	list3 = make([]float64, 100000)
 
+	seed := rand.New(rand.NewSource(0))
+
 	for i := 0; i < 100000; i++ {
-		list1[i], _ = RandGamma(alpha1, beta1)
-		list2[i], _ = RandGamma(alpha2, beta2)
-		list3[i], _ = RandGamma(alpha3, beta3)
+		list1[i], _ = RandGamma(alpha1, beta1, seed)
+		list2[i], _ = RandGamma(alpha2, beta2, seed)
+		list3[i], _ = RandGamma(alpha3, beta3, seed)
 	}
 	ave1 := AverageFloat64(list1)
 	var1 := VarianceFloat64(list1)
