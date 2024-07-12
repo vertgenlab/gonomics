@@ -93,7 +93,6 @@ func TestExtractBed(t *testing.T) {
 		observed := pFasta.Read(testCase.OutFile)
 		expected := pFasta.Read(testCase.ExpectedFile)
 		if !pFasta.AllAreEqual(observed, expected, testCase.Precision) {
-			os.Rename(testCase.OutFile, testCase.ExpectedFile)
 			t.Errorf("Error: pFaExtract outFile is not as expected.")
 		} else {
 			fileio.EasyRemove(testCase.OutFile)
