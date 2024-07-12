@@ -13,10 +13,11 @@ import (
 
 	// uncomment for additional tests
 	"fmt"
-	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 var ReconstructTests = []struct {
@@ -83,7 +84,7 @@ func TestReconstruct(t *testing.T) {
 		leaves = expandedTree.GetLeaves(tree)
 
 		if v.PDnaNode != "" {
-			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+			outPFasta = []pFasta.PFasta{{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 		}
 
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
@@ -312,7 +313,7 @@ func TestReconstruct(t *testing.T) {
 // 	_, err = fmt.Fprintf(out, "Name\tTreeIndex\tNodeName\tInaccuracy\n")
 // 	exception.PanicOnErr(err)
 // 	for _, v := range EmpiricalReconstructionComparison {
-// 		rand.Seed(v.SetSeed)
+// 		rand.New(rand.NewSource(s.SetSeed))
 // 		for currTreeIndex := 0; currTreeIndex < v.NumTrees; currTreeIndex++ {
 
 // 			//first, we make a tree to test, and run a molecular evolution simulation to generate sequences
@@ -570,7 +571,7 @@ func TestEmpiricalReconstruction(t *testing.T) {
 	_, err = fmt.Fprintf(out, "Name\tTreeIndex\tNodeName\tInaccuracy\n")
 	exception.PanicOnErr(err)
 	for _, v := range EmpiricalReconstructionComparisonPDna {
-		rand.Seed(v.SetSeed)
+		rand.New(rand.NewSource(v.SetSeed))
 
 		//first, we make a tree to test, and run a molecular evolution simulation to generate sequences
 		currRandGamma, _ = numbers.RandGamma(v.NodeGammaAlpha, v.NodeGammaBeta)
@@ -586,7 +587,7 @@ func TestEmpiricalReconstruction(t *testing.T) {
 
 		// initialise output pFasta
 		if v.PDnaNode != "" {
-			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+			outPFasta = []pFasta.PFasta{{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 		}
 
 		//second, we run a reconstruction

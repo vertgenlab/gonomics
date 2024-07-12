@@ -15,7 +15,7 @@ import (
 )
 
 func randSeq(outFile string, GC float64, numSeq int, lenSeq int, setSeed int64) {
-	rand.Seed(setSeed)
+	rand.New(rand.NewSource(setSeed))
 	file := fileio.EasyCreate(outFile)
 	defer file.Close()
 	for i := 0; i < numSeq; i++ {

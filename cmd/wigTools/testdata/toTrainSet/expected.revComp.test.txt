@@ -1,3 +1,3 @@
 name	seq	value
-chr1:39-42	GTA	2
-chr1:39-42_rev	TAC	2
+chr1:24-27	TTT	5
+chr1:24-27_rev	AAA	5

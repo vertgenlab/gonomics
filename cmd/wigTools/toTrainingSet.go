@@ -3,15 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math"
+	"math/rand"
+	"os"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
-	"math"
-	"math/rand"
-	"os"
 )
 
 // ToTrainingSetSettings defines the usage settings for the wigTools toTrainingSet subcommand.
@@ -93,7 +94,7 @@ func parseToTrainingSetArgs() {
 // toTrainingSet creates training examples (sequence-amplitude pairs) from an input wig file and corresponding
 // genome sequence. The output is split into a training, validation, and testing set.
 func toTrainingSet(s ToTrainingSetSettings) {
-	rand.Seed(s.SetSeed)
+	rand.New(rand.NewSource(s.SetSeed))
 	var start, chromIndex, midpoint int
 	var currName, lineToWrite string
 	var currFa fasta.Fasta

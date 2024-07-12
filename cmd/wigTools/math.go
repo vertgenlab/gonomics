@@ -3,16 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/bed"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/wig"
 	"log"
 	"math"
 	"math/rand"
 	"os"
 	"sort"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/wig"
 )
 
 // MathSettings defines the usage settings for the wigTools math subcommand.
@@ -110,7 +111,7 @@ func parseMathArgs() {
 
 // wigMth performs mathematical operations on input wig format files.
 func wigMath(s MathSettings) {
-	rand.Seed(s.SetSeed)
+	rand.New(rand.NewSource(s.SetSeed))
 	var err error
 	var second map[string]wig.Wig
 	var foundInMap bool

@@ -1,2 +1,4 @@
 name	seq	value
+chr1:27-30	TTT	4
 chr1:39-42	GTA	2
+chr1:45-48	CCA	97

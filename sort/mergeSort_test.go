@@ -9,7 +9,7 @@ import (
 )
 
 func TestMergeSort(t *testing.T) {
-	rand.Seed(1)
+	rand.New(rand.NewSource(1))
 	vcfs, _ := vcf.Read("testdata/test.vcf")
 	data := make(chan vcf.Vcf, len(vcfs))
 	rand.Shuffle(len(vcfs), func(i, j int) {

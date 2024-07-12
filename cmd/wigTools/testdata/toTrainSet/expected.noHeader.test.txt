@@ -1,2 +1,2 @@
-chr1:39-42	GTA	2
-chr1:39-42_rev	TAC	2
+chr1:18-21	CCC	8
+chr1:18-21_rev	GGG	8
