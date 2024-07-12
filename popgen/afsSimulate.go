@@ -10,7 +10,7 @@ import (
 
 // SimulateSegSite returns a segregating site with a non-zero allele frequency sampled from a stationarity distribution with selection parameter alpha.
 // the second returns true if the site is divergent.
-func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) (*SegSite, bool) {
+func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64, seed *rand.Rand) (*SegSite, bool) {
 	var fatalCount int = 1000000
 	var maxIteration int = 10000000
 	var r, derivedFrequency float64
@@ -47,11 +47,11 @@ func SimulateSegSite(alpha float64, n int, boundAlpha float64, boundBeta float64
 
 // SimulateGenotype returns a slice of type vcf.GenomeSample, representing a Sample field of a vcf struct, with an allele frequency drawn from a stationarity distribution with selection parameter alpha.
 // Second return is true if the current genotype is a divergent base.
-func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64) ([]vcf.Sample, bool) {
+func SimulateGenotype(alpha float64, n int, boundAlpha float64, boundBeta float64, boundMultiplier float64, seed *rand.Rand) ([]vcf.Sample, bool) {
 	var answer []vcf.Sample = make([]vcf.Sample, 0)
 	var s *SegSite
 	var divergent bool
-	s, divergent = SimulateSegSite(alpha, n, boundAlpha, boundBeta, boundMultiplier)
+	s, divergent = SimulateSegSite(alpha, n, boundAlpha, boundBeta, boundMultiplier, seed)
 	if divergent {
 		InvertSegSite(s)
 	}

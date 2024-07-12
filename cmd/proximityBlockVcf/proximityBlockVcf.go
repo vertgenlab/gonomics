@@ -17,9 +17,9 @@ import (
 
 func proximityBlockVcf(inFile string, outFile string, distance int, setSeed int64) {
 	var err error
-	rand.New(rand.NewSource(setSeed))
+	seed := rand.New(rand.NewSource(setSeed))
 	records, header := vcf.Read(inFile)
-	rand.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
+	seed.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
 
 	//make an output slice and put the first entry in it.
 	var retainedVcfs []vcf.Vcf = make([]vcf.Vcf, 1)
