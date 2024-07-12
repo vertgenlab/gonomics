@@ -6,18 +6,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
-	"math"
-	"math/rand"
 )
 
 func bedFilter(s Settings) {
-	rand.Seed(s.SetSeed)
+	rand.New(rand.NewSource(s.SetSeed))
 	var length int
 	var pass bool = false
 	var r float64

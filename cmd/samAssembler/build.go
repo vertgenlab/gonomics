@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"os"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"math/rand"
-	"os"
 )
 
 func buildUsage(buildFlags *flag.FlagSet) {
@@ -148,7 +149,7 @@ func parseBuildArgs() {
 // samAssemblerBuild is the primary function of the samAssembler build cmd. It creates reference-guided pseudoassemblies
 // from aligned short reads.
 func samAssemblerBuild(s BuildSettings) {
-	rand.Seed(s.SetSeed)
+	rand.New(rand.NewSource(s.SetSeed))
 	var i, refPos, positionsToSkip, haploidBases int
 	var haploidStrand bool // haploidStrand is true when the haploid bases are on the first strand (deletion on second strand)
 	var currChrom string
