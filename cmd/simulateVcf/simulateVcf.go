@@ -7,12 +7,14 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 
 	"github.com/vertgenlab/gonomics/simulate"
 )
 
 func simulateVcf(s Settings) {
-	simulate.VcfToFile(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, s.SetSeed)
+	rand.Seed(s.SetSeed)
+	simulate.VcfToFile(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier)
 }
 
 func usage() {

@@ -38,14 +38,14 @@ func simulateDivergentWindowsVcf(s Settings) {
 	var windows []Window = make([]Window, s.NumWindows)
 
 	for i := 0; i < s.NumTotalSites; i++ {
-		TotalSites[i] = simulate.SingleVcf(s.Alpha, s.NumAlleles, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, i+1, seed)
+		TotalSites[i] = simulate.SingleVcf(s.Alpha, s.NumAlleles, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, i+1)
 	}
 
 	for i := 0; i < s.NumWindows; i++ {
 		windows[i].Variants = make([]vcf.Vcf, s.NumWindowSites)
 		//Shuffle the vcf records, our subset will be composed to the first entries in the shuffled order.
-		rand.Seed(s.SetSeed * int64(i))
-		rand.Shuffle(len(TotalSites), func(i, j int) { TotalSites[i], TotalSites[j] = TotalSites[j], TotalSites[i] })
+		seed.Seed(s.SetSeed * int64(i))
+		seed.Shuffle(len(TotalSites), func(i, j int) { TotalSites[i], TotalSites[j] = TotalSites[j], TotalSites[i] })
 		copy(windows[i].Variants, TotalSites[:s.NumWindowSites]) //keep only as many results as specified
 		windows[i].NumDivergent = countDivergent(windows[i].Variants)
 	}
