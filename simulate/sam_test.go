@@ -14,13 +14,13 @@ import (
 
 func TestSam(t *testing.T) {
 	var err error
-	rand.Seed(1)
+	seed := rand.New(rand.NewSource(1))
 	ref := fasta.Read("testdata/eng.fa")
 	out := fileio.EasyCreate("testdata/actual.sam")
 	var bw *sam.BamWriter
 	header := sam.GenerateHeader(fasta.ToChromInfo(ref), nil, sam.Unsorted, sam.None)
 	sam.WriteHeaderToFileHandle(out, header)
-	IlluminaPairedSam(ref[0].Name, ref[0].Seq, 100, 150, 500, 50, 0, 0, numbers.BinomialAlias{}, numbers.BinomialAlias{}, 0, out, bw, false, []int{})
+	IlluminaPairedSam(ref[0].Name, ref[0].Seq, 100, 150, 500, 50, 0, 0, numbers.BinomialAlias{}, numbers.BinomialAlias{}, 0, out, bw, false, []int{}, seed)
 	err = out.Close()
 	exception.PanicOnErr(err)
 	if !fileio.AreEqual("testdata/actual.sam", "testdata/expected.sam") {

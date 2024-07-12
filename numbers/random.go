@@ -6,8 +6,8 @@ import (
 
 // RandIntInRange returns a pseudorandom value of type int between x and y.
 // Output includes x, but not y.
-func RandIntInRange(x int, y int) int {
-	return int(rand.Float64()*float64(y-x)) + x
+func RandIntInRange(x int, y int, seed *rand.Rand) int {
+	return seed.Intn(y-x) + x
 }
 
 // RandInt64InRange returns a pseudorandom value of type int64 between x and y.

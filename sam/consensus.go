@@ -3,6 +3,8 @@ package sam
 import (
 	"fmt"
 
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 )
@@ -55,12 +57,13 @@ func PileConsensus(p Pile, substitutionsOnly bool, insertionThreshold float64) C
 	max, tiedConsensus = getMaxBase(p, max, dna.C, tiedConsensus)
 	max, tiedConsensus = getMaxBase(p, max, dna.G, tiedConsensus)
 	max, tiedConsensus = getMaxBase(p, max, dna.T, tiedConsensus)
+
 	if substitutionsOnly { //legacy feature
 		//max, tiedConsensus = getMaxBase(p, max, dna.Gap, tiedConsensus) Dan I know that this is a legacy featuer but it's not technically substitutionsOnly, coordinates will change in the output
 		if max < 1 {
 			return Consensus{Type: Undefined}
 		}
-		return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))] //we don't need to check the length because this wil return tiedConsensus[0] even if length is 1.
+		return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus), rand.New(rand.NewSource(0)))] //we don't need to check the length because this wil return tiedConsensus[0] even if length is 1.
 	} else {
 		max, tiedConsensus = getMaxDeletion(p, max, tiedConsensus)
 		if max < 1 {
@@ -94,6 +97,7 @@ func getMaxInsertion(p Pile, tiedConsensus []Consensus, InsThreshold float64) Co
 	var totalBaseCounts = p.CountF[0] + p.CountF[1] + p.CountF[2] + p.CountF[3] + p.CountR[0] + p.CountR[1] + p.CountR[2] + p.CountR[3] + deletionSum
 	var insertionThreshold = int(InsThreshold * float64(totalBaseCounts))
 	var maxInsertionScore, deletionScore = 0, 0
+	
 
 	for i := range p.InsCountF {
 		seenOnPosStrand[i] = 1
@@ -163,7 +167,8 @@ func getMaxInsertion(p Pile, tiedConsensus []Consensus, InsThreshold float64) Co
 			}
 		}
 	}
-	return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus))]
+	seed := rand.New(rand.NewSource(0))
+	return tiedConsensus[numbers.RandIntInRange(0, len(tiedConsensus), seed)]
 }
 
 // helper function of PileConsensus, finds the max deletion in a Pile struct.

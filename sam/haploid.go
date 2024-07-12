@@ -2,6 +2,7 @@ package sam
 
 import (
 	"math"
+	"math/rand"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -75,7 +76,7 @@ func HaploidCallFromPile(p Pile, refBase dna.Base, epsilon float64, lambda float
 		} else if currPosterior == maxPosterior {
 			maxBase = append(maxBase, dna.T)
 		}
-		answer.Base = maxBase[numbers.RandIntInRange(0, len(maxBase))]
+		answer.Base = maxBase[numbers.RandIntInRange(0, len(maxBase), rand.New(rand.NewSource(0)))]
 	}
 
 	//next we evaluate haploid insertion. We only consider Ia

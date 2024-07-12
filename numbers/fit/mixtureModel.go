@@ -1,10 +1,11 @@
 package fit
 
 import (
-	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 	"math"
 	"math/rand"
+
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 // MixtureModel holds data, results, and working memory for running the EM algorithm.
@@ -267,15 +268,17 @@ func sampleWithoutReplacement(data []float64, k int) []float64 {
 	if k > len(data) {
 		log.Panic("ERROR: requested more gaussians than data points")
 	}
+	seed := rand.New(rand.NewSource(0))
 	ans := make([]float64, k)
 	origSize := len(data)
-	rand.Shuffle(origSize, func(i, j int) {
+	seed.Shuffle(origSize, func(i, j int) {
 		data[i], data[j] = data[j], data[i]
 	})
 	var max int = origSize
 	var idx int
+	
 	for i := range ans {
-		idx = numbers.RandIntInRange(0, max)
+		idx = numbers.RandIntInRange(0, max, seed)
 		ans[i] = data[idx]
 		data[idx], data[len(data)-1] = data[len(data)-1], data[idx]
 		max--

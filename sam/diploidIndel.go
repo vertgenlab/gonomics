@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/rand"
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
@@ -147,7 +148,7 @@ func DiploidInsertionCallFromPile(p Pile, priorCache []float64, homozygousIndelC
 		answer = append(answer, DiploidInsertion{Type: IaB, Ia: IaKey, Ib: IbKey})
 	}
 
-	return answer[numbers.RandIntInRange(0, len(answer))] //if two insertion genotypes have the same posterior probability, pick one at random
+	return answer[numbers.RandIntInRange(0, len(answer), rand.New(rand.NewSource(0)))] //if two insertion genotypes have the same posterior probability, pick one at random
 }
 
 // DeletionType encodes the deletion genotype state, which can be one of the four constant values explained below.
@@ -263,7 +264,7 @@ func DiploidDeletionCallFromPile(p Pile, priorCache []float64, homozygousIndelCa
 		answer = append(answer, DiploidDeletion{Type: DaB, Da: DaKey, Db: DbKey})
 	}
 
-	return answer[numbers.RandIntInRange(0, len(answer))] //if two insertion genotypes have the same posterior probability, pick one at random
+	return answer[numbers.RandIntInRange(0, len(answer), rand.New(rand.NewSource(0)))] //if two insertion genotypes have the same posterior probability, pick one at random
 }
 
 // homozygousIndelLikelihoodExpression is a helper function of DiploidInsertionCallFromPile and DiploidDeletionCallFromPile
