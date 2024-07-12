@@ -19,7 +19,7 @@ import (
 // the read will not match the input DNA, a numbers.binomialAlias that is used to speed up calculations, and
 // output file handles for sam, bam, and a bool denoting if bam (or sam) should be the output.
 // Whichever handle (sam or bam) is not being used can be nil.
-func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFragmentSize int, avgFragmentStdDev float64, flatErrorRate float64, ancientErrorRate float64, flatBinomialAlias numbers.BinomialAlias, ancientBinomialAlias numbers.BinomialAlias, geometricParam float64, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool, deaminationDistributionSlice []int, rng *rand.Rand) {
+func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFragmentSize int, avgFragmentStdDev float64, flatErrorRate float64, ancientErrorRate float64, flatBinomialAlias numbers.BinomialAlias, ancientBinomialAlias numbers.BinomialAlias, geometricParam float64, out *fileio.EasyWriter, bw *sam.BamWriter, bamOutput bool, deaminationDistributionSlice []int, seed *rand.Rand) {
 	var fragmentSize, midpoint, startFor, endRev, newCapacity int
 	var currFor, currRev sam.Sam
 	var fragment []dna.Base = make([]dna.Base, 0, avgFragmentSize+int(5*avgFragmentStdDev)) //set initial fragment slice capacity to 5 deviations above average fragment size
@@ -30,7 +30,7 @@ func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFra
 
 	for i := 0; i < numPairs; i++ {
 		fragmentSize = numbers.Max(readLen, int(numbers.SampleInverseNormal(float64(avgFragmentSize), avgFragmentStdDev)))
-		midpoint = numbers.RandIntInRange(0, len(ref), rng)
+		midpoint = numbers.RandIntInRange(0, len(ref), seed)
 		startFor = numbers.Max(midpoint-(fragmentSize/2), 0)
 		endRev = numbers.Min(midpoint+(fragmentSize/2), len(ref))
 
@@ -49,12 +49,12 @@ func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFra
 		copy(fragment, ref[startFor:endRev])
 
 		if endRev > len(ref) || startFor < 0 {
-			currFor, currRev = generateUnmapped(readLen, rng)
+			currFor, currRev = generateUnmapped(readLen, seed)
 		} else {
 			if ancientErrorRate > 0 {
 				ancientDamage(fragment, ancientBinomialAlias, geometricParam, deaminationDistributionSlice)
 			}
-			currFor, currRev = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, fragment, readLen, startFor, flatErrorRate, flatBinomialAlias, rng)
+			currFor, currRev = generateSamReadNoFlag(fmt.Sprintf("%s_Read:%d", refName, i), refName, fragment, readLen, startFor, flatErrorRate, flatBinomialAlias, seed)
 		}
 
 		if currFor.Cigar == nil && currRev.Cigar == nil {
@@ -83,15 +83,15 @@ func IlluminaPairedSam(refName string, ref []dna.Base, numPairs, readLen, avgFra
 }
 
 // generateUnmapped creates a paired end read with a random sequence that is unmapped.
-func generateUnmapped(readLen int, rng *rand.Rand) (sam.Sam, sam.Sam) {
+func generateUnmapped(readLen int, seed *rand.Rand) (sam.Sam, sam.Sam) {
 	var forRead, revRead sam.Sam
 	forRead.RName = "*"
 	revRead.RName = "*"
 	forRead.Seq = make([]dna.Base, readLen)
 	revRead.Seq = make([]dna.Base, readLen)
 	for i := range forRead.Seq {
-		forRead.Seq[i] = dna.Base(numbers.RandIntInRange(0, 4, rng))
-		revRead.Seq[i] = dna.Base(numbers.RandIntInRange(0, 4, rng))
+		forRead.Seq[i] = dna.Base(numbers.RandIntInRange(0, 4, seed))
+		revRead.Seq[i] = dna.Base(numbers.RandIntInRange(0, 4, seed))
 	}
 	return forRead, revRead
 }
@@ -99,7 +99,7 @@ func generateUnmapped(readLen int, rng *rand.Rand) (sam.Sam, sam.Sam) {
 // generateSamReadNoFlag generates a sam record for the input position.
 // the second return is a deaminationDistributionSlice, recording the positions of observed cytosine deamination events.
 // Soft clips sequence that is off template and does not generate Flag, RNext, or PNext.
-func generateSamReadNoFlag(readName string, refName string, fragment []dna.Base, readLength int, fragmentStart int, flatErrorRate float64, flatAlias numbers.BinomialAlias, rng *rand.Rand) (sam.Sam, sam.Sam) {
+func generateSamReadNoFlag(readName string, refName string, fragment []dna.Base, readLength int, fragmentStart int, flatErrorRate float64, flatAlias numbers.BinomialAlias, seed *rand.Rand) (sam.Sam, sam.Sam) {
 	var currForSam = sam.Sam{
 		QName: readName,
 		Seq:   make([]dna.Base, readLength),
@@ -112,17 +112,17 @@ func generateSamReadNoFlag(readName string, refName string, fragment []dna.Base,
 	// generate quality scores for forward and reverse read
 	var bldrFor strings.Builder
 	for range currForSam.Seq {
-		bldrFor.WriteRune(rune(numbers.RandIntInRange(30, 40, rng) + 33)) // high quality seq + ascii offset
+		bldrFor.WriteRune(rune(numbers.RandIntInRange(30, 40, seed) + 33)) // high quality seq + ascii offset
 	}
 	currForSam.Qual = bldrFor.String()
 	var bldrRev strings.Builder
 	for range currRevSam.Seq {
-		bldrRev.WriteRune(rune(numbers.RandIntInRange(30, 40, rng) + 33)) // high quality seq + ascii offset
+		bldrRev.WriteRune(rune(numbers.RandIntInRange(30, 40, seed) + 33)) // high quality seq + ascii offset
 	}
 	currRevSam.Qual = bldrRev.String()
 
-	currForSam.MapQ = uint8(numbers.RandIntInRange(30, 40, rng))
-	currRevSam.MapQ = uint8(numbers.RandIntInRange(30, 40, rng))
+	currForSam.MapQ = uint8(numbers.RandIntInRange(30, 40, seed))
+	currRevSam.MapQ = uint8(numbers.RandIntInRange(30, 40, seed))
 	currForSam.RName, currRevSam.RName = refName, refName
 
 	copy(currForSam.Seq, fragment[0:readLength])
@@ -130,8 +130,8 @@ func generateSamReadNoFlag(readName string, refName string, fragment []dna.Base,
 
 	// now we will simulate sequencing/PCR error with a flat error rate
 	if flatErrorRate > 0 {
-		currForSam = sequencingError(currForSam, flatAlias, rng)
-		currRevSam = sequencingError(currRevSam, flatAlias, rng)
+		currForSam = sequencingError(currForSam, flatAlias, seed)
+		currRevSam = sequencingError(currRevSam, flatAlias, seed)
 	}
 
 	// generate other values
