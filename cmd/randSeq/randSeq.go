@@ -15,11 +15,11 @@ import (
 )
 
 func randSeq(outFile string, GC float64, numSeq int, lenSeq int, setSeed int64) {
-	rand.New(rand.NewSource(setSeed))
+	seed := rand.New(rand.NewSource(setSeed))
 	file := fileio.EasyCreate(outFile)
 	defer file.Close()
 	for i := 0; i < numSeq; i++ {
-		fasta.WriteFasta(file, fasta.Fasta{Name: fmt.Sprintf("Sequence_%v", i), Seq: simulate.RandIntergenicSeq(GC, lenSeq)}, 50)
+		fasta.WriteFasta(file, fasta.Fasta{Name: fmt.Sprintf("Sequence_%v", i), Seq: simulate.RandIntergenicSeq(GC, lenSeq, seed)}, 50)
 	}
 }
 

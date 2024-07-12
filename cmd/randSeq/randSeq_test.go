@@ -1,11 +1,10 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var RandSeqTests = []struct {
@@ -23,7 +22,6 @@ var RandSeqTests = []struct {
 }
 
 func TestRandSeq(t *testing.T) {
-	var err error
 	for _, v := range RandSeqTests {
 		randSeq(v.outFile, v.GC, v.numSeq, v.lenSeq, v.setSeed)
 		records := fasta.Read(v.outFile)
@@ -31,7 +29,6 @@ func TestRandSeq(t *testing.T) {
 		if !fasta.AllAreEqual(records, expected) {
 			t.Errorf("Error in randSeq.")
 		}
-		err = os.Remove(v.outFile)
-		exception.PanicOnErr(err)
+		fileio.EasyRemove(v.outFile)
 	}
 }

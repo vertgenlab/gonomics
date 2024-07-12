@@ -17,7 +17,7 @@ var SimulateVcfTests = []struct {
 	BoundBeta       float64
 	BoundMultiplier float64
 }{
-	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000},
+	{"testdata/expected.vcf.gz", "testdata/out.vcf.gz", 4, 100, 100, 11, 0.001, 0.001, 10000},
 }
 
 func TestSimulateVcf(t *testing.T) {

@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -36,11 +34,11 @@ var NonCodingTests = []struct {
 		SubstitutionMatrixFile: "",
 		UnitBranchLength:       -100,
 		NewickOut:              "testdata/test.NewickOut.nh",
-		ExpectedFile:           "testdata/expected.NonCoding.fa",
-		ExpectedNewick:         "testdata/expected.NewickOut.nh",
+		ExpectedFile:           "testdata/expected.NonCoding.fa.gz",
+		ExpectedNewick:         "testdata/expected.NewickOut.nh.gz",
 	},
 	{TreeFile: "testdata/newickLongBranches.txt",
-		FastaFile:              "testdata/rand.fa",
+		FastaFile:              "testdata/rand.fa.gz",
 		OutFile:                "testdata/test.preMade.fa",
 		SetSeed:                31,
 		NumNodes:               0,
@@ -48,17 +46,16 @@ var NonCodingTests = []struct {
 		GammaBeta:              50,
 		GcContent:              0.41,
 		LenSeq:                 50,
-		SubstitutionMatrixFile: "testdata/substitutionMatrix.txt",
+		SubstitutionMatrixFile: "testdata/substitutionMatrix.txt.gz",
 		UnitBranchLength:       0.5,
 		NewickOut:              "testdata/test.NewickOut.PreMade.nh",
-		ExpectedNewick:         "testdata/expected.NewickOut.PreMade.nh",
-		ExpectedFile:           "testdata/expected.NonCoding.preMade.fa",
+		ExpectedNewick:         "testdata/expected.NewickOut.PreMade.nh.gz",
+		ExpectedFile:           "testdata/expected.NonCoding.preMade.fa.gz",
 	},
 }
 
 func TestNonCoding(t *testing.T) {
 	var s NonCodingSettings
-	var err error
 	for _, v := range NonCodingTests {
 		s = NonCodingSettings{
 			TreeFile:               v.TreeFile,
@@ -75,17 +72,17 @@ func TestNonCoding(t *testing.T) {
 			NewickOut:              v.NewickOut,
 		}
 		NonCoding(s)
+
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: simulateEvol nonCoding output was not as expected.\n")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
+
 		if !fileio.AreEqual(v.NewickOut, v.ExpectedNewick) {
 			t.Errorf("Error: simulateEvol nonCoding output Newick was not as expected.\n")
 		} else {
-			err = os.Remove(v.NewickOut)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.NewickOut)
 		}
 	}
 }

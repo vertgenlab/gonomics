@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -22,7 +20,7 @@ var WithIndelsTests = []struct {
 	ExpectedVcfFile string
 	QName           string
 }{
-	{InputFastaFile: "testdata/rand.fa",
+	{InputFastaFile: "testdata/rand.fa.gz",
 		OutFile:         "testdata/tmp.out.fa",
 		BranchLength:    0.1,
 		Lambda:          1,
@@ -31,13 +29,13 @@ var WithIndelsTests = []struct {
 		SetSeed:         -1,
 		TransitionBias:  1,
 		VcfOutFile:      "testdata/tmp.vcf",
-		ExpectedVcfFile: "testdata/expected.branchLength.vcf",
-		ExpectedOutFile: "testdata/expected.branchLength.fa",
+		ExpectedVcfFile: "testdata/expected.branchLength.vcf.gz",
+		ExpectedOutFile: "testdata/expected.branchLength.fa.gz",
 		QName:           "sim"},
 }
 
 func TestSimulateEvol(t *testing.T) {
-	var err error
+
 	var s WithIndelsSettings
 	for _, v := range WithIndelsTests {
 		s = WithIndelsSettings{
@@ -56,15 +54,13 @@ func TestSimulateEvol(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedOutFile) {
 			t.Errorf("Error in SimulateEvol withIndels. OutFile was not as expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 		if v.VcfOutFile != "" {
 			if !fileio.AreEqual(v.VcfOutFile, v.ExpectedVcfFile) {
 				t.Errorf("Error in SimulateEvol withIndels. Output Vcf file was not as expected.")
 			} else {
-				err = os.Remove(v.VcfOutFile)
-				exception.PanicOnErr(err)
+				fileio.EasyRemove(v.VcfOutFile)
 			}
 		}
 	}

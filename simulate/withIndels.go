@@ -16,10 +16,11 @@ import (
 // RandIntergenicSeq makes a randomly generated DNA sequence by drawing from a distribution with a specified GC content.
 // Unlike RandGene, it does not have to be divisible by 3.
 // The inputs are the expected GC content and the desired length of the output sequence.
-func RandIntergenicSeq(GcContent float64, lenSeq int) []dna.Base {
+func RandIntergenicSeq(GcContent float64, lenSeq int, seed *rand.Rand) []dna.Base {
 	var answer []dna.Base = make([]dna.Base, lenSeq)
+
 	for i := range answer {
-		answer[i] = ChooseRandomBase(GcContent)
+		answer[i] = ChooseRandomBase(GcContent, seed)
 	}
 	return answer
 }
@@ -40,7 +41,7 @@ const bufferSize = 10_000_000
 // vcfOutFile specifies an optional (empty string disables this option) return that records all variants made during the simulated mutation process.
 // transitionBias specifies the expected value of the ratio of transitions to transversions in the output sequence.
 // qName sets the suffix for the output query fasta name.
-func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, transitionBias float64, vcfOutFile string, qName string) []fasta.Fasta {
+func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambda float64, gcContent float64, transitionBias float64, vcfOutFile string, qName string, seed *rand.Rand) []fasta.Fasta {
 	var answer = make([]fasta.Fasta, 2)
 	var emptyRoomInBuffer = bufferSize
 	var currRand, currRand2, currRand3 float64
@@ -65,19 +66,19 @@ func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambd
 	}
 
 	for inputPos < len(records[0].Seq) {
-		currRand = rand.Float64() //this rand determines if there will be a mutation
+		currRand = seed.Float64() //this rand determines if there will be a mutation
 		if currRand < branchLength {
-			currRand2 = rand.Float64()         //this rand determines the mutation type
+			currRand2 = seed.Float64()         //this rand determines the mutation type
 			if currRand2 < (propIndel / 2.0) { //this half of INDELs will be deletions
 				indelStartPos = inputPos + 1
-				currRand3 = rand.Float64() //one more rand for the case where a substitution immediately precedes a deletion
+				currRand3 = seed.Float64() //one more rand for the case where a substitution immediately precedes a deletion
 				if currRand3 < branchLength {
 					answer[0].Seq[outputPos] = records[0].Seq[inputPos]
 					currRef = []dna.Base{records[0].Seq[inputPos]}
 					if transitionBias != 1 {
 						answer[1].Seq[outputPos] = changeBaseTransitionBias(records[0].Seq[inputPos], transitionBias)
 					} else {
-						answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+						answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos], seed)
 					}
 					currAlt = []dna.Base{answer[1].Seq[outputPos]}
 				} else {
@@ -124,17 +125,18 @@ func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambd
 				//if we didn't run off the chrom, we'll report the variant
 				if vcfOutFile != "" {
 					_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, indelStartPos, ".", dna.BasesToString(currRef), dna.BasesToString((currAlt)), "100", "PASS", ".", ".")
+					exception.PanicOnErr(err)
 				}
 			} else if currRand2 < propIndel { //the other half will be insertions
 				indelStartPos = inputPos + 1
-				currRand2 = rand.Float64()
+				currRand2 = seed.Float64()
 				if currRand2 < branchLength { //case where a substitution immediately precedes an insertion
 					answer[0].Seq[outputPos] = records[0].Seq[inputPos]
 					currRef = []dna.Base{records[0].Seq[inputPos]}
 					if transitionBias != 1 {
 						answer[1].Seq[outputPos] = changeBaseTransitionBias(records[0].Seq[inputPos], transitionBias)
 					} else {
-						answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+						answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos], seed)
 					}
 					currAlt = []dna.Base{answer[1].Seq[outputPos]}
 				} else {
@@ -158,7 +160,7 @@ func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambd
 				indelPos = 0
 				for indelPos < length {
 					answer[0].Seq[outputPos] = dna.Gap
-					answer[1].Seq[outputPos] = ChooseRandomBase(gcContent)
+					answer[1].Seq[outputPos] = ChooseRandomBase(gcContent, seed)
 					currAlt = append(currAlt, answer[1].Seq[outputPos])
 					outputPos++
 					emptyRoomInBuffer--
@@ -172,18 +174,20 @@ func WithIndels(fastaFile string, branchLength float64, propIndel float64, lambd
 				inputPos-- //avoid double skipping for the main loop iterator
 				if vcfOutFile != "" {
 					_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, indelStartPos, ".", dna.BasesToString(currRef), dna.BasesToString(currAlt), "100", "PASS", ".", ".")
+					exception.PanicOnErr(err)
 				}
 			} else { //this section handles the substitution case
 				answer[0].Seq[outputPos] = records[0].Seq[inputPos]
 				if transitionBias != 1 {
 					answer[1].Seq[outputPos] = changeBaseTransitionBias(records[0].Seq[inputPos], transitionBias)
 				} else {
-					answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos])
+					answer[1].Seq[outputPos] = changeBase(records[0].Seq[inputPos], seed)
 				}
 				currRef = []dna.Base{records[0].Seq[inputPos]}
 				currAlt = []dna.Base{answer[1].Seq[outputPos]}
 				if vcfOutFile != "" {
 					_, err = fmt.Fprintf(vcfOut, "%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\n", records[0].Name, inputPos+1, ".", dna.BasesToString(currRef), dna.BasesToString(currAlt), "100", "PASS", ".", ".")
+					exception.PanicOnErr(err)
 				}
 				outputPos++
 				emptyRoomInBuffer--

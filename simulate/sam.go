@@ -203,7 +203,7 @@ func sequencingError(currSam sam.Sam, alias numbers.BinomialAlias, seed *rand.Ra
 		currRandInt = numbers.RandIntInRange(0, len(currSam.Seq), seed) // sample a base on the read
 		if _, foundInMap = mutatedPositions[currRandInt]; !foundInMap {
 			mutatedPositions[currRandInt] = 1
-			currSam.Seq[currRandInt] = changeBase(currSam.Seq[currRandInt])
+			currSam.Seq[currRandInt] = changeBase(currSam.Seq[currRandInt], seed)
 			currError++
 		}
 	}

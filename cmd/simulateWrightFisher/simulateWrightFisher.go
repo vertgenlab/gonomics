@@ -14,8 +14,8 @@ import (
 )
 
 func simulateWrightFisher(outFile string, set popgen.WrightFisherSettings) {
-	rand.New(rand.NewSource(set.SetSeed))
-	wf := simMain(set)
+	seed := rand.New(rand.NewSource(set.SetSeed))
+	wf := simMain(set, seed)
 	if set.Fasta {
 		fasta.Write(outFile, wf.Fasta)
 	} else {

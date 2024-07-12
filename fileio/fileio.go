@@ -3,6 +3,7 @@ package fileio
 
 import (
 	"bufio"
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/klauspost/pgzip"
 	"github.com/vertgenlab/gonomics/exception"
 )
 
@@ -139,15 +141,37 @@ func ReadHeader(reader *bufio.Reader) ([]string, error) {
 
 // equal returns true if two input files are identical.
 func equal(a string, b string, commentsMatter bool) bool {
-	var fileADone, fileBDone = false, false
-	var lineA, lineB string
-
 	fA := MustOpen(a)
 	defer fA.Close()
 	fB := MustOpen(b)
 	defer fB.Close()
-	readerA := bufio.NewReader(fA)
-	readerB := bufio.NewReader(fB)
+
+	var readerA, readerB *bufio.Reader
+
+	if IsGzip(fA) {
+		gzipReaderA, err := pgzip.NewReader(fA)
+		if err != nil {
+			panic(fmt.Sprintf("failed to create gzip reader for file %s: %v", a, err))
+		}
+		defer gzipReaderA.Close()
+		readerA = bufio.NewReader(gzipReaderA)
+	} else {
+		readerA = bufio.NewReader(fA)
+	}
+
+	if IsGzip(fB) {
+		gzipReaderB, err := gzip.NewReader(fB)
+		if err != nil {
+			exception.PanicOnErr(fmt.Errorf("failed to create gzip reader for file %s: %v", b, err))
+		}
+		defer gzipReaderB.Close()
+		readerB = bufio.NewReader(gzipReaderB)
+	} else {
+		readerB = bufio.NewReader(fB)
+	}
+
+	var fileADone, fileBDone = false, false
+	var lineA, lineB string
 
 	for !fileADone && !fileBDone {
 		if commentsMatter {

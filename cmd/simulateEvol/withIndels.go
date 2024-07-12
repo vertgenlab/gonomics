@@ -90,7 +90,7 @@ func WithIndels(s WithIndelsSettings) {
 	if s.BranchLength < 0 || s.BranchLength > 1 {
 		log.Fatalf("The branchLength argument must be a value between 0 and 1.")
 	}
-	rand.New(rand.NewSource(s.SetSeed))
-	outFasta := simulate.WithIndels(s.FastaFile, s.BranchLength, s.PropIndels, s.Lambda, s.GcContent, s.TransitionBias, s.VcfOutFile, s.QName)
+	seed := rand.New(rand.NewSource(s.SetSeed))
+	outFasta := simulate.WithIndels(s.FastaFile, s.BranchLength, s.PropIndels, s.Lambda, s.GcContent, s.TransitionBias, s.VcfOutFile, s.QName, seed)
 	fasta.Write(s.OutFile, outFasta)
 }

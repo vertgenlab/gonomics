@@ -1,7 +1,10 @@
 package reconstruct
 
 import (
+	"fmt"
 	"testing"
+
+	"math/rand"
 
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -9,15 +12,14 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/simulate"
 
 	// uncomment for additional tests
-	"fmt"
+
 	"log"
-	"math/rand"
 
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers"
 )
 
 var ReconstructTests = []struct {
@@ -70,12 +72,13 @@ func TestReconstruct(t *testing.T) {
 	var baseAccData []float64
 	var foundInMap bool
 	var outPFasta []pFasta.PFasta
+	seed := rand.New(rand.NewSource(0))
 
 	for _, v := range ReconstructTests {
 		tree, err = expandedTree.ReadNewick(v.NewickFileName)
 		exception.PanicOnErr(err)
-		fasta.Write(v.RandFa, simulate.RandGene(v.RandFaSeqName, v.Length, v.GcContent))
-		simulate.Simulate(v.RandFa, tree, v.GenePredFile, false)
+		fasta.Write(v.RandFa, simulate.RandGene(v.RandFaSeqName, v.Length, v.GcContent, seed))
+		simulate.Simulate(v.RandFa, tree, v.GenePredFile, false, seed)
 		WriteTreeToFasta(tree, v.SimTree)
 		WriteLeavesToFasta(tree, v.LeavesFile)
 
@@ -567,12 +570,13 @@ func TestEmpiricalReconstruction(t *testing.T) {
 	var currRandGamma float64
 	var currSimTree, currReconTree *expandedTree.ETree
 	var outPFasta []pFasta.PFasta
-	seed := rand.New(rand.NewSource(0))
+
 	out := fileio.EasyCreate("testdata/resultsSummary.txt")
 	_, err = fmt.Fprintf(out, "Name\tTreeIndex\tNodeName\tInaccuracy\n")
 	exception.PanicOnErr(err)
+	var seed *rand.Rand
 	for _, v := range EmpiricalReconstructionComparisonPDna {
-		rand.New(rand.NewSource(v.SetSeed))
+		seed = rand.New(rand.NewSource(v.SetSeed))
 
 		//first, we make a tree to test, and run a molecular evolution simulation to generate sequences
 		currRandGamma, _ = numbers.RandGamma(v.NodeGammaAlpha, v.NodeGammaBeta, seed)
@@ -582,7 +586,7 @@ func TestEmpiricalReconstruction(t *testing.T) {
 		}
 		currSimTree = simulate.ETree(currNumNodes, v.BranchAlpha, v.BranchBeta)
 		expandedTree.ToNewickFile(v.NewickFile, currSimTree)
-		currSimTree.Fasta = &fasta.Fasta{Name: currSimTree.Name, Seq: simulate.RandIntergenicSeq(v.GcContent, v.SeqLen)}
+		currSimTree.Fasta = &fasta.Fasta{Name: currSimTree.Name, Seq: simulate.RandIntergenicSeq(v.GcContent, v.SeqLen, seed)}
 		simulate.NonCoding(currSimTree, v.SimSubstitutionMatrixFile, 0.1)
 		WriteLeavesToFasta(currSimTree, v.LeavesFile)
 

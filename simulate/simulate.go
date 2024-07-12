@@ -30,8 +30,8 @@ var GC float64 = 0.42
 // RandGene takes a gene name, length (in bp) and expected GC content and
 // makes a random gene with start and stop codons.  Length must be a multiple of 3
 // and it returns the gene as a slice of fasta.Fasta with a single entry that is the gene.
-func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
-	var AT float64
+func RandGene(name string, length int, GCcontent float64, seed *rand.Rand) []fasta.Fasta {
+	var AT = float64(0)
 	AT = 1 - GCcontent
 	seq := []dna.Base{dna.A, dna.T, dna.G}
 	randLength := length - 6
@@ -40,7 +40,7 @@ func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 		log.Fatal("length must be divisible by three")
 	} else {
 		for i := 0; i < randLength; i++ {
-			r := rand.Float64()
+			r := seed.Float64()
 
 			//cut-offs based on GC content of galGal6
 			if r < GCcontent/2 {
@@ -55,7 +55,7 @@ func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 		}
 	}
 
-	r := rand.Float64()
+	r := seed.Float64()
 
 	if r < 1/3 {
 		seq = append(seq, dna.T, dna.A, dna.G)
@@ -75,12 +75,12 @@ func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 // a genePred filename related to the starting sequence, and if deletions should be allowed along with substitutions.
 // The starting sequence will then be evolved according to the neutral tree provided and each node in the tree
 // will be assigned a DNA sequence.
-func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, deletions bool) {
+func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, deletions bool, seed *rand.Rand) {
 	var rand1 []fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
 	root.Fasta = &rand1[0]
-	printSeqForNodes(root, rand1[0].Seq, gene, deletions)
+	printSeqForNodes(root, rand1[0].Seq, gene, deletions, seed)
 }
 
 // BLOSUM matrix for amino acid switching probabilities normalized to 0-1.
@@ -107,12 +107,12 @@ var BLOSUM = [][]float64{{0.288590604, 0.03087248322, 0.03087248322, 0.029530201
 	{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}}
 
 // ChooseRandomBase chooses one of the four bases according to the GC content provided.
-func ChooseRandomBase(GCcontent float64) dna.Base {
+func ChooseRandomBase(GCcontent float64, seed *rand.Rand) dna.Base {
 	var base dna.Base
 	var AT float64
 	AT = 1 - GCcontent
 
-	r := rand.Float64()
+	r := seed.Float64()
 
 	if r < GCcontent/2 {
 		base = dna.G
@@ -128,19 +128,19 @@ func ChooseRandomBase(GCcontent float64) dna.Base {
 }
 
 // changeBase takes an input base (A, C, G, or T) and returns one of the three possible substitutions.
-func changeBase(originalBase dna.Base) dna.Base {
-	newBase := ChooseRandomBase(GC)
+func changeBase(originalBase dna.Base, seed *rand.Rand) dna.Base {
+	newBase := ChooseRandomBase(GC, seed)
 
 	for newBase == originalBase {
-		newBase = ChooseRandomBase(GC)
+		newBase = ChooseRandomBase(GC, seed)
 	}
 	return newBase
 }
 
 // mutateBase takes a base, a position, and a branch length and returns the base (possibily mutated)
 // along with its position
-func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
-	r := rand.Float64()
+func mutateBase(b dna.Base, branchLength float64, position int, seed *rand.Rand) BaseExt {
+	r := seed.Float64()
 
 	var dnaBase dna.Base
 	var base BaseExt
@@ -148,7 +148,7 @@ func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 	if branchLength == 0 {
 		dnaBase = b
 	} else if r < branchLength {
-		dnaBase = changeBase(b)
+		dnaBase = changeBase(b, seed)
 	} else {
 		dnaBase = b
 	}
@@ -159,7 +159,7 @@ func mutateBase(b dna.Base, branchLength float64, position int) BaseExt {
 
 // MutateGene takes a starting sequence, a branch length, and the gene structure of the starting sequence in the form of a genePred file, along with a flag
 // for if deletions should be allowed along with substitutions.  The function returns the evolved sequence.
-func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, deletions bool) []dna.Base {
+func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, deletions bool, seed *rand.Rand) []dna.Base {
 	//TODO: make sure a genePred can be updated as we go through the tree
 	//TODO: any time there is an insertion we loop through and increment all SeqPos > insertion's SeqPos +1, deletion -1, or assign SeqPos between original position numbers and fix them later
 	var newSequence []BaseExt
@@ -173,7 +173,6 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 	var start bool
 	var stop bool
 	var increment int
-
 	geneRecord = genePred.Read(geneFile)
 	seq := copySeq(inputSeq)
 	seqExt := BasesToBaseExt(seq)
@@ -182,7 +181,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 		for g := 0; g < len(geneRecord); g++ {
 			overlapExon, thisExon := CheckExon(geneRecord[g], p)
 			if !overlapExon {
-				newBase = mutateBase(seq[p], branchLength, p)
+				newBase = mutateBase(seq[p], branchLength, p, seed)
 				newSequence = append(newSequence, newBase)
 			} else {
 				var originalCodons []CodonExt
@@ -211,7 +210,7 @@ func MutateGene(inputSeq []dna.Base, branchLength float64, geneFile string, dele
 					if !start && !stop && !delFound {
 						newCodon.Seq = make([]BaseExt, 3)
 						for codonPosition := 0; codonPosition < 3; codonPosition++ {
-							newBase = mutateBase(thisCodon.Seq[codonPosition].Base, branchLength, thisCodon.Seq[codonPosition].SeqPos)
+							newBase = mutateBase(thisCodon.Seq[codonPosition].Base, branchLength, thisCodon.Seq[codonPosition].SeqPos, seed)
 							newCodon.Seq[codonPosition] = newBase
 						}
 						//codonExt will be transferred to a codon to check translation against BLOSUM,
@@ -459,19 +458,19 @@ func copySeq(seq []dna.Base) []dna.Base {
 }
 
 // make fastas based off of node and random sequence.
-func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string, deletions bool) {
+func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string, deletions bool, seed *rand.Rand) {
 	var length float64
 	var seq []dna.Base
 	var seqFasta fasta.Fasta
 
 	length = node.BranchLength
-	seq = MutateGene(sequence, length, gene, deletions)
+	seq = MutateGene(sequence, length, gene, deletions, seed)
 
 	seqFasta = fasta.Fasta{node.Name, seq}
 	node.Fasta = &seqFasta
 	if node.Left != nil && node.Right != nil {
-		printSeqForNodes(node.Right, seq, gene, deletions)
-		printSeqForNodes(node.Left, seq, gene, deletions)
+		printSeqForNodes(node.Right, seq, gene, deletions, seed)
+		printSeqForNodes(node.Left, seq, gene, deletions, seed)
 	}
 }
 

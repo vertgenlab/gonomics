@@ -25,7 +25,7 @@ var SimulateSamTests = []struct {
 	ExpectedDeaminationDistribution string
 }{
 	{OutFile: "testdata/actual.sam",
-		RefFile:       "testdata/test.fa",
+		RefFile:       "testdata/test.fa.gz",
 		NumReads:      100,
 		Coverage:      0,
 		ReadLength:    150,
@@ -35,7 +35,7 @@ var SimulateSamTests = []struct {
 		SetSeed:       1,
 		ExpectedFile:  "testdata/expected.sam"},
 	{OutFile: "testdata/actual.bam",
-		RefFile:       "testdata/test.fa",
+		RefFile:       "testdata/test.fa.gz",
 		NumReads:      100,
 		Coverage:      0,
 		ReadLength:    150,
@@ -45,7 +45,7 @@ var SimulateSamTests = []struct {
 		SetSeed:       1,
 		ExpectedFile:  "testdata/expected.bam"},
 	{OutFile: "testdata/10xCoverage.sam",
-		RefFile:       "testdata/test.fa",
+		RefFile:       "testdata/test.fa.gz",
 		NumReads:      100, // this value will be ignored
 		Coverage:      10,
 		ReadLength:    150,
@@ -55,7 +55,7 @@ var SimulateSamTests = []struct {
 		SetSeed:       1,
 		ExpectedFile:  "testdata/expected.10xCoverage.sam"},
 	{OutFile: "testdata/100xCoverage.sam",
-		RefFile:       "testdata/test.fa",
+		RefFile:       "testdata/test.fa.gz",
 		NumReads:      100, // this value will be ignored
 		Coverage:      100,
 		ReadLength:    150,
@@ -65,7 +65,7 @@ var SimulateSamTests = []struct {
 		SetSeed:       1,
 		ExpectedFile:  "testdata/expected.100xCoverage.sam"},
 	{OutFile: "testdata/errorTest.LowRate.sam",
-		RefFile:       "testdata/errorTest.fa",
+		RefFile:       "testdata/errorTest.fa.gz",
 		NumReads:      100, // this value will be ignored
 		Coverage:      10,
 		ReadLength:    50,
@@ -75,7 +75,7 @@ var SimulateSamTests = []struct {
 		SetSeed:       1,
 		ExpectedFile:  "testdata/expected.errorTest.LowRate.sam"},
 	{OutFile: "testdata/errorTest.HighRate.sam",
-		RefFile:       "testdata/errorTest.fa",
+		RefFile:       "testdata/errorTest.fa.gz",
 		NumReads:      100, // this value will be ignored
 		Coverage:      10,
 		ReadLength:    50,
@@ -85,7 +85,7 @@ var SimulateSamTests = []struct {
 		SetSeed:       1,
 		ExpectedFile:  "testdata/expected.errorTest.HighRate.sam"},
 	{OutFile: "testdata/ancientErrorTest.sam",
-		RefFile:                         "testdata/test.fa",
+		RefFile:                         "testdata/test.fa.gz",
 		NumReads:                        100, // this value will be ignored
 		Coverage:                        10,
 		ReadLength:                      50,
@@ -95,9 +95,9 @@ var SimulateSamTests = []struct {
 		SetSeed:                         1,
 		AncientErrorRate:                0.1,
 		GeometricParam:                  0.25,
-		DeaminationDistribution:         "testdata/test.deaminationDistribution.txt",
+		DeaminationDistribution:         "testdata/test.deaminationDistribution.txt.gz",
 		ExpectedFile:                    "testdata/expected.ancientErrorTest.sam",
-		ExpectedDeaminationDistribution: "testdata/expected.deaminationDistribution.txt"},
+		ExpectedDeaminationDistribution: "testdata/expected.deaminationDistribution.txt.gz"},
 }
 
 func TestSimulateSam(t *testing.T) {
@@ -131,15 +131,13 @@ func TestSimulateSam(t *testing.T) {
 					}
 				}
 			}
-			if !t.Failed() {
-				fileio.EasyRemove(v.OutFile)
-			}
 		} else {
 			if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 				t.Errorf("Error: Problem simulating sam.")
-			} else {
-				fileio.EasyRemove(v.OutFile)
 			}
+		}
+		if !t.Failed() {
+			fileio.EasyRemove(v.OutFile)
 		}
 
 		if v.ExpectedDeaminationDistribution != "" {
@@ -149,6 +147,5 @@ func TestSimulateSam(t *testing.T) {
 				fileio.EasyRemove(v.DeaminationDistribution)
 			}
 		}
-
 	}
 }

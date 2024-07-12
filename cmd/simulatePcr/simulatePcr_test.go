@@ -1,46 +1,54 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
+var pcrSimTests = []struct {
+	Primers       []string
+	BedFile       string
+	ExpectedBed   string
+	FastqFile     string
+	ExpectedFastq string
+	Length        int
+	WithPrimer    bool
+}{
+	{
+		Primers: []string{
+			"GCCTCCGTGAGGCTAC",
+			"TTGAGGATCTTTTCTTCACG",
+		},
+		BedFile:       "testdata/actual1.bed",
+		ExpectedBed:   "testdata/expected1.bed",
+		FastqFile:     "testdata/actual1.fastq",
+		ExpectedFastq: "testdata/expected1.fastq",
+		Length:        1000,
+		WithPrimer:    false,
+	},
+	{Primers: []string{
+		"ATG",
+	},
+		BedFile:       "testdata/actual2.bed",
+		ExpectedBed:   "testdata/expected2.bed",
+		FastqFile:     "testdata/actual2.fastq",
+		ExpectedFastq: "testdata/expected2.fastq",
+		Length:        1000,
+		WithPrimer:    true,
+	},
+}
+
 func TestSimPcr(t *testing.T) {
 	template := "testdata/test.fasta"
-	primers := []string{
-		"GCCTCCGTGAGGCTAC",
-		"TTGAGGATCTTTTCTTCACG",
-	}
-	simulatePcr(primers, template, "testdata/actual1.bed", "testdata/actual1.fastq", 1000, false)
-
-	if !fileio.AreEqual("testdata/actual1.bed", "testdata/expected1.bed") || !fileio.AreEqual("testdata/actual1.fastq", "testdata/expected1.fastq") {
-		t.Error("problem with simulatePcr")
-	}
-
-	var err error
-	if !t.Failed() {
-		err = os.Remove("testdata/actual1.bed")
-		exception.PanicOnErr(err)
-		err = os.Remove("testdata/actual1.fastq")
-		exception.PanicOnErr(err)
-	}
-
-	primers = []string{
-		"ATG",
-	}
-	simulatePcr(primers, template, "testdata/actual2.bed", "testdata/actual2.fastq", 1000, true)
-
-	if !fileio.AreEqual("testdata/actual2.bed", "testdata/expected2.bed") || !fileio.AreEqual("testdata/actual2.fastq", "testdata/expected2.fastq") {
-		t.Error("problem with simulatePcr")
-	}
-
-	if !t.Failed() {
-		err = os.Remove("testdata/actual2.bed")
-		exception.PanicOnErr(err)
-		err = os.Remove("testdata/actual2.fastq")
-		exception.PanicOnErr(err)
+	for _, pcr := range pcrSimTests {
+		simulatePcr(pcr.Primers, template, pcr.BedFile, pcr.FastqFile, pcr.Length, pcr.WithPrimer)
+		if !fileio.AreEqual(pcr.ExpectedBed, pcr.ExpectedFastq) {
+			t.Error("Error: Problem with simulatePcr")
+		}
+		if !t.Failed() {
+			fileio.EasyRemove(pcr.BedFile)
+			fileio.EasyRemove(pcr.FastqFile)
+		}
 	}
 }

@@ -64,11 +64,11 @@ func parseGenicArgs() {
 
 func Genic(s GenicSettings) {
 	var fastas, leafFastas []fasta.Fasta
-	rand.New(rand.NewSource(s.SetSeed))
+	seed := rand.New(rand.NewSource(s.SetSeed))
 
 	tree, err := expandedTree.ReadTree(s.TreeFile, s.InFile)
 	exception.PanicOnErr(err)
-	simulate.Simulate(s.InFile, tree, s.GenePredFile, true)
+	simulate.Simulate(s.InFile, tree, s.GenePredFile, true, seed)
 	nodes := expandedTree.GetTree(tree)
 	for i := 0; i < len(nodes); i++ {
 		fastas = append(fastas, *nodes[i].Fasta)

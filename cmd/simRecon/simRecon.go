@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
@@ -18,12 +19,12 @@ import (
 )
 
 // SimulateEvolve takes in a root fasta file, a newick tree, and gene structure genePred file for the fasta and returns a full simulated tree and a tree with sequence only at the leaves for reconstruction.
-func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string) {
+func SimulateEvolve(rootFastaFile string, treeFile string, gp string, simOutFile string, leafOutFile string, seed *rand.Rand) {
 	tree, err := expandedTree.ReadTree(treeFile, rootFastaFile)
 	exception.FatalOnErr(err)
 	var fastas []fasta.Fasta
 	var leafFastas []fasta.Fasta
-	simulate.Simulate(rootFastaFile, tree, gp, false)
+	simulate.Simulate(rootFastaFile, tree, gp, false, seed)
 	nodes := expandedTree.GetTree(tree)
 
 	for i := 0; i < len(nodes); i++ {
@@ -66,7 +67,8 @@ func SimRecon(rootFastaFile string, treeFile string, gp string, simOutFile strin
 	//ReconAccuracy calculates the total number of incorrectly reconstructed base pairs in a tree and returns a percentage of correct base calls
 	//TODO: add option to reconstruct pdna nodes
 	var err error
-	SimulateEvolve(rootFastaFile, treeFile, gp, simOutFile, leafOutFile)
+	seed := rand.New(rand.NewSource(1))
+	SimulateEvolve(rootFastaFile, treeFile, gp, simOutFile, leafOutFile, seed)
 	ReconstructSeq(treeFile, leafOutFile, reconOutFile)
 	var calcBaseAcc = false
 	if baseAccFile != "" {

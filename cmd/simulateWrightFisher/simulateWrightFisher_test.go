@@ -23,8 +23,8 @@ var SimulateWFTests = []struct {
 	Fasta         bool
 	Vcf           bool
 }{
-	{"testdata/tmp_without_initFreq.tsv",
-		"testdata/expected_without_initFreq.tsv",
+	{"testdata/tmp_without_initFreq.tsv.gz",
+		"testdata/expected_without_initFreq.tsv.gz",
 		1000,
 		1e-4,
 		1000,
@@ -38,8 +38,8 @@ var SimulateWFTests = []struct {
 		false,
 		false,
 	},
-	{"testdata/tmp_with_initFreq.tsv",
-		"testdata/expected_with_initFreq.tsv",
+	{"testdata/tmp_with_initFreq.tsv.gz",
+		"testdata/expected_with_initFreq.tsv.gz",
 		1000,
 		1e-9,
 		500,
@@ -53,8 +53,8 @@ var SimulateWFTests = []struct {
 		false,
 		false,
 	},
-	{"testdata/tmp_with_fitnessString.tsv",
-		"testdata/expected_with_fitnessString.tsv",
+	{"testdata/tmp_with_fitnessString.tsv.gz",
+		"testdata/expected_with_fitnessString.tsv.gz",
 		1000,
 		1e-9,
 		500,

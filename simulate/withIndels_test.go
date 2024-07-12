@@ -10,6 +10,8 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
+var randFaInput string = "testdata/rand.fa.gz"
+
 var WithIndelsTests = []struct {
 	FastaFile         string
 	BranchLength      float64
@@ -23,47 +25,43 @@ var WithIndelsTests = []struct {
 	ExpectedVcfFile   string
 	QName             string
 }{
-	{FastaFile: "testdata/rand.fa",
+	{FastaFile: randFaInput,
 		BranchLength:      0.1,
 		PropIndel:         0.2,
 		Lambda:            1,
 		GcContent:         0.42,
 		TransitionBias:    1,
-		VcfOutFile:        "testdata/tmp.vcf",
-		OutFastaFile:      "testdata/tmp.rand.fa",
-		ExpectedVcfFile:   "testdata/expected.rand.vcf",
-		ExpectedFastaFile: "testdata/expected.rand.fa",
+		VcfOutFile:        "testdata/tmp.vcf.gz",
+		ExpectedVcfFile:   "testdata/expected.rand.vcf.gz",
+		ExpectedFastaFile: "testdata/expected.rand.fa.gz",
 		QName:             "sim",
 	},
-	{FastaFile: "testdata/rand.fa",
+	{FastaFile: randFaInput,
 		BranchLength:      0.1,
 		PropIndel:         0.2,
 		Lambda:            1,
 		GcContent:         0.42,
 		TransitionBias:    5,
-		VcfOutFile:        "testdata/tmp.transition5.vcf",
-		OutFastaFile:      "testdata/tmp.rand.transition5.fa",
-		ExpectedVcfFile:   "testdata/expected.transition5.rand.vcf",
-		ExpectedFastaFile: "testdata/expected.transition5.rand.fa",
+		VcfOutFile:        "testdata/tmp.transition5.vcf.gz",
+		ExpectedVcfFile:   "testdata/expected.transition5.rand.vcf.gz",
+		ExpectedFastaFile: "testdata/expected.transition5.rand.fa.gz",
 		QName:             "sim",
 	},
 }
 
 func TestWithIndels(t *testing.T) {
-	rand.New(rand.NewSource(-1))
+	seed := rand.New(rand.NewSource(-1))
 	var records []fasta.Fasta
 	for _, v := range WithIndelsTests {
-		records = WithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.TransitionBias, v.VcfOutFile, v.QName)
-		fasta.Write(v.OutFastaFile, records)
-		if !fileio.AreEqual(v.OutFastaFile, v.ExpectedFastaFile) {
-			err := os.Rename(v.OutFastaFile, v.ExpectedFastaFile)
-			exception.PanicOnErr(err)
+		records = WithIndels(v.FastaFile, v.BranchLength, v.PropIndel, v.Lambda, v.GcContent, v.TransitionBias, v.VcfOutFile, v.QName, seed)
+		if !fasta.AllAreEqual(records, fasta.Read(v.ExpectedFastaFile)) {
+			fasta.Write(v.ExpectedFastaFile, records)
 			t.Errorf("Error in SimulateWithIndels. Output fasta was not as expected.")
-		} else {
-			fileio.EasyRemove(v.OutFastaFile)
 		}
+
 		if v.VcfOutFile != "" {
 			if !fileio.AreEqual(v.VcfOutFile, v.ExpectedVcfFile) {
+				exception.PanicOnErr(os.Rename(v.VcfOutFile, v.ExpectedVcfFile))
 				t.Errorf("Error in SimulateWithIndels. Output vcf was not as expected.")
 			} else {
 				fileio.EasyRemove(v.VcfOutFile)

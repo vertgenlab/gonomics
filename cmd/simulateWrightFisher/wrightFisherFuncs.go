@@ -15,7 +15,7 @@ import (
 )
 
 // SimMain function to be called in simulateWrightFisher.go.
-func simMain(set popgen.WrightFisherSettings) popgen.WrightFisherPopData {
+func simMain(set popgen.WrightFisherSettings, seed *rand.Rand) popgen.WrightFisherPopData {
 	checkValidInput(set)                          // Check various inputs
 	set.AncestralAllele = setAncestralAllele(set) // Set ancestral allele if given by input
 
@@ -30,7 +30,7 @@ GC Content = %v`, set.PopSize, set.GenomeSize, set.NumGen, set.MutRate, set.RFit
 
 	// Make two slices of fasta containing initial sequences. Default: random generated sequences
 	// If initFreq or fitnessString is specified, all sequences start with the specified ancestrall allele
-	curFasta, nextFasta := makeInitialPop(set)
+	curFasta, nextFasta := makeInitialPop(set, seed)
 
 	if set.Verbose {
 		fmt.Printf("\nInitial sequence is\n%v\n", curFasta[0].Seq)
@@ -50,7 +50,7 @@ GC Content = %v`, set.PopSize, set.GenomeSize, set.NumGen, set.MutRate, set.RFit
 	}
 
 	// Main function that loops through all generation, individual, and site
-	simulateAllGeneration(curFasta, nextFasta, relFitArray, allFreq, set)
+	simulateAllGeneration(curFasta, nextFasta, relFitArray, allFreq, set, seed)
 
 	if set.Verbose {
 		fmt.Printf("Ancestral alleles are\n%v\n", ancestralAlleles)
@@ -108,14 +108,14 @@ makeInitialPop() returns identical slices of fasta containing initial sequences
 Case I-no ancestral allele is specified: randomly generate sequences
 Case II-ancestral allele is specified: generate repeats of that allele.
 */
-func makeInitialPop(set popgen.WrightFisherSettings) ([]fasta.Fasta, []fasta.Fasta) {
+func makeInitialPop(set popgen.WrightFisherSettings, seed *rand.Rand) ([]fasta.Fasta, []fasta.Fasta) {
 	curFasta := make([]fasta.Fasta, set.PopSize)
 	nextFasta := make([]fasta.Fasta, set.PopSize)
 	var i int
 
 	// Case I: No ancestral allele is specified. Random generate sequence.
 	if set.AncestralAllele == "" {
-		initialSeq := simulate.RandIntergenicSeq(set.GcContent, set.GenomeSize)
+		initialSeq := simulate.RandIntergenicSeq(set.GcContent, set.GenomeSize, seed)
 		for i = 0; i < set.PopSize; i++ {
 			curFasta[i].Name = fmt.Sprintf("Seq_%v", strconv.Itoa(i))
 			curFasta[i].Seq = make([]dna.Base, set.GenomeSize)
@@ -275,7 +275,7 @@ func makeFitnessArray(initSeq []dna.Base, set popgen.WrightFisherSettings) [][]f
 /*
 simulateAllGeneration() simulates the changes in allele frequencies through all generation, all individual, and all site.
 */
-func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relFitArray [][]float64, allFreq [][][]float64, set popgen.WrightFisherSettings) {
+func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relFitArray [][]float64, allFreq [][][]float64, set popgen.WrightFisherSettings, seed *rand.Rand) {
 	var t, s, b, p int
 	var r float64
 	// This slice contains new frequencies of each allele after they are resampled based on relative fitness
@@ -312,7 +312,7 @@ func simulateAllGeneration(curFasta []fasta.Fasta, nextFasta []fasta.Fasta, relF
 
 				// If random float generated is less than the set mutation rate, mutate the base (random)
 				if rand.Float64() < set.MutRate {
-					nextFasta[p].Seq[s] = mutate(nextFasta[p].Seq[s], set.GcContent)
+					nextFasta[p].Seq[s] = mutate(nextFasta[p].Seq[s], set.GcContent, seed)
 				}
 			}
 		}
@@ -400,11 +400,11 @@ func sumSlice(slice []float64) float64 {
 There exists the similar function in simulate.go, but that function doesn't allow
 me to choose GC content (it was set to 0.41 by default and not mutable).
 */
-func mutate(originalBase dna.Base, GC float64) dna.Base {
-	newBase := simulate.ChooseRandomBase(GC)
+func mutate(originalBase dna.Base, GC float64, seed *rand.Rand) dna.Base {
+	newBase := simulate.ChooseRandomBase(GC, seed)
 
 	for newBase == originalBase {
-		newBase = simulate.ChooseRandomBase(GC)
+		newBase = simulate.ChooseRandomBase(GC, seed)
 	}
 	return newBase
 }

@@ -122,7 +122,7 @@ func NonCoding(s NonCodingSettings) {
 		root.Fasta = &records[0]
 		root.Name = "root"
 	} else {
-		root.Fasta = &fasta.Fasta{Name: "root", Seq: simulate.RandIntergenicSeq(s.GcContent, s.LenSeq)}
+		root.Fasta = &fasta.Fasta{Name: "root", Seq: simulate.RandIntergenicSeq(s.GcContent, s.LenSeq, seed)}
 	}
 	exception.PanicOnErr(err)
 	root = simulate.NonCoding(root, s.SubstitutionMatrixFile, s.UnitBranchLength)
