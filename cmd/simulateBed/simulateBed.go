@@ -22,7 +22,7 @@ func bedStats(bedFile string) (avg, length int) {
 }
 
 func simulateBed(regionCount int, simLength int, matchedBed string, noGapFile string, outFile string, setSeed int64) {
-	rand.Seed(setSeed)
+	rand.New(rand.NewSource(setSeed))
 	noGap := bed.Read(noGapFile)
 
 	if matchedBed != "" {

@@ -19,7 +19,7 @@ import (
 
 func statCalc(s Settings) {
 	MultipleOptionErrorCheck(s.Normal, s.Binomial, s.Poisson, s.Beta, s.Gamma, s.SampleAfs, s.SampleBeta, s.SampleGamma, s.SampleNormal)
-	rand.Seed(s.SetSeed)
+	rand.New(rand.NewSource(s.SetSeed))
 	var err error
 	out := fileio.EasyCreate(s.OutFile)
 	if s.Normal != "" {

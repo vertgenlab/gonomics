@@ -2,10 +2,8 @@ package main
 
 import (
 	"math/rand"
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -44,8 +42,7 @@ var samConsensusTests = []struct {
 }
 
 func TestSamConsensus(t *testing.T) {
-	rand.Seed(1)
-	var err error
+	rand.New(rand.NewSource(1))
 	var s Settings
 	for _, v := range samConsensusTests {
 		s = Settings{
@@ -63,15 +60,14 @@ func TestSamConsensus(t *testing.T) {
 		if !fileio.AreEqual(v.outFile, v.outFile_expected) {
 			t.Errorf("Error in samConsensus: generating output fa file")
 		} else {
-			err = os.Remove(v.outFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.outFile)
 		}
 		if v.multiFaDir != "" {
 			for i := range v.multiFaOutAndExpectedFiles {
 				if !fileio.AreEqual(i, v.multiFaOutAndExpectedFiles[i]) {
 					t.Errorf("Error in samConsensus: output multiFa file did not match expected.")
 				} else {
-					err = os.Remove(i)
+					fileio.EasyRemove(i)
 				}
 			}
 		}

@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/vcf"
-	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var SampleVcfTests = []struct {
@@ -30,7 +30,6 @@ func TestSampleVcf(t *testing.T) {
 		if vcf.CompareHeader(recHeader, expectedHeader) != 0 {
 			t.Errorf("Error in sampleVcf headers.")
 		}
-		err := os.Remove("tmp.vcf")
-		exception.PanicOnErr(err)
+		fileio.EasyRemove("tmp.vcf")
 	}
 }

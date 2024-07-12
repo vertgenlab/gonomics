@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -44,7 +42,6 @@ var SimulateDivergentWindowsVcfTests = []struct {
 }
 
 func TestSimulateDivergentWindowsVcf(t *testing.T) {
-	var err error
 	var s Settings
 	for _, v := range SimulateDivergentWindowsVcfTests {
 		s = Settings{
@@ -66,14 +63,12 @@ func TestSimulateDivergentWindowsVcf(t *testing.T) {
 		if !fileio.AreEqual(v.ExpectedUpper, v.TmpUpper) {
 			t.Errorf("Error in simulateDivergentWindowsVcf. Upper file does not match expected.")
 		} else {
-			err = os.Remove(v.TmpUpper)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.TmpUpper)
 		}
 		if !fileio.AreEqual(v.ExpectedLower, v.TmpLower) {
 			t.Errorf("Error in simulateDivergentWindowsVcf. Lower file does not match expected.")
 		} else {
-			err = os.Remove(v.TmpLower)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.TmpLower)
 		}
 	}
 }

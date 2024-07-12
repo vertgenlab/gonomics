@@ -38,7 +38,7 @@ type Settings struct {
 }
 
 func fastqFilter(s Settings) {
-	rand.Seed(s.SetSeed)
+	rand.New(rand.NewSource(s.SetSeed))
 	var r float64
 	var err error
 	var doneReading, FwdInMap, RevInMap, NameInMap bool

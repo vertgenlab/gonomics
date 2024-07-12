@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/popgen"
 )
@@ -73,7 +71,6 @@ var SimulateWFTests = []struct {
 }
 
 func TestSimulateWF(t *testing.T) {
-	var err error
 	var s popgen.WrightFisherSettings
 	for _, v := range SimulateWFTests {
 		s = popgen.WrightFisherSettings{
@@ -94,8 +91,7 @@ func TestSimulateWF(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in SimulateWrightFisher. Output did not match expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }

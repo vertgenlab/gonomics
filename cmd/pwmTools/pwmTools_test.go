@@ -1,10 +1,9 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var filterTests = []struct {
@@ -25,7 +24,6 @@ var filterTests = []struct {
 }
 
 func TestPwmFilter(t *testing.T) {
-	var err error
 	var s FilterSettings
 	for _, v := range filterTests {
 		s = FilterSettings{
@@ -39,8 +37,7 @@ func TestPwmFilter(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: pwmFilter outFile is not as expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }
@@ -81,7 +78,6 @@ var FormatTests = []struct {
 }
 
 func TestPwmFormat(t *testing.T) {
-	var err error
 	var s FormatSettings
 	for _, v := range FormatTests {
 		s = FormatSettings{
@@ -96,8 +92,7 @@ func TestPwmFormat(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: pwmFormat outFile is not as expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }
@@ -122,7 +117,6 @@ var InfoTests = []struct {
 }
 
 func TestPwmInfo(t *testing.T) {
-	var err error
 	var s InfoSettings
 	for _, v := range InfoTests {
 		s = InfoSettings{
@@ -137,8 +131,7 @@ func TestPwmInfo(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: pwmInfo outFile is not as expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }
@@ -159,7 +152,6 @@ var PwmShuffleTests = []struct {
 }
 
 func TestPwmShuffle(t *testing.T) {
-	var err error
 	var s ShuffleSettings
 	for _, v := range PwmShuffleTests {
 		s = ShuffleSettings{
@@ -172,8 +164,7 @@ func TestPwmShuffle(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: pwmShuffle outFile is not as expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }

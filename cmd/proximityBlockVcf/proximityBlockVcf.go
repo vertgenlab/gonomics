@@ -6,17 +6,18 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/vcf"
-	"log"
-	"math/rand"
 )
 
 func proximityBlockVcf(inFile string, outFile string, distance int, setSeed int64) {
 	var err error
-	rand.Seed(setSeed)
+	rand.New(rand.NewSource(setSeed))
 	records, header := vcf.Read(inFile)
 	rand.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
 

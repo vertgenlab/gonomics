@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"os"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"log"
-	"math/rand"
-	"os"
 )
 
 // SampleSettings defines the usage settings for the pFa sample subcommand.
@@ -68,7 +69,7 @@ func parseSampleArgs() {
 // pFaSample parses an input pFASTA file and samples the file according to user-defined settings.
 func pFaSample(s SampleSettings) {
 	var err error
-	rand.Seed(s.SetSeed)
+	rand.New(rand.NewSource(s.SetSeed))
 	for currSample := 0; currSample < s.NumSamples; currSample++ {
 		var outName = fmt.Sprintf("%s/sample_%v.fa", s.OutDir, currSample)
 		records := pFasta.Sample(pFasta.Read(s.InFile), s.Chrom)

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/numbers"
-	"github.com/vertgenlab/gonomics/vcf"
-	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/vcf"
 )
 
 var VcfFilterTests = []struct {
@@ -51,7 +51,6 @@ var VcfFilterTests = []struct {
 }
 
 func TestVcfFilter(t *testing.T) {
-	var err error
 	for _, v := range VcfFilterTests {
 		var altSlice []string
 		if v.alt != "" {
@@ -89,8 +88,7 @@ func TestVcfFilter(t *testing.T) {
 		if !vcf.AllEqual(records, expected) {
 			t.Errorf("Error in vcfFilter. Tmp: %v. Expected: %v.", v.tmpOutFile, v.expectedOutputFile)
 		} else {
-			err = os.Remove(v.tmpOutFile)
+			fileio.EasyRemove(v.tmpOutFile)
 		}
-		exception.PanicOnErr(err)
 	}
 }

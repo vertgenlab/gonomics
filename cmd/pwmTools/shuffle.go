@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/motif"
 	"log"
 	"math/rand"
 	"os"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/motif"
 )
 
 // ShuffleSettings defines the usage options for the pwmTools shuffle subcommand.
@@ -65,7 +66,7 @@ func pwmShuffle(s ShuffleSettings) {
 	var originalMotifName string
 	var currIter int
 	var err error
-	rand.Seed(s.SetSeed)
+	rand.New(rand.NewSource(s.SetSeed))
 	records := motif.ReadJaspar(s.InFile, "Frequency") // we don't use the type information, so we'll just read it as Frequency, though it doesn't matter
 	out := fileio.EasyCreate(s.OutFile)
 	for currMatrix := range records {

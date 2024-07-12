@@ -97,7 +97,7 @@ func rmClusteredRecords(input <-chan vcf.Vcf, output chan<- vcf.Vcf, minDist int
 }
 
 func vcfFilter(infile string, outfile string, c criteria, groupFile string, parseFormat bool, parseInfo bool, setSeed int64) (total, removed int) {
-	rand.Seed(setSeed)
+	rand.New(rand.NewSource(setSeed))
 	var records <-chan vcf.Vcf
 	var totalChan, removedChan chan int
 	var header vcf.Header

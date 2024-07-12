@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -208,7 +206,6 @@ var StatCalcTests = []struct {
 }
 
 func TestStatCalc(t *testing.T) {
-	var err error
 	var s Settings
 	for _, v := range StatCalcTests {
 		s = Settings{
@@ -229,8 +226,7 @@ func TestStatCalc(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in statCalc. Output did not match expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }

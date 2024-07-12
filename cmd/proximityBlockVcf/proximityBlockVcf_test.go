@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -20,14 +18,12 @@ var ProximityBlockVcfTests = []struct {
 }
 
 func TestProximityBlockVcf(t *testing.T) {
-	var err error
 	for _, v := range ProximityBlockVcfTests {
 		proximityBlockVcf(v.InFile, v.OutFile, v.Distance, v.SetSeed)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in proximityBlockVcf. Output did not match expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }

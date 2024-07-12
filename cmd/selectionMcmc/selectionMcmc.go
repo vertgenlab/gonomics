@@ -14,7 +14,7 @@ import (
 )
 
 func selectionMcmc(filename string, outFile string, s popgen.McmcSettings) {
-	rand.Seed(s.SetSeed)
+	rand.New(rand.NewSource(s.SetSeed))
 	data, err := popgen.VcfToAfs(filename, s.UnPolarized, s.DivergenceAscertainment, s.IncludeRef) //VcfToAFS is written with polarized as the argument for clarity, so the bool is flipped here.
 	exception.FatalOnErr(err)
 	popgen.MetropolisHastings(*data, outFile, s)

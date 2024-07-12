@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -23,7 +21,6 @@ var SimulateVcfTests = []struct {
 }
 
 func TestSimulateVcf(t *testing.T) {
-	var err error
 	var s Settings
 	for _, v := range SimulateVcfTests {
 		s = Settings{
@@ -40,8 +37,7 @@ func TestSimulateVcf(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in simulateVcf.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.OutFile)
 		}
 	}
 }

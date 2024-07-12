@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
+	"testing"
+
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"testing"
 )
 
 var extractTests = []struct {
@@ -80,7 +81,6 @@ var extractBedTests = []struct {
 }
 
 func TestExtractBed(t *testing.T) {
-	var err error
 	var s ExtractBedSettings
 	for _, testCase := range extractBedTests {
 		s = ExtractBedSettings{
@@ -93,10 +93,10 @@ func TestExtractBed(t *testing.T) {
 		observed := pFasta.Read(testCase.OutFile)
 		expected := pFasta.Read(testCase.ExpectedFile)
 		if !pFasta.AllAreEqual(observed, expected, testCase.Precision) {
+			os.Rename(testCase.OutFile, testCase.ExpectedFile)
 			t.Errorf("Error: pFaExtract outFile is not as expected.")
 		} else {
-			err = os.Remove(testCase.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(testCase.OutFile)
 		}
 	}
 }
@@ -119,7 +119,6 @@ var sampleTests = []struct {
 }
 
 func TestSample(t *testing.T) {
-	var err error
 	var s SampleSettings
 	for _, testCase := range sampleTests {
 		s = SampleSettings{
@@ -135,8 +134,7 @@ func TestSample(t *testing.T) {
 			if !fileio.AreEqual(outName, testCase.ExpectedFile) {
 				t.Errorf("Error: pFaExtract outFile is not as expected.")
 			} else {
-				err = os.Remove(outName)
-				exception.PanicOnErr(err)
+				fileio.EasyRemove(outName)
 			}
 		}
 	}
@@ -218,7 +216,6 @@ var visualizeTests = []struct {
 }
 
 func TestVisualize(t *testing.T) {
-	var err error
 	var s ExtractSettings
 	for _, testCase := range extractTests {
 		s = ExtractSettings{
@@ -235,8 +232,7 @@ func TestVisualize(t *testing.T) {
 		if !pFasta.AllAreEqual(observed, expected, testCase.Precision) {
 			t.Errorf("Error: pFaExtract outFile is not as expected.")
 		} else {
-			err = os.Remove(testCase.OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(testCase.OutFile)
 		}
 	}
 }
@@ -323,7 +319,6 @@ var VisualizeTsvTests = []struct {
 }
 
 func TestVisualizeTsv(t *testing.T) {
-	var err error
 	var s VisualizeSettings
 
 	for _, testCase := range VisualizeTsvTests {
@@ -345,8 +340,7 @@ func TestVisualizeTsv(t *testing.T) {
 		if !fileio.AreEqual(testCase.OutDir, testCase.ExpectedFile) {
 			t.Errorf("Error: pFaVisualize --tsvOut=true output not as expected.")
 		} else {
-			err = os.Remove(testCase.OutDir)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(testCase.OutDir)
 		}
 	}
 }
