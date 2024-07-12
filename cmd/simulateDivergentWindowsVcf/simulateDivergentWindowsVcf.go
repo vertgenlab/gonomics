@@ -32,21 +32,22 @@ func simulateDivergentWindowsVcf(s Settings) {
 		log.Fatalf("LowerPercentile argument must be between one and zero.")
 	}
 
-	seed := rand.New(rand.NewSource(s.SetSeed))
+	var global, local *rand.Rand
+	global = rand.New(rand.NewSource(s.SetSeed))
 
 	var err error
 	var TotalSites []vcf.Vcf = make([]vcf.Vcf, s.NumTotalSites)
 	var windows []Window = make([]Window, s.NumWindows)
 
 	for i := 0; i < s.NumTotalSites; i++ {
-		TotalSites[i] = simulate.SingleVcf(s.Alpha, s.NumAlleles, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, i+1, seed)
+		TotalSites[i] = simulate.SingleVcf(s.Alpha, s.NumAlleles, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, i+1, global)
 	}
 
 	for i := 0; i < s.NumWindows; i++ {
 		windows[i].Variants = make([]vcf.Vcf, s.NumWindowSites)
 		// Shuffle the vcf records using the seed instance
-		localSeed := rand.New(rand.NewSource(s.SetSeed * int64(i)))
-		localSeed.Shuffle(len(TotalSites), func(i, j int) { TotalSites[i], TotalSites[j] = TotalSites[j], TotalSites[i] })
+		local = rand.New(rand.NewSource(s.SetSeed * int64(i)))
+		local.Shuffle(len(TotalSites), func(i, j int) { TotalSites[i], TotalSites[j] = TotalSites[j], TotalSites[i] })
 		copy(windows[i].Variants, TotalSites[:s.NumWindowSites]) // Keep only as many results as specified
 		windows[i].NumDivergent = countDivergent(windows[i].Variants)
 	}

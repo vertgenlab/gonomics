@@ -22,10 +22,7 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 		current = SingleVcf(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, i+1, seed)
 		vcf.WriteVcf(out, current)
 	}
-
-	var err error
-	err = out.Close()
-	exception.PanicOnErr(err)
+	exception.PanicOnErr(out.Close())
 }
 
 // SingleVcf returns a single simulated Vcf record for a user-specified selection parameter alpha and genomic position.
