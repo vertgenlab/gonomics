@@ -2,12 +2,13 @@ package browser
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta/pFasta"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // PFaVisualizer produces command line visualizations of pFasta format alignments from a specified start and end position.
