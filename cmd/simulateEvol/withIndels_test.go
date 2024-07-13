@@ -57,6 +57,7 @@ func TestSimulateEvol(t *testing.T) {
 			fileio.EasyRemove(v.OutFile)
 		}
 		if v.VcfOutFile != "" {
+
 			if !fileio.AreEqual(v.VcfOutFile, v.ExpectedVcfFile) {
 				t.Errorf("Error in SimulateEvol withIndels. Output Vcf file was not as expected.")
 			} else {

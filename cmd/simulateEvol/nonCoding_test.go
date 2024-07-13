@@ -23,7 +23,7 @@ var NonCodingTests = []struct {
 	ExpectedNewick         string
 }{
 	{TreeFile: "",
-		FastaFile:              "",
+		FastaFile:              "testdata/rand.fa.gz",
 		OutFile:                "testdata/test.NonCoding.fa",
 		SetSeed:                29,
 		NumNodes:               17,
@@ -72,13 +72,11 @@ func TestNonCoding(t *testing.T) {
 			NewickOut:              v.NewickOut,
 		}
 		NonCoding(s)
-
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error: simulateEvol nonCoding output was not as expected.\n")
 		} else {
 			fileio.EasyRemove(v.OutFile)
 		}
-
 		if !fileio.AreEqual(v.NewickOut, v.ExpectedNewick) {
 			t.Errorf("Error: simulateEvol nonCoding output Newick was not as expected.\n")
 		} else {
