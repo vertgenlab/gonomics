@@ -20,7 +20,7 @@ import (
 // Fatal/Panics when appropriate.
 func MustCreate(filename string) *os.File {
 	if filename == "" {
-		log.Fatalf("Error: Must write to a non-empty filename...")
+		exception.PanicOnErr(fmt.Errorf("must write to a non-empty filename"))
 	}
 	file, err := os.Create(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrExist) {
@@ -139,7 +139,7 @@ func ReadHeader(reader *bufio.Reader) ([]string, error) {
 	return header, peekErr
 }
 
-// equal returns true if two input files are identical.
+// equal returns true if two input files are identical,gzip compatibility.
 func equal(a string, b string, commentsMatter bool) bool {
 	fA := MustOpen(a)
 	defer fA.Close()
@@ -150,9 +150,7 @@ func equal(a string, b string, commentsMatter bool) bool {
 
 	if IsGzip(fA) {
 		gzipReaderA, err := pgzip.NewReader(fA)
-		if err != nil {
-			panic(fmt.Sprintf("failed to create gzip reader for file %s: %v", a, err))
-		}
+		exception.PanicOnErr(err)
 		defer gzipReaderA.Close()
 		readerA = bufio.NewReader(gzipReaderA)
 	} else {
@@ -161,9 +159,7 @@ func equal(a string, b string, commentsMatter bool) bool {
 
 	if IsGzip(fB) {
 		gzipReaderB, err := gzip.NewReader(fB)
-		if err != nil {
-			exception.PanicOnErr(fmt.Errorf("failed to create gzip reader for file %s: %v", b, err))
-		}
+		exception.PanicOnErr(err)
 		defer gzipReaderB.Close()
 		readerB = bufio.NewReader(gzipReaderB)
 	} else {
@@ -182,7 +178,7 @@ func equal(a string, b string, commentsMatter bool) bool {
 			lineB, fileBDone = NextRealLine(readerB)
 		}
 		if lineA != lineB {
-			fmt.Printf("diff\n%s\n%s\n", lineA, lineB)
+			log.Printf("diff\n%s\n%s\n", lineA, lineB)
 			return false
 		}
 	}

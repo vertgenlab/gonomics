@@ -1,10 +1,8 @@
 package main
 
 import (
-	"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 )
@@ -31,18 +29,18 @@ var FastqFilterTests = []struct {
 	BarcodeLength    int
 	UmiLength        int
 }{
-	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedReadWrite.fastq", "", "", "", "", "", "", false, 1, 10, 0, numbers.MaxInt, "", "", "", false, 16, 12},
-	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedHalf.fastq", "", "", "", "", "", "", false, 0.5, 10, 0, numbers.MaxInt, "", "", "", false, 16, 12},
-	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1ReadWrite.fastq", "testdata/expectedR2ReadWrite.fastq", true, 1, 10, 0, numbers.MaxInt, "", "", "", false, 16, 12}, //~/go/bin/fastqFilter -pairedEnd -setSeed 10 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1ReadWrite.fastq testdata/expectedR2ReadWrite.fastq
-	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1Half.fastq", "testdata/expectedR2Half.fastq", true, 0.5, 10, 0, numbers.MaxInt, "", "", "", false, 16, 12},         //~/go/bin/fastqFilter -pairedEnd -setSeed 10 -subSet 0.5 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1Half.fastq testdata/expectedR2Half.fastq
-	{"", "", "", "testdata/UmiTest_R1.fastq", "testdata/UmiTest_R2.fastq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedUmi_R1.fastq", "testdata/expectedUmi_R2.fastq", true, 1, 10, 0, numbers.MaxInt, "", "", "", true, 16, 12},
-	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedNamesFilter.fastq", "", "", "", "", "", "", false, 1, 10, 0, numbers.MaxInt, "testdata/namesList.txt", "", "", false, 16, 12},                                                                                                                 //~/go/bin/fastqFilter -setSeed 10 -retainNamesList testdata/namesList.txt ../../fastq/testdata/test.fastq testdata/expectedNamesFilter.fastq
-	{"../../fastq/testdata/test.fastq", "tmpOut.fastq", "testdata/expectedDiscardNamesFilter.fastq", "", "", "", "", "", "", false, 1, 10, 0, numbers.MaxInt, "", "testdata/namesList.txt", "", false, 16, 12},                                                                                                          //~/go/bin/fastqFilter -setSeed 10 -discardNamesList testdata/namesList.txt ../../fastq/testdata/test.fastq testdata/expectedDiscardNamesFilter.fastq
-	{"", "", "", "testdata/UmiTest_R1.fastq", "testdata/UmiTest_R2.fastq", "testdata/keepCellsOut_R1.fastq", "testdata/keepCellsOut_R2.fastq", "testdata/expectedKeepCellsOut_R1.fastq", "testdata/expectedKeepCellsOut_R2.fastq", true, 1, 10, 0, numbers.MaxInt, "", "", "testdata/keepCellsList.txt", false, 16, 12}, //keepCellsList test
+	{"../../fastq/testdata/test.fastq", "tmpOut.fastq.gz", "testdata/expectedReadWrite.fastq", "", "", "", "", "", "", false, 1, 10, 0, numbers.MaxInt, "", "", "", false, 16, 12},
+	{"../../fastq/testdata/test.fastq", "tmpOut.fastq.gz", "testdata/expectedHalf.fastq", "", "", "", "", "", "", false, 0.5, 10, 0, numbers.MaxInt, "", "", "", false, 16, 12},
+	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1ReadWrite.fastq.gz", "testdata/expectedR2ReadWrite.fastq.gz", true, 1, 10, 0, numbers.MaxInt, "", "", "", false, 16, 12}, //~/go/bin/fastqFilter -pairedEnd -setSeed 10 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1ReadWrite.fastq testdata/expectedR2ReadWrite.fastq
+	{"", "", "", "../../fastq/testdata/simReads_R1.fq", "../../fastq/testdata/simReads_R2.fq", "tmpR1.fastq", "tmpR2.fastq", "testdata/expectedR1Half.fastq.gz", "testdata/expectedR2Half.fastq.gz", true, 0.5, 10, 0, numbers.MaxInt, "", "", "", false, 16, 12},         //~/go/bin/fastqFilter -pairedEnd -setSeed 10 -subSet 0.5 ../../fastq/testdata/simReads_R1.fq ../../fastq/testdata/simReads_R2.fq testdata/expectedR1Half.fastq testdata/expectedR2Half.fastq
+	{"", "", "", "testdata/UmiTest_R1.fastq", "testdata/UmiTest_R2.fastq", "tmpR1.fastq.gz", "tmpR2.fastq.gz", "testdata/expectedUmi_R1.fastq", "testdata/expectedUmi_R2.fastq", true, 1, 10, 0, numbers.MaxInt, "", "", "", true, 16, 12},
+	{"../../fastq/testdata/test.fastq", "tmpOut.fastq.gz", "testdata/expectedNamesFilter.fastq.gz", "", "", "", "", "", "", false, 1, 10, 0, numbers.MaxInt, "testdata/namesList.txt", "", "", false, 16, 12},                                                                                                                 //~/go/bin/fastqFilter -setSeed 10 -retainNamesList testdata/namesList.txt ../../fastq/testdata/test.fastq testdata/expectedNamesFilter.fastq
+	{"../../fastq/testdata/test.fastq", "tmpOut.fastq.gz", "testdata/expectedDiscardNamesFilter.fastq.gz", "", "", "", "", "", "", false, 1, 10, 0, numbers.MaxInt, "", "testdata/namesList.txt", "", false, 16, 12},                                                                                                          //~/go/bin/fastqFilter -setSeed 10 -discardNamesList testdata/namesList.txt ../../fastq/testdata/test.fastq testdata/expectedDiscardNamesFilter.fastq
+	{"", "", "", "testdata/UmiTest_R1.fastq", "testdata/UmiTest_R2.fastq", "testdata/keepCellsOut_R1.fastq.gz", "testdata/keepCellsOut_R2.fastq.gz", "testdata/expectedKeepCellsOut_R1.fastq", "testdata/expectedKeepCellsOut_R2.fastq", true, 1, 10, 0, numbers.MaxInt, "", "", "testdata/keepCellsList.txt", false, 16, 12}, //keepCellsList test
 }
 
 func TestFastqFilter(t *testing.T) {
-	var err error
+	//var err error
 	var s Settings
 	for _, v := range FastqFilterTests {
 		s = Settings{
@@ -72,16 +70,13 @@ func TestFastqFilter(t *testing.T) {
 			if !fileio.AreEqual(v.R2OutFile, v.R2ExpectedFile) {
 				t.Errorf("Error in fastqFilter, paired reads, read 2.")
 			}
-			err = os.Remove(v.R1OutFile)
-			exception.PanicOnErr(err)
-			err = os.Remove(v.R2OutFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.R1OutFile)
+			fileio.EasyRemove(v.R2OutFile)
 		} else {
 			if !fileio.AreEqual(v.outputFile, v.expectedFile) {
 				t.Errorf("Error in fastqFilter, unpaired reads.")
 			}
-			err = os.Remove(v.outputFile)
-			exception.PanicOnErr(err)
+			fileio.EasyRemove(v.outputFile)
 		}
 	}
 }

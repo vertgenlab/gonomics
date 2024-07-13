@@ -1,7 +1,9 @@
 package fileio
 
 import (
+	"bytes"
 	"io"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -55,13 +57,28 @@ func TestEqual(t *testing.T) {
 }
 
 func TestMustCreateEmptyFilenameError(t *testing.T) {
-	if os.Getenv("TEST_FATAL") != "1" {
-		return
-	}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Error: Unknown file type should throw error...\n")
+		}
+	}()
+
 	// Will cause log.Fatal in this test context
 	MustCreate("")
-}
 
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer log.SetOutput(os.Stderr)
+
+	expectedMessage := "must write to a non-empty filename"
+	logOutput := buf.String()
+
+	if !strings.Contains(expectedMessage, logOutput) {
+		t.Errorf("Expected log message:\n%s\nNot found in actual log:\n%s\n", expectedMessage, logOutput)
+	} else {
+		t.Log("log.Fatalf called with expected message - Test Passed!\n")
+	}
+}
 func TestStdin(t *testing.T) {
 	testCases := []string{
 		"Gonomics fileio stdin mock",
