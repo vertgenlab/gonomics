@@ -20,7 +20,7 @@ import (
 // Fatal/Panics when appropriate.
 func MustCreate(filename string) *os.File {
 	if filename == "" {
-		exception.PanicOnErr(fmt.Errorf("must write to a non-empty filename"))
+		panic(fmt.Errorf("must write to a non-empty filename"))
 	}
 	file, err := os.Create(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrExist) {
@@ -40,7 +40,7 @@ func MustOpen(filename string) *os.File {
 
 	file, err := os.Open(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrNotExist) {
-		log.Fatal(err.Error())
+		panic(err.Error())
 	} else {
 		exception.PanicOnErr(err)
 	}
