@@ -37,7 +37,7 @@ func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-c
 	return c
 }
 
-// TODO: comment this function
+// GenerateBedRegion searches the regions of searchSpace (a noGap.bed input file, as a parsed struct) and randomly selects a continuous region of length regionLength 
 func GenerateBedRegion(searchSpace []bed.Bed, totalWindows int, regionLength int) {
 	tmp = numbers.RandIntInRange(0, totalWindows)
 

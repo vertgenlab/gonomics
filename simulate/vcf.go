@@ -77,7 +77,9 @@ func SingleVcf(alpha float64, numAlleles int, boundAlpha float64, boundBeta floa
 	return answer
 }
 
-// TODO: comment this function
+// SingleVcfWithRef returns a single simulated Vcf record for a user-specified selection parameter alpha, genomic position and reference Fasta file.
+// There also needs to be parameters for the bounding function, where alpha, beta, and multiplier parameters of 0.001, 0.001, and 10000 are good
+// for most applications.
 func SingleVcfWithRef(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, chrom string, pos int, refBase dna.base) vcf.Vcf {
 	var genotype []vcf.Sample
 	var divergent bool
