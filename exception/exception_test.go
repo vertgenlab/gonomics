@@ -20,8 +20,7 @@ func TestRecoverPanicErrWithError(t *testing.T) {
 			t.Error("Error: Failed expected panic:")
 		}
 	}()
-
-	defer RecoverPanicErr()
+	RecoverPanicErr()
 }
 
 // TestPanicOnErr verifies that the PanicOnErr function correctly panics when passed a non-nil error.
