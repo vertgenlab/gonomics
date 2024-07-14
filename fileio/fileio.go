@@ -18,7 +18,7 @@ import (
 // Fatal/Panics when appropriate.
 func MustCreate(filename string) *os.File {
 	if filename == "" {
-		log.Fatalf("Error: Must write to a non-empty filename...")
+		panic(fmt.Errorf("must write to a non-empty filename"))
 	}
 	file, err := os.Create(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrExist) {
@@ -35,7 +35,6 @@ func MustOpen(filename string) *os.File {
 	if strings.Contains(filename, "stdin") {
 		return os.Stdin
 	}
-
 	file, err := os.Open(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrNotExist) {
 		log.Fatal(err.Error())
@@ -62,10 +61,10 @@ func NextLine(reader *bufio.Reader) (string, bool) {
 	var line string
 	var err error
 	line, err = reader.ReadString('\n')
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		exception.PanicOnErr(err)
 	}
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		if line != "" {
 			log.Panicf("Error: last line of file didn't end with a newline character: %s\n", line)
 		} else {
@@ -87,7 +86,7 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 	if err != nil && err != io.EOF {
 		log.Panic(err)
 	}
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		if line != "" {
 			log.Panicf("Error: last line of file didn't end with a newline character: %s\n", line)
 		} else {
@@ -137,28 +136,25 @@ func ReadHeader(reader *bufio.Reader) ([]string, error) {
 	return header, peekErr
 }
 
-// equal returns true if two input files are identical.
+// equal returns true if two input files are identical,gzip compatibility.
 func equal(a string, b string, commentsMatter bool) bool {
+	readerA, readerB := EasyOpen(a), EasyOpen(b)
+	defer readerA.Close()
+	defer readerB.Close()
+
 	var fileADone, fileBDone = false, false
 	var lineA, lineB string
 
-	fA := MustOpen(a)
-	defer fA.Close()
-	fB := MustOpen(b)
-	defer fB.Close()
-	readerA := bufio.NewReader(fA)
-	readerB := bufio.NewReader(fB)
-
 	for !fileADone && !fileBDone {
 		if commentsMatter {
-			lineA, fileADone = NextLine(readerA)
-			lineB, fileBDone = NextLine(readerB)
+			lineA, fileADone = EasyNextLine(readerA)
+			lineB, fileBDone = EasyNextLine(readerB)
 		} else {
-			lineA, fileADone = NextRealLine(readerA)
-			lineB, fileBDone = NextRealLine(readerB)
+			lineA, fileADone = EasyNextRealLine(readerA)
+			lineB, fileBDone = EasyNextRealLine(readerB)
 		}
 		if lineA != lineB {
-			fmt.Printf("diff\n%s\n%s\n", lineA, lineB)
+			log.Printf("diff\n%s\n%s\n", lineA, lineB)
 			return false
 		}
 	}
