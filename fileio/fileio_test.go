@@ -119,10 +119,11 @@ func TestStdin(t *testing.T) {
 }
 
 func TestEqualGzip(t *testing.T) {
-	var unzip, gzipped string = "testdata/big.fa", "testdata/big.fa.gz"
-	copyFile(gzipped, unzip)
+	var unzip, gzipped string = "testdata/words.txt", "testdata/words.txt.gz"
 
+	copyFile(gzipped, unzip)
 	defer EasyRemove(unzip)
+
 	if !equal(gzipped, gzipped, true) || !equal(unzip, gzipped, true) {
 		t.Errorf("Error: problem with unzip vs. gzip equal")
 	}
