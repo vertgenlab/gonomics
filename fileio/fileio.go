@@ -137,7 +137,7 @@ func ReadHeader(reader *bufio.Reader) ([]string, error) {
 	return header, peekErr
 }
 
-// equal returns true if two input files are identical,gzip compatibility.
+// equal returns true if two input files are identical, gzip compatibility.
 func equal(a string, b string, commentsMatter bool) bool {
 	readerA, readerB := EasyOpen(a), EasyOpen(b)
 	defer readerA.Close()
