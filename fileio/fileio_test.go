@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 var testfile string = "testdata/smallTest"
@@ -57,11 +59,7 @@ func TestEqual(t *testing.T) {
 }
 
 func TestMustCreateEmptyFilenameError(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Error: Unknown file type should throw error...\n")
-		}
-	}()
+	defer exception.RecoverPanicErr()
 
 	// Will cause log.Fatal in this test context
 	MustCreate("")

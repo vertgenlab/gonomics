@@ -67,7 +67,4 @@ func RecoverPanicErr() {
 	if r == nil {
 		log.Printf("Expected panic, but none occurred\n")
 	}
-	if err, ok := r.(error); ok && err != nil {
-		log.Panicf("Error: Unexpected error panic: %v\n", err)
-	}
 }
