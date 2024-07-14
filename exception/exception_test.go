@@ -11,7 +11,16 @@ import (
 )
 
 // TestPanicOnErr verifies that the PanicOnErr function panics when given a non-nil error.
-func TestPanicOnErr(t *testing.T) {
+func TestRecoverPanicErrWithError(t *testing.T) {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer func() {
+		log.SetOutput(os.Stderr) // Restore default
+		if strings.HasSuffix(buf.String(), "Expected panic, but none occurred:\n") {
+			t.Error("Error: Failed expected panic:")
+		}
+	}()
+
 	defer RecoverPanicErr()
 	PanicOnErr(errors.New("Error: panic test error"))
 }

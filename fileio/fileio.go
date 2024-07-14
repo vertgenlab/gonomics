@@ -131,7 +131,7 @@ func ReadHeader(reader *bufio.Reader) ([]string, error) {
 		header = append(header, line)
 	}
 
-	if errors.Is(peekErr, io.EOF) {
+	if peekErr == io.EOF {
 		return header, nil
 	}
 	return header, peekErr
