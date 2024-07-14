@@ -16,7 +16,7 @@ func TestRecoverPanicErrWithError(t *testing.T) {
 	log.SetOutput(&buf)
 	defer func() {
 		log.SetOutput(os.Stderr) // Restore default
-		if strings.HasSuffix(buf.String(), "Expected panic, but none occurred:\n") {
+		if !strings.HasSuffix(buf.String(), "Expected panic, but none occurred.\n") {
 			t.Error("Error: Failed expected panic:")
 		}
 	}()

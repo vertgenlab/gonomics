@@ -4,7 +4,6 @@ package fileio
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -18,7 +17,7 @@ import (
 // Fatal/Panics when appropriate.
 func MustCreate(filename string) *os.File {
 	if filename == "" {
-		panic(fmt.Errorf("must write to a non-empty filename"))
+		log.Panicf("Error: must write to a non-empty filename")
 	}
 	file, err := os.Create(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrExist) {
