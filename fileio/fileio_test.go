@@ -116,6 +116,24 @@ func TestStdin(t *testing.T) {
 	}
 }
 
+func TestNotEqual(t *testing.T) {
+	var gzipped string = "testdata/words.txt.gz"
+
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer func() { log.SetOutput(os.Stderr) }() // Restore default
+
+	expected := "diff\nHello World\nmock text gzip\n"
+
+	if equal(testfile, gzipped, true) || equal(testfile, gzipped, false) {
+		t.Errorf("Error: results should not equal")
+	}
+
+	if !strings.HasSuffix(buf.String(), expected) {
+		t.Errorf("Expected warning: '%s', got '%s'", expected, buf.String())
+	}
+}
+
 func TestEqualGzip(t *testing.T) {
 	var unzip, gzipped string = "testdata/words.txt", "testdata/words.txt.gz"
 
