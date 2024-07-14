@@ -22,7 +22,12 @@ func TestRecoverPanicErrWithError(t *testing.T) {
 	}()
 
 	defer RecoverPanicErr()
-	PanicOnErr(errors.New("Error: panic test error"))
+}
+
+// TestPanicOnErr verifies that the PanicOnErr function correctly panics when passed a non-nil error.
+func TestPanicOnErr(t *testing.T) {
+	defer RecoverPanicErr()
+	PanicOnErr(errors.New("Error: expected test error"))
 }
 
 // TestFatalOnErr verifies that FatalOnErr logs an error and exits the program.

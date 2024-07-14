@@ -62,7 +62,7 @@ func NextLine(reader *bufio.Reader) (string, bool) {
 	var line string
 	var err error
 	line, err = reader.ReadString('\n')
-	if err != nil && !errors.Is(err, io.EOF) {
+	if err != nil && err != io.EOF {
 		exception.PanicOnErr(err)
 	}
 	if errors.Is(err, io.EOF) {
@@ -84,10 +84,10 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 	var err error
 	for line, err = reader.ReadString('\n'); err == nil && strings.HasPrefix(line, "#"); line, err = reader.ReadString('\n') {
 	}
-	if err != nil && !errors.Is(err, io.EOF) {
+	if err != nil && err != io.EOF {
 		log.Panic(err)
 	}
-	if errors.Is(err, io.EOF) {
+	if err == io.EOF {
 		if line != "" {
 			log.Panicf("Error: last line of file didn't end with a newline character: %s\n", line)
 		} else {
