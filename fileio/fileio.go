@@ -84,7 +84,7 @@ func NextRealLine(reader *bufio.Reader) (string, bool) {
 	var err error
 	for line, err = reader.ReadString('\n'); err == nil && strings.HasPrefix(line, "#"); line, err = reader.ReadString('\n') {
 	}
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		log.Panic(err)
 	}
 	if errors.Is(err, io.EOF) {
@@ -131,7 +131,7 @@ func ReadHeader(reader *bufio.Reader) ([]string, error) {
 		header = append(header, line)
 	}
 
-	if peekErr == io.EOF {
+	if errors.Is(peekErr, io.EOF) {
 		return header, nil
 	}
 	return header, peekErr
