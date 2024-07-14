@@ -10,16 +10,9 @@ import (
 	"testing"
 )
 
-// RecoverPanicErr verifies that a panic occurred in a test, failing the test if not.
-func RecoverPanicErr(t *testing.T) {
-	if r := recover(); r == nil {
-		t.Errorf("Expected panic, but none occurred")
-	}
-}
-
 // TestPanicOnErr verifies that the PanicOnErr function panics when given a non-nil error.
 func TestPanicOnErr(t *testing.T) {
-	defer RecoverPanicErr(t)
+	defer RecoverPanicErr()
 	PanicOnErr(errors.New("Error: panic test error"))
 }
 

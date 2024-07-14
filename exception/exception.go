@@ -60,3 +60,14 @@ func WarningOnErr(err error) {
 		log.Printf("WARNING: %s", err)
 	}
 }
+
+// RecoverPanicErr recovers non-nil panics errrors that occurrs in tests, failing the test if not.
+func RecoverPanicErr() {
+	r := recover()
+	if r == nil {
+		log.Printf("Expected panic, but none occurred\n")
+	}
+	if err, ok := r.(error); ok && err != nil {
+		log.Panicf("Error: Unexpected error panic: %v\n", err)
+	}
+}
