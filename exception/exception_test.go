@@ -30,13 +30,13 @@ func TestFatalOnErr(t *testing.T) {
 	log.SetOutput(&buf)
 	defer func() { log.SetOutput(os.Stderr) }() // Restore default
 
-	if os.Getenv("BE_CRASHER") == "1" {
+	if os.Getenv("TEST_FATAL") == "1" {
 		FatalOnErr(errors.New("fatal test error"))
 		return // Should not reach here
 	}
 
 	cmd := exec.Command(os.Args[0], "-test.run=TestFatalOnErr")
-	cmd.Env = append(os.Environ(), "BE_CRASHER=1")
+	cmd.Env = append(os.Environ(), "TEST_FATAL=1")
 	err := cmd.Run()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		// Success: the test process exited with a non-zero status
