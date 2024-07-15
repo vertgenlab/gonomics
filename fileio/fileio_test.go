@@ -12,6 +12,7 @@ import (
 )
 
 var testfile string = "testdata/smallTest"
+var gzipped string = "testdata/words.txt.gz"
 var line1 string = "#shhhh this line is a secret"
 var line2 string = "Hello World"
 var line3 string = "I am a gopher"
@@ -57,20 +58,43 @@ func TestEqual(t *testing.T) {
 		t.Errorf("problem with equal")
 	}
 }
-
-func TestMustCreateEmptyFilenameError(t *testing.T) {
-	defer exception.RecoverPanicErr()
-
-	// Will cause log.Fatal in this test context
-	MustCreate("")
-
+func TestNotEqual(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 	defer log.SetOutput(os.Stderr)
 
-	expectedMessage := "must write to a non-empty filename"
+	expected := "diff\nHello World\nmock text gzip\n"
+
+	if equal(testfile, gzipped, true) || equal(testfile, gzipped, false) {
+		t.Errorf("Error: results should not equal")
+	}
+
+	if !strings.HasSuffix(buf.String(), expected) {
+		t.Errorf("Expected warning: '%s', got '%s'", expected, buf.String())
+	}
+}
+
+func TestEqualGzip(t *testing.T) {
+	var unzip string = "testdata/words.txt"
+
+	copyFile(gzipped, unzip)
+	defer EasyRemove(unzip)
+
+	if !equal(gzipped, gzipped, true) || !equal(unzip, gzipped, true) {
+		t.Errorf("Error: problem with unzip vs. gzip equal")
+	}
+}
+
+func TestMustCreateEmptyFilenameError(t *testing.T) {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer log.SetOutput(os.Stderr)
+	defer exception.RecoverPanicErr()
+
+	MustCreate("") // Will cause log.Panic in this test context
 	logOutput := buf.String()
 
+	expectedMessage := "must write to a non-empty filename"
 	if !strings.Contains(expectedMessage, logOutput) {
 		t.Errorf("Error: Expected log message:\n%s\nNot found in actual log:\n%s\n", expectedMessage, logOutput)
 	} else {
@@ -112,35 +136,5 @@ func TestStdin(t *testing.T) {
 		if reader.String() != input {
 			t.Errorf("Error: Mismatch for input %q. Expected: %q, got %q", input, input, reader.String())
 		}
-
-	}
-}
-
-func TestNotEqual(t *testing.T) {
-	var gzipped string = "testdata/words.txt.gz"
-
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
-	defer func() { log.SetOutput(os.Stderr) }() // Restore default
-
-	expected := "diff\nHello World\nmock text gzip\n"
-
-	if equal(testfile, gzipped, true) || equal(testfile, gzipped, false) {
-		t.Errorf("Error: results should not equal")
-	}
-
-	if !strings.HasSuffix(buf.String(), expected) {
-		t.Errorf("Expected warning: '%s', got '%s'", expected, buf.String())
-	}
-}
-
-func TestEqualGzip(t *testing.T) {
-	var unzip, gzipped string = "testdata/words.txt", "testdata/words.txt.gz"
-
-	copyFile(gzipped, unzip)
-	defer EasyRemove(unzip)
-
-	if !equal(gzipped, gzipped, true) || !equal(unzip, gzipped, true) {
-		t.Errorf("Error: problem with unzip vs. gzip equal")
 	}
 }
