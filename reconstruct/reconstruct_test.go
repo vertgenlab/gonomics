@@ -83,7 +83,7 @@ func TestReconstruct(t *testing.T) {
 		leaves = expandedTree.GetLeaves(tree)
 
 		if v.PDnaNode != "" {
-			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+			outPFasta = []pFasta.PFasta{{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 		}
 
 		for i := 0; i < len(leaves[0].Fasta.Seq); i++ {
@@ -586,7 +586,7 @@ func TestEmpiricalReconstruction(t *testing.T) {
 
 		// initialise output pFasta
 		if v.PDnaNode != "" {
-			outPFasta = []pFasta.PFasta{pFasta.PFasta{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+			outPFasta = []pFasta.PFasta{{Name: v.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
 		}
 
 		//second, we run a reconstruction

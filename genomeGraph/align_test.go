@@ -2,9 +2,6 @@ package genomeGraph
 
 import (
 	"flag"
-	"github.com/vertgenlab/gonomics/fastq"
-	"github.com/vertgenlab/gonomics/giraf"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"os"
 	"runtime"
@@ -13,6 +10,10 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
@@ -106,10 +107,10 @@ func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {
 	//if len(aln.Aln) < 1 {
 	if aln.Cigar[0].Op == 'S' {
 		//log.Printf("%s\n", giraf.GirafToString(aln))
-		targetStart = targetStart - int(aln.Cigar[0].RunLen)
+		targetStart = targetStart - int(aln.Cigar[0].RunLength)
 	}
 	if aln.Cigar[len(aln.Cigar)-1].Op == 'S' {
-		targetEnd = targetEnd + int(aln.Cigar[len(aln.Cigar)-1].RunLen)
+		targetEnd = targetEnd + int(aln.Cigar[len(aln.Cigar)-1].RunLength)
 
 		//}
 	}
@@ -119,7 +120,7 @@ func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {
 		//	log.Printf("%s\n", giraf.GirafToString(aln))
 		return true
 	} else {
-		//log.Printf("endPos=%d, right side cigar runLength: %d\n", endPos, aln.Aln[len(aln.Aln)-1].RunLen)
+		//log.Printf("endPos=%d, right side cigar runLength: %d\n", endPos, aln.Aln[len(aln.Aln)-1].RunLength)
 		//log.Printf("%s\n", giraf.GirafToString(aln))
 		//log.Printf("Error: this read is not aligning correctly...\n")
 	}

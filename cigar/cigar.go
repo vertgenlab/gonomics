@@ -4,9 +4,13 @@ package cigar
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
+	"strconv"
+	"strings"
 	"unicode"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // Cigar contains information on the runLength, operation, and DNA sequence associated with a particular cigar character.
@@ -15,10 +19,40 @@ type Cigar struct {
 	Op        rune
 }
 
+// Cigar operation runes as defined in the SAM format specification to represent the different alignment sequences
+const (
+	Match     rune = 'M' // Alignment match (can be a sequence match or mismatch)
+	Insertion rune = 'I' // Insertion to the reference
+	Deletion  rune = 'D' // Deletion from the reference
+	Ns        rune = 'N' // Skipped region from the reference
+	SoftClip  rune = 'S' // Soft clipping (clipped sequences present in SEQ)
+	HardClip  rune = 'H' // Hard clipping (clipped sequences NOT present in SEQ)
+	Padded    rune = 'P' // Padding (silent deletion from padded reference)
+	Equal     rune = '=' // Sequence match
+	Mismatch  rune = 'X' // Sequence mismatch
+	Unmapped  rune = '*' // Represents an unmapped read in a SAM file.
+)
+
+// OpTable is a slice containing the runes representing CIGAR operation types
+var OpTable []rune = []rune{Match, Insertion, Deletion, Ns, SoftClip, HardClip, Padded, Equal, Mismatch}
+
+// Uint32Table is a map that provides a numeric representation of each CIGAR operation rune
+var Uint32Table = map[rune]uint32{
+	Match:     0,
+	Insertion: 1,
+	Deletion:  2,
+	Ns:        3,
+	SoftClip:  4,
+	HardClip:  5,
+	Padded:    6,
+	Equal:     7,
+	Mismatch:  8,
+}
+
 // NumInsertions calculates the number of inserted bases relative to a reference genome for an input Cigar slice.
 func NumInsertions(input []Cigar) int {
 	var count int
-	if input[0].Op == '*' {
+	if input[0].Op == Unmapped {
 		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for i := range input {
@@ -32,7 +66,7 @@ func NumInsertions(input []Cigar) int {
 // NumDeletions calculates the number of deletions relative to a reference genome for an input Cigar slice.
 func NumDeletions(input []Cigar) int {
 	var count int
-	if input[0].Op == '*' {
+	if input[0].Op == Unmapped {
 		log.Panic("Cannot calculate NumDeletions from unaligned reads.")
 	}
 	for i := range input {
@@ -44,49 +78,63 @@ func NumDeletions(input []Cigar) int {
 }
 
 // ToString converts a slice of Cigar structs to a string for producing readable outputs for files or standard out.
-func ToString(c []Cigar) string {
-	if len(c) == 0 {
-		return "*"
+func ToString(cigars []Cigar) string {
+	var buf strings.Builder
+	var err error
+
+	if len(cigars) == 0 || cigars == nil {
+		_, err = buf.WriteRune(Unmapped)
+		exception.PanicOnErr(err)
+		return buf.String()
 	}
-	var output string = ""
-	for _, v := range c {
-		if v.Op == '*' {
-			output = "*"
-			break
+
+	for _, c := range cigars {
+		if c.Op == Unmapped {
+			_, err = buf.WriteRune(c.Op)
+			exception.PanicOnErr(err)
+			return buf.String()
 		}
-		output += fmt.Sprintf("%v%c", v.RunLength, v.Op)
+		_, err = buf.WriteString(strconv.Itoa(c.RunLength))
+		exception.PanicOnErr(err)
+		_, err = buf.WriteRune(c.Op)
+		exception.PanicOnErr(err)
 	}
-	return output
+	return buf.String()
 }
 
 // FromString parses an input string into a slice of Cigar structs.
 func FromString(input string) []Cigar {
-	var output []Cigar
-	var currentNumber string
-	var currentCigar Cigar
 	if input == "*" || input == "**" {
-		currentCigar = Cigar{RunLength: 0, Op: '*'}
-		return append(output, currentCigar)
+		return []Cigar{{RunLength: 0, Op: Unmapped}}
 	}
 
-	for _, v := range input {
-		if unicode.IsDigit(v) {
-			currentNumber = currentNumber + fmt.Sprintf("%c", v)
-		} else if validOp(v) {
-			currentCigar := Cigar{RunLength: parse.StringToInt(currentNumber), Op: v}
-			output = append(output, currentCigar)
-			currentNumber = ""
+	var output []Cigar
+	var currentNumber strings.Builder
+	currentNumber.Grow(4)
+
+	for _, r := range input {
+		if unicode.IsDigit(r) {
+			currentNumber.WriteRune(r)
+		} else if validOp(r) {
+
+			output = append(output, Cigar{RunLength: parse.StringToInt(currentNumber.String()), Op: r})
+			currentNumber.Reset()
 		} else {
-			log.Panicf("Invalid character: %c", v)
+			exception.PanicOnErr(fmt.Errorf("invalid character: %c", r)) // Panic on invalid char
 		}
 	}
+	// Handle case where the input ends with a number (incomplete CIGAR)
+	if currentNumber.Len() > 0 {
+		output = append(output, Cigar{RunLength: parse.StringToInt(currentNumber.String())}) // Assume 'M' if op is missing
+	}
+
 	return output
 }
 
 // MatchLength returns the number of bases in a Cigar slice that align to the reference.
 func MatchLength(c []Cigar) int {
 	var ans int
-	if c[0].Op == '*' {
+	if c[0].Op == Unmapped {
 		log.Panic("Cannot calculate MatchLength from unaligned reads.")
 	}
 	for _, v := range c {
@@ -100,7 +148,7 @@ func MatchLength(c []Cigar) int {
 // ReferenceLength calculates the number of reference positions that a Cigar slice spans.
 func ReferenceLength(c []Cigar) int {
 	var ans int
-	if c[0].Op == '*' {
+	if c[0].Op == Unmapped {
 		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for _, v := range c {
@@ -114,7 +162,7 @@ func ReferenceLength(c []Cigar) int {
 // QueryLength calculates the length of the query read from a slice of Cigar structs.
 func QueryLength(c []Cigar) int {
 	var ans int
-	if c[0].Op == '*' {
+	if c[0].Op == Unmapped {
 		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for _, v := range c {
@@ -128,7 +176,7 @@ func QueryLength(c []Cigar) int {
 // validOp returns true if a particular input rune matches any of the acceptable Cigar operation characters.
 func validOp(r rune) bool {
 	switch r {
-	case 'M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X':
+	case Match, Insertion, Deletion, Ns, SoftClip, HardClip, Padded, Equal, Mismatch:
 		return true
 	default:
 		return false
@@ -138,9 +186,9 @@ func validOp(r rune) bool {
 // ConsumesReference returns true of the rune matches an operation character that is reference consuming for Cigars.
 func ConsumesReference(r rune) bool {
 	switch r {
-	case 'M', 'D', 'N', '=', 'X':
+	case Match, Deletion, Ns, Equal, Mismatch:
 		return true
-	case 'I', 'S', 'H', 'P':
+	case Insertion, SoftClip, HardClip, Padded:
 		return false
 	}
 	log.Panicf("Invalid rune: %c", r)
@@ -150,9 +198,9 @@ func ConsumesReference(r rune) bool {
 // ConsumesQuery returns true for input runes that match query consuming characters for Cigars.
 func ConsumesQuery(r rune) bool {
 	switch r {
-	case 'M', 'I', 'S', '=', 'X':
+	case Match, Insertion, SoftClip, Equal, Mismatch:
 		return true
-	case 'D', 'N', 'H', 'P':
+	case Deletion, Ns, HardClip, Padded:
 		return false
 	}
 	log.Panicf("Invalid rune: %c", r)

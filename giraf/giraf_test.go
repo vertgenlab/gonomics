@@ -21,7 +21,7 @@ func TestReadAndWrite(t *testing.T) {
 		QEnd:      2020,
 		PosStrand: true,
 		Path:      girafPath,
-		Cigar:     []cigar.ByteCigar{{RunLen: 5, Op: 'M'}},
+		Cigar:     []cigar.Cigar{{RunLength: 5, Op: cigar.Match}},
 		AlnScore:  110335,
 		MapQ:      5,
 		Seq:       dna.StringToBases("ATGCG"),
@@ -38,10 +38,10 @@ func TestReadAndWrite(t *testing.T) {
 	log.Printf("len=%d, len=%d", len(alpha), len(beta))
 	if AllEqual(alpha, beta) {
 		for i := 0; i < len(alpha); i++ {
-			fmt.Printf("%s\n", GirafToString(alpha[i]))
+			t.Logf("%s\n", GirafToString(alpha[i]))
 		}
 	} else {
-		log.Fatal("Error: files are not the same...\n")
+		t.Fatalf("Error: files are not the same...\n")
 	}
 	fileio.EasyRemove("testdata/giraf.tsv")
 }

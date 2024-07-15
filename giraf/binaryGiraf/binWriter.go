@@ -3,6 +3,10 @@ package binaryGiraf
 import (
 	"bytes"
 	"encoding/binary"
+	"io"
+	"log"
+	"math"
+
 	"github.com/vertgenlab/gonomics/bgzf"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
@@ -11,9 +15,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"io"
-	"log"
-	"math"
 )
 
 // The BinWriter struct wraps the bgzf writer from the biogo repository with a bytes buffer to store encoded giraf records.
@@ -106,14 +107,14 @@ func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
 		bw.buf.Write(currBuf[:4]) // path ([]uint32)
 	}
 
-	// cigar ([]cigar.ByteCigar)
+	// cigar ([]cigar.Cigar)
 	binary.LittleEndian.PutUint32(currBuf[:4], uint32(len(g.Cigar)))
 	bw.buf.Write(currBuf[:4]) // numCigarOps (uint32)
 
 	for _, val := range g.Cigar {
-		binary.LittleEndian.PutUint16(currBuf[:2], val.RunLen)
-		bw.buf.Write(currBuf[:2])    // byteCigar.RunLen (uint16)
-		bw.buf.Write([]byte{val.Op}) // byteCigar.Op (byte)
+		binary.LittleEndian.PutUint16(currBuf[:2], uint16(val.RunLength))
+		bw.buf.Write(currBuf[:2]) // byteCigar.RunLength (uint16)
+		bw.buf.WriteRune(val.Op)
 	}
 
 	// fancySeq (dnaThreeBit.ThreeBit)
@@ -132,14 +133,14 @@ func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
 	// mapQ (uint8)
 	bw.buf.Write([]byte{g.MapQ})
 
-	// qual ([]cigar.ByteCigar)
+	// qual ([]cigar.Cigar)
 	binary.LittleEndian.PutUint16(currBuf[:2], uint16(len(qual)))
 	bw.buf.Write(currBuf[:2]) // numQualOps (uint16)
 
 	for _, val := range qual {
-		binary.LittleEndian.PutUint16(currBuf[:2], val.RunLen)
-		bw.buf.Write(currBuf[:2])    // byteCigar.RunLen (uint16)
-		bw.buf.Write([]byte{val.Op}) // byteCigar.Op (byte)
+		binary.LittleEndian.PutUint16(currBuf[:2], uint16(val.RunLength))
+		bw.buf.Write(currBuf[:2]) // byteCigar.RunLength (uint16)
+		bw.buf.WriteRune(val.Op)  // byteCigar.Op (byte)
 	}
 
 	// notes ([]BinNote)
@@ -150,8 +151,8 @@ func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
 	return err
 }
 
-// getFancySeq will parse the []cigar.ByteCigar and record any bases that cannot be recovered by reference matching.
-func getFancySeq(seq []dna.Base, cigar []cigar.ByteCigar) dnaThreeBit.ThreeBit {
+// getFancySeq will parse the []cigar.Cigar and record any bases that cannot be recovered by reference matching.
+func getFancySeq(seq []dna.Base, cigar []cigar.Cigar) dnaThreeBit.ThreeBit {
 	var answer []dna.Base
 	var seqIdx int
 	if cigar == nil {
@@ -159,28 +160,28 @@ func getFancySeq(seq []dna.Base, cigar []cigar.ByteCigar) dnaThreeBit.ThreeBit {
 	}
 	for _, val := range cigar {
 		if val.Op == 'S' || val.Op == 'X' || val.Op == 'I' {
-			answer = append(answer, seq[seqIdx:seqIdx+int(val.RunLen)]...)
+			answer = append(answer, seq[seqIdx:seqIdx+int(val.RunLength)]...)
 		}
-		seqIdx += int(val.RunLen)
+		seqIdx += int(val.RunLength)
 	}
 	return *dnaThreeBit.NewThreeBit(answer, dnaThreeBit.A)
 }
 
-// encodeQual creates a run-length encoded representation of the Qual scores in the ByteCigar format.
-func encodeQual(q []uint8) []cigar.ByteCigar {
-	answer := make([]cigar.ByteCigar, 0, len(q))
-	var curr cigar.ByteCigar
-	curr.Op = q[0]
+// encodeQual creates a run-length encoded representation of the Qual scores in the Cigar format.
+func encodeQual(q []uint8) []cigar.Cigar {
+	answer := make([]cigar.Cigar, 0, len(q))
+	var curr cigar.Cigar
+	curr.Op = rune(q[0])
 	for i := 0; i < len(q); i++ {
-		if q[i] != curr.Op && curr.RunLen != 0 {
+		if rune(q[i]) != curr.Op && curr.RunLength != 0 {
 			answer = append(answer, curr)
-			curr.RunLen = 0
-			curr.Op = q[i]
+			curr.RunLength = 0
+			curr.Op = rune(q[i])
 		}
-		curr.RunLen++
+		curr.RunLength++
 	}
 
-	if curr.RunLen != 0 {
+	if curr.RunLength != 0 {
 		answer = append(answer, curr)
 	}
 

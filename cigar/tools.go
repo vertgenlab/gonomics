@@ -29,3 +29,24 @@ func CatCigar(cigs []Cigar, newCigs []Cigar) []Cigar {
 		return cigs
 	}
 }
+
+// ReverseBytesCigar cigar will reverse the order of a cigar slice. Typically performed after matrix traceback
+func ReverseBytesCigar(alpha []Cigar) {
+	var i, off int
+	for i = len(alpha)/2 - 1; i >= 0; i-- {
+		off = len(alpha) - 1 - i
+		alpha[i], alpha[off] = alpha[off], alpha[i]
+	}
+}
+
+// atrixTrace will trace smith-waterman matrix alignment and return one of 3 cigar Op's.
+// M: matches or mismatches, I: insertions, D: for deletions.
+func MatrixTrace(a int64, b int64, c int64) (int64, rune) {
+	if a >= b && a >= c {
+		return a, Match
+	} else if b >= c {
+		return b, Insertion
+	} else {
+		return c, Deletion
+	}
+}

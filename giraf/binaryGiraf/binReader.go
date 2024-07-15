@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
+	"log"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/bgzf"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
@@ -12,9 +16,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/genomeGraph"
 	"github.com/vertgenlab/gonomics/giraf"
-	"io"
-	"log"
-	"strings"
 )
 
 // The BinReader struct wraps the bgzf reader from the biogo repository with a bytes buffer to store encoded giraf records.
@@ -119,9 +120,9 @@ func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	// cigar ([]cigar.ByteCigar)
 	numCigarOps := binary.LittleEndian.Uint32(br.currData.Next(4)) // numCigarOps (uint16)
 	for k = 0; k < numCigarOps; k++ {
-		answer.Cigar = append(answer.Cigar, cigar.ByteCigar{
-			RunLen: binary.LittleEndian.Uint16(br.currData.Next(2)), // byteCigar.RunLen (uint16)
-			Op:     br.currData.Next(1)[0],                          // byteCigar.Op (byte)
+		answer.Cigar = append(answer.Cigar, cigar.Cigar{
+			RunLength: int(binary.LittleEndian.Uint16(br.currData.Next(2))), // byteCigar.RunLength (uint16)
+			Op:        rune(br.currData.Next(1)[0]),                         // byteCigar.Op (byte)
 		})
 	}
 
@@ -150,7 +151,7 @@ func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	var op uint8
 	numQualOps := binary.LittleEndian.Uint16(br.currData.Next(2)) // numQualOps (uint16)
 	for i = 0; i < numQualOps; i++ {
-		runLen = binary.LittleEndian.Uint16(br.currData.Next(2)) // byteCigar.RunLen (uint16)
+		runLen = binary.LittleEndian.Uint16(br.currData.Next(2)) // byteCigar.RunLength (uint16)
 		op = br.currData.Next(1)[0]                              // byteCigar.Op (byte)
 		for j = 0; j < runLen; j++ {
 			answer.Qual = append(answer.Qual, op)
@@ -184,7 +185,7 @@ func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *geno
 	for _, cigar := range answer.Cigar {
 		switch cigar.Op {
 		case '=':
-			for i = 0; i < cigar.RunLen; i++ {
+			for i = 0; i < uint16(cigar.RunLength); i++ {
 				if refIdx > len(currNode.Seq)-1 {
 					refIdx = 0
 					currNodeId++
@@ -195,17 +196,17 @@ func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *geno
 				refIdx++
 			}
 		case 'X':
-			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...) // retrieve RunLen number of bases from the fancyBases slice
-			fancyBases = fancyBases[:cigar.RunLen]                        // removed the retrieved bases from the fancyBases slice
-			refIdx += int(cigar.RunLen)
+			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLength]...) // retrieve RunLength number of bases from the fancyBases slice
+			fancyBases = fancyBases[:cigar.RunLength]                        // removed the retrieved bases from the fancyBases slice
+			refIdx += int(cigar.RunLength)
 		case 'S':
-			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...) // retrieve RunLen number of bases from the fancyBases slice
-			fancyBases = fancyBases[:cigar.RunLen]                        // removed the retrieved bases from the fancyBases slice
+			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLength]...) // retrieve RunLength number of bases from the fancyBases slice
+			fancyBases = fancyBases[:cigar.RunLength]                        // removed the retrieved bases from the fancyBases slice
 		case 'I':
-			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLen]...) // retrieve RunLen number of bases from the fancyBases slice
-			fancyBases = fancyBases[:cigar.RunLen]                        // removed the retrieved bases from the fancyBases slice
+			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLength]...) // retrieve RunLength number of bases from the fancyBases slice
+			fancyBases = fancyBases[:cigar.RunLength]                        // removed the retrieved bases from the fancyBases slice
 		case 'D':
-			refIdx += int(cigar.RunLen)
+			refIdx += int(cigar.RunLength)
 		default:
 			log.Fatalf("ERROR: Unrecognized cigar operation: %v", cigar.Op)
 		}
@@ -283,13 +284,13 @@ func determineQStartQEnd(answer *giraf.Giraf) (int, int) {
 	}
 
 	if answer.Cigar[0].Op == 'S' {
-		start = int(answer.Cigar[0].RunLen)
+		start = int(answer.Cigar[0].RunLength)
 	} else {
 		start = 0
 	}
 
 	if answer.Cigar[len(answer.Cigar)-1].Op == 'S' {
-		end = (len(answer.Seq) - 1) - int(answer.Cigar[len(answer.Cigar)-1].RunLen)
+		end = (len(answer.Seq) - 1) - int(answer.Cigar[len(answer.Cigar)-1].RunLength)
 	} else {
 		end = len(answer.Seq) - 1
 	}
