@@ -208,7 +208,7 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	var cigint uint32
 	for i := 0; i < numCigarOps; i++ {
 		cigint = le.Uint32(r.next(4))
-		s.Cigar[i].Op = cigLookup[cigint&0xf]
+		s.Cigar[i].Op = cigar.OpTable[cigint&0xf]
 		s.Cigar[i].RunLength = int(cigint >> 4)
 	}
 

@@ -2,13 +2,14 @@ package genomeGraph
 
 import (
 	"fmt"
+	"log"
+	"math/rand"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
-	"math/rand"
 )
 
 func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []*giraf.Giraf {
@@ -40,7 +41,7 @@ func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []
 				QEnd:      readLen,
 				PosStrand: strand,
 				Path:      girafPath,
-				Cigar:     []cigar.ByteCigar{{RunLen: uint16(readLen), Op: 'M'}}, // tmp cigar until giraf cigars have been implemented
+				Cigar:     []cigar.Cigar{{RunLength: readLen, Op: 'M'}}, // tmp cigar until giraf cigars have been implemented
 				AlnScore:  alnScore,                                              // placeholder
 				MapQ:      mapQ,                                                  // placeholder
 				Seq:       seq,

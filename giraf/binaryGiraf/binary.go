@@ -33,13 +33,13 @@ type binGiraf struct {
 	pathLen     uint32               // length of below path
 	path        []uint32             // list of nodes in alignment, len of path is = pathLen
 	numCigarOps uint32               // number of cigar operations
-	byteCigar   []cigar.ByteCigar    // run-length encoding of alignment. Can be copied directly from Giraf struct IF the aligner encodes mismatches into the cigar.
+	byteCigar   []cigar.Cigar    // run-length encoding of alignment. Can be copied directly from Giraf struct IF the aligner encodes mismatches into the cigar.
 	fancySeq    dnaThreeBit.ThreeBit // three bit encoding of 'fancy-cigar' seq determined at time of compression. Length will be determined by Op's in byteCigar
 	alnScore    int64                // alignment quality score
 	mapQ        uint8                // mapping quality score
 	// Seq field is dropped, can be determined from aln
 	numQualOps uint16            // number of qual operations for field below
-	qual       []cigar.ByteCigar // phred-scaled base qualities. run-length encoding using ByteCigar
+	qual       []cigar.Cigar // phred-scaled base qualities. run-length encoding using ByteCigar
 	notes      []binNote         // the notes field will be identical to the SAM notes field. See section 4.2.4 in SAM specs for details
 }
 
