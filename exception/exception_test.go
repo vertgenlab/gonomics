@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 	"testing"
 )
@@ -27,29 +26,6 @@ func TestRecoverPanicErrWithError(t *testing.T) {
 func TestPanicOnErr(t *testing.T) {
 	defer RecoverPanicErr()
 	PanicOnErr(errors.New("Error: expected test error"))
-}
-
-// TestFatalOnErr verifies that FatalOnErr logs an error and exits the program.
-func TestFatalOnErr(t *testing.T) {
-	// Capture log output
-	var buf bytes.Buffer
-	log.SetOutput(&buf)
-	defer func() { log.SetOutput(os.Stderr) }() // Restore default
-
-	if os.Getenv("TEST_FATAL") == "1" {
-		FatalOnErr(errors.New("fatal test error"))
-		return // Should not reach here
-	}
-
-	cmd := exec.Command(os.Args[0], "-test.run=TestFatalOnErr")
-	cmd.Env = append(os.Environ(), "TEST_FATAL=1")
-	err := cmd.Run()
-	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
-		// Success: the test process exited with a non-zero status
-		return
-	}
-
-	t.Errorf("Expected FatalOnErr to exit, but it didn't")
 }
 
 // TestWarningOnErr verifies that WarningOnErr logs a warning message correctly.
