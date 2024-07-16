@@ -1,11 +1,10 @@
 package motif
 
 import (
-	"os"
-	"testing"
-
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
+	"os"
+	"testing"
 )
 
 var MatchCompTests = []struct {
