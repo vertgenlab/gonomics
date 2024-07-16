@@ -1,6 +1,7 @@
 package motif
 
 import (
+	"log"
 	"strings"
 
 	"github.com/vertgenlab/gonomics/fileio"
@@ -40,6 +41,7 @@ func ApproxEquals(alpha, beta string, epsilon float64) bool {
 
 			// Compare the parsed values for near equality
 			if !numbers.ApproxEqual(queryValue, answerValue, epsilon) {
+				log.Fatalf("Error: Values on line %d at index %d are not almost equal: %v, %v", i, index, queryValue, answerValue)
 				// fmt.Errorf("Error: Values on line %d at index %d are not almost equal: %v, %v", i, index, queryValue, answerValue)
 				return false
 			}
