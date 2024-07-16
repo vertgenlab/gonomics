@@ -218,5 +218,5 @@ func ApproxEqual(a, b, epsilon float64) bool {
 	if a == 0 || b == 0 { // Handle the case where a or b is zero
 		return math.Abs(a-b) <= epsilon
 	}
-	return math.Abs(a-b)/math.Max(math.Abs(a), math.Abs(b)) <= epsilon
+	return math.Abs(a-b)/Max(math.Abs(a), math.Abs(b)) <= epsilon
 }

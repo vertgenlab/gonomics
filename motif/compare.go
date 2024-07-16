@@ -1,10 +1,11 @@
 package motif
 
 import (
+	"strings"
+
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"strings"
 )
 
 // AlmostEquals determines if floating-point numbers within two files are equal within a specified epsilon level.
