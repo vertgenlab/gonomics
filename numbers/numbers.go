@@ -212,5 +212,11 @@ func AbsInt(x int) int {
 
 // ApproxEqual determines if two floating-point numbers are equal within a specified tolerance level.
 func ApproxEqual(a, b, epsilon float64) bool {
-	return math.Abs(a-b) <= epsilon
+	if math.IsInf(a, 0) && math.IsInf(b, 0) && math.Signbit(a) == math.Signbit(b) {
+		return true // Both are the same kind of infinity (positive or negative)
+	}
+	if a == 0.0 || b == 0.0 { // Avoid division by zero
+		return math.Abs(a-b) <= epsilon
+	}
+	return math.Abs(a-b)/math.Max(math.Abs(a), math.Abs(b)) <= epsilon
 }

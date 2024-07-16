@@ -27,7 +27,7 @@ func TestRandBinomial(t *testing.T) {
 		currAlias = MakeBinomialAlias(v.N, v.P)
 		variates = make([]int, v.VariateCount)
 		for i = range v.ExpectedProb {
-			if ApproxEqual(currAlias.Probability[i], v.ExpectedProb[i], defaultEpsilon) {
+			if !ApproxEqual(currAlias.Probability[i], v.ExpectedProb[i], defaultEpsilon) {
 				t.Errorf("Error: RandBinomial produced an incorrect alias probability vector.\nExpected: %v.\nFound: %v.\n", v.ExpectedProb, currAlias.Probability)
 			}
 		}

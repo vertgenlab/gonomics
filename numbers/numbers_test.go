@@ -103,14 +103,14 @@ func TestBinomCoefficientLog(t *testing.T) {
 	// First we see if we have consistency with the non-log version
 	for _, test := range BinomCoefficientTests {
 		calculated := math.Exp(BinomCoefficientLog(test.n, test.k))
-		if ApproxEqual(calculated, float64(test.answer), defaultEpsilon) {
+		if !ApproxEqual(calculated, float64(test.answer), 1e-6) {
 			t.Errorf("ForBinomialCoefficientLog(%d, %d) we would expect %f, but we got %f", test.n, test.k, float64(test.answer), calculated)
 		}
 	}
 	// Now we test big numbers
 	for _, test := range BinomCoefficientLogTests {
 		calculated := BinomCoefficientLog(test.n, test.k)
-		if ApproxEqual(calculated, test.answer, defaultEpsilon) {
+		if !ApproxEqual(calculated, test.answer, defaultEpsilon) {
 			t.Errorf("ForBinomialCoefficientLog(%d, %d) we would expected %f, but we got %f", test.n, test.k, test.answer, calculated)
 		}
 	}
@@ -131,12 +131,16 @@ func TestApproxEqualFloatPrecision(t *testing.T) {
 		{alpha: 1.0, beta: 1.005, epsilon: 0.01, answer: true},
 		{alpha: -1.0, beta: -1.004, epsilon: 0.005, answer: true},
 		{alpha: -1.0, beta: 1.0, epsilon: 0.1, answer: false},
+		{alpha: math.Inf(1), beta: math.Inf(1), epsilon: defaultEpsilon, answer: true},
+		{alpha: math.Inf(1), beta: math.Inf(-1), epsilon: 1e-12, answer: false},
+		{alpha: 10000001.1, beta: 1000000.2, epsilon: defaultEpsilon, answer: false},
+		{alpha: 1.9e-7, beta: 1e-15, epsilon: 1e-5, answer: false},
 	}
 
-	for _, tt := range tests {
-		got := ApproxEqual(tt.alpha, tt.beta, tt.epsilon)
-		if got != tt.answer {
-			t.Errorf("Error: ApproxEqual(%v, %v, %v) = %v; answer %v", tt.alpha, tt.beta, tt.epsilon, got, tt.answer)
+	for _, test := range tests {
+		result := ApproxEqual(test.alpha, test.beta, test.epsilon)
+		if result != test.answer {
+			t.Errorf("Error: ApproxEqual(%f, %f, %f) = %v; answer %v", test.alpha, test.beta, test.epsilon, result, test.answer)
 		}
 	}
 }
