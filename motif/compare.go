@@ -1,11 +1,10 @@
 package motif
 
 import (
-	"math"
-	"strings"
-
 	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
+	"strings"
 )
 
 // AlmostEquals determines if floating-point numbers within two files are equal within a specified epsilon level.
@@ -39,8 +38,7 @@ func ApproxEquals(alpha, beta string, epsilon float64) bool {
 			answerValue := parse.StringToFloat64(answerFields[index])
 
 			// Compare the parsed values for near equality
-			// TODO: Debug why Approx is failing here in github cicd but not local machine, might have to deal with zero case.
-			if !(math.Abs(queryValue-answerValue) <= epsilon) {
+			if !numbers.ApproxEqual(queryValue, answerValue, epsilon) {
 				// fmt.Errorf("Error: Values on line %d at index %d are not almost equal: %v, %v", i, index, queryValue, answerValue)
 				return false
 			}
