@@ -135,6 +135,7 @@ func TestApproxEqualFloatPrecision(t *testing.T) {
 		{alpha: math.Inf(1), beta: math.Inf(-1), epsilon: 1e-12, answer: false},
 		{alpha: 10000001.1, beta: 1000000.2, epsilon: defaultEpsilon, answer: false},
 		{alpha: 1.9e-7, beta: 1e-15, epsilon: 1e-5, answer: false},
+		{alpha: 0, beta: 0, epsilon: defaultEpsilon, answer: true},
 	}
 
 	for _, test := range tests {
