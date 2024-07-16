@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"io"
 	"sync"
@@ -28,6 +30,16 @@ type queryAnswer struct {
 
 type fileWriter interface {
 	WriteToFileHandle(io.Writer)
+}
+
+func mergeOutput(v queryAnswer) []string {
+	var toWrite []string
+	var str string
+	for i := range v.answer {
+		str = fmt.Sprintf("%v\t%v", v.answer[i], v.query)
+		toWrite = append(toWrite, str)
+	}
+	return toWrite
 }
 
 func buildTree(intervals []interval.Interval, aggregate bool) map[string]*interval.IntervalNode {
@@ -92,12 +104,13 @@ func passingThreshold(query interval.Interval, answer []interval.Interval, thres
 }
 
 func writeToFile(answerChan <-chan *queryAnswer, outfile io.Writer, mergedOutput bool, nonOverlap bool, thresholdOverlap float64) {
+	var toWrite []string
 	if mergedOutput && thresholdOverlap == 0 {
 		for val := range answerChan {
 			if len(val.answer) != 0 {
-				val.query.(fileWriter).WriteToFileHandle(outfile)
-				for _, curr := range val.answer {
-					curr.(fileWriter).WriteToFileHandle(outfile)
+				toWrite = mergeOutput(*val)
+				for i := range toWrite {
+					fileio.WriteToFileHandle(outfile, toWrite[i])
 				}
 			}
 		}
@@ -110,9 +123,9 @@ func writeToFile(answerChan <-chan *queryAnswer, outfile io.Writer, mergedOutput
 	} else if mergedOutput && thresholdOverlap > 0 {
 		for val := range answerChan {
 			if len(val.answer) != 0 {
-				val.query.(fileWriter).WriteToFileHandle(outfile)
-				for _, curr := range val.answer {
-					curr.(fileWriter).WriteToFileHandle(outfile)
+				toWrite = mergeOutput(*val)
+				for i := range toWrite {
+					fileio.WriteToFileHandle(outfile, toWrite[i])
 				}
 			}
 		}
