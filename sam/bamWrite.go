@@ -219,36 +219,9 @@ var baseEncoder = []uint8{1, 2, 4, 8, 15, 1, 2, 4, 8, 15, 15, 15, 15, 15, 15, 15
 // getCigUint32 encodes cigar op and runlen as a uint32 defined by op_len<<4|op.
 func getCigUint32(c cigar.Cigar) uint32 {
 	var cigint uint32
-	cigint = uint32(c.RunLength) << 4  // move 4 bits to the left
-	cigint = cigint | opToUint32(c.Op) // bitwise OR with op
+	cigint = uint32(c.RunLength) << 4         // move 4 bits to the left
+	cigint = cigint | cigar.Uint32Table[c.Op] // bitwise OR with op
 	return cigint
-}
-
-// opToUint32 returns the uint32 corresponding to the rune per the Sam specifications.
-func opToUint32(r rune) uint32 {
-	switch r {
-	case 'M':
-		return 0
-	case 'I':
-		return 1
-	case 'D':
-		return 2
-	case 'N':
-		return 3
-	case 'S':
-		return 4
-	case 'H':
-		return 5
-	case 'P':
-		return 6
-	case '=':
-		return 7
-	case 'X':
-		return 8
-	default:
-		log.Fatalf("ERROR (opToUint32): Unrecognized cigar op '%v'", r)
-		return 0 // unreachable
-	}
 }
 
 // writeExtra writes the Extra field of a sam to a BamWriter.

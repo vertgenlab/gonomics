@@ -122,7 +122,7 @@ func ReadGiraf(br *BinReader, g *genomeGraph.GenomeGraph) (giraf.Giraf, error) {
 	for k = 0; k < numCigarOps; k++ {
 		answer.Cigar = append(answer.Cigar, cigar.Cigar{
 			RunLength: int(binary.LittleEndian.Uint16(br.currData.Next(2))), // byteCigar.RunLength (uint16)
-			Op:        rune(br.currData.Next(1)[0]),                         // byteCigar.Op (byte)
+			Op:        br.currData.Next(1)[0],                               // byteCigar.Op (byte)
 		})
 	}
 

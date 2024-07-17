@@ -29,7 +29,7 @@ type memoryPool struct {
 
 type MatrixAln struct {
 	m     [][]int64
-	trace [][]rune
+	trace [][]byte
 }
 
 type dnaPool struct {
@@ -111,12 +111,12 @@ func NewSwMatrix(size int) MatrixAln {
 	return sw
 }
 
-func MatrixSetup(size int) ([][]int64, [][]rune) {
+func MatrixSetup(size int) ([][]int64, [][]byte) {
 	m := make([][]int64, size)
-	trace := make([][]rune, size)
+	trace := make([][]byte, size)
 	for idx := range m {
 		m[idx] = make([]int64, size)
-		trace[idx] = make([]rune, size)
+		trace[idx] = make([]byte, size)
 	}
 	return m, trace
 }

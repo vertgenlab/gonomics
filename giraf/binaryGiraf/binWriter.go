@@ -114,7 +114,7 @@ func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
 	for _, val := range g.Cigar {
 		binary.LittleEndian.PutUint16(currBuf[:2], uint16(val.RunLength))
 		bw.buf.Write(currBuf[:2]) // byteCigar.RunLength (uint16)
-		bw.buf.WriteRune(val.Op)
+		bw.buf.WriteByte(val.Op)
 	}
 
 	// fancySeq (dnaThreeBit.ThreeBit)
@@ -140,7 +140,7 @@ func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
 	for _, val := range qual {
 		binary.LittleEndian.PutUint16(currBuf[:2], uint16(val.RunLength))
 		bw.buf.Write(currBuf[:2]) // byteCigar.RunLength (uint16)
-		bw.buf.WriteRune(val.Op)  // byteCigar.Op (byte)
+		bw.buf.WriteByte(val.Op)  // byteCigar.Op (byte)
 	}
 
 	// notes ([]BinNote)
@@ -152,14 +152,14 @@ func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
 }
 
 // getFancySeq will parse the []cigar.Cigar and record any bases that cannot be recovered by reference matching.
-func getFancySeq(seq []dna.Base, cigar []cigar.Cigar) dnaThreeBit.ThreeBit {
+func getFancySeq(seq []dna.Base, cigars []cigar.Cigar) dnaThreeBit.ThreeBit {
 	var answer []dna.Base
 	var seqIdx int
-	if cigar == nil {
+	if cigars == nil {
 		return *dnaThreeBit.NewThreeBit(seq, dnaThreeBit.A)
 	}
-	for _, val := range cigar {
-		if val.Op == 'S' || val.Op == 'X' || val.Op == 'I' {
+	for _, val := range cigars {
+		if val.Op == cigar.SoftClip || val.Op == cigar.Mismatch || val.Op == cigar.Insertion {
 			answer = append(answer, seq[seqIdx:seqIdx+int(val.RunLength)]...)
 		}
 		seqIdx += int(val.RunLength)
@@ -171,12 +171,12 @@ func getFancySeq(seq []dna.Base, cigar []cigar.Cigar) dnaThreeBit.ThreeBit {
 func encodeQual(q []uint8) []cigar.Cigar {
 	answer := make([]cigar.Cigar, 0, len(q))
 	var curr cigar.Cigar
-	curr.Op = rune(q[0])
+	curr.Op = q[0]
 	for i := 0; i < len(q); i++ {
-		if rune(q[i]) != curr.Op && curr.RunLength != 0 {
+		if q[i] != curr.Op && curr.RunLength != 0 {
 			answer = append(answer, curr)
 			curr.RunLength = 0
-			curr.Op = rune(q[i])
+			curr.Op = q[i]
 		}
 		curr.RunLength++
 	}

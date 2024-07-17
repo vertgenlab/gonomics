@@ -39,11 +39,26 @@ func ReverseBytesCigar(alpha []Cigar) {
 	}
 }
 
-// atrixTrace will trace smith-waterman matrix alignment and return one of 3 cigar Op's.
+// MatrixTrace will trace smith-waterman matrix alignment and return one of 3 cigar Op's.
 // M: matches or mismatches, I: insertions, D: for deletions.
-func MatrixTrace(a int64, b int64, c int64) (int64, rune) {
+func MatrixTrace(a int64, b int64, c int64) (int64, byte) {
 	if a >= b && a >= c {
 		return a, Match
+	} else if b >= c {
+		return b, Insertion
+	} else {
+		return c, Deletion
+	}
+}
+
+// TripleMaxTrace is an expanded version of MatrixTrace which will return either '=' or 'X' where 'M'(s) are found.
+func TripleMaxTrace(prev int64, a int64, b int64, c int64) (int64, byte) {
+	if a >= b && a >= c {
+		if a > prev {
+			return a, Equal
+		} else {
+			return a, Mismatch
+		}
 	} else if b >= c {
 		return b, Insertion
 	} else {
