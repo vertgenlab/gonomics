@@ -48,10 +48,6 @@ func TestToString(t *testing.T) {
 	}
 }
 
-func isEqual(a Cigar, b Cigar) bool {
-	return (a.RunLength == b.RunLength && a.Op == b.Op)
-}
-
 func TestMatchLength(t *testing.T) {
 	tests := []struct {
 		input    []Cigar

@@ -81,14 +81,13 @@ func ToString(cigars []Cigar) string {
 	var err error
 
 	if len(cigars) == 0 || cigars == nil {
-		err = buf.WriteByte(Unmapped)
-		exception.PanicOnErr(err)
+		exception.PanicOnErr(buf.WriteByte(Unmapped))
 		return buf.String()
 	}
 
 	for _, c := range cigars {
 		if c.Op == Unmapped {
-			exception.PanicOnErr(err)
+			exception.PanicOnErr(buf.WriteByte(Unmapped))
 			return buf.String()
 		}
 		_, err = buf.WriteString(strconv.Itoa(c.RunLength))
