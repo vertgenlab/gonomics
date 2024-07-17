@@ -18,17 +18,18 @@ var c7 Cigar = Cigar{RunLength: 3, Op: SoftClip}
 var unknown []Cigar = []Cigar{{RunLength: 0, Op: Unmapped}}
 
 func TestFromString(t *testing.T) {
-	var cigarsString = "35M2I16D"
-	var c1 Cigar = Cigar{RunLength: 35, Op: 'M'}
-	var c2 Cigar = Cigar{RunLength: 2, Op: 'I'}
-	var c3 Cigar = Cigar{RunLength: 16, Op: 'D'}
-	var cigars []Cigar = []Cigar{c1, c2, c3}
+	tests := []struct {
+		input    string
+		expected []Cigar
+	}{
+		{"35M2I16D", []Cigar{c1, c2, c3}},
+		{"*", []Cigar{{RunLength: 0, Op: Unmapped}}},
+	}
 
-	cigarCheck := FromString(cigarsString)
-
-	for i := 0; i < len(cigarCheck); i++ {
-		if !isEqual(cigars[i], cigarCheck[i]) {
-			t.Errorf("Error with FromString")
+	for _, test := range tests {
+		result := FromString(test.input)
+		if !AllEqual(test.expected, result) {
+			t.Errorf("Error: Incorrect FromString() %s != %s\n", ToString(result), ToString(test.expected))
 		}
 	}
 }
@@ -121,7 +122,7 @@ func TestQueryLength(t *testing.T) {
 		log.SetOutput(os.Stderr) // Restore default
 		r := recover()
 		if r == nil {
-			log.Printf("Expected QueryLength() log.panic, but none occurred.\n")
+			t.Logf("Expected QueryLength() log.panic, but none occurred.\n")
 		}
 		if !strings.Contains(buf.String(), "Cannot calculate NumInsertions from unaligned reads.\n") {
 			t.Error("Error: Failed expected panic:")

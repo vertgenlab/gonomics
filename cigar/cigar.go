@@ -88,14 +88,12 @@ func ToString(cigars []Cigar) string {
 
 	for _, c := range cigars {
 		if c.Op == Unmapped {
-			err = buf.WriteByte(c.Op)
 			exception.PanicOnErr(err)
 			return buf.String()
 		}
 		_, err = buf.WriteString(strconv.Itoa(c.RunLength))
 		exception.PanicOnErr(err)
-		err = buf.WriteByte(c.Op)
-		exception.PanicOnErr(err)
+		exception.PanicOnErr(buf.WriteByte(c.Op))
 	}
 	return buf.String()
 }
@@ -105,12 +103,11 @@ func FromString(input string) []Cigar {
 	if input == "*" || input == "**" {
 		return []Cigar{{RunLength: 0, Op: Unmapped}}
 	}
-
 	var ans []Cigar = make([]Cigar, 0, 1)
 	var lastNum int = 0
 	for i := 0; i < len(input); i++ {
 		if validOp(input[i]) {
-			ans = append(ans, Cigar{RunLength: parse.StringToInt(string(input[lastNum:i])), Op: input[i]})
+			ans = append(ans, Cigar{RunLength: parse.StringToInt(input[lastNum:i]), Op: input[i]})
 			lastNum = i + 1
 		}
 	}
