@@ -100,7 +100,7 @@ func ToString(cigars []Cigar) string {
 // FromString parses an input string into a slice of Cigar structs.
 func FromString(input string) []Cigar {
 	if input == "*" || input == "**" {
-		return []Cigar{{RunLength: 0, Op: Unmapped}}
+		return []Cigar{} // Unmapped returns a cigar slice of zero
 	}
 	var ans []Cigar = make([]Cigar, 0, 1)
 	var lastNum int = 0

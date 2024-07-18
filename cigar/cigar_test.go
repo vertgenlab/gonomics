@@ -23,9 +23,8 @@ func TestFromString(t *testing.T) {
 		expected []Cigar
 	}{
 		{"35M2I16D", []Cigar{c1, c2, c3}},
-		{"*", []Cigar{{RunLength: 0, Op: Unmapped}}},
+		{"*", []Cigar{}},
 	}
-
 	for _, test := range tests {
 		result := FromString(test.input)
 		if !AllEqual(test.expected, result) {
