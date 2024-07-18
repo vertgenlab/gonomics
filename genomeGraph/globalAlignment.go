@@ -32,7 +32,7 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 				m[i][j] = m[i-1][j] + gapPen
 				trace[i][j] = 'D'
 			} else {
-				m[i][j], trace[i][j] = cigar.TripleMaxTrace(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+				m[i][j], trace[i][j] = cigar.TripleMaxTraceExtended(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			}
 		}
 	}
@@ -61,7 +61,7 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 			log.Fatalf("Error: unexpected traceback")
 		}
 	}
-	reverseCigarPointer(route)
+	cigar.ReverseCigar(route)
 	return m[len(alpha)-1][len(beta)-1], route
 }
 

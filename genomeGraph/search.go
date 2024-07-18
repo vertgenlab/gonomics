@@ -243,7 +243,7 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix 
 
 	for dynamicScore.i = 1; dynamicScore.i < len(alpha)+1; dynamicScore.i++ {
 		for dynamicScore.j = 1; dynamicScore.j < len(beta)+1; dynamicScore.j++ {
-			matrix.m[dynamicScore.i][dynamicScore.j], matrix.trace[dynamicScore.i][dynamicScore.j] = cigar.MatrixTrace(matrix.m[dynamicScore.i-1][dynamicScore.j-1]+scores[alpha[dynamicScore.i-1]][beta[dynamicScore.j-1]], matrix.m[dynamicScore.i][dynamicScore.j-1]+gapPen, matrix.m[dynamicScore.i-1][dynamicScore.j]+gapPen)
+			matrix.m[dynamicScore.i][dynamicScore.j], matrix.trace[dynamicScore.i][dynamicScore.j] = cigar.TripleMaxTrace(matrix.m[dynamicScore.i-1][dynamicScore.j-1]+scores[alpha[dynamicScore.i-1]][beta[dynamicScore.j-1]], matrix.m[dynamicScore.i][dynamicScore.j-1]+gapPen, matrix.m[dynamicScore.i-1][dynamicScore.j]+gapPen)
 			if matrix.m[dynamicScore.i][dynamicScore.j] < 0 {
 				matrix.m[dynamicScore.i][dynamicScore.j] = 0
 			}
@@ -288,7 +288,7 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, scores [][]int64, matrix
 				matrix.m[dynamicScore.i][dynamicScore.j] = matrix.m[dynamicScore.i-1][dynamicScore.j] + gapPen
 				matrix.trace[dynamicScore.i][dynamicScore.j] = 'D'
 			} else {
-				matrix.m[dynamicScore.i][dynamicScore.j], matrix.trace[dynamicScore.i][dynamicScore.j] = cigar.MatrixTrace(matrix.m[dynamicScore.i-1][dynamicScore.j-1]+scores[alpha[dynamicScore.i-1]][beta[dynamicScore.j-1]], matrix.m[dynamicScore.i][dynamicScore.j-1]+gapPen, matrix.m[dynamicScore.i-1][dynamicScore.j]+gapPen)
+				matrix.m[dynamicScore.i][dynamicScore.j], matrix.trace[dynamicScore.i][dynamicScore.j] = cigar.TripleMaxTrace(matrix.m[dynamicScore.i-1][dynamicScore.j-1]+scores[alpha[dynamicScore.i-1]][beta[dynamicScore.j-1]], matrix.m[dynamicScore.i][dynamicScore.j-1]+gapPen, matrix.m[dynamicScore.i-1][dynamicScore.j]+gapPen)
 			}
 			if matrix.m[dynamicScore.i][dynamicScore.j] > dynamicScore.currMax {
 				dynamicScore.currMax = matrix.m[dynamicScore.i][dynamicScore.j]

@@ -60,10 +60,10 @@ func ReverseCigar(cigars []Cigar) {
 	}
 }
 
-// TODO: Move these to align package and replace
-// MatrixTrace will trace smith-waterman matrix alignment and return one of 3 cigar Op's.
+// TODO: Move TripleMaxTrace() and TripleMaxTraceExtended() to align package and replace
+// TripleMaxTrace will trace smith-waterman matrix alignment and return one of 3 cigar Op's.
 // M: matches or mismatches, I: insertions, D: for deletions.
-func MatrixTrace(a int64, b int64, c int64) (int64, byte) {
+func TripleMaxTrace(a int64, b int64, c int64) (int64, byte) {
 	if a >= b && a >= c {
 		return a, Match
 	} else if b >= c {
@@ -73,8 +73,8 @@ func MatrixTrace(a int64, b int64, c int64) (int64, byte) {
 	}
 }
 
-// TripleMaxTrace is an expanded version of MatrixTrace which will return either '=' or 'X' where 'M'(s) are found.
-func TripleMaxTrace(prev int64, a int64, b int64, c int64) (int64, byte) {
+// TripleMaxTraceExtended is an expanded version of TripleMaxTrace which trace will return either '=' or 'X' where 'M'(s) are found.
+func TripleMaxTraceExtended(prev int64, a int64, b int64, c int64) (int64, byte) {
 	if a >= b && a >= c {
 		if a > prev {
 			return a, Equal
