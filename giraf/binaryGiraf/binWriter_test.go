@@ -13,9 +13,9 @@ import (
 )
 
 var TestQual = []uint8{40, 5, 5, 5, 5, 5, 5, 5, 30, 20, 20, 20, 1}
-var ExpectedQual = []cigar.ByteCigar{{RunLen: 1, Op: 40},
-	{RunLen: 7, Op: 5}, {RunLen: 1, Op: 30},
-	{RunLen: 3, Op: 20}, {RunLen: 1, Op: 1}}
+var ExpectedQual = []cigar.Cigar{{RunLength: 1, Op: 40},
+	{RunLength: 7, Op: 5}, {RunLength: 1, Op: 30},
+	{RunLength: 3, Op: 20}, {RunLength: 1, Op: 1}}
 
 func TestEncodeQual(t *testing.T) {
 	answer := encodeQual(TestQual)
@@ -25,9 +25,9 @@ func TestEncodeQual(t *testing.T) {
 }
 
 var TestSeq = dna.StringToBases("ACGTGGTCA")
-var TestCigar = []cigar.ByteCigar{{RunLen: 1, Op: 'S'},
-	{RunLen: 4, Op: '='}, {RunLen: 2, Op: 'I'},
-	{RunLen: 1, Op: 'X'}, {RunLen: 3, Op: '='}}
+var TestCigar = []cigar.Cigar{{RunLength: 1, Op: 'S'},
+	{RunLength: 4, Op: '='}, {RunLength: 2, Op: 'I'},
+	{RunLength: 1, Op: 'X'}, {RunLength: 3, Op: '='}}
 var FancySeq = "AGTC"
 
 func TestGetFancySeq(t *testing.T) {

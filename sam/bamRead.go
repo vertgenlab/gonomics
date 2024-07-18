@@ -208,7 +208,7 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	var cigint uint32
 	for i := 0; i < numCigarOps; i++ {
 		cigint = le.Uint32(r.next(4))
-		s.Cigar[i].Op = cigLookup[cigint&0xf]
+		s.Cigar[i].Op = cigar.OpTable[cigint&0xf]
 		s.Cigar[i].RunLength = int(cigint >> 4)
 	}
 
@@ -271,9 +271,6 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 	s.parsedExtraTypes = nil
 	return
 }
-
-// integer to cigar look quick lookup.
-var cigLookup = []rune{'M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X', '*'}
 
 // baseDecoder is for 4-bit to dna.Base decoding.
 // gonomics does not support all 16 options in bam.

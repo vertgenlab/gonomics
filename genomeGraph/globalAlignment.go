@@ -19,7 +19,7 @@ func nmMatrixSetup(size int64) ([][]int64, [][]rune) {
 	return m, trace
 }
 
-func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []cigar.Cigar) {
+func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []cigar.Cigar) {
 	var i, j, routeIdx int
 	for i = 0; i < len(alpha)+1; i++ {
 		for j = 0; j < len(beta)+1; j++ {
@@ -32,7 +32,7 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 				m[i][j] = m[i-1][j] + gapPen
 				trace[i][j] = 'D'
 			} else {
-				m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+				m[i][j], trace[i][j] = cigar.TripleMaxTrace(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			}
 		}
 	}
