@@ -60,6 +60,7 @@ func ReverseCigar(cigars []Cigar) {
 	}
 }
 
+// TODO: Move these to align package and replace
 // MatrixTrace will trace smith-waterman matrix alignment and return one of 3 cigar Op's.
 // M: matches or mismatches, I: insertions, D: for deletions.
 func MatrixTrace(a int64, b int64, c int64) (int64, byte) {
