@@ -86,10 +86,6 @@ func ToString(cigars []Cigar) string {
 	}
 
 	for _, c := range cigars {
-		if c.Op == Unmapped {
-			exception.PanicOnErr(buf.WriteByte(Unmapped))
-			return buf.String()
-		}
 		_, err = buf.WriteString(strconv.Itoa(c.RunLength))
 		exception.PanicOnErr(err)
 		exception.PanicOnErr(buf.WriteByte(c.Op))
