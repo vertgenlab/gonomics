@@ -15,7 +15,7 @@ var c4 Cigar = Cigar{RunLength: 5, Op: Match}
 var c5 Cigar = Cigar{RunLength: 2, Op: Mismatch}
 var c6 Cigar = Cigar{RunLength: 3, Op: Equal}
 var c7 Cigar = Cigar{RunLength: 3, Op: SoftClip}
-var unknown []Cigar = []Cigar{}
+var unknown []Cigar = []Cigar{} // len(cigars) == 0 standard for unmapped
 
 func TestNumInsertions(t *testing.T) {
 	tests := []struct {
@@ -102,6 +102,7 @@ func TestToString(t *testing.T) {
 		expected string
 	}{
 		{[]Cigar{c1, c2, c3}, "35M2I16D"},
+		{[]Cigar{{RunLength: 0, Op: Unmapped}}, "*"},
 		{[]Cigar{}, "*"},
 	}
 	for _, test := range tests {
