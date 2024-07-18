@@ -15,8 +15,71 @@ var c4 Cigar = Cigar{RunLength: 5, Op: Match}
 var c5 Cigar = Cigar{RunLength: 2, Op: Mismatch}
 var c6 Cigar = Cigar{RunLength: 3, Op: Equal}
 var c7 Cigar = Cigar{RunLength: 3, Op: SoftClip}
-var unknown []Cigar = []Cigar{{RunLength: 0, Op: Unmapped}}
+var unknown []Cigar = []Cigar{}
 
+func TestNumInsertions(t *testing.T) {
+	tests := []struct {
+		input    []Cigar
+		expected int
+	}{
+		{[]Cigar{c1, c2, c3}, 2},
+	}
+
+	for _, c := range tests {
+		result := NumInsertions(c.input)
+		if c.expected != result {
+			t.Errorf("Error: Incorrect NumInsertions() %d != %d\n", result, c.expected)
+		}
+	}
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+
+	// restore log.Panic(err) from unmapped cigar and check if err is caught
+	defer func() {
+		log.SetOutput(os.Stderr) // Restore default
+		r := recover()
+		if r == nil {
+			log.Printf("Expected NumInsertions() log.panic, but none occurred.\n")
+		}
+		if !strings.Contains(buf.String(), "Cannot calculate NumInsertions from unaligned reads.\n") {
+			t.Error("Error: Failed expected panic:")
+		}
+	}()
+	// err panic from unmapped []Cigar
+	NumInsertions(unknown)
+}
+
+func TestNumDeletions(t *testing.T) {
+	tests := []struct {
+		input    []Cigar
+		expected int
+	}{
+		{[]Cigar{c1, c2, c3}, 16},
+	}
+
+	for _, c := range tests {
+		result := NumDeletions(c.input)
+		if c.expected != result {
+			t.Errorf("Error: Incorrect NumDeletions() %d != %d\n", result, c.expected)
+		}
+	}
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+
+	// restore log.Panic(err) from unmapped cigar and check if err is caught
+	defer func() {
+		log.SetOutput(os.Stderr) // Restore default
+		r := recover()
+		if r == nil {
+			log.Printf("Expected NumDeletions() log.panic, but none occurred.\n")
+		}
+		if !strings.Contains(buf.String(), "Cannot calculate NumDeletions from unaligned reads.\n") {
+			t.Error("Error: Failed expected panic:")
+		}
+	}()
+	// err panic from unmapped []Cigar
+	NumDeletions(unknown)
+}
 func TestFromString(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -82,6 +145,7 @@ func TestReferenceLength(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 
+	// restore log.Panic(err) from unmapped cigar and check if err is caught
 	defer func() {
 		log.SetOutput(os.Stderr) // Restore default
 		r := recover()
@@ -92,6 +156,7 @@ func TestReferenceLength(t *testing.T) {
 			t.Error("Error: Failed expected panic:")
 		}
 	}()
+	// err panic from unmapped []Cigar
 	ReferenceLength(unknown)
 }
 
@@ -113,6 +178,7 @@ func TestQueryLength(t *testing.T) {
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 
+	// restore log.Panic(err) from unmapped cigar and check if err is caught
 	defer func() {
 		log.SetOutput(os.Stderr) // Restore default
 		r := recover()
@@ -123,6 +189,7 @@ func TestQueryLength(t *testing.T) {
 			t.Error("Error: Failed expected panic:")
 		}
 	}()
+	// err panic from unmapped []Cigar
 	QueryLength(unknown)
 }
 

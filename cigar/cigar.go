@@ -50,7 +50,7 @@ var Uint32Table = map[byte]uint32{
 // NumInsertions calculates the number of inserted bases relative to a reference genome for an input Cigar slice.
 func NumInsertions(input []Cigar) int {
 	var count int
-	if input[0].Op == Unmapped {
+	if len(input) == 0 || input[0].Op == Unmapped {
 		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for i := range input {
@@ -64,7 +64,7 @@ func NumInsertions(input []Cigar) int {
 // NumDeletions calculates the number of deletions relative to a reference genome for an input Cigar slice.
 func NumDeletions(input []Cigar) int {
 	var count int
-	if input[0].Op == Unmapped {
+	if len(input) == 0 || input[0].Op == Unmapped {
 		log.Panic("Cannot calculate NumDeletions from unaligned reads.")
 	}
 	for i := range input {
@@ -116,7 +116,7 @@ func FromString(input string) []Cigar {
 // MatchLength returns the number of bases in a Cigar slice that align to the reference.
 func MatchLength(c []Cigar) int {
 	var ans int
-	if c[0].Op == Unmapped {
+	if len(c) == 0 || c[0].Op == Unmapped {
 		log.Panic("Cannot calculate MatchLength from unaligned reads.")
 	}
 	for _, v := range c {
@@ -130,7 +130,7 @@ func MatchLength(c []Cigar) int {
 // ReferenceLength calculates the number of reference positions that a Cigar slice spans.
 func ReferenceLength(c []Cigar) int {
 	var ans int
-	if c[0].Op == Unmapped {
+	if len(c) == 0 || c[0].Op == Unmapped {
 		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for _, v := range c {
@@ -144,7 +144,7 @@ func ReferenceLength(c []Cigar) int {
 // QueryLength calculates the length of the query read from a slice of Cigar structs.
 func QueryLength(c []Cigar) int {
 	var ans int
-	if c[0].Op == Unmapped {
+	if len(c) == 0 || c[0].Op == Unmapped {
 		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for _, v := range c {
