@@ -63,6 +63,7 @@ func TestSoftClipBases(t *testing.T) {
 		cig          []Cigar
 		expected     []Cigar
 	}{
+		{0, 10, []Cigar{{10, Match}}, []Cigar{{10, Match}}},                                                           // No clipping
 		{2, 10, []Cigar{{5, Match}, {5, Deletion}}, []Cigar{{2, SoftClip}, {5, Match}, {5, Deletion}, {3, SoftClip}}}, // Front clipping
 		{0, 15, []Cigar{{5, Match}, {5, Deletion}}, []Cigar{{5, Match}, {5, Deletion}, {10, SoftClip}}},               // End clipping
 		{2, 12, []Cigar{{5, Match}, {5, Deletion}}, []Cigar{{2, SoftClip}, {5, Match}, {5, Deletion}, {5, SoftClip}}}, // Both clippings
