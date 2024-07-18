@@ -592,23 +592,6 @@ func SortSeedLen(seeds []SeedDev) {
 	sort.Slice(seeds, func(i, j int) bool { return seeds[i].TotalLength > seeds[j].TotalLength })
 }
 
-func SoftClipBases(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
-	var runLen int = cigar.QueryLength(cig)
-	if runLen < lengthOfRead {
-		answer := make([]cigar.Cigar, 0, len(cig)+2)
-		if front > 0 {
-			answer = append(answer, cigar.Cigar{RunLength: front, Op: cigar.SoftClip})
-		}
-		answer = append(answer, cig...)
-		if front+cigar.QueryLength(cig) < lengthOfRead {
-			answer = append(answer, cigar.Cigar{RunLength: lengthOfRead - front - runLen, Op: cigar.SoftClip})
-		}
-		return answer
-	} else {
-		return cig
-	}
-}
-
 func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)
 	var buf *bytes.Buffer

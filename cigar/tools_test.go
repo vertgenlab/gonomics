@@ -49,10 +49,29 @@ func TestReverseCigar(t *testing.T) {
 	// Make a copy for reversing to avoid modifying the original
 	reversed := make([]Cigar, len(input))
 	copy(reversed, input)
-
 	ReverseCigar(reversed)
 
 	if !AllEqual(reversed, expected) {
 		t.Errorf("Error: Incorrect ReverseCigar() result. %s != %s", ToString(reversed), ToString(expected))
+	}
+}
+
+func TestSoftClipBases(t *testing.T) {
+	tests := []struct {
+		front        int
+		lengthOfRead int
+		cig          []Cigar
+		expected     []Cigar
+	}{
+		{2, 10, []Cigar{{5, Match}, {5, Deletion}}, []Cigar{{2, SoftClip}, {5, Match}, {5, Deletion}, {3, SoftClip}}}, // Front clipping
+		{0, 15, []Cigar{{5, Match}, {5, Deletion}}, []Cigar{{5, Match}, {5, Deletion}, {10, SoftClip}}},               // End clipping
+		{2, 12, []Cigar{{5, Match}, {5, Deletion}}, []Cigar{{2, SoftClip}, {5, Match}, {5, Deletion}, {5, SoftClip}}}, // Both clippings
+	}
+
+	for _, test := range tests {
+		result := SoftClipBases(test.front, test.lengthOfRead, test.cig)
+		if !AllEqual(test.expected, result) {
+			t.Errorf("Error: SoftClipBases(%d, %d, %s) = %s != %s", test.front, test.lengthOfRead, ToString(test.cig), ToString(result), ToString(test.expected))
+		}
 	}
 }
