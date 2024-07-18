@@ -97,16 +97,18 @@ func TestFromString(t *testing.T) {
 }
 
 func TestToString(t *testing.T) {
-	var cigarsString = "35M2I16D"
-	var c1 Cigar = Cigar{RunLength: 35, Op: 'M'}
-	var c2 Cigar = Cigar{RunLength: 2, Op: 'I'}
-	var c3 Cigar = Cigar{RunLength: 16, Op: 'D'}
-	var cigars []Cigar = []Cigar{c1, c2, c3}
-
-	cigarCheck := ToString(cigars)
-
-	if strings.Compare(cigarCheck, cigarsString) != 0 {
-		t.Errorf("Error with ToString")
+	tests := []struct {
+		input    []Cigar
+		expected string
+	}{
+		{[]Cigar{c1, c2, c3}, "35M2I16D"},
+		{[]Cigar{}, "*"},
+	}
+	for _, test := range tests {
+		result := ToString(test.input)
+		if strings.Compare(test.expected, result) != 0 {
+			t.Errorf("Error: Incorrect ToString() %s != %s\n", result, test.expected)
+		}
 	}
 }
 
@@ -125,7 +127,6 @@ func TestMatchLength(t *testing.T) {
 			t.Errorf("Error: MatchLength() %d != %d\n", result, c.expected)
 		}
 	}
-
 	var buf bytes.Buffer
 	log.SetOutput(&buf)
 
