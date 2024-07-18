@@ -12,6 +12,7 @@ func TestAllEqual(t *testing.T) {
 	}{
 		{[]Cigar{{RunLength: 10, Op: Match}}, []Cigar{{RunLength: 2, Op: Deletion}, {RunLength: 5, Op: Match}}, false},
 		{[]Cigar{{RunLength: 150, Op: Match}}, []Cigar{{RunLength: 150, Op: Match}}, true},
+		{[]Cigar{{RunLength: 1, Op: Deletion}}, []Cigar{{RunLength: 1, Op: Insertion}}, false},
 	}
 	for _, test := range tests {
 		result := AllEqual(test.alpha, test.beta)
