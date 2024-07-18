@@ -80,7 +80,7 @@ func ToString(cigars []Cigar) string {
 	var buf strings.Builder
 	var err error
 
-	if len(cigars) == 0 || cigars == nil {
+	if len(cigars) == 0 || cigars[0].Op == Unmapped {
 		exception.PanicOnErr(buf.WriteByte(Unmapped))
 		return buf.String()
 	}

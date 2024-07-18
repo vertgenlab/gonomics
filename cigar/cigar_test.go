@@ -36,7 +36,7 @@ func TestNumInsertions(t *testing.T) {
 
 	// restore log.Panic(err) from unmapped cigar and check if err is caught
 	defer func() {
-		log.SetOutput(os.Stderr) // Restore default
+		log.SetOutput(os.Stderr) // Restore logs
 		r := recover()
 		if r == nil {
 			log.Printf("Expected NumInsertions() log.panic, but none occurred.\n")
@@ -68,7 +68,7 @@ func TestNumDeletions(t *testing.T) {
 
 	// restore log.Panic(err) from unmapped cigar and check if err is caught
 	defer func() {
-		log.SetOutput(os.Stderr) // Restore default
+		log.SetOutput(os.Stderr) // Restore logs
 		r := recover()
 		if r == nil {
 			log.Printf("Expected NumDeletions() log.panic, but none occurred.\n")
@@ -132,7 +132,7 @@ func TestMatchLength(t *testing.T) {
 
 	// restore log.Panic(err) from unmapped cigar and check if err is caught
 	defer func() {
-		log.SetOutput(os.Stderr) // Restore default
+		log.SetOutput(os.Stderr) // Restore logs
 		r := recover()
 		if r == nil {
 			log.Printf("Expected MatchLength() log.panic, but none occurred.\n")
@@ -165,7 +165,7 @@ func TestReferenceLength(t *testing.T) {
 
 	// restore log.Panic(err) from unmapped cigar and check if err is caught
 	defer func() {
-		log.SetOutput(os.Stderr) // Restore default
+		log.SetOutput(os.Stderr) // Restore logs
 		r := recover()
 		if r == nil {
 			log.Printf("Expected ReferenceLength() log.panic, but none occurred.\n")
@@ -198,7 +198,7 @@ func TestQueryLength(t *testing.T) {
 
 	// restore log.Panic(err) from unmapped cigar and check if err is caught
 	defer func() {
-		log.SetOutput(os.Stderr) // Restore default
+		log.SetOutput(os.Stderr) // Restore logs
 		r := recover()
 		if r == nil {
 			t.Logf("Expected QueryLength() log.panic, but none occurred.\n")
@@ -227,7 +227,7 @@ func TestConsumesReference(t *testing.T) {
 
 	// restore log.Panic(err) from unmapped cigar and check if err is caught
 	defer func() {
-		log.SetOutput(os.Stderr) // Restore default
+		log.SetOutput(os.Stderr) // Restore logs
 		r := recover()
 		if r == nil {
 			t.Logf("Expected ConsumesReference() log.panic, but none occurred.\n")
@@ -256,7 +256,7 @@ func TestConsumesQuery(t *testing.T) {
 
 	// restore log.Panic(err) from unmapped cigar and check if err is caught
 	defer func() {
-		log.SetOutput(os.Stderr) // Restore default
+		log.SetOutput(os.Stderr) // Restore logs
 		r := recover()
 		if r == nil {
 			t.Logf("Expected ConsumesQuery() log.panic, but none occurred.\n")
@@ -272,17 +272,17 @@ func TestConsumesQuery(t *testing.T) {
 func BenchmarkCigarToString(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
+
 	for n := 0; n < b.N; n++ {
 		ToString([]Cigar{c1, c2, c3})
 	}
 }
 
 func BenchmarkCigarFromString(b *testing.B) {
-	var cigarsString = "35M2I16D"
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
-		FromString(cigarsString)
+		FromString("35M2I16D")
 	}
 }
