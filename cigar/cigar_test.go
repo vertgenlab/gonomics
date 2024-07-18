@@ -125,6 +125,23 @@ func TestMatchLength(t *testing.T) {
 			t.Errorf("Error: MatchLength() %d != %d\n", result, c.expected)
 		}
 	}
+
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+
+	// restore log.Panic(err) from unmapped cigar and check if err is caught
+	defer func() {
+		log.SetOutput(os.Stderr) // Restore default
+		r := recover()
+		if r == nil {
+			log.Printf("Expected MatchLength() log.panic, but none occurred.\n")
+		}
+		if !strings.Contains(buf.String(), "Cannot calculate MatchLength from unaligned reads.\n") {
+			t.Error("Error: Failed expected panic:")
+		}
+	}()
+	// err panic from unmapped []Cigar
+	MatchLength(unknown)
 }
 
 func TestReferenceLength(t *testing.T) {
@@ -204,6 +221,22 @@ func TestConsumesReference(t *testing.T) {
 	if expected != result {
 		t.Errorf("Error: Incorrect ConsumesReference() %d != %d\n", result, expected)
 	}
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+
+	// restore log.Panic(err) from unmapped cigar and check if err is caught
+	defer func() {
+		log.SetOutput(os.Stderr) // Restore default
+		r := recover()
+		if r == nil {
+			t.Logf("Expected ConsumesReference() log.panic, but none occurred.\n")
+		}
+		if !strings.Contains(buf.String(), "Invalid byte: $\n") {
+			t.Error("Error: Failed expected panic:")
+		}
+	}()
+	// err panic from Op == '$'
+	ConsumesReference('$')
 }
 
 func TestConsumesQuery(t *testing.T) {
@@ -217,6 +250,22 @@ func TestConsumesQuery(t *testing.T) {
 	if expected != result {
 		t.Errorf("Error: IncorrectConsumesQuery() %d != %d\n", result, expected)
 	}
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+
+	// restore log.Panic(err) from unmapped cigar and check if err is caught
+	defer func() {
+		log.SetOutput(os.Stderr) // Restore default
+		r := recover()
+		if r == nil {
+			t.Logf("Expected ConsumesQuery() log.panic, but none occurred.\n")
+		}
+		if !strings.Contains(buf.String(), "Invalid byte: /\n") {
+			t.Error("Error: Failed expected panic:")
+		}
+	}()
+	// err panic from Op == '/'
+	ConsumesQuery('/')
 }
 
 func BenchmarkCigarToString(b *testing.B) {
