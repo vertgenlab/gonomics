@@ -45,6 +45,41 @@ func indexGenomeIntoMapHelper(prevSeq []dna.Base, currNode *Node, locationCode u
 	}
 }
 
+func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
+	var maxMatch int64 = 0
+	var minMatch int64
+	var leastSevereMismatch int64 = scoreMatrix[0][1]
+	var i, j int
+	for i = 0; i < len(scoreMatrix); i++ {
+		for j = 0; j < len(scoreMatrix[i]); j++ {
+			if scoreMatrix[i][j] > maxMatch {
+				minMatch = maxMatch
+				maxMatch = scoreMatrix[i][j]
+			} else {
+				if scoreMatrix[i][j] < 0 && leastSevereMismatch < scoreMatrix[i][j] {
+					leastSevereMismatch = scoreMatrix[i][j]
+				}
+			}
+		}
+	}
+	var leastSevereMatchMismatchChange int64 = leastSevereMismatch - maxMatch
+	return maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
+}
+
+type ScoreMatrixHelper struct {
+	Matrix                         [][]int64
+	MaxMatch                       int64
+	MinMatch                       int64
+	LeastSevereMismatch            int64
+	LeastSevereMatchMismatchChange int64
+}
+
+func getScoreMatrixHelp(scoreMatrix [][]int64) *ScoreMatrixHelper {
+	help := ScoreMatrixHelper{Matrix: scoreMatrix}
+	help.MaxMatch, help.MinMatch, help.LeastSevereMismatch, help.LeastSevereMatchMismatchChange = MismatchStats(scoreMatrix)
+	return &help
+}
+
 // TODO: this does not take into account breaking up seeds by gaps instead of mismatches
 // similar calculations could also be used as the parameters to a banded alignment.
 func seedCouldBeBetter(seedLen int64, currBestScore int64, perfectScore int64, queryLen int64, config *GraphSettings) bool {

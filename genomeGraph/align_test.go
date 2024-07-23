@@ -13,6 +13,7 @@ import (
 
 	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 )
@@ -34,9 +35,12 @@ func BenchmarkGsw(b *testing.B) {
 	}
 	b.ReportAllocs()
 	//var output string = "/dev/stdout"
-	var output string = "testdata/rabs_test.giraf"
+	//var output string = "testdata/rabs_test.giraf"
 	var tileSize int = 32
 	var stepSize int = 32
+	var numberOfReads int = 100
+	var readLength int = 150
+	var mutations int = 2
 	//var numberOfReads int = 50000
 	//var readLength int = 150
 	//var mutations int = 1
@@ -44,21 +48,22 @@ func BenchmarkGsw(b *testing.B) {
 	var numWorkers int = 6
 	var scoreMatrix = align.HumanChimpTwoScoreMatrix
 	b.ResetTimer()
-	genome := Read("testdata/rabsTHREEspine.fa")
+	genome := Read("testdata/bigGenome.sg")
 	log.Printf("Reading in the genome (simple graph)...\n")
 	log.Printf("Indexing the genome...\n")
 
 	fastqPipe := make(chan fastq.PairedEndBig, 2408)
 	girafPipe := make(chan giraf.GirafPair, 2408)
 
-	//log.Printf("Simulating reads...\n")
-	//simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
-	//os.Remove("testdata/simReads_R1.fq")
-	//os.Remove("testdata/simReads_R2.fq")
-
 	//fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
 
 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+
+	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
+	fqOne := "testdata/simReads_R1.fq"
+	fqTwo := "testdata/simReads_R2.fq"
+
+	fastq.WritePair(fqOne, fqTwo, simReads)
 
 	go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
 	log.Printf("Finished Indexing Genome...\n")
@@ -69,8 +74,8 @@ func BenchmarkGsw(b *testing.B) {
 	for i := 0; i < numWorkers; i++ {
 		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
 	}
-	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
-	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
+	//go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
+	go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
 	writerWaiter.Add(1)
 	workerWaiter.Wait()
 	close(girafPipe)
@@ -80,7 +85,9 @@ func BenchmarkGsw(b *testing.B) {
 	stop := time.Now()
 	duration := stop.Sub(start)
 	//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", 50000*2, duration, float64(50000*2)/duration.Seconds())
+	b.Logf("Aligned %d reads in %s (%.1f reads per second).\n", 50000*2, duration, float64(50000*2)/duration.Seconds())
+	fileio.EasyRemove(fqOne)
+	fileio.EasyRemove(fqTwo)
 	if *memprofile != "" {
 		f, err := os.Create(*memprofile)
 		if err != nil {

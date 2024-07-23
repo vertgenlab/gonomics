@@ -198,6 +198,10 @@ func getLastPart(a *Seed) *Seed {
 	return a
 }
 
+func SortSeedLen(seeds []Seed) {
+	sort.Slice(seeds, func(i, j int) bool { return seeds[i].TotalLength > seeds[j].TotalLength })
+}
+
 func CompareBlastScore(a *Seed, b *Seed, read fastq.Fastq, scoreMatrix [][]int64) int {
 	if BlastSeed(a, read, scoreMatrix) == BlastSeed(b, read, scoreMatrix) {
 		return 0

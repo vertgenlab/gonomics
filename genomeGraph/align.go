@@ -3,7 +3,6 @@ package genomeGraph
 import (
 	"fmt"
 
-	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 )
@@ -51,23 +50,6 @@ func scoreSeed(seed *Seed, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 		score += scoreSeedPart(seed, read, scoreMatrix)
 	}
 	return score
-}
-
-func AddSClip(front int, lengthOfRead int, cig []cigar.Cigar) []cigar.Cigar {
-	var runLen int = cigar.QueryLength(cig)
-	if runLen < lengthOfRead {
-		answer := make([]cigar.Cigar, 0, len(cig)+2)
-		if front > 0 {
-			answer = append(answer, cigar.Cigar{RunLength: front, Op: 'S'})
-		}
-		answer = append(answer, cig...)
-		if front+int(cigar.QueryLength(cig)) < lengthOfRead {
-			answer = append(answer, cigar.Cigar{RunLength: lengthOfRead - front - runLen, Op: 'S'})
-		}
-		return answer
-	} else {
-		return cig
-	}
 }
 
 // perfect match.

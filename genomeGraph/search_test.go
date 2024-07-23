@@ -17,8 +17,10 @@ import (
 func TestLeftDynamicAln(t *testing.T) {
 	alpha := dna.StringToBases("ATGC")
 	beta := dna.StringToBases("ATCC")
-	scores := align.HumanChimpTwoScoreMatrix
-	gapPen := int64(-10)
+	settings := &GraphSettings{
+		ScoreMatrix: align.HumanChimpTwoScoreMatrix,
+		GapPenalty:  int64(-10),
+	}
 
 	expectedScore := int64(260)
 	expectedCigar := cigar.ToString([]cigar.Cigar{{RunLength: 1, Op: cigar.Match}, {RunLength: 1, Op: cigar.Insertion}, {RunLength: 1, Op: cigar.Deletion}, {RunLength: 2, Op: cigar.Match}})
@@ -26,11 +28,12 @@ func TestLeftDynamicAln(t *testing.T) {
 	expectedJ := 0
 
 	// Setup
-	matrix := NewSwMatrix((len(alpha) + len(beta)))
-	dynamicScore := dynamicScoreKeeper{}
+	pool := NewMatrixPool((len(alpha) + len(beta)))
+	matrix := pool.Get().(*Matrix)
+	defer pool.Put(matrix)
 
 	// Call the function under test
-	score, cig, i, j := LeftDynamicAln(alpha, beta, scores, &matrix, gapPen, dynamicScore)
+	score, cig, i, j := LeftDynamicAln(alpha, beta, settings, matrix)
 
 	// Assertions
 	if score != expectedScore {
@@ -94,12 +97,12 @@ func TestRightAlignTraversal(t *testing.T) {
 	expectedPath2 := []uint32{}
 
 	// Test with node1 (traversal)
-	matrix := NewSwMatrix(defaultMatrixSize)
-	sk := scoreKeeper{}
-	dynamicScore := dynamicScoreKeeper{}
-	dnaPool := NewDnaPool()
+	matrix := NewMatrixPool(defaultMatrixSize)
 
-	cigar1, score1, targetEnd1, queryEnd1, path1 := RightAlignTraversal(&n1, []dna.Base{}, 0, []uint32{}, query, config, &matrix, sk, dynamicScore, &dnaPool)
+	sk := scoreKeeper{}
+	dnaPool := NewAlignmentPool()
+
+	cigar1, score1, targetEnd1, queryEnd1, path1 := RightAlignTraversal(&n1, []dna.Base{}, 0, []uint32{}, query, config, sk, matrix, dnaPool)
 
 	if score1 != expectedScore {
 		t.Errorf("Error: Expected score %d for node1, got %d", expectedScore, score1)
@@ -116,7 +119,7 @@ func TestRightAlignTraversal(t *testing.T) {
 	}
 
 	// Test with node2 (no traversal, direct alignment)
-	cigar2, score2, targetEnd2, queryEnd2, path2 := RightAlignTraversal(&n1, []dna.Base{}, 0, []uint32{}, query, config, &matrix, sk, dynamicScore, &dnaPool)
+	cigar2, score2, targetEnd2, queryEnd2, path2 := RightAlignTraversal(&n1, []dna.Base{}, 0, []uint32{}, query, config, sk, matrix, dnaPool)
 
 	// Similar assertions for node2
 	if score2 != expectedScore {
@@ -154,11 +157,12 @@ func TestRightDynamicAln(t *testing.T) {
 	expectedI := 7
 	expectedJ := 7
 
-	matrix := NewSwMatrix(len(alpha) + len(beta))
-	dynamicScore := dynamicScoreKeeper{}
+	pool := NewMatrixPool(len(alpha) + len(beta))
+	matrix := pool.Get().(*Matrix)
+	defer pool.Put(matrix)
 
 	// Call the function under test
-	score, cig, i, j := RightDynamicAln(alpha, beta, config, &matrix, dynamicScore)
+	score, cig, i, j := RightDynamicAln(alpha, beta, config, matrix)
 
 	// Assertions
 	if score != expectedScore {
@@ -175,7 +179,7 @@ func TestRightDynamicAln(t *testing.T) {
 
 func BenchmarkGirafAlignment(b *testing.B) {
 	// Setup (outside of benchmark timing)
-	var numberOfReads int = 10
+	var numberOfReads int = 100
 	var readLength int = 150
 	var mutations int = 1
 
@@ -205,10 +209,10 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	defer file.Close()
 
 	// Reusable objects (created once, used throughout)
-	matrix := NewSwMatrix(defaultMatrixSize)
-	seedPool := NewMemSeedPool()
-	dnaPool := NewDnaPool()
+	matrix := NewMatrixPool(defaultMatrixSize)
+	dnaPool := NewAlignmentPool()
 	seedBuildHelper := newSeedBuilder()
+	scorekeeper := scoreKeeper{} // Create new scorekeepers per alignment
 
 	b.ResetTimer()
 
@@ -216,9 +220,7 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		correct = 0
 		for i := 0; i < len(fqs); i++ {
-			scorekeeper := scoreKeeper{} // Create new scorekeepers per alignment
-			dynamicKeeper := dynamicScoreKeeper{}
-			result := GraphSmithWatermanToGiraf(genome, fqs[i], tiles, config, &matrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper)
+			result := GraphSmithWatermanToGiraf(genome, fqs[i], tiles, config, matrix, dnaPool, scorekeeper, seedBuildHelper)
 			if isCorrectCoord(result) {
 				correct++
 			}
