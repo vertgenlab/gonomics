@@ -3,19 +3,20 @@ package align
 import (
 	"log"
 
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 )
 
 // ConstGap_highMem aligns two sequences (alpha, beta) using a score matrix (scores) and a constant gap penalty of gapPen.
 // The return values are the alignment score and the cigar representing the alignment.
-func ConstGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
+func ConstGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []cigar.Cigar) {
 	//make matrices for m (score, broken down into mRowCurrent,mRowPrevious and mColumn to save memory) and trace (traceback with directions)
 	mRowCurrent := make([]int64, len(beta)+1)
 	mRowPrevious := make([]int64, len(beta)+1)
 	var mColumn int = len(alpha) + 1
-	trace := make([][]ColType, len(alpha)+1)
+	trace := make([][]byte, len(alpha)+1)
 	for idx := 0; idx < mColumn; idx++ {
-		trace[idx] = make([]ColType, len(beta)+1)
+		trace[idx] = make([]byte, len(beta)+1)
 	}
 
 	//fill out matrices for m and trace
@@ -31,7 +32,7 @@ func ConstGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPe
 				mRowCurrent[j] = mRowPrevious[j] + gapPen
 				trace[i][j] = 2
 			} else {
-				mRowCurrent[j], trace[i][j] = tripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen)
+				mRowCurrent[j], trace[i][j] = cigar.TripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen)
 			}
 		}
 		if i < mColumn-1 {
@@ -40,7 +41,7 @@ func ConstGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPe
 	}
 
 	//write cigar
-	route := make([]Cigar, 1)
+	route := make([]cigar.Cigar, 1)
 	for i, j, routeIdx = mColumn-1, len(mRowCurrent)-1, 0; i > 0 || j > 0; {
 		if route[routeIdx].RunLength == 0 {
 			route[routeIdx].RunLength = 1
@@ -48,7 +49,7 @@ func ConstGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPe
 		} else if route[routeIdx].Op == trace[i][j] {
 			route[routeIdx].RunLength += 1
 		} else {
-			route = append(route, Cigar{RunLength: 1, Op: trace[i][j]})
+			route = append(route, cigar.Cigar{RunLength: 1, Op: trace[i][j]})
 			routeIdx++
 		}
 		switch trace[i][j] {
@@ -62,6 +63,6 @@ func ConstGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPe
 			log.Fatalf("Error: unexpected traceback")
 		}
 	}
-	reverseCigar(route)
+	cigar.ReverseCigar(route)
 	return mRowCurrent[len(mRowCurrent)-1], route
 }

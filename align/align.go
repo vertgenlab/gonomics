@@ -3,25 +3,11 @@ package align
 
 import (
 	"math"
+
+	"github.com/vertgenlab/gonomics/cigar"
 )
 
 var veryNegNum int64 = math.MinInt64 / 2
-
-// these are relative to the first seq.
-// e.g. ColI is an insertion in the second seq, relative to the first.
-type ColType uint8
-
-const (
-	ColM ColType = 0
-	ColI ColType = 1
-	ColD ColType = 2
-)
-
-// Cigar is a runlength encoding of how two sequences align to each other.
-type Cigar struct {
-	RunLength int64
-	Op        ColType
-}
 
 // DefaultScoreMatrix is a DNA-DNA scoring matrix that pairs well with opening and extension penalites of:
 // O=400 E=30.  It may be good for distances similar to human-mouse.
@@ -73,26 +59,11 @@ var StrictScoreMatrix = [][]int64{
 }
 */
 
-func tripleMaxTrace(a int64, b int64, c int64) (int64, ColType) {
-	if a >= b && a >= c {
-		return a, ColM
-	} else if b >= c {
-		return b, ColI
-	} else {
-		return c, ColD
-	}
-}
 
-func reverseCigar(alpha []Cigar) {
-	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
-		alpha[i], alpha[j] = alpha[j], alpha[i]
-	}
-}
-
-func countAlignmentColumns(route []Cigar) int64 {
-	var count int64 = 0
+func countAlignmentColumns(route []cigar.Cigar) int64 {
+	var count int = 0
 	for i := range route {
 		count += route[i].RunLength
 	}
-	return count
+	return int64(count)
 }

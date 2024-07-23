@@ -3,6 +3,7 @@ package align
 import (
 	"log"
 
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 )
@@ -10,7 +11,7 @@ import (
 // ConstGap aligns two sequences (alpha, beta) using a score matrix (scores) and a constant gap penalty of gapPen.
 // The return values are the alignment score and the cigar representing the alignment.
 // This version of ConstGap has a fixed checkersize of 10000*10000.
-func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []Cigar) {
+func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64) (int64, []cigar.Cigar) {
 	var checkersize_i, checkersize_j int
 	checkersize_i = 10000
 	checkersize_j = 10000
@@ -30,11 +31,11 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	j_inChecker_min = -2                                   // ditto for j
 	trace_size_i := numbers.Min(len(alpha), checkersize_i) // make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
 	trace_size_j := numbers.Min(len(beta), checkersize_j)
-	trace := make([][]ColType, trace_size_i)
+	trace := make([][]byte, trace_size_i)
 	for idx := 0; idx < len(trace); idx++ {
-		trace[idx] = make([]ColType, trace_size_j)
+		trace[idx] = make([]byte, trace_size_j)
 	}
-	route := make([]Cigar, 1) //initialie cigar route and routeIdx
+	route := make([]cigar.Cigar, 1) //initialie cigar route and routeIdx
 	var routeIdx_current int = 0
 
 	for k1, k2 = int((score_highest_i-1)/checkersize_i), int((score_highest_j-1)/checkersize_j); k1 >= 0 && k2 >= 0; { //use a function of score_highest_i, score_highest_j, and checkersize to initialize the right k1 and k2, go to the correct checkerboard to start traceback
@@ -63,14 +64,14 @@ func ConstGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64)
 	} // no more "else" because the only situation left is if Step 3 ended when k1 and k2 reached the smallest combination, and reached both i=0 and j=0, aka the i=0 j=0 square, and there is no sequence there, so no cigar
 
 	// Final processing (reverse route) and return outputs
-	reverseCigar(route)
+	cigar.ReverseCigar(route)
 	return score_highest, route
 }
 
 // ConstGap_customizeCheckersize aligns two sequences (alpha, beta) using a score matrix (scores) and a constant gap penalty of gapPen.
 // The return values are the alignment score and the cigar representing the alignment.
 // This version of ConstGap needs additional inputs and allows customization of checkersize_i and checkersize_j.
-func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int) (int64, []Cigar) {
+func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int) (int64, []cigar.Cigar) {
 	//Step 1: find highest score, as well as get the position (i and j) of the highest score, and materials needed to fill traceback and write cigar in checkerboards
 	score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j := highestScore(alpha, beta, scores, gapPen, checkersize_i, checkersize_j)
 
@@ -86,11 +87,11 @@ func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][
 	j_inChecker_min = -2                                   // ditto for j
 	trace_size_i := numbers.Min(len(alpha), checkersize_i) // make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
 	trace_size_j := numbers.Min(len(beta), checkersize_j)
-	trace := make([][]ColType, trace_size_i)
+	trace := make([][]byte, trace_size_i)
 	for idx := 0; idx < len(trace); idx++ {
-		trace[idx] = make([]ColType, trace_size_j)
+		trace[idx] = make([]byte, trace_size_j)
 	}
-	route := make([]Cigar, 1) // initialie cigar route and routeIdx
+	route := make([]cigar.Cigar, 1) // initialie cigar route and routeIdx
 	var routeIdx_current int = 0
 
 	for k1, k2 = int((score_highest_i-1)/checkersize_i), int((score_highest_j-1)/checkersize_j); k1 >= 0 && k2 >= 0; { //use a function of score_highest_i, score_highest_j, and checkersize to initialize the right k1 and k2, go to the correct checkerboard to start traceback
@@ -119,7 +120,7 @@ func ConstGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][
 	} // no more "else" because the only situation left is if Step 3 ended when k1 and k2 reached the smallest combination, and reached both i=0 and j=0, aka the i=0 j=0 square, and there is no sequence there, so no cigar
 
 	// Final processing (reverse route) and return outputs
-	reverseCigar(route)
+	cigar.ReverseCigar(route)
 	return score_highest, route
 }
 
@@ -154,7 +155,7 @@ func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 				mRowCurrent[j] = mRowPrevious[j] + gapPen
 				trace_prep_j[j/checkersize_j][i] = mRowCurrent[j] // it is implied that j%checkersize_j==0. It must be saved in trace_prep_j
 			} else {
-				mRowCurrent[j], _ = tripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen)
+				mRowCurrent[j], _ = cigar.TripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen)
 				if j%checkersize_j == 0 {
 					trace_prep_j[j/checkersize_j][i] = mRowCurrent[j]
 				}
@@ -182,7 +183,7 @@ func highestScore(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen in
 //	trace matrix which was initialized in the main ConstGap function and passed back and forth to be recycled
 //
 // outputs: trace matrix to be recycled, row (i) and column (j) positions of inChecker_max which describe where Step 2 (fillTraceback) stopped in the current checkerboard that just went through Step 2 (fillTraceback)
-func fillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int, score_highest_i int, score_highest_j int, trace_prep_i [][]int64, trace_prep_j [][]int64, k1 int, k2 int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, trace [][]ColType) ([][]ColType, int, int) {
+func fillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, checkersize_i int, checkersize_j int, score_highest_i int, score_highest_j int, trace_prep_i [][]int64, trace_prep_j [][]int64, k1 int, k2 int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, trace [][]byte) ([][]byte, int, int) {
 	mRowCurrent := make([]int64, len(beta)+1)
 	mRowPrevious := make([]int64, len(beta)+1)
 	copy(mRowPrevious, trace_prep_i[k1])
@@ -210,7 +211,7 @@ func fillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 
 		for j = checkersize_j*k2 + 1; j <= j_max; j++ {
 			j_inChecker = (j - 1) % checkersize_j
-			mRowCurrent[j], trace[i_inChecker][j_inChecker] = tripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen) //it is ok even if mRowCurrent isn't completely filled, aka only part of mRowCurrent is needed for the checkerboard traceback and writing cigar
+			mRowCurrent[j], trace[i_inChecker][j_inChecker] = cigar.TripleMaxTrace(mRowPrevious[j-1]+scores[alpha[i-1]][beta[j-1]], mRowCurrent[j-1]+gapPen, mRowPrevious[j]+gapPen) //it is ok even if mRowCurrent isn't completely filled, aka only part of mRowCurrent is needed for the checkerboard traceback and writing cigar
 		}
 
 		if i <= checkersize_i*(k1+1)-1 && i <= score_highest_i-1 {
@@ -227,7 +228,7 @@ func fillTraceback(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 //	the growing route describing the collection of cigars of the entire alignment, the index of the cigar that is currently being built, row (i) and column (j) positions of inChecker_min_Previous which describe where Step 3 (writeCigar) stopped in the previous checkerboard that just went through Step 3 (writeCigar)
 //
 // outputs: the updated grown route describine the collection of cigars of the entire alignment, the updated index of the cigar that is currently being built, row (i) and column (j) positions of inChecker_min which describe where Step 3 (writeCigar) stopped in the current checkerboard that just went through Step 3 (writeCigar)
-func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max_Previous int, route []Cigar, routeIdx_current int, i_inChecker_min_Previous int, j_inChecker_min_Previous int) ([]Cigar, int, int, int) {
+func writeCigar(trace [][]byte, i_inChecker_max_Previous int, j_inChecker_max_Previous int, route []cigar.Cigar, routeIdx_current int, i_inChecker_min_Previous int, j_inChecker_min_Previous int) ([]cigar.Cigar, int, int, int) {
 	var i_inChecker, j_inChecker, routeIdx, i_inChecker_min, j_inChecker_min, i_inChecker_max, j_inChecker_max int
 	route_updated := route
 
@@ -251,17 +252,17 @@ func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max
 		} else if route_updated[routeIdx].Op == trace[i_inChecker][j_inChecker] {
 			route_updated[routeIdx].RunLength += 1
 		} else {
-			route_updated = append(route_updated, Cigar{RunLength: 1, Op: trace[i_inChecker][j_inChecker]})
+			route_updated = append(route_updated, cigar.Cigar{RunLength: 1, Op: trace[i_inChecker][j_inChecker]})
 			routeIdx++
 		}
 
 		// update i_inChecker and j_inChecker
 		switch trace[i_inChecker][j_inChecker] {
-		case 0:
+		case cigar.Match:
 			i_inChecker, j_inChecker = i_inChecker-1, j_inChecker-1
-		case 1:
+		case cigar.Insertion:
 			j_inChecker -= 1
-		case 2:
+		case cigar.Deletion:
 			i_inChecker -= 1
 		default:
 			log.Fatalf("Error: unexpected traceback")
@@ -275,27 +276,27 @@ func writeCigar(trace [][]ColType, i_inChecker_max_Previous int, j_inChecker_max
 }
 
 // Step 4
-// inputs: lengths of original sequences alpha and beta, the growing route describing the collection of cigars of the entire alignment except the last cigar, the index of the cigar that is currently being built, the ColType (M=0,I=1,D=2) of the last cigar entry
+// inputs: lengths of original sequences alpha and beta, the growing route describing the collection of cigars of the entire alignment except the last cigar, the index of the cigar that is currently being built, the byte (M=0,I=1,D=2) of the last cigar entry
 // outputs: the updated final route describing the collection of cigars of the entire alignment including the last cigar, the updated and index of the cigar that is currently being built
-func lastCigar(len_alpha int, len_beta int, route []Cigar, routeIdx_current int, Op_end ColType) ([]Cigar, int) {
+func lastCigar(len_alpha int, len_beta int, route []cigar.Cigar, routeIdx_current int, Op_end byte) ([]cigar.Cigar, int) {
 	// Calculate the size of final runlength
-	var TotalRunLength, LastRunLength int64
+	var TotalRunLength, LastRunLength int
 	TotalRunLength = 0
 	switch Op_end {
-	case 1: // Op_end==1=ColI=Insertion=unique sequence in sequenceTwo beta
+	case cigar.Insertion: // Op_end==1=ColI=Insertion=unique sequence in sequenceTwo beta
 		for routeIdx := range route {
 			if route[routeIdx].Op == 0 || route[routeIdx].Op == 1 {
 				TotalRunLength += route[routeIdx].RunLength
 			}
 		}
-		LastRunLength = int64(len_beta) - TotalRunLength
-	case 2: // Op_end==2=ColD=Deletion=unique seuqnece in sequenceOne alpha
+		LastRunLength = len_beta - TotalRunLength
+	case cigar.Deletion: // Op_end==2=ColD=Deletion=unique seuqnece in sequenceOne alpha
 		for routeIdx := range route {
 			if route[routeIdx].Op == 0 || route[routeIdx].Op == 2 {
 				TotalRunLength += route[routeIdx].RunLength
 			}
 		}
-		LastRunLength = int64(len_alpha) - TotalRunLength
+		LastRunLength = len_alpha - TotalRunLength
 	default:
 		log.Fatalf("Error: unexpected lastCigar traceback")
 	}
@@ -304,7 +305,7 @@ func lastCigar(len_alpha int, len_beta int, route []Cigar, routeIdx_current int,
 	if route[routeIdx_current].Op == Op_end {
 		route[routeIdx_current].RunLength += LastRunLength
 	} else {
-		route = append(route, Cigar{RunLength: LastRunLength, Op: Op_end})
+		route = append(route, cigar.Cigar{RunLength: LastRunLength, Op: Op_end})
 		routeIdx_current++
 	}
 	return route, routeIdx_current

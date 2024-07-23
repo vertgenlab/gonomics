@@ -3,6 +3,7 @@ package align
 import (
 	"log"
 
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/numbers"
 )
@@ -40,14 +41,14 @@ func initAffineScoring(firstSeqLen int, secondSeqLen int, checkersize_i int, che
 
 // "Step 0"
 // make data structures for tracing.
-func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, checkersize_j int) [][][]ColType {
+func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, checkersize_j int) [][][]byte {
 	trace_size_i := numbers.Min(firstSeqLen, checkersize_i) //make trace a matrix of size checkersize_i*checkersize_j, unless alpha or beta are shorter, in which case there is no need to allocate a full checkersize of memory
 	trace_size_j := numbers.Min(secondSeqLen, checkersize_j)
-	trace := make([][][]ColType, 3)
+	trace := make([][][]byte, 3)
 	for k := range trace { //k ranges through 3 numbers (0,1,2)
-		trace[k] = make([][]ColType, trace_size_i)
+		trace[k] = make([][]byte, trace_size_i)
 		for i := range trace[0] {
-			trace[k][i] = make([]ColType, trace_size_j)
+			trace[k][i] = make([]byte, trace_size_j)
 		}
 	}
 	return trace
@@ -56,7 +57,7 @@ func initAffineTrace(firstSeqLen int, secondSeqLen int, checkersize_i int, check
 // AffineGap aligns two DNA sequences (alpha and beta), using a score matrix (i.e. scores), along with a gap opening and gap extension penalities.
 // The alignment score and a cigar describing the alignment are the return values.
 // This version of AffineGap has a fixed checkersize of 10000*10000.
-func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []Cigar) {
+func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64) (int64, []cigar.Cigar) {
 	var checkersize_i, checkersize_j int
 	checkersize_i = 10000
 	checkersize_j = 10000
@@ -70,7 +71,7 @@ func AffineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int6
 // AffineGap_customizeCheckersize aligns two DNA sequences (alpha and beta), using a score matrix (i.e. scores), along with a gap opening and gap extension penalities.
 // The alignment score and a cigar describing the alignment are the return values.
 // This version of AffineGap needs additional inputs and allows customization of checkersize_i and checkersize_j.
-func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, checkersize_i int, checkersize_j int) (int64, []Cigar) { //input=same as AffineGap_step1 for now, output=route
+func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, checkersize_i int, checkersize_j int) (int64, []cigar.Cigar) { //input=same as AffineGap_step1 for now, output=route
 	//Step 1: find highest score, as well as get the position (i and j) of the highest score,
 	//and materials needed to fill traceback and write cigar in checkerboards
 	score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j := highestScore_affineGap(alpha, beta, scores, gapOpen, gapExtend, checkersize_i, checkersize_j)
@@ -97,9 +98,9 @@ func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores []
 	i_inChecker_min = -2                                                          // initialize i_inChecker_min != 0, so that the first ever Step 3 (writeCigar) will not interfere with i_inChecker_max
 	j_inChecker_min = -2                                                          // ditto for j
 	trace := initAffineTrace(len(alpha), len(beta), checkersize_i, checkersize_j) // for affineGap, use initAffineTrace function to initialize trace
-	route := make([]Cigar, 1)                                                     // initialie cigar route and routeIdx
+	route := make([]cigar.Cigar, 1)                                                     // initialie cigar route and routeIdx
 	var routeIdx_current int = 0
-	var k_inChecker_max, k_inChecker_min ColType // for affineGap, make a variable to hold k_inChecker_max, outside of for loop
+	var k_inChecker_max, k_inChecker_min byte // for affineGap, make a variable to hold k_inChecker_max, outside of for loop
 
 	for k1, k2 = int((score_highest_i-1)/checkersize_i), int((score_highest_j-1)/checkersize_j); k1 >= 0 && k2 >= 0; { //use a function of score_highest_i, score_highest_j, and checkersize to initialize the right k1 and k2, go to the correct checkerboard to start traceback
 		// Step 2: for a checkerboard, fill traceback, as well as find the max i and j
@@ -139,7 +140,7 @@ func AffineGap_customizeCheckersize(alpha []dna.Base, beta []dna.Base, scores []
 	} // no more "else" because the only situation left is if Step 3 ended when k1 and k2 reached the smallest combination, and reached both i=0 and j=0, aka the i=0 j=0 square, and there is no sequence there, so no cigar
 
 	// Final processing (reverse route) and return outputs
-	reverseCigar(route)
+	cigar.ReverseCigar(route)
 	return score_highest, route
 }
 
@@ -180,9 +181,9 @@ func highestScore_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64,
 				trace_prep_j[1][j/checkersize_j][i] = mRowCurrent[1][j]
 				trace_prep_j[2][j/checkersize_j][i] = mRowCurrent[2][j]
 			} else {
-				mRowCurrent[0][j], _ = tripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+mRowPrevious[0][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[1][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[2][j-1])
-				mRowCurrent[1][j], _ = tripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
-				mRowCurrent[2][j], _ = tripleMaxTrace(gapOpen+gapExtend+mRowPrevious[0][j], gapOpen+gapExtend+mRowPrevious[1][j], gapExtend+mRowPrevious[2][j])
+				mRowCurrent[0][j], _ = cigar.TripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+mRowPrevious[0][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[1][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[2][j-1])
+				mRowCurrent[1][j], _ = cigar.TripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
+				mRowCurrent[2][j], _ = cigar.TripleMaxTrace(gapOpen+gapExtend+mRowPrevious[0][j], gapOpen+gapExtend+mRowPrevious[1][j], gapExtend+mRowPrevious[2][j])
 				if j%checkersize_j == 0 {
 					trace_prep_j[0][j/checkersize_j][i] = mRowCurrent[0][j]
 					trace_prep_j[1][j/checkersize_j][i] = mRowCurrent[1][j]
@@ -202,7 +203,7 @@ func highestScore_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64,
 	}
 	score_highest_i := mColumn - 1
 	score_highest_j := len(mRowCurrent[0]) - 1                                                                                            //score_highest_j was denoted with "last J" in affineGap_highMem.go
-	score_highest, _ := tripleMaxTrace(mRowCurrent[0][score_highest_j], mRowCurrent[1][score_highest_j], mRowCurrent[2][score_highest_j]) //denoted by "maxScore" in affineGap_highMem.go. The 2nd output variable is its direction (0,1,2)
+	score_highest, _ := cigar.TripleMaxTrace(mRowCurrent[0][score_highest_j], mRowCurrent[1][score_highest_j], mRowCurrent[2][score_highest_j]) //denoted by "maxScore" in affineGap_highMem.go. The 2nd output variable is its direction (0,1,2)
 	return score_highest, score_highest_i, score_highest_j, trace_prep_i, trace_prep_j
 }
 
@@ -216,7 +217,7 @@ func highestScore_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64,
 // outputs: trace matrix to be recycled, row (i),
 // column (j) and dimension (k) positions of inChecker_max which describe where Step 2 (fillTraceback)
 // stopped in the current checkerboard that just went through Step 2 (fillTraceback).
-func fillTraceback_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, checkersize_i int, checkersize_j int, score_highest_i int, score_highest_j int, trace_prep_i [][][]int64, trace_prep_j [][][]int64, k1 int, k2 int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, trace [][][]ColType) ([][][]ColType, int, int, ColType) {
+func fillTraceback_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, checkersize_i int, checkersize_j int, score_highest_i int, score_highest_j int, trace_prep_i [][][]int64, trace_prep_j [][][]int64, k1 int, k2 int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, trace [][][]byte) ([][][]byte, int, int, byte) {
 	mRowCurrent := make([][]int64, 3)
 	mRowPrevious := make([][]int64, 3)
 	for k := range mRowCurrent { //k ranges through 3 numbers (0,1,2)
@@ -255,9 +256,9 @@ func fillTraceback_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64
 
 		for j = checkersize_j*k2 + 1; j <= j_max; j++ {
 			j_inChecker = (j - 1) % checkersize_j
-			mRowCurrent[0][j], trace[0][i_inChecker][j_inChecker] = tripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+mRowPrevious[0][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[1][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[2][j-1])
-			mRowCurrent[1][j], trace[1][i_inChecker][j_inChecker] = tripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
-			mRowCurrent[2][j], trace[2][i_inChecker][j_inChecker] = tripleMaxTrace(gapOpen+gapExtend+mRowPrevious[0][j], gapOpen+gapExtend+mRowPrevious[1][j], gapExtend+mRowPrevious[2][j])
+			mRowCurrent[0][j], trace[0][i_inChecker][j_inChecker] = cigar.TripleMaxTrace(scores[alpha[i-1]][beta[j-1]]+mRowPrevious[0][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[1][j-1], scores[alpha[i-1]][beta[j-1]]+mRowPrevious[2][j-1])
+			mRowCurrent[1][j], trace[1][i_inChecker][j_inChecker] = cigar.TripleMaxTrace(gapOpen+gapExtend+mRowCurrent[0][j-1], gapExtend+mRowCurrent[1][j-1], gapOpen+gapExtend+mRowCurrent[2][j-1])
+			mRowCurrent[2][j], trace[2][i_inChecker][j_inChecker] = cigar.TripleMaxTrace(gapOpen+gapExtend+mRowPrevious[0][j], gapOpen+gapExtend+mRowPrevious[1][j], gapExtend+mRowPrevious[2][j])
 			//it is ok even if mRowCurrent isn't completely filled, aka only part of mRowCurrent is needed for the checkerboard traceback and writing cigar
 		}
 
@@ -267,7 +268,7 @@ func fillTraceback_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64
 	}
 
 	// for affineGap, return another variable k_inChecker_max, based on mRowCurrent and j_max
-	_, k_inChecker_max := tripleMaxTrace(mRowCurrent[0][j_max], mRowCurrent[1][j_max], mRowCurrent[2][j_max])
+	_, k_inChecker_max := cigar.TripleMaxTrace(mRowCurrent[0][j_max], mRowCurrent[1][j_max], mRowCurrent[2][j_max])
 
 	return trace, i_inChecker_max, j_inChecker_max, k_inChecker_max
 }
@@ -284,9 +285,9 @@ func fillTraceback_affineGap(alpha []dna.Base, beta []dna.Base, scores [][]int64
 // the updated index of the cigar that is currently being built, row (i), column (j) and
 // dimension (k) positions of inChecker_min which describe where Step 3 (writeCigar)
 // stopped in the current checkerboard that just went through Step 3 (writeCigar).
-func writeCigar_affineGap(trace [][][]ColType, i_inChecker_max_Previous int, j_inChecker_max_Previous int, k_inChecker_max_Previous ColType, route []Cigar, routeIdx_current int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, k_inChecker_min_Previous ColType) ([]Cigar, int, int, int, ColType) {
+func writeCigar_affineGap(trace [][][]byte, i_inChecker_max_Previous int, j_inChecker_max_Previous int, k_inChecker_max_Previous byte, route []cigar.Cigar, routeIdx_current int, i_inChecker_min_Previous int, j_inChecker_min_Previous int, k_inChecker_min_Previous byte) ([]cigar.Cigar, int, int, int, byte) {
 	var i_inChecker, j_inChecker, routeIdx, i_inChecker_min, j_inChecker_min, i_inChecker_max, j_inChecker_max int
-	var k_inChecker, k_inChecker_min ColType
+	var k_inChecker, k_inChecker_min byte
 
 	route_updated := route
 
@@ -316,19 +317,19 @@ func writeCigar_affineGap(trace [][][]ColType, i_inChecker_max_Previous int, j_i
 		} else if route_updated[routeIdx].Op == k_inChecker {
 			route_updated[routeIdx].RunLength += 1
 		} else {
-			route_updated = append(route_updated, Cigar{RunLength: 1, Op: k_inChecker})
+			route_updated = append(route_updated, cigar.Cigar{RunLength: 1, Op: k_inChecker})
 			routeIdx++
 		}
 
 		// update i_inChecker and j_inChecker
 		switch k_inChecker {
-		case 0:
+		case cigar.Match:
 			k_inChecker = trace[k_inChecker][i_inChecker][j_inChecker]
 			i_inChecker, j_inChecker = i_inChecker-1, j_inChecker-1
-		case 1:
+		case cigar.Insertion:
 			k_inChecker = trace[k_inChecker][i_inChecker][j_inChecker]
 			j_inChecker -= 1
-		case 2:
+		case cigar.Deletion:
 			k_inChecker = trace[k_inChecker][i_inChecker][j_inChecker]
 			i_inChecker -= 1
 		default:

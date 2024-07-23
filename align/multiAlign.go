@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 )
@@ -17,15 +18,15 @@ func fastaListToIndividualGroups(records []fasta.Fasta) [][]fasta.Fasta {
 	return answer
 }
 
-func mergeFastaGroups(groups [][]fasta.Fasta, x int, y int, route []Cigar) [][]fasta.Fasta {
+func mergeFastaGroups(groups [][]fasta.Fasta, x int, y int, route []cigar.Cigar) [][]fasta.Fasta {
 	groups[x] = mergeMultipleAlignments(groups[x], groups[y], route)
 	groups[y] = groups[len(groups)-1]
 	groups = groups[:len(groups)-1]
 	return groups
 }
 
-func nearestGroups(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64) (bestX int, bestY int, bestScore int64, bestRoute []Cigar) {
-	var route []Cigar
+func nearestGroups(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64) (bestX int, bestY int, bestScore int64, bestRoute []cigar.Cigar) {
+	var route []cigar.Cigar
 	var score int64
 	bestScore = math.MinInt64
 	for x := 0; x < len(groups)-1; x++ {
@@ -39,8 +40,8 @@ func nearestGroups(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64,
 	return bestX, bestY, bestScore, bestRoute
 }
 
-func nearestGroupsChunk(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64, chunkSize int) (bestX int, bestY int, bestScore int64, bestRoute []Cigar) {
-	var route []Cigar
+func nearestGroupsChunk(groups [][]fasta.Fasta, scoreMatrix [][]int64, gapOpen int64, gapExtend int64, chunkSize int) (bestX int, bestY int, bestScore int64, bestRoute []cigar.Cigar) {
+	var route []cigar.Cigar
 	var score int64
 	bestScore = math.MinInt64
 	for x := 0; x < len(groups)-1; x++ {
@@ -109,7 +110,7 @@ func ungappedRegionColumnScore(alpha []fasta.Fasta, alphaStart int, beta []fasta
 	return answer
 }
 
-func mergeMultipleAlignments(alpha []fasta.Fasta, beta []fasta.Fasta, route []Cigar) []fasta.Fasta {
+func mergeMultipleAlignments(alpha []fasta.Fasta, beta []fasta.Fasta, route []cigar.Cigar) []fasta.Fasta {
 	answer := make([]fasta.Fasta, len(alpha)+len(beta))
 	totalCols := countAlignmentColumns(route)
 
@@ -126,13 +127,13 @@ func mergeMultipleAlignments(alpha []fasta.Fasta, beta []fasta.Fasta, route []Ci
 		for j := 0; j < int(route[i].RunLength); j++ {
 			for k := range answer {
 				if k < len(alpha) {
-					if route[i].Op == ColM || route[i].Op == ColD {
+					if route[i].Op == cigar.Match || route[i].Op == cigar.Deletion {
 						answer[k].Seq[ansCol] = alpha[k].Seq[alphaCol]
 					} else {
 						answer[k].Seq[ansCol] = dna.Gap
 					}
 				} else {
-					if route[i].Op == ColM || route[i].Op == ColI {
+					if route[i].Op == cigar.Match || route[i].Op == cigar.Insertion {
 						answer[k].Seq[ansCol] = beta[k-len(alpha)].Seq[betaCol]
 					} else {
 						answer[k].Seq[ansCol] = dna.Gap
@@ -140,11 +141,11 @@ func mergeMultipleAlignments(alpha []fasta.Fasta, beta []fasta.Fasta, route []Ci
 				}
 			}
 			switch route[i].Op {
-			case ColM:
+			case cigar.Match:
 				alphaCol, betaCol, ansCol = alphaCol+1, betaCol+1, ansCol+1
-			case ColI:
+			case cigar.Insertion:
 				betaCol, ansCol = betaCol+1, ansCol+1
-			case ColD:
+			case cigar.Deletion:
 				alphaCol, ansCol = alphaCol+1, ansCol+1
 			}
 		}
