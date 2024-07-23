@@ -16,13 +16,14 @@ func (s Sam) GetChromStart() int {
 
 func (s Sam) GetChromEnd() int {
 	var runLength int = 0
-	if s.Cigar == nil || s.Cigar[0].Op == '*' {
-		return s.GetChromStart()
-	}
-	for i := 0; i < len(s.Cigar); i++ {
-		if cigar.ConsumesReference(s.Cigar[i].Op) {
-			runLength += int(s.Cigar[i].RunLength)
+	if len(s.Cigar) > 0 {
+		for i := 0; i < len(s.Cigar); i++ {
+			if cigar.ConsumesReference(s.Cigar[i].Op) {
+				runLength += int(s.Cigar[i].RunLength)
+			}
 		}
+	} else {
+		return s.GetChromStart()
 	}
 	return s.GetChromStart() + runLength
 }

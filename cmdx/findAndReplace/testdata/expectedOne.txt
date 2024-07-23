@@ -1,0 +1,4 @@
+Hello	GoodBye
+Yes	No
+Plus	Minus
+Fast	Slow

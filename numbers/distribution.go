@@ -2,10 +2,11 @@ package numbers
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"math"
+
+	"github.com/vertgenlab/gonomics/numbers/logspace"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // NormalDist returns the normal distribution value x for a distribution with mean mu and standard deviation sigma.
@@ -64,14 +65,23 @@ func ExpDist(x float64) float64 {
 }
 
 // PoissonDist returns the probability density of a poisson distribution with parameter lambda at the integer value k.
-func PoissonDist(k int, lambda float64) float64 {
+// The second return is false if no overflow/underflow was detected. If underflow was detected, the program returns 0 and true.
+// If logOutput is true, answer will be returned as log(answer).
+func PoissonDist(k int, lambda float64, logOutput bool) (float64, bool) {
 	if k < 0 {
 		log.Fatalf("The poisson distribution is supported for k > 0.")
 	}
 	if lambda <= 0 {
 		log.Fatalf("The poisson distribution is supported for lambda >= 0.")
 	}
-	return (math.Pow(lambda, float64(k)) * math.Pow(math.E, -lambda)) / float64(Factorial(k))
+	logAnswer := PoissonDistLog(k, lambda)
+	if logOutput {
+		return logAnswer, false
+	}
+	if logspace.CanConvert(logAnswer) {
+		return math.Exp(logAnswer), false
+	}
+	return 0, true
 }
 
 // BetaDist returns the probability density of a beta distribution with parameters alpha and beta at position x.
@@ -241,7 +251,8 @@ func GammaIntegral(left float64, right float64, alpha float64, beta float64) flo
 func PoissonLeftSummation(k int, lambda float64) float64 {
 	var answer float64 = 0
 	for i := 0; i < k+1; i++ {
-		answer = answer + PoissonDist(i, lambda)
+		increment, _ := PoissonDist(i, lambda, false)
+		answer = answer + increment
 	}
 	return answer
 }
@@ -258,7 +269,8 @@ func PoissonSum(left int, right int, lambda float64) float64 {
 	}
 	var answer float64 = 0
 	for i := left; i < right; i++ {
-		answer = answer + PoissonDist(i, lambda)
+		increment, _ := PoissonDist(i, lambda, false)
+		answer = answer + increment
 	}
 	return answer
 }

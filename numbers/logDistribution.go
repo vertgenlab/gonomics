@@ -46,3 +46,13 @@ func AddBinomMapEntry(n int) []float64 {
 	//DEBUG:fmt.Printf("Answer: %v\n", answer)
 	return answer
 }
+
+func PoissonDistLog(x int, lambda float64) float64 {
+	// log(e^-lambda) = -lambda
+	eRaiseNegLambda := -lambda
+	lambdaRaisetoX := math.Log(math.Pow(lambda, float64(x)))
+	numerator := logspace.Multiply(eRaiseNegLambda, lambdaRaisetoX)
+	// calculating x!
+	denominator := math.Log(math.Gamma(float64(x + 1)))
+	return logspace.Divide(numerator, denominator)
+}

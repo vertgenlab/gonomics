@@ -21,7 +21,7 @@ func TestLeftDynamicAln(t *testing.T) {
 	gapPen := int64(-10)
 
 	expectedScore := int64(260)
-	expectedCigar := cigar.ByteCigarToString([]cigar.ByteCigar{{RunLen: 1, Op: cigar.Match}, {RunLen: 1, Op: cigar.Insertion}, {RunLen: 1, Op: cigar.Deletion}, {RunLen: 2, Op: cigar.Match}})
+	expectedCigar := cigar.ToString([]cigar.Cigar{{RunLength: 1, Op: cigar.Match}, {RunLength: 1, Op: cigar.Insertion}, {RunLength: 1, Op: cigar.Deletion}, {RunLength: 2, Op: cigar.Match}})
 	expectedI := 0
 	expectedJ := 0
 
@@ -36,7 +36,7 @@ func TestLeftDynamicAln(t *testing.T) {
 	if score != expectedScore {
 		t.Errorf("Error: Expected score %d, but got %d", expectedScore, score)
 	}
-	result := cigar.ByteCigarToString(cig)
+	result := cigar.ToString(cig)
 	if expectedCigar != result {
 		t.Errorf("Error: Expected cigar %v, but got %v", expectedCigar, result)
 	}
@@ -82,11 +82,11 @@ func TestRightAlignTraversal(t *testing.T) {
 
 	// Expected Results
 	expectedScore := int64(35)
-	expectedCigar := cigar.ByteCigarToString([]cigar.ByteCigar{
-		{RunLen: 9, Op: cigar.Insertion},
-		{RunLen: 5, Op: cigar.Match},
-		{RunLen: 1, Op: cigar.Insertion},
-		{RunLen: 4, Op: cigar.Match},
+	expectedCigar := cigar.ToString([]cigar.Cigar{
+		{RunLength: 9, Op: cigar.Insertion},
+		{RunLength: 5, Op: cigar.Match},
+		{RunLength: 1, Op: cigar.Insertion},
+		{RunLength: 4, Op: cigar.Match},
 	})
 	expectedTargetEnd := 9
 	expectedQueryEnd := 19
@@ -104,8 +104,8 @@ func TestRightAlignTraversal(t *testing.T) {
 	if score1 != expectedScore {
 		t.Errorf("Error: Expected score %d for node1, got %d", expectedScore, score1)
 	}
-	result1 := cigar.ByteCigarToString(cigar1)
-	if cigar.ByteCigarToString(cigar1) != expectedCigar {
+	result1 := cigar.ToString(cigar1)
+	if cigar.ToString(cigar1) != expectedCigar {
 		t.Errorf("Error: Expected cigar %s, but got %s", expectedCigar, result1)
 	}
 	if targetEnd1 != expectedTargetEnd || queryEnd1 != expectedQueryEnd {
@@ -122,7 +122,7 @@ func TestRightAlignTraversal(t *testing.T) {
 	if score2 != expectedScore {
 		t.Errorf("Error: Expected score %d for node2, got %d", expectedScore, score2)
 	}
-	result2 := cigar.ByteCigarToString(cigar2)
+	result2 := cigar.ToString(cigar2)
 	if result2 != expectedCigar {
 		t.Errorf("Error: Expected cigar %s, but got %s", expectedCigar, result1)
 	}
@@ -150,7 +150,7 @@ func TestRightDynamicAln(t *testing.T) {
 	}
 
 	expectedScore := int64(8) // Based on the scoring matrix and gap penalty
-	expectedCigar := cigar.ByteCigarToString([]cigar.ByteCigar{{RunLen: 7, Op: cigar.Match}})
+	expectedCigar := cigar.ToString([]cigar.Cigar{{RunLength: 7, Op: cigar.Match}})
 	expectedI := 7
 	expectedJ := 7
 
@@ -164,7 +164,7 @@ func TestRightDynamicAln(t *testing.T) {
 	if score != expectedScore {
 		t.Errorf("Error: Expected score %d, but got %d", expectedScore, score)
 	}
-	result := cigar.ByteCigarToString(cig)
+	result := cigar.ToString(cig)
 	if expectedCigar != result {
 		t.Errorf("Error: Expected cigar %v, but got %v", expectedCigar, result)
 	}
@@ -239,5 +239,5 @@ func BenchmarkGirafAlignment(b *testing.B) {
 func isCorrectCoord(result *giraf.Giraf) bool {
 	name := strings.Split(result.QName, "_")
 	// TODO: Need better logic to look at node
-	return parse.StringToInt(name[1]) == result.Path.TStart-result.QStart && parse.StringToInt(name[3]) == result.Path.TEnd && cigar.QueryRunLen(result.Cigar) == 150
+	return parse.StringToInt(name[1]) == result.Path.TStart-result.QStart && parse.StringToInt(name[3]) == result.Path.TEnd && cigar.QueryLength(result.Cigar) == 150
 }

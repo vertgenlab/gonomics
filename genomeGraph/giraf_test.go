@@ -114,7 +114,7 @@ var check = giraf.Giraf{
 	QEnd:      4,
 	PosStrand: false,                                                    // rev strand, must reverse complement
 	Path:      giraf.Path{TStart: 2, Nodes: []uint32{0, 1, 2}, TEnd: 1}, // Nodes 0->1->2, start base 3, end base 1
-	Cigar:     []cigar.ByteCigar{{RunLen: 4, Op: 'M'}},
+	Cigar:     []cigar.Cigar{{RunLength: 4, Op: cigar.Match}},
 	AlnScore:  16607,
 	MapQ:      30,
 	Seq:       []dna.Base{3, 1, 2, 1}, // TCGC

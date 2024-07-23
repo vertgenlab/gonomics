@@ -37,7 +37,7 @@ func ViewGraphAlignment(g *giraf.Giraf, genome *GenomeGraph) string {
 	var alpha []dna.Base = PathToSeq(g.Path, genome)
 	var beta []dna.Base = g.Seq
 	for _, operation := range g.Cigar {
-		for count = 0; count < int(operation.RunLen); count++ {
+		for count = 0; count < operation.RunLength; count++ {
 			switch operation.Op {
 			case 'M':
 				seqOne.WriteRune(dna.BaseToRune(alpha[i]))

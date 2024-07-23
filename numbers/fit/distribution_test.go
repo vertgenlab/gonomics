@@ -1,10 +1,12 @@
 package fit
 
 import (
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 var NegativeBinomialTests = []struct {
@@ -133,6 +135,31 @@ func TestPoisson(t *testing.T) {
 		currLambda = Poisson(variates)
 		if (currLambda-v.ExpectedLambda)/v.ExpectedLambda > 0.05 {
 			t.Errorf("Error: currLambda: %v is not as expected: %v\n", currLambda, v.ExpectedLambda)
+		}
+	}
+}
+
+var PoissonHistogramTests = []struct {
+	InHist         []int
+	ExpectedLambda float64
+}{
+	{InHist: []int{2, 3, 5, 7, 9, 3, 2},
+		ExpectedLambda: 3.129032,
+	},
+	{InHist: []int{0, 0, 0, 0, 0, 0, 4},
+		ExpectedLambda: 6.0,
+	},
+	{InHist: []int{0, 0, 3, 0, 8, 0},
+		ExpectedLambda: 3.454545,
+	},
+}
+
+func TestPoissonHistogram(t *testing.T) {
+	epsilon := 1e-6
+	for _, v := range PoissonHistogramTests {
+		outputLambda := PoissonHistogram(v.InHist)
+		if !numbers.ApproxEqual(outputLambda, v.ExpectedLambda, epsilon) {
+			t.Errorf("Error in PoissonHistogram")
 		}
 	}
 }

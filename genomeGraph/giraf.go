@@ -42,9 +42,9 @@ func RandGiraf(graph *GenomeGraph, numReads int, readLen int, randSeed int64) []
 				QEnd:      readLen,
 				PosStrand: strand,
 				Path:      girafPath,
-				Cigar:     []cigar.ByteCigar{{RunLen: uint16(readLen), Op: 'M'}}, // tmp cigar until giraf cigars have been implemented
-				AlnScore:  alnScore,                                              // placeholder
-				MapQ:      mapQ,                                                  // placeholder
+				Cigar:     []cigar.Cigar{{RunLength: readLen, Op: cigar.Match}}, // tmp cigar until giraf cigars have been implemented
+				AlnScore:  alnScore,                                             // placeholder
+				MapQ:      mapQ,                                                 // placeholder
 				Seq:       seq,
 				Qual:      qual,
 				Notes:     nil}
