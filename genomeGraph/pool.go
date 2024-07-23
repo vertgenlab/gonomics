@@ -35,20 +35,16 @@ type MemoryAllocation struct {
 }
 
 type SeedMemory struct {
-	Hits   []Seed
-	Worker []Seed
-}
-
-type seedHelper struct {
 	currHits                                  []uint64
 	codedNodeCoord                            uint64
 	seqKey                                    uint64
 	keyShift                                  uint
 	keyIdx, keyOffset, readOffset, nodeOffset int
 	nodeIdx, nodePos                          int64
-	leftMatches                               int
+	leftMatches, rightMatches                 int
 	tempSeed                                  Seed
-	pool                                      *sync.Pool
+	Hits                                      []Seed
+	Worker                                    []Seed
 }
 
 type scoreKeeper struct {
@@ -56,6 +52,7 @@ type scoreKeeper struct {
 	targetEnd    int
 	queryStart   int
 	queryEnd     int
+	queryLength  int
 	currScore    int64
 	seedScore    int64
 	perfectScore int64
@@ -106,12 +103,13 @@ func NewMemoryAllocation(size int) *sync.Pool {
 	}
 }
 
-func NewMemSeedPool() *sync.Pool {
+func NewSeedBuilder() *sync.Pool {
 	return &sync.Pool{
 		New: func() interface{} {
 			pool := SeedMemory{
-				Hits:   make([]Seed, 0, 10000),
-				Worker: make([]Seed, 0, 10000),
+				tempSeed: Seed{},
+				Hits:     make([]Seed, 0, 10000),
+				Worker:   make([]Seed, 0, 10000),
 			}
 			return &pool
 		},
@@ -157,15 +155,6 @@ func NewAlignmentPool() *sync.Pool {
 	}
 }
 
-func newSeedBuilder() *seedHelper {
-	var tmp Seed = Seed{}
-	return &seedHelper{
-		currHits: make([]uint64, 0, 20),
-		tempSeed: tmp,
-		pool:     NewMemSeedPool(),
-	}
-}
-
 func resetDynamicScore(matrix *Matrix) {
 	matrix.route = matrix.route[:0]
 	matrix.currMax = math.MinInt64
@@ -177,7 +166,7 @@ func resetScoreKeeper(sk scoreKeeper) {
 	sk.leftSeq, sk.rightSeq, sk.currSeq = sk.leftSeq[:0], sk.rightSeq[:0], sk.currSeq[:0]
 }
 
-func restartSeedHelper(helper *seedHelper) {
+func restartSeedHelper(helper *SeedMemory) {
 	helper.currHits = helper.currHits[:0]
 	helper.keyIdx, helper.keyOffset, helper.readOffset, helper.nodeOffset = 0, 0, 0, 0
 	helper.nodeIdx, helper.nodePos = 0, 0

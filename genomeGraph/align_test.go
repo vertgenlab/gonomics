@@ -1,11 +1,7 @@
 package genomeGraph
 
 import (
-	"flag"
 	"log"
-	"os"
-	"runtime"
-	"runtime/pprof"
 	"strings"
 	"sync"
 	"testing"
@@ -18,21 +14,8 @@ import (
 	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
-var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
-
 func BenchmarkGsw(b *testing.B) {
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal("could not create CPU profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatal("could not start CPU profile: ", err)
-		}
-		defer pprof.StopCPUProfile()
-	}
+
 	b.ReportAllocs()
 	//var output string = "/dev/stdout"
 	//var output string = "testdata/rabs_test.giraf"
@@ -88,17 +71,7 @@ func BenchmarkGsw(b *testing.B) {
 	b.Logf("Aligned %d reads in %s (%.1f reads per second).\n", 2*len(simReads), duration, float64(2*len(simReads))/duration.Seconds())
 	fileio.EasyRemove(fqOne)
 	fileio.EasyRemove(fqTwo)
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
-		}
-		defer f.Close() // error handling omitted for example
-		runtime.GC()    // get up-to-date statistics
-		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
-		}
-	}
+
 }
 
 func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {

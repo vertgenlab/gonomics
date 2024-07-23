@@ -18,7 +18,7 @@ func RoutineFqToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int
 		StepSize:       stepSize,
 	}
 	allocateMemory := NewMemoryAllocation(defaultMatrixSize)
-	seedBuildHelper := newSeedBuilder()
+	seedBuildHelper := NewSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	for read := range inputChan {
 		outputChan <- *GraphSmithWatermanToGiraf(gg, read, seedHash, settings, allocateMemory, scorekeeper, seedBuildHelper)
@@ -35,7 +35,7 @@ func RoutineFqPairToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen
 		StepSize:       stepSize,
 	}
 	allocateMemory := NewMemoryAllocation(defaultMatrixSize)
-	seedBuildHelper := newSeedBuilder()
+	seedBuildHelper := NewSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	for read := range input {
 		output <- WrapPairGiraf(gg, read, seedHash, settings, allocateMemory, scorekeeper, seedBuildHelper)
@@ -54,7 +54,7 @@ func RoutineGirafToSamSingle(gg *GenomeGraph, seedHash map[uint64][]uint64, seed
 
 	allocateMemory := NewMemoryAllocation(defaultMatrixSize)
 
-	seedBuildHelper := newSeedBuilder()
+	seedBuildHelper := NewSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	for read := range inputChan {
 		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, settings, allocateMemory, scorekeeper, seedBuildHelper))
@@ -72,7 +72,7 @@ func RoutineGirafToSam(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen in
 	}
 	allocateMemory := NewMemoryAllocation(defaultMatrixSize)
 	scorekeeper := scoreKeeper{}
-	seedBuildHelper := newSeedBuilder()
+	seedBuildHelper := NewSeedBuilder()
 	var pair sam.MatePair
 	for read := range input {
 		pair = GirafPairToSam(WrapPairGiraf(gg, read, seedHash, settings, allocateMemory, scorekeeper, seedBuildHelper))

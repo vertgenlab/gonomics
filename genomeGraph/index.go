@@ -2,7 +2,6 @@ package genomeGraph
 
 import (
 	"log"
-	"sort"
 
 	"github.com/vertgenlab/gonomics/dna"
 )
@@ -66,20 +65,6 @@ func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
 	return maxMatch, minMatch, leastSevereMismatch, leastSevereMatchMismatchChange
 }
 
-type ScoreMatrixHelper struct {
-	Matrix                         [][]int64
-	MaxMatch                       int64
-	MinMatch                       int64
-	LeastSevereMismatch            int64
-	LeastSevereMatchMismatchChange int64
-}
-
-func getScoreMatrixHelp(scoreMatrix [][]int64) *ScoreMatrixHelper {
-	help := ScoreMatrixHelper{Matrix: scoreMatrix}
-	help.MaxMatch, help.MinMatch, help.LeastSevereMismatch, help.LeastSevereMatchMismatchChange = MismatchStats(scoreMatrix)
-	return &help
-}
-
 // TODO: this does not take into account breaking up seeds by gaps instead of mismatches
 // similar calculations could also be used as the parameters to a banded alignment.
 func seedCouldBeBetter(seedLen int64, currBestScore int64, perfectScore int64, queryLen int64, config *GraphSettings) bool {
@@ -103,8 +88,4 @@ func seedCouldBeBetter(seedLen int64, currBestScore int64, perfectScore int64, q
 	} else {
 		return false
 	}
-}
-
-func SortSeedDevByTotalLen(seeds []*Seed) {
-	sort.Slice(seeds, func(i, j int) bool { return seeds[i].TotalLength > seeds[j].TotalLength })
 }
