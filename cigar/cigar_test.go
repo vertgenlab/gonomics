@@ -187,6 +187,7 @@ func TestQueryLength(t *testing.T) {
 	}{
 		{[]Cigar{c1, c2, c3}, 37},
 		{[]Cigar{c4, c5, c6, c7}, 13},
+		{[]Cigar{{7, Match}, {143, SoftClip}}, 150},
 	}
 
 	for _, c := range tests {

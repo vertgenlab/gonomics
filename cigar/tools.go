@@ -26,12 +26,8 @@ func CatCigar(alpha []Cigar, beta []Cigar) []Cigar {
 		return beta
 	}
 	// Merge the first new cigar if possible
-	if alpha[size-1].Op == beta[0].Op {
-		alpha[size-1].RunLength += beta[0].RunLength
-		beta = beta[1:] // Remove the merged cigar from beta
-	}
-	// Append the remaining new cigars
-	return append(alpha, beta...)
+	alpha = AddCigar(alpha, beta[0])
+	return append(alpha, beta[1:]...)
 }
 
 // SoftClipBases adds soft clips to the beginning and/or end of a CIGAR string to match a given read length.

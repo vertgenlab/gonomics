@@ -3,6 +3,7 @@ package genomeGraph
 import (
 	"sync"
 
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/sam"
@@ -55,7 +56,10 @@ func RoutineGirafToSamSingle(gg *GenomeGraph, seedHash map[uint64][]uint64, seed
 	allocateMemory := NewMemoryAllocation(defaultMatrixSize)
 
 	seedBuildHelper := NewSeedBuilder()
-	scorekeeper := scoreKeeper{}
+	scorekeeper := scoreKeeper{
+		leftAlignment:  make([]cigar.Cigar, 0, 1),
+		rightAlignment: make([]cigar.Cigar, 0, 1),
+	}
 	for read := range inputChan {
 		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, settings, allocateMemory, scorekeeper, seedBuildHelper))
 	}

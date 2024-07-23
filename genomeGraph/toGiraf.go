@@ -39,9 +39,9 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	//settings.MaxMatch, settings.MinMatch, settings.LeastSevereMismatch, settings.LeastSevereMatchMismatchChange = MismatchStats(settings.ScoreMatrix)
 	seedHelper.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, sk, settings, seedHelper)
 
-	for i := 0; i < len(seedHelper.Hits); i++ {
-		sk.currSeed = &seedHelper.Hits[i]
-		sk.tailSeed = getLastPart(sk.currSeed)
+	for i := 0; i < len(seedHelper.Hits) && seedCouldBeBetter(int64(seedHelper.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(sk.queryLength), settings); i++ {
+		sk.currSeed = seedHelper.Hits[i]
+		sk.tailSeed = *getLastPart(&sk.currSeed)
 		if sk.currSeed.PosStrand {
 			sk.currSeq = read.Seq
 		} else {
@@ -60,16 +60,16 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 		}
 		if sk.currScore > int64(currBest.AlnScore) {
 			currBest.QStart = sk.queryStart
-			currBest.QEnd = int(sk.currSeed.QueryStart) + currBest.QStart + sk.queryEnd + int(sk.currSeed.TotalLength) - 1
+			currBest.QEnd = int(sk.currSeed.QueryStart) - currBest.QStart + sk.queryEnd + int(sk.currSeed.TotalLength) - 1
 			currBest.PosStrand = sk.currSeed.PosStrand
-			currBest.Path = setPath(currBest.Path, sk.targetStart, CatPaths(CatPaths(sk.leftPath, getSeedPath(sk.currSeed)), sk.rightPath), sk.targetEnd)
+			currBest.Path = setPath(currBest.Path, sk.targetStart, CatPaths(CatPaths(sk.leftPath, getSeedPath(&sk.currSeed)), sk.rightPath), sk.targetEnd)
 			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(sk.leftAlignment, cigar.Cigar{RunLength: int(sk.currSeed.TotalLength), Op: cigar.Match}), sk.rightAlignment)
 			currBest.AlnScore = int(sk.currScore)
 			currBest.Seq = sk.currSeq
 		}
 	}
 	if len(currBest.Cigar) > 0 {
-		currBest.Cigar = cigar.SoftClipBases(currBest.QStart, sk.queryLength, currBest.Cigar)
+		currBest.Cigar = cigar.SoftClipBases(currBest.QStart, currBest.QEnd-currBest.QStart+1, currBest.Cigar)
 	}
 
 	if !currBest.PosStrand {

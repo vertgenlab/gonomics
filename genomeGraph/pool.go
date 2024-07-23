@@ -63,9 +63,9 @@ type scoreKeeper struct {
 	leftSeq      []dna.Base
 	rightSeq     []dna.Base
 	currSeq      []dna.Base
-	tailSeed     *Seed
+	tailSeed     Seed
 
-	currSeed       *Seed
+	currSeed       Seed
 	leftAlignment  []cigar.Cigar
 	rightAlignment []cigar.Cigar
 }

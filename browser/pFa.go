@@ -239,7 +239,7 @@ func PFaVisualizerTsv(infile string, outfile string, start int, end int, startOf
 // printAllSetsTsv prints probability distribution of bases from pos start to pos end in record
 func printAllSetsTsv(out *fileio.EasyWriter, err error, record pFasta.PFasta, start int, end int, lineLength int, sigFigs int, decimalPlaces int) {
 	idx := start
-	
+
 	if sigFigs == 0 {
 		// gives decimal places
 		for idx < end {

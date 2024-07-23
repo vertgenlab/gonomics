@@ -52,16 +52,15 @@ func extendToTheRight(node *Node, read *fastq.FastqBig, sk scoreKeeper, settings
 			for j = 0; j < len(nextParts); j++ {
 				//currNode =
 				seedBuildHelper.tempSeed = Seed{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(seedBuildHelper.rightMatches), PosStrand: posStrand, TotalLength: uint32(seedBuildHelper.rightMatches) + nextParts[j].TotalLength, NextPart: &nextParts[j]}
-				if seedCouldBeBetter(int64(seedBuildHelper.tempSeed.TotalLength), sk.currScore, sk.perfectScore, int64(sk.queryLength), settings) {
-					heap.Push(&pq, &SeedHeap{Seed: &currNode})
-				}
+
+				heap.Push(&pq, &SeedHeap{Seed: &currNode})
+
 			}
 		}
 	} else {
 		currNode = Seed{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(seedBuildHelper.rightMatches), PosStrand: posStrand, TotalLength: uint32(seedBuildHelper.rightMatches), NextPart: nil}
-		if seedCouldBeBetter(int64(currNode.TotalLength), sk.currScore, sk.perfectScore, int64(sk.queryLength), settings) {
-			heap.Push(&pq, &SeedHeap{Seed: &currNode})
-		}
+
+		heap.Push(&pq, &SeedHeap{Seed: &currNode})
 
 	}
 	var answer []Seed
