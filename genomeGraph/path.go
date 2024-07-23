@@ -210,7 +210,7 @@ func PathToString(allPaths []uint32) string {
 	return s
 }
 
-func getSeedPath(seed *SeedDev) []uint32 {
+func getSeedPath(seed *Seed) []uint32 {
 	var path []uint32 = []uint32{seed.TargetId}
 	if seed.NextPart == nil {
 		return path

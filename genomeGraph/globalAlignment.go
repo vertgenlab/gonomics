@@ -9,28 +9,18 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-func nmMatrixSetup(size int64) ([][]int64, [][]rune) {
-	m := make([][]int64, size)
-	trace := make([][]rune, size)
-	for idx := range m {
-		m[idx] = make([]int64, size)
-		trace[idx] = make([]rune, size)
-	}
-	return m, trace
-}
-
 func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []cigar.Cigar) {
 	var i, j, routeIdx int
 	for i = 0; i < len(alpha)+1; i++ {
 		for j = 0; j < len(beta)+1; j++ {
 			if i == 0 && j == 0 {
-				m[i][j] = 'M'
+				trace[i][j] = cigar.Match
 			} else if i == 0 {
 				m[i][j] = m[i][j-1] + gapPen
-				trace[i][j] = 'I'
+				trace[i][j] = cigar.Insertion
 			} else if j == 0 {
 				m[i][j] = m[i-1][j] + gapPen
-				trace[i][j] = 'D'
+				trace[i][j] = cigar.Deletion
 			} else {
 				m[i][j], trace[i][j] = cigar.TripleMaxTraceExtended(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			}
@@ -49,13 +39,13 @@ func NeedlemanWunsch(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case '=':
+		case cigar.Equal:
 			i, j = i-1, j-1
-		case 'X':
+		case cigar.Mismatch:
 			i, j = i-1, j-1
-		case 'I':
+		case cigar.Insertion:
 			j -= 1
-		case 'D':
+		case cigar.Deletion:
 			i -= 1
 		default:
 			log.Fatalf("Error: unexpected traceback")

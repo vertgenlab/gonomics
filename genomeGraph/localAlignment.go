@@ -7,13 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-var HumanChimpTwoScoreMatrixNoGap = [][]int64{
-	{90, -330, -236, -356},
-	{-330, 100, -318, -236},
-	{-236, -318, 100, -330},
-	{-356, -236, -330, 90},
-}
-
 func swMatrixSetup(size int64) ([][]int64, [][]byte) {
 	m := make([][]int64, size)
 	trace := make([][]byte, size)
@@ -30,15 +23,6 @@ func initialZeroMatrix(m [][]int64, alphaLen int, betaLen int) {
 	}
 	for j := 0; j < betaLen+1; j++ {
 		m[0][j] = 0
-	}
-}
-
-func initialTraceMatrix(trace [][]rune, alphaLen int, betaLen int) {
-	for i := 1; i < alphaLen+1; i++ {
-		trace[i][0] = 'D'
-	}
-	for j := 1; j < betaLen+1; j++ {
-		trace[0][j] = 'I'
 	}
 }
 

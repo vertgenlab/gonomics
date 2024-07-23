@@ -34,7 +34,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 	seeds := seedPool.Get().(*memoryPool)
 	seeds.Hits = seeds.Hits[:0]
 	seeds.Worker = seeds.Worker[:0]
-	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, seedLen, sk.perfectScore, scoreMatrix, seeds.Hits, seeds.Worker, seedBuildHelper)
+	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, stepSize, seeds.Hits, seeds.Worker, seedBuildHelper)
 	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
 		sk.currSeed = seeds.Hits[i]
 		sk.tailSeed = *getLastPart(&sk.currSeed)
@@ -85,12 +85,6 @@ type ScoreMatrixHelper struct {
 	MinMatch                       int64
 	LeastSevereMismatch            int64
 	LeastSevereMatchMismatchChange int64
-}
-
-func getScoreMatrixHelp(scoreMatrix [][]int64) *ScoreMatrixHelper {
-	help := ScoreMatrixHelper{Matrix: scoreMatrix}
-	help.MaxMatch, help.MinMatch, help.LeastSevereMismatch, help.LeastSevereMatchMismatchChange = MismatchStats(scoreMatrix)
-	return &help
 }
 
 func MismatchStats(scoreMatrix [][]int64) (int64, int64, int64, int64) {
