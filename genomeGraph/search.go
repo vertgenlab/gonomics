@@ -85,6 +85,17 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, config *GraphSettings, re
 	resetDynamicScore(res)
 	columns, rows := len(alpha), len(beta)
 
+	if cap(res.matrix) < columns {
+		res.matrix = make([][]int64, columns)
+		res.trace = make([][]byte, columns)
+		if cap(res.matrix[0]) < rows {
+			for idx := range res.matrix {
+				res.matrix[idx] = make([]int64, rows)
+				res.trace[idx] = make([]byte, rows)
+			}
+		}
+	}
+
 	for res.i = 0; res.i <= columns; res.i++ {
 		res.matrix[res.i][0] = 0
 	}
@@ -150,6 +161,16 @@ func RightAlignTraversal(n *Node, seq []dna.Base, end int, currentPath []uint32,
 func RightDynamicAln(alpha []dna.Base, beta []dna.Base, config *GraphSettings, res *Matrix) (int64, []cigar.Cigar, int, int) {
 	columns, rows := len(alpha), len(beta)
 	resetDynamicScore(res)
+	if cap(res.matrix) <= columns {
+		res.matrix = make([][]int64, columns+1)
+		res.trace = make([][]byte, columns+1)
+		if cap(res.matrix[0]) <= rows {
+			for idx := range res.matrix {
+				res.matrix[idx] = make([]int64, rows+1)
+				res.trace[idx] = make([]byte, rows+1)
+			}
+		}
+	}
 	var maxI int
 	var maxJ int
 
