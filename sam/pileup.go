@@ -226,16 +226,16 @@ func updateLinkedPile(start *Pile, s Sam, refmap map[string]chromInfo.ChromInfo)
 	if len(s.Cigar) > 0 {
 		for i := range s.Cigar {
 			switch s.Cigar[i].Op {
-			case 'M', '=', 'X': // Match
+			case cigar.Match, cigar.Equal, cigar.Mismatch: // Match
 				addMatchLinked(start, refidx, refPos, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength], readIsForward)
 				refPos += uint32(s.Cigar[i].RunLength)
 				seqPos += s.Cigar[i].RunLength
 
-			case 'D': // Deletion
+			case cigar.Deletion: // Deletion
 				addDeletionLinked(start, refidx, refPos, s.Cigar[i].RunLength, readIsForward)
 				refPos += uint32(s.Cigar[i].RunLength)
 
-			case 'I': // Insertion
+			case cigar.Insertion: // Insertion
 				addInsertionLinked(start, refidx, refPos-1, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength], readIsForward)
 				seqPos += s.Cigar[i].RunLength
 
@@ -430,25 +430,25 @@ func resetPile(p *Pile) {
 
 // sclipTerminalIns will convert an insertion on the left or right end of the read to a soft clip.
 func sclipTerminalIns(s *Sam) {
-	if len(s.Cigar) == 0 || s.Cigar[0].Op == '*' {
+	if len(s.Cigar) == 0 {
 		return
 	}
-	if s.Cigar[0].Op == 'I' {
-		s.Cigar[0].Op = 'S'
+	if s.Cigar[0].Op == cigar.Insertion {
+		s.Cigar[0].Op = cigar.SoftClip
 	}
-	if s.Cigar[len(s.Cigar)-1].Op == 'I' {
-		s.Cigar[len(s.Cigar)-1].Op = 'S'
+	if s.Cigar[len(s.Cigar)-1].Op == cigar.Insertion {
+		s.Cigar[len(s.Cigar)-1].Op = cigar.SoftClip
 	}
 
 	// catch case where beginning/end of read is already soft clipped
-	if len(s.Cigar) >= 2 && s.Cigar[0].Op == 'S' && s.Cigar[1].Op == 'I' {
-		s.Cigar[1].Op = 'S'
+	if len(s.Cigar) >= 2 && s.Cigar[0].Op == cigar.SoftClip && s.Cigar[1].Op == cigar.Insertion {
+		s.Cigar[1].Op = cigar.SoftClip
 		s.Cigar[1].RunLength += s.Cigar[0].RunLength
 		s.Cigar = s.Cigar[1:]
 	}
 
-	if len(s.Cigar) >= 2 && s.Cigar[len(s.Cigar)-1].Op == 'S' && s.Cigar[len(s.Cigar)-2].Op == 'I' {
-		s.Cigar[len(s.Cigar)-2].Op = 'S'
+	if len(s.Cigar) >= 2 && s.Cigar[len(s.Cigar)-1].Op == cigar.SoftClip && s.Cigar[len(s.Cigar)-2].Op == cigar.Insertion {
+		s.Cigar[len(s.Cigar)-2].Op = cigar.SoftClip
 		s.Cigar[len(s.Cigar)-2].RunLength += s.Cigar[len(s.Cigar)-1].RunLength
 		s.Cigar = s.Cigar[:len(s.Cigar)-1]
 	}
