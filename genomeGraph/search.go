@@ -46,42 +46,35 @@ func rightBasesFromTwoBit(n *Node, extension int, start int, seq []dna.Base, ans
 	return append(append(ans, seq...), dnaTwoBit.GetFrag(n.SeqTwoBit, start, start+basesToTake)...)
 }*/
 
-func LeftAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, query []dna.Base, config *GraphSettings, sk scoreKeeper, matrix *sync.Pool, pool *sync.Pool) ([]cigar.Cigar, int64, int, int, []uint32) {
-	cache := pool.Get().(*AlignmentData)
-	defer pool.Put(cache)
+func LeftAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32, query []dna.Base, config *GraphSettings, sk scoreKeeper, memoryPool *sync.Pool) ([]cigar.Cigar, int64, int, int, []uint32) {
+	alignData := memoryPool.Get().(*MemoryAllocation)
+	defer memoryPool.Put(alignData)
+	alignData.Alignment.Seq, alignData.Alignment.Path = alignData.Alignment.Seq[:0], alignData.Alignment.Path[:0]
+	alignData.Alignment.Seq = getLeftBases(n, config.Extention, start, seq, alignData.Alignment.Seq)
+	alignData.Alignment.Path = make([]uint32, len(currentPath))
 
-	res := matrix.Get().(*Matrix)
-	defer matrix.Put(res)
-
-	cache.Seq, cache.Path = cache.Seq[:0], cache.Path[:0]
-	cache.Seq = getLeftBases(n, config.Extention, start, seq, cache.Seq)
-	cache.Path = make([]uint32, len(currentPath))
-
-	copy(cache.Path, currentPath)
-	AddPath(cache.Path, n.Id)
+	copy(alignData.Alignment.Path, currentPath)
+	AddPath(alignData.Alignment.Path, n.Id)
 
 	currLen := len(seq)
-
 	if currLen+start >= config.Extention || len(n.Prev) == 0 {
-		sk.leftScore, sk.leftAlignment, sk.targetStart, sk.queryStart = LeftDynamicAln(cache.Seq, query, config, res)
-		sk.targetStart = start - len(cache.Seq) - currLen + sk.targetStart
-		sk.leftPath = cache.Path
+		sk.leftScore, sk.leftAlignment, sk.targetStart, sk.queryStart = LeftDynamicAln(alignData.Alignment.Seq, query, config, alignData.Matrix)
+		sk.targetStart = start - len(alignData.Alignment.Seq) - currLen + sk.targetStart
+		sk.leftPath = alignData.Alignment.Path
 		return sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath
 	} else {
 		//A very negative number
 		sk.leftScore = math.MinInt64
-
 		for _, i := range n.Prev {
-			res.route, cache.currScore, cache.targetStart, cache.queryStart, cache.Path = LeftAlignTraversal(i.Dest, cache.Seq, len(i.Dest.Seq), cache.Path, query, config, sk, matrix, pool)
-			if cache.currScore > sk.leftScore {
-				sk.leftScore = cache.currScore
-				sk.leftAlignment = res.route
-				sk.targetStart = start - len(cache.Seq) - currLen + cache.targetStart
-				sk.queryStart = cache.queryStart
-				sk.leftPath = cache.Path
+			alignData.Matrix.route, alignData.Alignment.currScore, alignData.Alignment.targetStart, alignData.Alignment.queryStart, alignData.Alignment.Path = LeftAlignTraversal(i.Dest, alignData.Alignment.Seq, len(i.Dest.Seq), alignData.Alignment.Path, query, config, sk, memoryPool)
+			if alignData.Alignment.currScore > sk.leftScore {
+				sk.leftScore = alignData.Alignment.currScore
+				sk.leftAlignment = alignData.Matrix.route
+				sk.targetStart = start - len(alignData.Alignment.Seq) - currLen + alignData.Alignment.targetStart
+				sk.queryStart = alignData.Alignment.queryStart
+				sk.leftPath = alignData.Alignment.Path
 			}
 		}
-
 		cigar.ReverseCigar(sk.leftAlignment)
 		reversePath(sk.leftPath)
 		return sk.leftAlignment, sk.leftScore, sk.targetStart, sk.queryStart, sk.leftPath
@@ -90,24 +83,20 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint32
 
 func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, config *GraphSettings, res *Matrix) (int64, []cigar.Cigar, int, int) {
 	resetDynamicScore(res)
-
 	columns, rows := len(alpha), len(beta)
 
 	for res.i = 0; res.i <= columns; res.i++ {
 		res.matrix[res.i][0] = 0
 	}
-
 	for res.j = 0; res.j <= rows; res.j++ {
 		res.matrix[0][res.j] = 0
 	}
-
 	for res.i = 1; res.i <= columns; res.i++ {
 		for res.j = 1; res.j <= rows; res.j++ {
 			res.matrix[res.i][res.j], res.trace[res.i][res.j] = cigar.TripleMaxTrace(res.matrix[res.i-1][res.j-1]+config.ScoreMatrix[alpha[res.i-1]][beta[res.j-1]], res.matrix[res.i][res.j-1]+config.GapPenalty, res.matrix[res.i-1][res.j]+config.GapPenalty)
 			res.matrix[res.i][res.j] = numbers.Max(res.matrix[res.i][res.j], 0)
 		}
 	}
-
 	for res.i, res.j, res.index = columns, rows, 0; res.matrix[res.i][res.j] > 0; {
 		if len(res.route) == 0 || res.route[len(res.route)-1].Op != res.trace[res.i][res.j] {
 			res.route = append(res.route, cigar.Cigar{RunLength: 1, Op: res.trace[res.i][res.j]})
@@ -128,32 +117,29 @@ func LeftDynamicAln(alpha []dna.Base, beta []dna.Base, config *GraphSettings, re
 	return res.matrix[columns][rows], res.route, res.i, res.j
 }
 
-func RightAlignTraversal(n *Node, seq []dna.Base, end int, currentPath []uint32, query []dna.Base, config *GraphSettings, sk scoreKeeper, matrix *sync.Pool, pool *sync.Pool) ([]cigar.Cigar, int64, int, int, []uint32) {
-	cache := pool.Get().(*AlignmentData)
-	defer pool.Put(cache)
+func RightAlignTraversal(n *Node, seq []dna.Base, end int, currentPath []uint32, query []dna.Base, config *GraphSettings, sk scoreKeeper, memoryPool *sync.Pool) ([]cigar.Cigar, int64, int, int, []uint32) {
+	alignData := memoryPool.Get().(*MemoryAllocation)
+	defer memoryPool.Put(alignData)
 
-	res := matrix.Get().(*Matrix)
-	defer matrix.Put(res)
-
-	cache.Seq, cache.Path = cache.Seq[:0], cache.Path[:0]
-	cache.Seq = getRightBases(n, config.Extention, end, seq, cache.Seq)
-	cache.Path = make([]uint32, len(currentPath))
-	copy(cache.Path, currentPath)
+	alignData.Alignment.Seq, alignData.Alignment.Path = alignData.Alignment.Seq[:0], alignData.Alignment.Path[:0]
+	alignData.Alignment.Seq = getRightBases(n, config.Extention, end, seq, alignData.Alignment.Seq)
+	alignData.Alignment.Path = make([]uint32, len(currentPath))
+	copy(alignData.Alignment.Path, currentPath)
 
 	if len(seq)+len(n.Seq)-end >= config.Extention || len(n.Next) == 0 {
-		sk.rightScore, sk.rightAlignment, sk.targetEnd, sk.queryEnd = RightDynamicAln(cache.Seq, query, config, res)
-		sk.rightPath = cache.Path
+		sk.rightScore, sk.rightAlignment, sk.targetEnd, sk.queryEnd = RightDynamicAln(alignData.Alignment.Seq, query, config, alignData.Matrix)
+		sk.rightPath = alignData.Alignment.Path
 		return sk.rightAlignment, sk.rightScore, sk.targetEnd + end, sk.queryEnd, sk.rightPath
 	} else {
 		sk.rightScore = math.MinInt64
 		for _, i := range n.Next {
-			res.route, cache.currScore, cache.targetEnd, cache.queryEnd, cache.Path = RightAlignTraversal(i.Dest, cache.Seq, 0, cache.Path, query, config, sk, matrix, pool)
-			if cache.currScore > sk.rightScore {
-				sk.rightScore = cache.currScore
-				sk.rightAlignment = res.route
-				sk.targetEnd = cache.targetEnd
-				sk.queryEnd = cache.queryEnd
-				sk.rightPath = cache.Path
+			alignData.Matrix.route, alignData.Alignment.currScore, alignData.Alignment.targetEnd, alignData.Alignment.queryEnd, alignData.Alignment.Path = RightAlignTraversal(i.Dest, alignData.Alignment.Seq, 0, alignData.Alignment.Path, query, config, sk, memoryPool)
+			if alignData.Alignment.currScore > sk.rightScore {
+				sk.rightScore = alignData.Alignment.currScore
+				sk.rightAlignment = alignData.Matrix.route
+				sk.targetEnd = alignData.Alignment.targetEnd
+				sk.queryEnd = alignData.Alignment.queryEnd
+				sk.rightPath = alignData.Alignment.Path
 			}
 		}
 		cigar.ReverseCigar(sk.rightAlignment)
@@ -170,13 +156,11 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, config *GraphSettings, r
 	for res.i = 0; res.i <= columns; res.i++ {
 		res.matrix[res.i][0] = config.GapPenalty * int64(res.i)
 		res.trace[res.i][0] = cigar.Deletion // Initialize first column traces
-
 	}
 	for res.j = 0; res.j <= rows; res.j++ {
 		res.matrix[0][res.j] = config.GapPenalty * int64(res.j)
 		res.trace[0][res.j] = cigar.Insertion // Initialize first row traces
 	}
-
 	for res.i = 1; res.i <= columns; res.i++ {
 		for res.j = 1; res.j <= rows; res.j++ {
 			res.matrix[res.i][res.j], res.trace[res.i][res.j] = cigar.TripleMaxTrace(

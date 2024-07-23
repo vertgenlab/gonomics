@@ -97,12 +97,11 @@ func TestRightAlignTraversal(t *testing.T) {
 	expectedPath2 := []uint32{}
 
 	// Test with node1 (traversal)
-	matrix := NewMatrixPool(defaultMatrixSize)
+	memory := NewMemoryAllocation(defaultMatrixSize)
 
 	sk := scoreKeeper{}
-	dnaPool := NewAlignmentPool()
 
-	cigar1, score1, targetEnd1, queryEnd1, path1 := RightAlignTraversal(&n1, []dna.Base{}, 0, []uint32{}, query, config, sk, matrix, dnaPool)
+	cigar1, score1, targetEnd1, queryEnd1, path1 := RightAlignTraversal(&n1, []dna.Base{}, 0, []uint32{}, query, config, sk, memory)
 
 	if score1 != expectedScore {
 		t.Errorf("Error: Expected score %d for node1, got %d", expectedScore, score1)
@@ -119,7 +118,7 @@ func TestRightAlignTraversal(t *testing.T) {
 	}
 
 	// Test with node2 (no traversal, direct alignment)
-	cigar2, score2, targetEnd2, queryEnd2, path2 := RightAlignTraversal(&n1, []dna.Base{}, 0, []uint32{}, query, config, sk, matrix, dnaPool)
+	cigar2, score2, targetEnd2, queryEnd2, path2 := RightAlignTraversal(&n1, []dna.Base{}, 0, []uint32{}, query, config, sk, memory)
 
 	// Similar assertions for node2
 	if score2 != expectedScore {
@@ -209,8 +208,8 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	defer file.Close()
 
 	// Reusable objects (created once, used throughout)
-	matrix := NewMatrixPool(defaultMatrixSize)
-	dnaPool := NewAlignmentPool()
+	memory := NewMemoryAllocation(defaultMatrixSize)
+
 	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{} // Create new scorekeepers per alignment
 
@@ -220,7 +219,7 @@ func BenchmarkGirafAlignment(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		correct = 0
 		for i := 0; i < len(fqs); i++ {
-			result := GraphSmithWatermanToGiraf(genome, fqs[i], tiles, config, matrix, dnaPool, scorekeeper, seedBuildHelper)
+			result := GraphSmithWatermanToGiraf(genome, fqs[i], tiles, config, memory, scorekeeper, seedBuildHelper)
 			if isCorrectCoord(result) {
 				correct++
 			}

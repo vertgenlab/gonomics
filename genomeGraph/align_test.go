@@ -85,7 +85,7 @@ func BenchmarkGsw(b *testing.B) {
 	stop := time.Now()
 	duration := stop.Sub(start)
 	//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-	b.Logf("Aligned %d reads in %s (%.1f reads per second).\n", 50000*2, duration, float64(50000*2)/duration.Seconds())
+	b.Logf("Aligned %d reads in %s (%.1f reads per second).\n", 2*len(simReads), duration, float64(2*len(simReads))/duration.Seconds())
 	fileio.EasyRemove(fqOne)
 	fileio.EasyRemove(fqTwo)
 	if *memprofile != "" {

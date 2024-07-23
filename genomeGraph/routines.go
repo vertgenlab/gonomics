@@ -17,12 +17,11 @@ func RoutineFqToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int
 		TileSize:       seedLen,
 		StepSize:       stepSize,
 	}
-	matrix := NewMatrixPool(defaultMatrixSize)
-	dnaPool := NewAlignmentPool()
+	allocateMemory := NewMemoryAllocation(defaultMatrixSize)
 	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	for read := range inputChan {
-		outputChan <- *GraphSmithWatermanToGiraf(gg, read, seedHash, settings, matrix, dnaPool, scorekeeper, seedBuildHelper)
+		outputChan <- *GraphSmithWatermanToGiraf(gg, read, seedHash, settings, allocateMemory, scorekeeper, seedBuildHelper)
 	}
 	wg.Done()
 }
@@ -35,12 +34,11 @@ func RoutineFqPairToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen
 		TileSize:       seedLen,
 		StepSize:       stepSize,
 	}
-	matrix := NewMatrixPool(defaultMatrixSize)
-	dnaPool := NewAlignmentPool()
+	allocateMemory := NewMemoryAllocation(defaultMatrixSize)
 	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	for read := range input {
-		output <- WrapPairGiraf(gg, read, seedHash, settings, matrix, dnaPool, scorekeeper, seedBuildHelper)
+		output <- WrapPairGiraf(gg, read, seedHash, settings, allocateMemory, scorekeeper, seedBuildHelper)
 	}
 	wg.Done()
 }
@@ -54,12 +52,12 @@ func RoutineGirafToSamSingle(gg *GenomeGraph, seedHash map[uint64][]uint64, seed
 		StepSize:       stepSize,
 	}
 
-	matrix := NewMatrixPool(defaultMatrixSize)
-	dnaPool := NewAlignmentPool()
+	allocateMemory := NewMemoryAllocation(defaultMatrixSize)
+
 	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	for read := range inputChan {
-		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, settings, matrix, dnaPool, scorekeeper, seedBuildHelper))
+		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, settings, allocateMemory, scorekeeper, seedBuildHelper))
 	}
 	wg.Done()
 }
@@ -72,13 +70,12 @@ func RoutineGirafToSam(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen in
 		TileSize:       seedLen,
 		StepSize:       stepSize,
 	}
-	matrix := NewMatrixPool(defaultMatrixSize)
-	dnaPool := NewAlignmentPool()
+	allocateMemory := NewMemoryAllocation(defaultMatrixSize)
 	scorekeeper := scoreKeeper{}
 	seedBuildHelper := newSeedBuilder()
 	var pair sam.MatePair
 	for read := range input {
-		pair = GirafPairToSam(WrapPairGiraf(gg, read, seedHash, settings, matrix, dnaPool, scorekeeper, seedBuildHelper))
+		pair = GirafPairToSam(WrapPairGiraf(gg, read, seedHash, settings, allocateMemory, scorekeeper, seedBuildHelper))
 		output <- pair.Fwd
 		output <- pair.Rev
 	}

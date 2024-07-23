@@ -19,6 +19,21 @@ type Matrix struct {
 	route   []cigar.Cigar
 }
 
+type Alignment struct {
+	Seq         []dna.Base
+	Path        []uint32
+	queryStart  int
+	queryEnd    int
+	targetStart int
+	targetEnd   int
+	currScore   int64
+}
+
+type MemoryAllocation struct {
+	Matrix    *Matrix
+	Alignment *Alignment
+}
+
 type SeedMemory struct {
 	Hits   []Seed
 	Worker []Seed
@@ -36,16 +51,6 @@ type seedHelper struct {
 	pool                                      *sync.Pool
 }
 
-type AlignmentData struct {
-	Seq         []dna.Base
-	Path        []uint32
-	queryStart  int
-	queryEnd    int
-	targetStart int
-	targetEnd   int
-	currScore   int64
-}
-
 type scoreKeeper struct {
 	targetStart  int
 	targetEnd    int
@@ -61,11 +66,56 @@ type scoreKeeper struct {
 	leftSeq      []dna.Base
 	rightSeq     []dna.Base
 	currSeq      []dna.Base
-	tailSeed     Seed
+	tailSeed     *Seed
 
-	currSeed       Seed
+	currSeed       *Seed
 	leftAlignment  []cigar.Cigar
 	rightAlignment []cigar.Cigar
+}
+
+func NewMemoryAllocation(size int) *sync.Pool {
+	m := make([][]int64, size)
+	trace := make([][]byte, size)
+	for idx := range m {
+		m[idx] = make([]int64, size)
+		trace[idx] = make([]byte, size)
+	}
+	return &sync.Pool{
+		New: func() interface{} {
+			pool := MemoryAllocation{
+				Matrix: &Matrix{
+					matrix:  m,
+					trace:   trace,
+					i:       0,
+					j:       0,
+					index:   0,
+					currMax: math.MinInt64,
+					route:   make([]cigar.Cigar, 0, 1),
+				},
+				Alignment: &Alignment{
+					Seq:         make([]dna.Base, 0, 150),
+					Path:        make([]uint32, 0, 10),
+					queryStart:  0,
+					targetStart: 0,
+					targetEnd:   0,
+					queryEnd:    0,
+				},
+			}
+			return &pool
+		},
+	}
+}
+
+func NewMemSeedPool() *sync.Pool {
+	return &sync.Pool{
+		New: func() interface{} {
+			pool := SeedMemory{
+				Hits:   make([]Seed, 0, 10000),
+				Worker: make([]Seed, 0, 10000),
+			}
+			return &pool
+		},
+	}
 }
 
 func NewMatrixPool(size int) *sync.Pool {
@@ -91,22 +141,10 @@ func NewMatrixPool(size int) *sync.Pool {
 	}
 }
 
-func NewMemSeedPool() *sync.Pool {
-	return &sync.Pool{
-		New: func() interface{} {
-			pool := SeedMemory{
-				Hits:   make([]Seed, 0, 10000),
-				Worker: make([]Seed, 0, 10000),
-			}
-			return &pool
-		},
-	}
-}
-
 func NewAlignmentPool() *sync.Pool {
 	return &sync.Pool{
 		New: func() interface{} {
-			align := AlignmentData{
+			align := Alignment{
 				Seq:         make([]dna.Base, 0, 150),
 				Path:        make([]uint32, 0, 10),
 				queryStart:  0,
