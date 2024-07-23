@@ -80,23 +80,23 @@ func ToString(cigars []Cigar) string {
 	var buf strings.Builder
 	var err error
 
-	if len(cigars) == 0 || cigars[0].Op == Unmapped {
+	if len(cigars) == 0 {
 		exception.PanicOnErr(buf.WriteByte(Unmapped))
 		return buf.String()
 	}
-
 	for _, c := range cigars {
 		_, err = buf.WriteString(strconv.Itoa(c.RunLength))
 		exception.PanicOnErr(err)
 		exception.PanicOnErr(buf.WriteByte(c.Op))
 	}
 	return buf.String()
+
 }
 
 // FromString parses an input string into a slice of Cigar structs.
 func FromString(input string) []Cigar {
 	if input == "*" || input == "**" {
-		return []Cigar{} // Unmapped returns a cigar slice of zero
+		return make([]Cigar, 0) // Unmapped returns a cigar slice of zero
 	}
 	var ans []Cigar = make([]Cigar, 0, 1)
 	var lastNum int = 0

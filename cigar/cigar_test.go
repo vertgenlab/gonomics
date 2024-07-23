@@ -87,6 +87,7 @@ func TestFromString(t *testing.T) {
 	}{
 		{"35M2I16D", []Cigar{c1, c2, c3}},
 		{"*", []Cigar{}},
+		{"*", make([]Cigar, 0)},
 	}
 	for _, test := range tests {
 		result := FromString(test.input)
@@ -102,7 +103,7 @@ func TestToString(t *testing.T) {
 		expected string
 	}{
 		{[]Cigar{c1, c2, c3}, "35M2I16D"},
-		{[]Cigar{{RunLength: 0, Op: Unmapped}}, "*"},
+		{make([]Cigar, 0), "*"},
 		{[]Cigar{}, "*"},
 	}
 	for _, test := range tests {
