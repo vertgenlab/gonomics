@@ -157,14 +157,12 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 	bw.recordBuf.WriteByte(nul)
 
 	// cigar
-	for i := range s.Cigar {
-		if i == 0 && s.Cigar[0].Op == '*' {
-			break
+	if len(s.Cigar) > 0 {
+		for i := range s.Cigar {
+			le.PutUint32(bw.u32[:4], cigar.GetCigUint32(s.Cigar[i]))
+			bw.recordBuf.Write(bw.u32[:4])
 		}
-		le.PutUint32(bw.u32[:4], getCigUint32(s.Cigar[i]))
-		bw.recordBuf.Write(bw.u32[:4])
 	}
-
 	// seq
 	var seqInt uint8
 	for i := range s.Seq {

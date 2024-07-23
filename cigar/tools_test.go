@@ -42,20 +42,6 @@ func TestCatCigar(t *testing.T) {
 	}
 }
 
-func TestReverseCigar(t *testing.T) {
-	input := []Cigar{{7, Match}, {3, Deletion}, {3, Match}, {5, SoftClip}}
-	expected := []Cigar{{5, SoftClip}, {3, Match}, {3, Deletion}, {7, Match}}
-
-	// Make a copy for reversing to avoid modifying the original
-	reversed := make([]Cigar, len(input))
-	copy(reversed, input)
-	ReverseCigar(reversed)
-
-	if !AllEqual(reversed, expected) {
-		t.Errorf("Error: Incorrect ReverseCigar() result. %s != %s", ToString(reversed), ToString(expected))
-	}
-}
-
 func TestSoftClipBases(t *testing.T) {
 	tests := []struct {
 		front        int
@@ -74,5 +60,29 @@ func TestSoftClipBases(t *testing.T) {
 		if !AllEqual(test.expected, result) {
 			t.Errorf("Error: SoftClipBases(%d, %d, %s) = %s != %s", test.front, test.lengthOfRead, ToString(test.cig), ToString(result), ToString(test.expected))
 		}
+	}
+}
+
+func TestReverseCigar(t *testing.T) {
+	input := []Cigar{{7, Match}, {3, Deletion}, {3, Match}, {5, SoftClip}}
+	expected := []Cigar{{5, SoftClip}, {3, Match}, {3, Deletion}, {7, Match}}
+
+	// Make a copy for reversing to avoid modifying the original
+	reversed := make([]Cigar, len(input))
+	copy(reversed, input)
+	ReverseCigar(reversed)
+
+	if !AllEqual(reversed, expected) {
+		t.Errorf("Error: Incorrect ReverseCigar() result. %s != %s", ToString(reversed), ToString(expected))
+	}
+}
+
+func TestGetCigUint32(t *testing.T) {
+	var input Cigar = Cigar{RunLength: 10, Op: Match}
+	var expected uint32 = 160
+
+	result := GetCigUint32(input)
+	if result != expected {
+		t.Errorf("Error: Incorrect GetCigUint32() result. %d != %d", result, expected)
 	}
 }

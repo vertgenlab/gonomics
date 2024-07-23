@@ -167,7 +167,7 @@ func pileupLinked(send chan<- Pile, reads <-chan Sam, header Header, includeNoDa
 	refmap := chromInfo.SliceToMap(header.Chroms)
 	var read Sam
 	for read = range reads {
-		if read.Cigar == nil || read.Cigar[0].Op == '*' {
+		if len(read.Cigar) == 0 {
 			continue // skip unmapped reads
 		}
 		if !passesReadFilters(read, readFilters) {
@@ -223,30 +223,33 @@ func updateLinkedPile(start *Pile, s Sam, refmap map[string]chromInfo.ChromInfo)
 	var readIsForward bool = !IsPaired(s) || IsForwardRead(s) // record unpaired as forward
 	refPos := s.Pos
 	refidx := refmap[s.RName].Order
-	for i := range s.Cigar {
-		switch s.Cigar[i].Op {
-		case 'M', '=', 'X': // Match
-			addMatchLinked(start, refidx, refPos, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength], readIsForward)
-			refPos += uint32(s.Cigar[i].RunLength)
-			seqPos += s.Cigar[i].RunLength
-
-		case 'D': // Deletion
-			addDeletionLinked(start, refidx, refPos, s.Cigar[i].RunLength, readIsForward)
-			refPos += uint32(s.Cigar[i].RunLength)
-
-		case 'I': // Insertion
-			addInsertionLinked(start, refidx, refPos-1, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength], readIsForward)
-			seqPos += s.Cigar[i].RunLength
-
-		default:
-			if cigar.ConsumesReference(s.Cigar[i].Op) {
+	if len(s.Cigar) > 0 {
+		for i := range s.Cigar {
+			switch s.Cigar[i].Op {
+			case 'M', '=', 'X': // Match
+				addMatchLinked(start, refidx, refPos, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength], readIsForward)
 				refPos += uint32(s.Cigar[i].RunLength)
-			}
-			if cigar.ConsumesQuery(s.Cigar[i].Op) {
 				seqPos += s.Cigar[i].RunLength
+
+			case 'D': // Deletion
+				addDeletionLinked(start, refidx, refPos, s.Cigar[i].RunLength, readIsForward)
+				refPos += uint32(s.Cigar[i].RunLength)
+
+			case 'I': // Insertion
+				addInsertionLinked(start, refidx, refPos-1, s.Seq[seqPos:seqPos+s.Cigar[i].RunLength], readIsForward)
+				seqPos += s.Cigar[i].RunLength
+
+			default:
+				if cigar.ConsumesReference(s.Cigar[i].Op) {
+					refPos += uint32(s.Cigar[i].RunLength)
+				}
+				if cigar.ConsumesQuery(s.Cigar[i].Op) {
+					seqPos += s.Cigar[i].RunLength
+				}
 			}
 		}
 	}
+
 }
 
 func addMatchLinked(start *Pile, refidx int, startPos uint32, seq []dna.Base, readIsForward bool) *Pile {

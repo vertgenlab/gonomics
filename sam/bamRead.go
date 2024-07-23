@@ -220,9 +220,8 @@ func DecodeBam(r *BamReader, s *Sam) (binId uint32, err error) {
 		if cap(s.Cigar) >= 1 {
 			s.Cigar = s.Cigar[:1]
 		} else {
-			s.Cigar = make([]cigar.Cigar, 1)
+			s.Cigar = make([]cigar.Cigar, 0)
 		}
-		s.Cigar[0].Op = '*'
 	}
 
 	if cap(s.Seq) >= lenSeq {

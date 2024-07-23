@@ -60,6 +60,14 @@ func ReverseCigar(cigars []Cigar) {
 	}
 }
 
+// GetCigUint32 encodes cigar op and runlen as a uint32 defined by op_len<<4|op.
+func GetCigUint32(c Cigar) uint32 {
+	var cigint uint32
+	cigint = uint32(c.RunLength) << 4   // move 4 bits to the left
+	cigint = cigint | Uint32Table[c.Op] // bitwise OR with op
+	return cigint
+}
+
 // TODO: Move TripleMaxTrace() and TripleMaxTraceExtended() to align package and replace
 // TripleMaxTrace will trace smith-waterman matrix alignment and return one of 3 cigar Op's.
 // M: matches or mismatches, I: insertions, D: for deletions.
