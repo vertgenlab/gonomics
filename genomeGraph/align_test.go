@@ -20,7 +20,7 @@ func BenchmarkGsw(b *testing.B) {
 	var stepSize int = 32
 	var numberOfReads int = 100
 	var readLength int = 150
-	var mutations int = 2
+	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 6
 	var scoreMatrix = align.HumanChimpTwoScoreMatrix
@@ -77,9 +77,7 @@ func isGirafPairCorrect(input <-chan giraf.GirafPair, wg *sync.WaitGroup, readLe
 			unmapped++
 			//name := strings.Split(pair.Fwd.QName, "_")
 			//if len(pair.Fwd.Cigar)> 0&& parse.StringToInt(name[3]) != pair.Fwd.Path.TEnd +(readLength-pair.Fwd.QEnd-1-pair.Fwd.QStart) {
-			if len(pair.Fwd.Cigar) > 0 {
-				b.Logf(giraf.GirafToString(&pair.Fwd))
-			}
+			
 
 			//b.Logf("%d != %d\n", parse.StringToInt(name[3]), pair.Fwd.Path.TEnd + (readLength-pair.Fwd.QEnd-1-pair.Fwd.QStart) )
 			//}

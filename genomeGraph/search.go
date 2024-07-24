@@ -197,10 +197,13 @@ func RightDynamicAln(alpha []dna.Base, beta []dna.Base, config *GraphSettings, r
 		}
 	}
 	for res.i, res.j, res.index = maxI, maxJ, 0; res.i > 0 || res.j > 0; {
-		if len(res.route) == 0 || res.route[len(res.route)-1].Op != res.trace[res.i][res.j] {
+		if len(res.route) == 0 {
 			res.route = append(res.route, cigar.Cigar{RunLength: 1, Op: res.trace[res.i][res.j]})
+		} else if res.route[res.index].Op == res.trace[res.i][res.j] {
+			res.route[res.index].RunLength += 1
 		} else {
-			res.route[len(res.route)-1].RunLength++
+			res.route = append(res.route, cigar.Cigar{RunLength: 1, Op: res.trace[res.i][res.j]})
+			res.index++
 		}
 		switch res.trace[res.i][res.j] {
 		case cigar.Match:
