@@ -52,11 +52,6 @@ func ToUint32(c Cigar) uint32 {
 	return uint32(c.RunLength)<<4 | Uint32Table[c.Op] // move 4 bits to the left followed by bitwise OR with op.
 }
 
-// IsUnmapped checks if provided cigars are unmapped. Note: Handle additional unmapped scenarios if needed.
-func IsUnmapped(cigars []Cigar) bool {
-	return len(cigars) == 0 // (empty slice)
-}
-
 // TODO: Move TripleMaxTrace() and TripleMaxTraceExtended() to align package and replace
 // TripleMaxTrace will trace smith-waterman matrix alignment and return one of 3 cigar Op's.
 // M: matches or mismatches, I: insertions, D: for deletions.

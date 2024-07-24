@@ -89,25 +89,3 @@ func TestToUint32(t *testing.T) {
 		t.Errorf("Error: Incorrect ToUint32() result. %d != %d", result, expected)
 	}
 }
-
-func TestIsUnmapped(t *testing.T) {
-	tests := []struct {
-		cigar    []Cigar
-		expected bool
-	}{
-		{[]Cigar{}, true},
-		{[]Cigar{{1, Match}, {1, Equal}, {1, Mismatch}}, false},
-		{make([]Cigar, 0), true},
-		{nil, true}, // a slice that is nil will currently return true 0xff
-		{FromString("*"), true},
-		{FromString("0xff"), true},
-		{FromString("150M"), false},
-		{make([]Cigar, 1), false}, // TODO: Consider the result in which a slice is allocated memory, but contains empty values: i.e Cigar{0, nil}.
-	}
-	for _, test := range tests {
-		result := IsUnmapped(test.cigar)
-		if test.expected != result {
-			t.Errorf("Error: Incorrect IsUnmapped() result. %s (%t) != %t", ToString(test.cigar), result, test.expected)
-		}
-	}
-}

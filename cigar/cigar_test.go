@@ -17,6 +17,28 @@ var c6 Cigar = Cigar{RunLength: 3, Op: Equal}
 var c7 Cigar = Cigar{RunLength: 3, Op: SoftClip}
 var unknown []Cigar = []Cigar{} // len(cigars) == 0 standard for unmapped
 
+func TestIsUnmapped(t *testing.T) {
+	tests := []struct {
+		cigar    []Cigar
+		expected bool
+	}{
+		{[]Cigar{}, true},
+		{[]Cigar{{1, Match}, {1, Equal}, {1, Mismatch}}, false},
+		{make([]Cigar, 0), true},
+		{nil, true}, // a slice that is nil will currently return true 0xff
+		{FromString("*"), true},
+		{FromString("0xff"), true},
+		{FromString("150M"), false},
+		{make([]Cigar, 1), false}, // TODO: Consider the result in which a slice is allocated memory, but contains empty values: i.e Cigar{0, nil}.
+	}
+	for _, test := range tests {
+		result := IsUnmapped(test.cigar)
+		if test.expected != result {
+			t.Errorf("Error: Incorrect IsUnmapped() result. %s (%t) != %t", ToString(test.cigar), result, test.expected)
+		}
+	}
+}
+
 func TestNumInsertions(t *testing.T) {
 	tests := []struct {
 		input    []Cigar
@@ -274,7 +296,6 @@ func TestConsumesQuery(t *testing.T) {
 func BenchmarkCigarToString(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
-
 	for n := 0; n < b.N; n++ {
 		ToString([]Cigar{c1, c2, c3})
 	}
@@ -283,7 +304,6 @@ func BenchmarkCigarToString(b *testing.B) {
 func BenchmarkCigarFromString(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
-
 	for n := 0; n < b.N; n++ {
 		FromString("35M2I16D")
 	}

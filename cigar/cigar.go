@@ -47,6 +47,11 @@ var Uint32Table = map[byte]uint32{
 	Mismatch:  8,
 }
 
+// IsUnmapped checks if provided cigars are unmapped. Note: Handle additional unmapped scenarios if needed.
+func IsUnmapped(cigars []Cigar) bool {
+	return len(cigars) == 0 // (empty slice)
+}
+
 // NumInsertions calculates the number of inserted bases relative to a reference genome for an input Cigar slice.
 func NumInsertions(input []Cigar) int {
 	var count int
