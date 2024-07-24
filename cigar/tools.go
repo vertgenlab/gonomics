@@ -22,28 +22,27 @@ func Concat(alpha []Cigar, beta []Cigar) []Cigar {
 	return append(alpha, beta...)
 }
 
-// SoftClipBases adds soft clips to the beginning and/or end of a CIGAR string to match a given read length.
-func SoftClipBases(front, lengthOfRead int, cigars []Cigar) []Cigar {
-	var runLen = QueryLength(cigars) // Fixed variable name
-	if front == 0 && runLen >= lengthOfRead {
+// AppendSoftClips adds soft clips to the beginning and/or end of a CIGAR string to match a given read length.
+func AppendSoftClips(front, lengthOfRead int, cigars []Cigar) []Cigar {
+	var queryRunlength = QueryLength(cigars) // Fixed variable name
+	if front == 0 && queryRunlength >= lengthOfRead {
 		return cigars
 	}
-	var answer []Cigar
 	// Pre-allocate slice for efficiency (estimate maximum size)
-	answer = make([]Cigar, 0, len(cigars)+2)
+	var answer []Cigar = make([]Cigar, 0, len(cigars)+2)
 	if front > 0 {
 		answer = append(answer, Cigar{RunLength: front, Op: SoftClip})
 	}
-	answer = append(answer, cigars...)
-	if front+QueryLength(answer) < lengthOfRead {
-		answer = append(answer, Cigar{RunLength: lengthOfRead - front - runLen, Op: SoftClip})
+	if front+queryRunlength < lengthOfRead {
+		answer = append(append(answer, cigars...), Cigar{RunLength: lengthOfRead - front - queryRunlength, Op: SoftClip})
 	}
 	return answer
 }
 
 // ReverseCigar reverses the order of a cigar slice in place.
 func ReverseCigar(cigars []Cigar) {
-	for i, j := 0, len(cigars)-1; i < j; i, j = i+1, j-1 {
+	size := len(cigars)
+	for i, j := 0, size-1; i < size/2; i, j = i+1, j-1 {
 		cigars[i], cigars[j] = cigars[j], cigars[i]
 	}
 }

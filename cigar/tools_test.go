@@ -33,7 +33,6 @@ func TestConcat(t *testing.T) {
 		{[]Cigar{{5, Deletion}}, []Cigar{{3, Insertion}, {4, 'X'}}, []Cigar{{5, Deletion}, {3, Insertion}, {4, 'X'}}},               // No merge
 		{[]Cigar{{2, SoftClip}, {1, Match}}, []Cigar{{6, Match}, {1, Deletion}}, []Cigar{{2, SoftClip}, {7, Match}, {1, Deletion}}}, // Merge and append
 	}
-
 	for _, test := range tests {
 		result := Concat(test.alpha, test.beta)
 		if !AllEqual(test.expected, result) {
@@ -42,7 +41,7 @@ func TestConcat(t *testing.T) {
 	}
 }
 
-func TestSoftClipBases(t *testing.T) {
+func TestAppendSoftClips(t *testing.T) {
 	tests := []struct {
 		front        int
 		lengthOfRead int
@@ -54,26 +53,30 @@ func TestSoftClipBases(t *testing.T) {
 		{0, 15, []Cigar{{5, Match}, {5, Deletion}}, []Cigar{{5, Match}, {5, Deletion}, {10, SoftClip}}},               // End clipping
 		{2, 12, []Cigar{{5, Match}, {5, Deletion}}, []Cigar{{2, SoftClip}, {5, Match}, {5, Deletion}, {5, SoftClip}}}, // Both clippings
 	}
-
 	for _, test := range tests {
-		result := SoftClipBases(test.front, test.lengthOfRead, test.cig)
+		result := AppendSoftClips(test.front, test.lengthOfRead, test.cig)
 		if !AllEqual(test.expected, result) {
-			t.Errorf("Error: SoftClipBases(%d, %d, %s) = %s != %s", test.front, test.lengthOfRead, ToString(test.cig), ToString(result), ToString(test.expected))
+			t.Errorf("Error: AppendSoftClips(%d, %d, %s) = %s != %s", test.front, test.lengthOfRead, ToString(test.cig), ToString(result), ToString(test.expected))
 		}
 	}
 }
 
 func TestReverseCigar(t *testing.T) {
-	input := []Cigar{{7, Match}, {3, Deletion}, {3, Match}, {5, SoftClip}}
-	expected := []Cigar{{5, SoftClip}, {3, Match}, {3, Deletion}, {7, Match}}
-
-	// Make a copy for reversing to avoid modifying the original
-	reversed := make([]Cigar, len(input))
-	copy(reversed, input)
-	ReverseCigar(reversed)
-
-	if !AllEqual(reversed, expected) {
-		t.Errorf("Error: Incorrect ReverseCigar() result. %s != %s", ToString(reversed), ToString(expected))
+	tests := []struct {
+		input    []Cigar
+		expected []Cigar
+	}{
+		{[]Cigar{{7, Match}, {3, Deletion}, {3, Match}, {5, SoftClip}}, []Cigar{{5, SoftClip}, {3, Match}, {3, Deletion}, {7, Match}}},
+		{[]Cigar{{7, Match}, {3, Deletion}, {3, Match}, {2, Mismatch}, {5, SoftClip}}, []Cigar{{5, SoftClip}, {2, Mismatch}, {3, Match}, {3, Deletion}, {7, Match}}}, // Odd number
+	}
+	for _, test := range tests {
+		// Make a copy for reversing to avoid modifying the original
+		reversed := make([]Cigar, len(test.input))
+		copy(reversed, test.input)
+		ReverseCigar(reversed)
+		if !AllEqual(test.expected, reversed) {
+			t.Errorf("Error: Incorrect ReverseCigar() result. %s != %s", ToString(reversed), ToString(test.expected))
+		}
 	}
 }
 
