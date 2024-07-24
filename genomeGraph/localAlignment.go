@@ -33,15 +33,6 @@ func initialZeroMatrix(m [][]int64, alphaLen int, betaLen int) {
 	}
 }
 
-func initialTraceMatrix(trace [][]rune, alphaLen int, betaLen int) {
-	for i := 1; i < alphaLen+1; i++ {
-		trace[i][0] = 'D'
-	}
-	for j := 1; j < betaLen+1; j++ {
-		trace[0][j] = 'I'
-	}
-}
-
 func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []cigar.Cigar, int64, int64, int64, int64) {
 	//check if size of alpha is larger than m
 	var currMax int64
@@ -80,16 +71,14 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case '=':
+		case cigar.Equal:
 			i, j = i-1, j-1
-			//refStart = refStart + 1
-		case 'X':
+		case cigar.Mismatch:
 			i, j = i-1, j-1
-		case 'I':
+		case cigar.Insertion:
 			j -= 1
-		case 'D':
+		case cigar.Deletion:
 			i -= 1
-			//refStart = refStart + 1
 		default:
 			log.Fatalf("Error: unexpected traceback")
 		}
@@ -128,13 +117,13 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case '=':
+		case cigar.Equal:
 			i, j = i-1, j-1
-		case 'X':
+		case cigar.Mismatch:
 			i, j = i-1, j-1
-		case 'I':
+		case cigar.Insertion:
 			j -= 1
-		case 'D':
+		case cigar.Deletion:
 			i -= 1
 		default:
 			log.Fatalf("Error: unexpected traceback %c\n", trace[i][j])
@@ -161,10 +150,10 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 				m[i][j] = 0
 			} else if i == 0 {
 				m[i][j] = m[i][j-1] + gapPen
-				trace[i][j] = 'I'
+				trace[i][j] = cigar.Insertion
 			} else if j == 0 {
 				m[i][j] = m[i-1][j] + gapPen
-				trace[i][j] = 'D'
+				trace[i][j] = cigar.Deletion
 			} else {
 				m[i][j], trace[i][j] = cigar.TripleMaxTraceExtended(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			}
@@ -190,13 +179,13 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case '=':
+		case cigar.Equal:
 			i, j = i-1, j-1
-		case 'X':
+		case cigar.Mismatch:
 			i, j = i-1, j-1
-		case 'I':
+		case cigar.Insertion:
 			j -= 1
-		case 'D':
+		case cigar.Deletion:
 			i -= 1
 		default:
 			log.Fatalf("Error: unexpected traceback with %c\n", trace[i][j])
