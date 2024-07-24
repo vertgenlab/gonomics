@@ -1,9 +1,7 @@
 package cigar
 
-// AddCigar adds a cigar struct to the end of a slice, but is smart about checking
-// to see if the addition is the same operation that is present at the end of the
-// existing slice and just increasing the run length of that entry.
-func AddCigar(alpha []Cigar, beta Cigar) []Cigar {
+// Append merges a cigar into a slice, checking for consecutive cigars with the same operation.
+func Append(alpha []Cigar, beta Cigar) []Cigar {
 	if len(alpha) > 0 && alpha[len(alpha)-1].Op == beta.Op {
 		alpha[len(alpha)-1].RunLength += beta.RunLength
 	} else {
@@ -12,25 +10,15 @@ func AddCigar(alpha []Cigar, beta Cigar) []Cigar {
 	return alpha
 }
 
-// CatCigar cats two cigars together, but is smart about checking to see if the
-// last element of the first slice is the same operation as the first element
-// of the second slice.  In this case it will compress that struct into a single
-// element with a longer run length.
-func CatCigar(alpha []Cigar, beta []Cigar) []Cigar {
-	if len(beta) == 0 {
-		return alpha
-	}
-
-	size := len(alpha)
-	if size == 0 {
+// Concat combines two cigar slices, checking consecutive elements with the same operation.
+func Concat(alpha []Cigar, beta []Cigar) []Cigar {
+	if len(alpha) == 0 {
 		return beta
 	}
-	// Merge the first new cigar if possible
-	if alpha[size-1].Op == beta[0].Op {
-		alpha[size-1].RunLength += beta[0].RunLength
-		beta = beta[1:] // Remove the merged cigar from beta
+	if len(beta) > 0 {
+		alpha = Append(alpha, beta[0])
+		beta = beta[1:]
 	}
-	// Append the remaining new cigars
 	return append(alpha, beta...)
 }
 
@@ -60,12 +48,17 @@ func ReverseCigar(cigars []Cigar) {
 	}
 }
 
-// GetCigUint32 encodes cigar op and runlen as a uint32 defined by op_len<<4|op.
-func GetCigUint32(c Cigar) uint32 {
+// ToUint32 encodes cigar op and runlen as a uint32 defined by runlength(op)<<4|op.
+func ToUint32(c Cigar) uint32 {
 	var cigint uint32
 	cigint = uint32(c.RunLength) << 4   // move 4 bits to the left
 	cigint = cigint | Uint32Table[c.Op] // bitwise OR with op
 	return cigint
+}
+
+// IsUnmapped checks if provided cigars are unmapped. Note: Handle additional unmapped scenarios if needed.
+func IsUnmapped(cigars []Cigar) bool {
+	return len(cigars) == 0 // (empty slice)
 }
 
 // TODO: Move TripleMaxTrace() and TripleMaxTraceExtended() to align package and replace

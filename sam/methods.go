@@ -16,7 +16,7 @@ func (s Sam) GetChromStart() int {
 
 func (s Sam) GetChromEnd() int {
 	var runLength int = 0
-	if len(s.Cigar) > 0 {
+	if !cigar.IsUnmapped(s.Cigar) {
 		for i := 0; i < len(s.Cigar); i++ {
 			if cigar.ConsumesReference(s.Cigar[i].Op) {
 				runLength += int(s.Cigar[i].RunLength)

@@ -59,7 +59,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			currBest.QEnd = int(sk.currSeed.QueryStart) + sk.queryStart + sk.queryEnd + int(sk.currSeed.TotalLength) - 1
 			currBest.PosStrand = sk.currSeed.PosStrand
 			currBest.Path = setPath(currBest.Path, sk.targetStart, CatPaths(CatPaths(sk.leftPath, getSeedPath(&sk.currSeed)), sk.rightPath), sk.targetEnd)
-			currBest.Cigar = cigar.SoftClipBases(sk.queryStart, len(sk.currSeq), cigar.CatCigar(cigar.AddCigar(sk.leftAlignment, cigar.Cigar{RunLength: int(sk.currSeed.TotalLength), Op: cigar.Match}), sk.rightAlignment))
+			currBest.Cigar = cigar.SoftClipBases(sk.queryStart, len(sk.currSeq), cigar.Concat(cigar.Append(sk.leftAlignment, cigar.Cigar{RunLength: int(sk.currSeed.TotalLength), Op: cigar.Match}), sk.rightAlignment))
 			currBest.AlnScore = int(sk.currScore)
 			currBest.Seq = sk.currSeq
 		}

@@ -167,7 +167,7 @@ func pileupLinked(send chan<- Pile, reads <-chan Sam, header Header, includeNoDa
 	refmap := chromInfo.SliceToMap(header.Chroms)
 	var read Sam
 	for read = range reads {
-		if len(read.Cigar) == 0 {
+		if cigar.IsUnmapped(read.Cigar) {
 			continue // skip unmapped reads
 		}
 		if !passesReadFilters(read, readFilters) {
@@ -430,7 +430,7 @@ func resetPile(p *Pile) {
 
 // sclipTerminalIns will convert an insertion on the left or right end of the read to a soft clip.
 func sclipTerminalIns(s *Sam) {
-	if len(s.Cigar) == 0 {
+	if cigar.IsUnmapped(s.Cigar) {
 		return
 	}
 	if s.Cigar[0].Op == cigar.Insertion {

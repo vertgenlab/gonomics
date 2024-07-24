@@ -50,7 +50,7 @@ var Uint32Table = map[byte]uint32{
 // NumInsertions calculates the number of inserted bases relative to a reference genome for an input Cigar slice.
 func NumInsertions(input []Cigar) int {
 	var count int
-	if len(input) == 0 {
+	if IsUnmapped(input) {
 		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for i := range input {
@@ -64,7 +64,7 @@ func NumInsertions(input []Cigar) int {
 // NumDeletions calculates the number of deletions relative to a reference genome for an input Cigar slice.
 func NumDeletions(input []Cigar) int {
 	var count int
-	if len(input) == 0 {
+	if IsUnmapped(input) {
 		log.Panic("Cannot calculate NumDeletions from unaligned reads.")
 	}
 	for i := range input {
@@ -80,7 +80,7 @@ func ToString(cigars []Cigar) string {
 	var buf strings.Builder
 	var err error
 
-	if len(cigars) == 0 {
+	if IsUnmapped(cigars) {
 		exception.PanicOnErr(buf.WriteByte(Unmapped))
 		return buf.String()
 	}
@@ -90,7 +90,6 @@ func ToString(cigars []Cigar) string {
 		exception.PanicOnErr(buf.WriteByte(c.Op))
 	}
 	return buf.String()
-
 }
 
 // FromString parses an input string into a slice of Cigar structs.
@@ -112,7 +111,7 @@ func FromString(input string) []Cigar {
 // MatchLength returns the number of bases in a Cigar slice that align to the reference.
 func MatchLength(c []Cigar) int {
 	var ans int
-	if len(c) == 0 {
+	if IsUnmapped(c) {
 		log.Panic("Cannot calculate MatchLength from unaligned reads.")
 	}
 	for _, v := range c {
@@ -126,7 +125,7 @@ func MatchLength(c []Cigar) int {
 // ReferenceLength calculates the number of reference positions that a Cigar slice spans.
 func ReferenceLength(c []Cigar) int {
 	var ans int
-	if len(c) == 0 {
+	if IsUnmapped(c) {
 		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for _, v := range c {
@@ -140,7 +139,7 @@ func ReferenceLength(c []Cigar) int {
 // QueryLength calculates the length of the query read from a slice of Cigar structs.
 func QueryLength(c []Cigar) int {
 	var ans int
-	if len(c) == 0 {
+	if IsUnmapped(c) {
 		log.Panic("Cannot calculate NumInsertions from unaligned reads.")
 	}
 	for _, v := range c {

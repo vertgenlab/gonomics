@@ -4,24 +4,24 @@ import (
 	"testing"
 )
 
-func TestAddCigar(t *testing.T) {
+func TestAppend(t *testing.T) {
 	tests := []struct {
 		alpha    []Cigar
 		beta     Cigar
 		expected []Cigar
 	}{
-		{[]Cigar{{RunLength: 2, Op: Deletion}, {RunLength: 30, Op: Match}}, Cigar{RunLength: 20, Op: Match}, []Cigar{{RunLength: 2, Op: Deletion}, {RunLength: 50, Op: Match}}},
-		{[]Cigar{{RunLength: 1, Op: Deletion}, {RunLength: 10, Op: Match}}, Cigar{RunLength: 2, Op: SoftClip}, []Cigar{{RunLength: 1, Op: Deletion}, {RunLength: 10, Op: Match}, {RunLength: 2, Op: SoftClip}}},
+		{[]Cigar{{2, Deletion}, {30, Match}}, Cigar{20, Match}, []Cigar{{2, Deletion}, {50, Match}}},
+		{[]Cigar{{1, Deletion}, {10, Match}}, Cigar{2, SoftClip}, []Cigar{{1, Deletion}, {10, Match}, {2, SoftClip}}},
 	}
 	for _, test := range tests {
-		result := AddCigar(test.alpha, test.beta)
+		result := Append(test.alpha, test.beta)
 		if !AllEqual(test.expected, result) {
 			t.Errorf("Error: Incorrect AddCigar() %s != %s\n", ToString(result), ToString(test.expected))
 		}
 	}
 }
 
-func TestCatCigar(t *testing.T) {
+func TestConcat(t *testing.T) {
 	tests := []struct {
 		alpha    []Cigar
 		beta     []Cigar
@@ -35,7 +35,7 @@ func TestCatCigar(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := CatCigar(test.alpha, test.beta)
+		result := Concat(test.alpha, test.beta)
 		if !AllEqual(test.expected, result) {
 			t.Errorf("Error: Incorrect CatCigar() result. %s != %s", ToString(test.expected), ToString(result))
 		}
@@ -77,12 +77,34 @@ func TestReverseCigar(t *testing.T) {
 	}
 }
 
-func TestGetCigUint32(t *testing.T) {
-	var input Cigar = Cigar{RunLength: 10, Op: Match}
+func TestToUint32(t *testing.T) {
+	var input Cigar = Cigar{10, Match}
 	var expected uint32 = 160
 
-	result := GetCigUint32(input)
+	result := ToUint32(input)
 	if result != expected {
-		t.Errorf("Error: Incorrect GetCigUint32() result. %d != %d", result, expected)
+		t.Errorf("Error: Incorrect ToUint32() result. %d != %d", result, expected)
+	}
+}
+
+func TestIsUnmapped(t *testing.T) {
+	tests := []struct {
+		cigar    []Cigar
+		expected bool
+	}{
+		{[]Cigar{}, true},
+		{[]Cigar{{1, Match}, {1, Equal}, {1, Mismatch}}, false},
+		{make([]Cigar, 0), true},
+		{nil, true}, // a slice that is nil will currently return true 0xff
+		{FromString("*"), true},
+		{FromString("0xff"), true},
+		{FromString("150M"), false},
+		{make([]Cigar, 1), false}, // TODO: Consider the result in which a slice is allocated memory, but contains empty values: i.e Cigar{0, nil}.
+	}
+	for _, test := range tests {
+		result := IsUnmapped(test.cigar)
+		if test.expected != result {
+			t.Errorf("Error: Incorrect IsUnmapped() result. %s (%t) != %t", ToString(test.cigar), result, test.expected)
+		}
 	}
 }

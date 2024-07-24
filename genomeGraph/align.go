@@ -59,7 +59,7 @@ func GraphSmithWatermanMemPool(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			currBest.Pos = uint32(minTarget + 1)
 			currBest.Extra = "BZ:i:" + fmt.Sprint(bestScore) + "\tGP:Z:" + PathToString(CatPaths(CatPaths(leftPath, getSeedPath(currSeed)), rightPath))
 
-			currBest.Cigar = cigar.CatCigar(cigar.AddCigar(leftAlignment, cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment)
+			currBest.Cigar = cigar.Concat(cigar.Append(leftAlignment, cigar.Cigar{RunLength: int(currSeed.TotalLength), Op: 'M'}), rightAlignment)
 			currBest.Cigar = AddSClip(minQuery, len(currSeq), currBest.Cigar)
 		}
 	}
