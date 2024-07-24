@@ -50,10 +50,7 @@ func ReverseCigar(cigars []Cigar) {
 
 // ToUint32 encodes cigar op and runlen as a uint32 defined by runlength(op)<<4|op.
 func ToUint32(c Cigar) uint32 {
-	var cigint uint32
-	cigint = uint32(c.RunLength) << 4   // move 4 bits to the left
-	cigint = cigint | Uint32Table[c.Op] // bitwise OR with op
-	return cigint
+	return uint32(c.RunLength)<<4 | Uint32Table[c.Op] // move 4 bits to the left followed by bitwise OR with op.
 }
 
 // IsUnmapped checks if provided cigars are unmapped. Note: Handle additional unmapped scenarios if needed.
