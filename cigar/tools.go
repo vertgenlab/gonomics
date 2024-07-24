@@ -24,8 +24,8 @@ func Concat(alpha []Cigar, beta []Cigar) []Cigar {
 
 // AppendSoftClips adds soft clips to the beginning and/or end of a CIGAR string to match a given read length.
 func AppendSoftClips(front, lengthOfRead int, cigars []Cigar) []Cigar {
-	var queryRunlength = QueryLength(cigars) // Fixed variable name
-	if front == 0 && queryRunlength >= lengthOfRead {
+	var currRunLen = QueryLength(cigars) // Fixed variable name
+	if front == 0 && currRunLen >= lengthOfRead {
 		return cigars
 	}
 	// Pre-allocate slice for efficiency (estimate maximum size)
@@ -33,8 +33,8 @@ func AppendSoftClips(front, lengthOfRead int, cigars []Cigar) []Cigar {
 	if front > 0 {
 		answer = append(answer, Cigar{RunLength: front, Op: SoftClip})
 	}
-	if front+queryRunlength < lengthOfRead {
-		answer = append(append(answer, cigars...), Cigar{RunLength: lengthOfRead - front - queryRunlength, Op: SoftClip})
+	if front+currRunLen < lengthOfRead {
+		answer = append(append(answer, cigars...), Cigar{RunLength: lengthOfRead - front - currRunLen, Op: SoftClip})
 	}
 	return answer
 }
