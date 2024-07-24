@@ -182,10 +182,10 @@ func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *geno
 	var currNode genomeGraph.Node = graph.Nodes[answer.Path.Nodes[0]]
 	var i uint16
 
-	for _, cigar := range answer.Cigar {
-		switch cigar.Op {
-		case '=':
-			for i = 0; i < uint16(cigar.RunLength); i++ {
+	for _, c := range answer.Cigar {
+		switch c.Op {
+		case cigar.Equal:
+			for i = 0; i < uint16(c.RunLength); i++ {
 				if refIdx > len(currNode.Seq)-1 {
 					refIdx = 0
 					currNodeId++
@@ -195,20 +195,20 @@ func addFullSeq(answer *giraf.Giraf, fancySeq *dnaThreeBit.ThreeBit, graph *geno
 				answer.Seq = append(answer.Seq, currNode.Seq[refIdx])
 				refIdx++
 			}
-		case 'X':
-			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLength]...) // retrieve RunLength number of bases from the fancyBases slice
-			fancyBases = fancyBases[:cigar.RunLength]                        // removed the retrieved bases from the fancyBases slice
-			refIdx += int(cigar.RunLength)
-		case 'S':
-			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLength]...) // retrieve RunLength number of bases from the fancyBases slice
-			fancyBases = fancyBases[:cigar.RunLength]                        // removed the retrieved bases from the fancyBases slice
-		case 'I':
-			answer.Seq = append(answer.Seq, fancyBases[:cigar.RunLength]...) // retrieve RunLength number of bases from the fancyBases slice
-			fancyBases = fancyBases[:cigar.RunLength]                        // removed the retrieved bases from the fancyBases slice
-		case 'D':
-			refIdx += int(cigar.RunLength)
+		case cigar.Mismatch:
+			answer.Seq = append(answer.Seq, fancyBases[:c.RunLength]...) // retrieve RunLength number of bases from the fancyBases slice
+			fancyBases = fancyBases[:c.RunLength]                        // removed the retrieved bases from the fancyBases slice
+			refIdx += int(c.RunLength)
+		case cigar.SoftClip:
+			answer.Seq = append(answer.Seq, fancyBases[:c.RunLength]...) // retrieve RunLength number of bases from the fancyBases slice
+			fancyBases = fancyBases[:c.RunLength]                        // removed the retrieved bases from the fancyBases slice
+		case cigar.Insertion:
+			answer.Seq = append(answer.Seq, fancyBases[:c.RunLength]...) // retrieve RunLength number of bases from the fancyBases slice
+			fancyBases = fancyBases[:c.RunLength]                        // removed the retrieved bases from the fancyBases slice
+		case cigar.Deletion:
+			refIdx += int(c.RunLength)
 		default:
-			log.Fatalf("ERROR: Unrecognized cigar operation: %v", cigar.Op)
+			log.Fatalf("ERROR: Unrecognized cigar operation: %v", c.Op)
 		}
 	}
 }
@@ -279,17 +279,17 @@ func appendNotes(answer *giraf.Giraf, br *BinReader) {
 // determineQStartQEnd parses the cigar to determine where the alignment starts and ends.
 func determineQStartQEnd(answer *giraf.Giraf) (int, int) {
 	var start, end int
-	if answer.Cigar == nil {
+	if cigar.IsUnmapped(answer.Cigar) {
 		return 0, 0
 	}
 
-	if answer.Cigar[0].Op == 'S' {
+	if answer.Cigar[0].Op == cigar.SoftClip {
 		start = int(answer.Cigar[0].RunLength)
 	} else {
 		start = 0
 	}
 
-	if answer.Cigar[len(answer.Cigar)-1].Op == 'S' {
+	if answer.Cigar[len(answer.Cigar)-1].Op == cigar.SoftClip {
 		end = (len(answer.Seq) - 1) - int(answer.Cigar[len(answer.Cigar)-1].RunLength)
 	} else {
 		end = len(answer.Seq) - 1

@@ -152,14 +152,14 @@ func WriteGiraf(bw *BinWriter, g *giraf.Giraf) error {
 }
 
 // getFancySeq will parse the []cigar.Cigar and record any bases that cannot be recovered by reference matching.
-func getFancySeq(seq []dna.Base, cigar []cigar.Cigar) dnaThreeBit.ThreeBit {
+func getFancySeq(seq []dna.Base, cigars []cigar.Cigar) dnaThreeBit.ThreeBit {
 	var answer []dna.Base
 	var seqIdx int
-	if cigar == nil {
+	if cigar.IsUnmapped(cigars) {
 		return *dnaThreeBit.NewThreeBit(seq, dnaThreeBit.A)
 	}
-	for _, val := range cigar {
-		if val.Op == 'S' || val.Op == 'X' || val.Op == 'I' {
+	for _, val := range cigars {
+		if val.Op == cigar.SoftClip || val.Op == cigar.Mismatch || val.Op == cigar.Insertion {
 			answer = append(answer, seq[seqIdx:seqIdx+val.RunLength]...)
 		}
 		seqIdx += val.RunLength
