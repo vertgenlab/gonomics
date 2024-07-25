@@ -2,195 +2,150 @@ package genomeGraph
 
 import (
 	"log"
+	"math"
+	"sync"
 
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-var HumanChimpTwoScoreMatrixNoGap = [][]int64{
-	{90, -330, -236, -356},
-	{-330, 100, -318, -236},
-	{-236, -318, 100, -330},
-	{-356, -236, -330, 90},
-}
+func SmithWaterman(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *sync.Pool) (int64, []cigar.Cigar, int, int, int, int) {
+	var rows, columns int = len(alpha) + 1, len(beta) + 1
+	var i, j, minI, maxI, minJ, maxJ int
+	var currMax int64 = math.MinInt64
 
-func swMatrixSetup(size int64) ([][]int64, [][]byte) {
-	m := make([][]int64, size)
-	trace := make([][]byte, size)
-	for idx := range m {
-		m[idx] = make([]int64, size)
-		trace[idx] = make([]byte, size)
-	}
-	return m, trace
-}
+	dp := pool.Get().(*Matrix)
+	defer pool.Put(dp)
+	dp.Reset(rows, columns)
 
-func initialZeroMatrix(m [][]int64, alphaLen int, betaLen int) {
-	for i := 0; i < alphaLen+1; i++ {
-		m[i][0] = 0
-	}
-	for j := 0; j < betaLen+1; j++ {
-		m[0][j] = 0
-	}
-}
-
-func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []cigar.Cigar, int64, int64, int64, int64) {
-	//check if size of alpha is larger than m
-	var currMax int64
-	var maxI int64
-	var maxJ int64
-	var i, j, routeIdx int64
-	//setting up the first rows and columns
-	//seting up the rest of the matrix
-	initialZeroMatrix(m, len(alpha), len(beta))
-	for i = 1; i < int64(len(alpha)+1); i++ {
-		for j = 1; j < int64(len(beta)+1); j++ {
-			m[i][j], trace[i][j] = cigar.TripleMaxTraceExtended(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
-			if m[i][j] > currMax {
-				currMax = m[i][j]
-				maxI = int64(i)
-				maxJ = int64(j)
+	for i = 1; i < rows; i++ {
+		for j = 1; j < columns; j++ {
+			dp.matrix[i][j], dp.trace[i][j] = cigar.TripleMaxTraceExtended(dp.matrix[i-1][j-1], dp.matrix[i-1][j-1]+config.ScoreMatrix[alpha[i-1]][beta[j-1]], dp.matrix[i][j-1]+config.GapPenalty, dp.matrix[i-1][j]+config.GapPenalty)
+			if dp.matrix[i][j] > currMax {
+				currMax = dp.matrix[i][j]
+				maxI = i
+				maxJ = j
 			}
-			if m[i][j] < 0 {
-				m[i][j] = 0
+			if dp.matrix[i][j] < 0 {
+				dp.matrix[i][j] = 0
 			}
 		}
 	}
-	var minI, minJ int64
-	var curr cigar.Cigar
-	var route []cigar.Cigar
-	route = append(route, cigar.Cigar{RunLength: 0, Op: trace[maxI][maxJ]})
-	for i, j, routeIdx = maxI, maxJ, 0; m[i][j] > 0; {
-		if route[routeIdx].RunLength == 0 {
-			route[routeIdx].RunLength = 1
-			route[routeIdx].Op = trace[i][j]
-		} else if route[routeIdx].Op == trace[i][j] {
-			route[routeIdx].RunLength += 1
+	route := make([]cigar.Cigar, 1)
+	route[0] = cigar.Cigar{RunLength: 0, Op: dp.trace[maxI][maxJ]}
+
+	for i, j = maxI, maxJ; dp.matrix[i][j] > 0; {
+		if route[len(route)-1].Op != dp.trace[i][j] {
+			route = append(route, cigar.Cigar{RunLength: 1, Op: dp.trace[i][j]})
 		} else {
-			curr = cigar.Cigar{RunLength: 0, Op: trace[i][j]}
-			route = append(route, curr)
-			routeIdx++
+			route[len(route)-1].RunLength++
 		}
-		switch trace[i][j] {
-		case cigar.Equal:
-			i, j = i-1, j-1
-		case cigar.Mismatch:
+		switch dp.trace[i][j] {
+		case cigar.Equal, cigar.Mismatch:
 			i, j = i-1, j-1
 		case cigar.Insertion:
-			j -= 1
+			j--
 		case cigar.Deletion:
-			i -= 1
+			i--
 		default:
-			log.Fatalf("Error: unexpected traceback")
+			log.Fatalf("Error: unexpected traceback: %c", dp.trace[i][j])
+		}
+		minI, minJ = i, j
+	}
+	cigar.ReverseCigar(route)
+	return dp.matrix[maxI][maxJ], route, minI, maxI, minJ, maxJ
+}
+
+func LeftLocal(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *sync.Pool) (int64, []cigar.Cigar, int, int, int, int) {
+	var i, j int
+	rows, columns := len(alpha), len(beta)
+
+	dp := pool.Get().(*Matrix)
+	defer pool.Put(dp)
+	dp.Reset(rows+1, columns+1)
+
+	for i = 1; i <= rows; i++ {
+		for j = 1; j <= columns; j++ {
+			dp.matrix[i][j], dp.trace[i][j] = cigar.TripleMaxTraceExtended(dp.matrix[i-1][j-1], dp.matrix[i-1][j-1]+config.ScoreMatrix[alpha[i-1]][beta[j-1]], dp.matrix[i][j-1]+config.GapPenalty, dp.matrix[i-1][j]+config.GapPenalty)
+			if dp.matrix[i][j] < 0 {
+				dp.matrix[i][j] = 0
+			}
+		}
+	}
+	var minI, minJ = rows, columns
+	route := make([]cigar.Cigar, 1)
+	route[0] = cigar.Cigar{RunLength: 0, Op: dp.trace[minI][minJ]}
+	for i, j = minI, minJ; dp.matrix[i][j] > 0; {
+		if route[len(route)-1].Op != dp.trace[i][j] {
+			route = append(route, cigar.Cigar{RunLength: 1, Op: dp.trace[i][j]})
+		} else {
+			route[len(route)-1].RunLength++
+		}
+		switch dp.trace[i][j] {
+		case cigar.Equal, cigar.Mismatch:
+			i, j = i-1, j-1
+		case cigar.Insertion:
+			j--
+		case cigar.Deletion:
+			i--
+		default:
+			log.Fatalf("Error: unexpected traceback %c\n", dp.trace[i][j])
 		}
 		minI = i
 		minJ = j
 	}
 	cigar.ReverseCigar(route)
-	return m[maxI][maxJ], route, minI, maxI, minJ, maxJ
+	return dp.matrix[len(alpha)][len(beta)], route, minI, rows, minJ, columns
 }
 
-func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []cigar.Cigar, int, int, int, int) {
-	//check if size of alpha is larger than m
-	var i, j, routeIdx int
-	initialZeroMatrix(m, len(alpha), len(beta))
-	for i = 1; i < len(alpha)+1; i++ {
-		for j = 1; j < len(beta)+1; j++ {
-			m[i][j], trace[i][j] = cigar.TripleMaxTraceExtended(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
-			if m[i][j] < 0 {
-				m[i][j] = 0
-			}
-		}
-	}
-	var minI, minJ = len(alpha), len(beta)
-	var route []cigar.Cigar
-	//traceback starts in top corner
-	for i, j, routeIdx = len(alpha), len(beta), 0; m[i][j] > 0; {
-		//if route[routeIdx].RunLength == 0 {
-		if len(route) == 0 {
-			curr := cigar.Cigar{RunLength: 1, Op: trace[i][j]}
-			route = append(route, curr)
-		} else if route[routeIdx].Op == trace[i][j] {
-			route[routeIdx].RunLength += 1
-		} else {
-			curr := cigar.Cigar{RunLength: 1, Op: trace[i][j]}
-			route = append(route, curr)
-			routeIdx++
-		}
-		switch trace[i][j] {
-		case cigar.Equal:
-			i, j = i-1, j-1
-		case cigar.Mismatch:
-			i, j = i-1, j-1
-		case cigar.Insertion:
-			j -= 1
-		case cigar.Deletion:
-			i -= 1
-		default:
-			log.Fatalf("Error: unexpected traceback %c\n", trace[i][j])
-		}
-		minI = i
-		minJ = j
-	}
-	//TODO: double check if this is tracing back in the correct directions
-	cigar.ReverseCigar(route)
-	return m[len(alpha)][len(beta)], route, minI, len(alpha), minJ, len(beta)
-}
+func RightLocal(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *sync.Pool) (int64, []cigar.Cigar, int, int, int, int) {
+	rows, columns := len(alpha)+1, len(beta)+1
+	dp := pool.Get().(*Matrix)
+	defer pool.Put(dp)
+	dp.Reset(rows, columns)
 
-func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []cigar.Cigar, int, int, int, int) {
-	//check if size of alpha is larger than m
-	var currMax int64
-	var maxI int
-	var maxJ int
-	var i, j, routeIdx int
-	//setting up the first rows and columns
-	//seting up the rest of the matrix
-	for i = 0; i < len(alpha)+1; i++ {
-		for j = 0; j < len(beta)+1; j++ {
+	var currMax int64 = math.MinInt64
+	var i, j, maxI, maxJ int
+
+	for i = 0; i < rows; i++ {
+		for j = 0; j < columns; j++ {
 			if i == 0 && j == 0 {
-				m[i][j] = 0
+				dp.matrix[i][j] = 0
 			} else if i == 0 {
-				m[i][j] = m[i][j-1] + gapPen
-				trace[i][j] = cigar.Insertion
+				dp.matrix[i][j] = dp.matrix[i][j-1] + config.GapPenalty
+				dp.trace[i][j] = cigar.Insertion
 			} else if j == 0 {
-				m[i][j] = m[i-1][j] + gapPen
-				trace[i][j] = cigar.Deletion
+				dp.matrix[i][j] = dp.matrix[i-1][j] + config.GapPenalty
+				dp.trace[i][j] = cigar.Deletion
 			} else {
-				m[i][j], trace[i][j] = cigar.TripleMaxTraceExtended(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+				dp.matrix[i][j], dp.trace[i][j] = cigar.TripleMaxTraceExtended(dp.matrix[i-1][j-1], dp.matrix[i-1][j-1]+config.ScoreMatrix[alpha[i-1]][beta[j-1]], dp.matrix[i][j-1]+config.GapPenalty, dp.matrix[i-1][j]+config.GapPenalty)
 			}
-			if m[i][j] > currMax {
-				currMax = m[i][j]
+			if dp.matrix[i][j] > currMax {
+				currMax = dp.matrix[i][j]
 				maxI = i
 				maxJ = j
 			}
 		}
 	}
-	var route []cigar.Cigar
-	//traceback starts in top corner
-	for i, j, routeIdx = maxI, maxJ, 0; i > 0 || j > 0; {
-		//if route[routeIdx].RunLength == 0 {
-		if len(route) == 0 {
-			curr := cigar.Cigar{RunLength: 1, Op: trace[i][j]}
-			route = append(route, curr)
-		} else if route[routeIdx].Op == trace[i][j] {
-			route[routeIdx].RunLength += 1
+	route := make([]cigar.Cigar, 1)
+	route[0] = cigar.Cigar{RunLength: 0, Op: dp.trace[maxI][maxJ]}
+	for i, j = maxI, maxJ; i > 0 || j > 0; {
+		if route[len(route)-1].Op != dp.trace[i][j] {
+			route = append(route, cigar.Cigar{RunLength: 1, Op: dp.trace[i][j]})
 		} else {
-			curr := cigar.Cigar{RunLength: 1, Op: trace[i][j]}
-			route = append(route, curr)
-			routeIdx++
+			route[len(route)-1].RunLength++
 		}
-		switch trace[i][j] {
-		case cigar.Equal:
-			i, j = i-1, j-1
-		case cigar.Mismatch:
+		switch dp.trace[i][j] {
+		case cigar.Equal, cigar.Mismatch:
 			i, j = i-1, j-1
 		case cigar.Insertion:
-			j -= 1
+			j--
 		case cigar.Deletion:
-			i -= 1
+			i--
 		default:
-			log.Fatalf("Error: unexpected traceback with %c\n", trace[i][j])
+			log.Fatalf("Error: unexpected traceback with %c\n", dp.trace[i][j])
 		}
 	}
 	cigar.ReverseCigar(route)
-	return m[maxI][maxJ], route, 0, maxI, 0, maxJ
+	return dp.matrix[maxI][maxJ], route, 0, maxI, 0, maxJ
 }

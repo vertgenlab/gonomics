@@ -70,12 +70,24 @@ func TripleMaxTraceExtended(prev int64, a int64, b int64, c int64) (int64, byte)
 	if a >= b && a >= c {
 		if a > prev {
 			return a, Equal
-		} else {
-			return a, Mismatch
 		}
-	} else if b >= c {
-		return b, Insertion
-	} else {
-		return c, Deletion
+		return a, Mismatch
 	}
+	if b >= c {
+		return b, Insertion
+	}
+	return c, Deletion
 }
+
+// func traceBack(prev int64, a int64, b int64, c int64) (int64, byte) {
+//     if a >= b && a >= c {
+//         if a > prev {
+//             return a, cigar.Equal
+//         }
+//         return a, cigar.Mismatch
+//     }
+//     if b >= c {
+//         return b, cigar.Insertion
+//     }
+//     return c, cigar.Deletion
+// }

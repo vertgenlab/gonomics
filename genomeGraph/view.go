@@ -1,53 +1,61 @@
 package genomeGraph
 
 import (
-	"bytes"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers/parse"
-	"github.com/vertgenlab/gonomics/sam"
-	"strings"
 )
 
-func calcExtension(seq []dna.Base) int64 {
-	var maxScore int64 = 0
-	for bases := 0; bases < len(seq); bases++ {
-		maxScore += HumanChimpTwoScoreMatrix[seq[bases]][seq[bases]]
+func View(alpha []dna.Base, beta []dna.Base, operations []cigar.Cigar, startI, endI, startJ, endJ int) string {
+	var seqOne, seqTwo strings.Builder
+	var i, j = 0, 0
+	// Print leading bases in alpha
+	for ; i < startI; i++ {
+		seqOne.WriteRune(dna.BaseToRune(alpha[i]))
+		seqTwo.WriteRune('-')
 	}
-	return maxScore/600 + int64(len(seq))
-}
 
-func LocalView(samLine *sam.Sam, ref []*Node) string {
-	var seqOne, seqTwo bytes.Buffer
+	// Print leading bases in beta
+	for ; j < startJ; j++ {
+		seqOne.WriteRune('-')
+		seqTwo.WriteRune(dna.BaseToRune(beta[j]))
+	}
 
-	var operations []cigar.Cigar = samLine.Cigar
-	var i int64 = int64(samLine.Pos) - 1
-	var j int64 = 0
-	var count int
-	words := strings.Split(samLine.RName, "_")
-	var alpha []dna.Base = ref[parse.StringToInt64(words[1])].Seq
-	var beta []dna.Base = samLine.Seq
-
+	// Print the aligned region
 	for _, operation := range operations {
-		for count = 0; count < operation.RunLength; count++ {
+		for count := 0; count < operation.RunLength && i <= endI && j <= endJ; count++ {
 			switch operation.Op {
-			case 'M':
+			case cigar.Match, cigar.Equal, cigar.Mismatch:
 				seqOne.WriteRune(dna.BaseToRune(alpha[i]))
 				seqTwo.WriteRune(dna.BaseToRune(beta[j]))
-				i, j = i+1, j+1
-			case 'I':
+				i++
+				j++
+			case cigar.Insertion:
 				seqOne.WriteRune('-')
 				seqTwo.WriteRune(dna.BaseToRune(beta[j]))
 				j++
-			case 'D':
+			case cigar.Deletion:
 				seqOne.WriteRune(dna.BaseToRune(alpha[i]))
 				seqTwo.WriteRune('-')
 				i++
-			case 'S':
-				seqOne.WriteRune('-')
-				seqTwo.WriteRune('-')
 			}
 		}
 	}
-	return cigar.ToString(operations) + "\n" + seqOne.String() + "\n" + seqTwo.String() + "\n"
+
+	// Print trailing bases in alpha (if any)
+	for ; i < endI; i++ {
+		seqOne.WriteRune(dna.BaseToRune(alpha[i]))
+		seqTwo.WriteRune('-')
+	}
+	seqOne.WriteByte('\n')
+
+	// Print trailing bases in beta (if any)
+	for ; j < endJ; j++ {
+		seqOne.WriteRune('-')
+		seqTwo.WriteRune(dna.BaseToRune(beta[j]))
+	}
+	seqTwo.WriteByte('\n')
+
+	return seqOne.String() + seqTwo.String()
 }
