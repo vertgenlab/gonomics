@@ -21,8 +21,6 @@ type Seed struct {
 	NextPart    *Seed
 }
 
-
-
 type seedHelper struct {
 	currHits                                  []uint64
 	codedNodeCoord                            uint64
@@ -67,7 +65,6 @@ func restartSeedHelper(helper *seedHelper) {
 	helper.seqKey, helper.codedNodeCoord = 0, 0
 	helper.leftMatches = 0
 }
-
 
 func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool, answer []Seed) []Seed {
 	const basesPerInt int = 32
@@ -247,7 +244,6 @@ func SortSeedDevByTotalLen(seeds []*Seed) {
 	sort.Slice(seeds, func(i, j int) bool { return seeds[i].TotalLength > seeds[j].TotalLength })
 }
 
-
 func getLastPart(a *Seed) *Seed {
 	for ; a.NextPart != nil; a = a.NextPart {
 	}
@@ -282,7 +278,6 @@ func BlastSeed(seed *Seed, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 		return scoreSeed(seed, read, scoreMatrix) + scoreSeed(seed.NextPart, read, scoreMatrix)
 	}
 }
-
 
 func leftSeed(i int) int {
 	return 2*i + 1
@@ -365,5 +360,3 @@ func recursiveSort(arr []*Seed, start, end int) {
 	recursiveSort(arr, start, splitIndex-1)
 	recursiveSort(arr, splitIndex+1, end)
 }
-
-

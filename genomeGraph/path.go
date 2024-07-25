@@ -166,27 +166,23 @@ func pathPrettyString(graphPath string) string {
 	return s
 }
 
-func AddPath(allPaths []uint32, newPath uint32) []uint32 {
-	if len(allPaths) == 0 {
-		allPaths = append(allPaths, newPath)
-	} else if allPaths[len(allPaths)-1] == newPath {
-		return allPaths
+func AddPath(alpha []uint32, beta uint32) []uint32 {
+	if len(alpha) > 0 && alpha[len(alpha)-1] == beta {
+		return alpha
 	} else {
-		allPaths = append(allPaths, newPath)
+		return append(alpha, beta)
 	}
-	return allPaths
 }
 
 func CatPaths(currPaths []uint32, newPaths []uint32) []uint32 {
-	if len(newPaths) == 0 {
-		return currPaths
-	} else if len(currPaths) == 0 {
+	if len(currPaths) == 0 {
 		return newPaths
-	} else {
-		currPaths = AddPath(currPaths, newPaths[0])
-		currPaths = append(currPaths, newPaths[1:]...)
-		return currPaths
 	}
+	if len(newPaths) > 0 {
+		currPaths = AddPath(currPaths, newPaths[0])
+		newPaths = newPaths[1:]
+	}
+	return append(currPaths, newPaths...)
 }
 
 func setPath(p giraf.Path, targetStart int, nodes []uint32, targetEnd int) giraf.Path {

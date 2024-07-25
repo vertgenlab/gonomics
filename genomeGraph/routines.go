@@ -29,7 +29,7 @@ func RoutineFqPairToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, config 
 	seedBuildHelper := newSeedBuilder()
 	scorekeeper := scoreKeeper{}
 	dynamicKeeper := dynamicScoreKeeper{}
-	
+
 	for read := range input {
 		output <- WrapPairGiraf(gg, read, seedHash, config, matrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper)
 	}
@@ -45,7 +45,7 @@ func RoutineGirafToSamSingle(gg *GenomeGraph, seedHash map[uint64][]uint64, seed
 	dynamicKeeper := dynamicScoreKeeper{}
 	config := DefaultAlignment()
 	for read := range inputChan {
-		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, config, matrix,  &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper))
+		outputChan <- GirafToSam(GraphSmithWatermanToGiraf(gg, read, seedHash, config, matrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper))
 	}
 	wg.Done()
 }
@@ -60,7 +60,7 @@ func RoutineGirafToSam(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen in
 	config := DefaultAlignment()
 	var pair sam.MatePair
 	for read := range input {
-		pair = GirafPairToSam(WrapPairGiraf(gg, read, seedHash, config, matrix,  &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper))
+		pair = GirafPairToSam(WrapPairGiraf(gg, read, seedHash, config, matrix, &seedPool, &dnaPool, scorekeeper, dynamicKeeper, seedBuildHelper))
 		output <- pair.Fwd
 		output <- pair.Rev
 	}

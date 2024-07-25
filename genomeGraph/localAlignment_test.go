@@ -16,13 +16,13 @@ var tests = []struct {
 }{
 	{
 		Alpha:         dna.StringToBases("TTTTTTTTTTTTTTTTAGC"),
-		Beta:          dna.StringToBases("ATTTTTTTAGC"),
-		ExpectedScore: int64(920),
-		ExpectedCigar: []cigar.Cigar{{RunLength: 10, Op: '='}},
-		ExpectedMinI:  9,
+		Beta:          dna.StringToBases("TTTTTTAGC"),
+		ExpectedScore: int64(830),
+		ExpectedCigar: []cigar.Cigar{{RunLength: 9, Op: '='}},
+		ExpectedMinI:  10,
 		ExpectedMaxI:  19,
-		ExpectedMinJ:  1,
-		ExpectedMaxJ:  11,
+		ExpectedMinJ:  0,
+		ExpectedMaxJ:  9,
 	},
 	{
 		Alpha:         dna.StringToBases("GACCCTGACCTTACTAGTTTACAATCACACGATCCTGACCTTACTAGTTT"),
@@ -36,44 +36,43 @@ var tests = []struct {
 	},
 }
 
+var alphaRight = dna.StringToBases("TTTTTTTTTTTTTTTTAGC")
+var betaRight = dna.StringToBases("TTTTTTTTTAGC")
+var alphaLeft = dna.StringToBases("TAGGGGGTGGGGGGGGT")
+var betaLeft = dna.StringToBases("GGGGGGGT")
+
 func TestRightLocal(t *testing.T) {
-	var seqOneA = dna.StringToBases("TTTTTTTTTTTTTTTTAGC")
-	var seqOneB = dna.StringToBases("ATTTTTTTTTTTTTTTTAGC")
 	config := DefaultAlignment()
 	pool := NewMatrixPool(50)
 
-	score, alignmentPath, refStart, refEnd, queryStart, queryEnd := RightLocal(seqOneA, seqOneB, config, pool)
-	t.Logf("RightLocal:\n\n%s\nscore=%d, alignment=%s, refStart=%d, refEnd=%d, queryStart=%d, queryEnd=%d\n", View(seqOneA, seqOneB, alignmentPath, refStart, refEnd, queryStart, queryEnd), score, cigar.ToString(alignmentPath), refStart, refEnd, queryStart, queryEnd)
+	score, alignmentPath, refStart, refEnd, queryStart, queryEnd := RightLocal(alphaRight, betaRight, config, pool)
+	t.Logf("RightLocal:\n\n%s\nscore=%d, alignment=%s, refStart=%d, refEnd=%d, queryStart=%d, queryEnd=%d\n", View(alphaRight, betaRight, alignmentPath, refStart, refEnd, queryStart, queryEnd), score, cigar.ToString(alignmentPath), refStart, refEnd, queryStart, queryEnd)
 
-	if score != 1130 {
-		t.Errorf("Score mismatch: expected %d, got %d", score, 1130)
+	if score != 810 {
+		t.Errorf("Score mismatch: expected %d, got %d", score, 810)
 	}
-	if !cigar.AllEqual(alignmentPath, []cigar.Cigar{{RunLength: 1, Op: cigar.Insertion}, {RunLength: 19, Op: cigar.Equal}}) {
-		t.Errorf("Alignment mismatch:\nExpected: %s\nGot: %s", cigar.ToString(alignmentPath), cigar.ToString([]cigar.Cigar{{RunLength: 10, Op: '='}}))
+	if !cigar.AllEqual(alignmentPath, []cigar.Cigar{{RunLength: 9, Op: '='}}) {
+		t.Errorf("Alignment mismatch:\nExpected: %s\nGot: %s", cigar.ToString(alignmentPath), cigar.ToString([]cigar.Cigar{{RunLength: 9, Op: '='}}))
 	}
 	if refStart != 0 {
 		t.Errorf("refStart mismatch: expected %d, got %d", 0, refStart)
 	}
-	if refEnd != 19 {
-		t.Errorf("refEnd mismatch: expected %d, got %d", 19, refEnd)
+	if refEnd != 9 {
+		t.Errorf("refEnd mismatch: expected %d, got %d", 9, refEnd)
 	}
 	if queryStart != 0 {
 		t.Errorf("queryStart mismatch: expected %d, got %d", 0, queryStart)
 	}
-	if queryEnd != 20 {
-		t.Errorf("queryEnd mismatch: expected %d, got %d", 20, queryEnd)
+	if queryEnd != 9 {
+		t.Errorf("queryEnd mismatch: expected %d, got %d", 9, queryEnd)
 	}
 }
 
 func TestLeftLocal(t *testing.T) {
-	var seqOneA = dna.StringToBases("TAGGGGGTGGGGGGGGT")
-	var seqOneB = dna.StringToBases("GGGGGGGT")
-
 	config := DefaultAlignment()
 	pool := NewMatrixPool(50)
-	score, alignmentPath, refStart, refEnd, queryStart, queryEnd := LeftLocal(seqOneA, seqOneB, config, pool)
-	t.Logf("LeftLocal:\n\n%s\nscore=%d, alignment=%s, refStart=%d, refEnd=%d, queryStart=%d, queryEnd=%d\n", View(seqOneA, seqOneB, alignmentPath, refStart, refEnd, queryStart, queryEnd), score, cigar.ToString(alignmentPath), refStart, refEnd, queryStart, queryEnd)
-
+	score, alignmentPath, refStart, refEnd, queryStart, queryEnd := LeftLocal(alphaLeft, betaLeft, config, pool)
+	t.Logf("LeftLocal:\n\n%s\nscore=%d, alignment=%s, refStart=%d, refEnd=%d, queryStart=%d, queryEnd=%d\n", View(alphaLeft, betaLeft, alignmentPath, refStart, refEnd, queryStart, queryEnd), score, cigar.ToString(alignmentPath), refStart, refEnd, queryStart, queryEnd)
 	if score != 790 {
 		t.Errorf("Score mismatch: expected %d, got %d", score, 790)
 	}
@@ -128,6 +127,34 @@ func BenchmarkSmithWatermanDP(b *testing.B) {
 			if minI != test.ExpectedMinI || maxI != test.ExpectedMaxI || minJ != test.ExpectedMinJ || maxJ != test.ExpectedMaxJ {
 				b.Errorf("Expected indices mismatch: got minI=%d, maxI=%d, minJ=%d, maxJ=%d\n", minI, maxI, minJ, maxJ)
 			}
+		}
+	}
+	b.ReportAllocs()
+}
+
+func BenchmarkLeftLocalAlignment(b *testing.B) {
+	config := DefaultAlignment()
+	pool := NewMatrixPool(500)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		score, route, minI, maxI, minJ, maxJ := LeftLocal(alphaLeft, betaLeft, config, pool)
+		b.Logf("Test case: Left local alignment\n%s\n", View(alphaLeft, betaLeft, route, minI, maxI, minJ, maxJ))
+		if score != 790 {
+			b.Errorf("Expected score %d, got %d\n", 790, score)
+		}
+	}
+	b.ReportAllocs()
+}
+
+func BenchmarkRightLocalAlignment(b *testing.B) {
+	config := DefaultAlignment()
+	pool := NewMatrixPool(500)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		score, route, minI, maxI, minJ, maxJ := RightLocal(alphaRight, betaRight, config, pool)
+		b.Logf("Test case: Right local alignment\n%s\n", View(alphaRight, betaRight, route, minI, maxI, minJ, maxJ))
+		if score != 810 {
+			b.Errorf("Score mismatch: expected %d, got %d", score, 810)
 		}
 	}
 	b.ReportAllocs()

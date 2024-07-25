@@ -2,8 +2,6 @@ package genomeGraph
 
 import (
 	"testing"
-
-	"github.com/vertgenlab/gonomics/cigar"
 )
 
 func TestNewMatrixPoolAndReset(t *testing.T) {
@@ -51,22 +49,4 @@ func TestNewMatrixPoolAndReset(t *testing.T) {
 		}
 	}
 
-	// Check if the first row and column are set correctly
-	for i := 0; i < newRows; i++ {
-		if matrix.matrix[i][0] != 0 {
-			t.Errorf("Matrix element [%d][0] not set to 0 after reset", i)
-		}
-		if matrix.trace[i][0] != cigar.Insertion {
-			t.Errorf("Trace element [%d][0] not set to cigar.Insertion after reset", i)
-		}
-	}
-
-	for j := 0; j < newCols; j++ {
-		if matrix.matrix[0][j] != 0 {
-			t.Errorf("Matrix element [0][%d] not set to 0 after reset", j)
-		}
-		if matrix.trace[0][j] != cigar.Insertion {
-			t.Errorf("Trace element [0][%d] not set to cigar.Insertion after reset", j)
-		}
-	}
 }

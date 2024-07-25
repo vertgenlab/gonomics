@@ -32,6 +32,7 @@ func BenchmarkGsw(b *testing.B) {
 	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
 	fqOne, fqTwo := "testdata/simReads_R1.fq", "testdata/simReads_R2.fq"
 	fastq.WritePair(fqOne, fqTwo, simReads)
+	//var output string = "pprof/pairedTest.giraf"
 
 	fastqPipe, girafPipe := make(chan fastq.PairedEndBig, 2408), make(chan giraf.GirafPair, 2408)
 	go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
@@ -44,6 +45,7 @@ func BenchmarkGsw(b *testing.B) {
 		for i := 0; i < numWorkers; i++ {
 			go RoutineFqPairToGiraf(genome, tiles, config, dp, fastqPipe, girafPipe, &workerWaiter)
 		}
+		//go giraf.GirafPairChanToFile(output, girafPipe, &writerWaiter)
 		go isGirafPairCorrect(girafPipe, &writerWaiter, readLength, 2*len(simReads), b)
 		writerWaiter.Add(1)
 
@@ -81,8 +83,7 @@ func isGirafPairCorrect(input <-chan giraf.GirafPair, wg *sync.WaitGroup, readLe
 			// 		fmt.Printf("%s\n%s\n", cigar.ToString(pair.Fwd.Cigar), giraf.GirafToString(&pair.Fwd))
 			// 	}
 			// }
-				
-			
+
 			// name := strings.Split(pair.Fwd.QName, "_")
 			// if len(pair.Fwd.Cigar)> 0&& parse.StringToInt(name[3]) != pair.Fwd.Path.TEnd +(readLength-pair.Fwd.QEnd-1-pair.Fwd.QStart) {
 			// 	b.Errorf("read==%s\n", giraf.GirafToString(&pair.Fwd))

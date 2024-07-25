@@ -111,29 +111,26 @@ func resetScoreKeeper(sk scoreKeeper) {
 	sk.leftScore, sk.rightScore = 0, 0
 }
 
-
 func getLeftBases(n *Node, extension int, refEnd int, ans []dna.Base) []dna.Base {
-    seqLen := len(ans)
-	var basesToTake int = (numbers.Min(seqLen + refEnd, extension) - seqLen)
-    
+	seqLen := len(ans)
+	var basesToTake int = (numbers.Min(seqLen+refEnd, extension) - seqLen)
+
 	ans = append(ans, make([]dna.Base, basesToTake)...)
-    copy(ans[seqLen:], n.Seq[refEnd-basesToTake:refEnd])
-    return ans
+	copy(ans[seqLen:], n.Seq[refEnd-basesToTake:refEnd])
+	return ans
 }
 
-
-
 func getRightBases(n *Node, extension, refStart int, ans []dna.Base) []dna.Base {
-    seqLen := len(ans)
-    basesToTake := numbers.Min(len(n.Seq)-refStart, extension-seqLen)
+	seqLen := len(ans)
+	basesToTake := numbers.Min(len(n.Seq)-refStart, extension-seqLen)
 
-    // Preallocate for efficiency
-    ans = append(ans, make([]dna.Base, basesToTake)...)  
+	// Preallocate for efficiency
+	ans = append(ans, make([]dna.Base, basesToTake)...)
 
-    // Copy the bases from n.Seq
-    copy(ans[seqLen:], n.Seq[refStart:refStart+basesToTake])
+	// Copy the bases from n.Seq
+	copy(ans[seqLen:], n.Seq[refStart:refStart+basesToTake])
 
-    return ans
+	return ans
 }
 
 /*
@@ -161,7 +158,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 	copy(s.Path, currentPath)
 	AddPath(s.Path, n.Id)
 	if len(seq)+refEnd >= extension || len(n.Prev) == 0 {
-		sk.leftScore, sk.leftAlignment, sk.targetStart,_, sk.queryStart, _ = LeftLocal(s.Seq, read,config, matrix )
+		sk.leftScore, sk.leftAlignment, sk.targetStart, _, sk.queryStart, _ = LeftLocal(s.Seq, read, config, matrix)
 		sk.targetStart = refEnd - len(s.Seq) - len(seq) + sk.targetStart
 		sk.leftPath = s.Path
 		pool.Put(s)
@@ -170,7 +167,7 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 		//A very negative number
 		sk.leftScore = math.MinInt64
 		for _, i := range n.Prev {
-			dynamicScore.route, s.currScore, s.targetStart, s.queryStart, s.Path = LeftAlignTraversal(i.Dest, s.Seq, len(i.Dest.Seq), s.Path,read, extension, config, matrix, sk, dynamicScore, pool)
+			dynamicScore.route, s.currScore, s.targetStart, s.queryStart, s.Path = LeftAlignTraversal(i.Dest, s.Seq, len(i.Dest.Seq), s.Path, read, extension, config, matrix, sk, dynamicScore, pool)
 			if s.currScore > sk.leftScore {
 				sk.leftScore = s.currScore
 				sk.leftAlignment = dynamicScore.route
@@ -311,7 +308,6 @@ func ReversePath(alpha []uint32) {
 		alpha[i], alpha[off] = alpha[off], alpha[i]
 	}
 }
-
 
 func SimpleWriteGirafPair(filename string, input <-chan giraf.GirafPair, wg *sync.WaitGroup) {
 	file := fileio.EasyCreate(filename)

@@ -1,12 +1,15 @@
 package genomeGraph
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"sync"
 
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/numbers"
 )
 
 func SmithWaterman(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *sync.Pool) (int64, []cigar.Cigar, int, int, int, int) {
@@ -18,6 +21,16 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, config *GraphSettings, poo
 	defer pool.Put(dp)
 	dp.Reset(rows, columns)
 
+	for i = 0; i < numbers.Max(rows, columns); i++ {
+		if i < rows {
+			dp.matrix[i][0] = 0
+			dp.trace[i][0] = cigar.Insertion
+		}
+		if i < columns {
+			dp.matrix[0][i] = 0
+			dp.trace[0][i] = cigar.Deletion
+		}
+	}
 	for i = 1; i < rows; i++ {
 		for j = 1; j < columns; j++ {
 			dp.matrix[i][j], dp.trace[i][j] = cigar.TripleMaxTraceExtended(dp.matrix[i-1][j-1], dp.matrix[i-1][j-1]+config.ScoreMatrix[alpha[i-1]][beta[j-1]], dp.matrix[i][j-1]+config.GapPenalty, dp.matrix[i-1][j]+config.GapPenalty)
@@ -48,7 +61,7 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, config *GraphSettings, poo
 		case cigar.Deletion:
 			i--
 		default:
-			log.Fatalf("Error: unexpected traceback: %c", dp.trace[i][j])
+			exception.PanicOnErr(fmt.Errorf("unexpected traceback: %c", dp.trace[i][j]))
 		}
 		minI, minJ = i, j
 	}
@@ -64,6 +77,16 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *s
 	defer pool.Put(dp)
 	dp.Reset(rows+1, columns+1)
 
+	for i = 0; i <= numbers.Max(rows, columns); i++ {
+		if i <= rows {
+			dp.matrix[i][0] = 0
+			dp.trace[i][0] = cigar.Insertion
+		}
+		if i <= columns {
+			dp.matrix[0][i] = 0
+			dp.trace[0][i] = cigar.Deletion
+		}
+	}
 	for i = 1; i <= rows; i++ {
 		for j = 1; j <= columns; j++ {
 			dp.matrix[i][j], dp.trace[i][j] = cigar.TripleMaxTraceExtended(dp.matrix[i-1][j-1], dp.matrix[i-1][j-1]+config.ScoreMatrix[alpha[i-1]][beta[j-1]], dp.matrix[i][j-1]+config.GapPenalty, dp.matrix[i-1][j]+config.GapPenalty)
@@ -82,20 +105,20 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *s
 			route[len(route)-1].RunLength++
 		}
 		switch dp.trace[i][j] {
-		case cigar.Equal, cigar.Mismatch:
+		case cigar.Equal, cigar.Mismatch, cigar.Match:
 			i, j = i-1, j-1
 		case cigar.Insertion:
 			j--
 		case cigar.Deletion:
 			i--
 		default:
-			log.Fatalf("Error: unexpected traceback %c\n", dp.trace[i][j])
+			exception.PanicOnErr(fmt.Errorf("unexpected traceback: %c", dp.trace[i][j]))
 		}
 		minI = i
 		minJ = j
 	}
 	cigar.ReverseCigar(route)
-	return dp.matrix[len(alpha)][len(beta)], route, minI, rows, minJ, columns
+	return dp.matrix[rows][columns], route, minI, rows, minJ, columns
 }
 
 func RightLocal(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *sync.Pool) (int64, []cigar.Cigar, int, int, int, int) {
@@ -136,7 +159,7 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *
 			route[len(route)-1].RunLength++
 		}
 		switch dp.trace[i][j] {
-		case cigar.Equal, cigar.Mismatch:
+		case cigar.Equal, cigar.Mismatch, cigar.Match:
 			i, j = i-1, j-1
 		case cigar.Insertion:
 			j--

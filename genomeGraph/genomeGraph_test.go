@@ -19,9 +19,8 @@ func TestWorkerWithWriting(t *testing.T) {
 	var mutations int = 0
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 8
-	
+
 	config := DefaultAlignment()
-	
 
 	genome := Read("testdata/bigGenome.sg")
 	t.Logf("Reading in the genome (simple graph)...\n")
@@ -45,8 +44,8 @@ func TestWorkerWithWriting(t *testing.T) {
 	t.Logf("Starting alignment worker...\n")
 	workerWaiter.Add(numWorkers)
 	for i := 0; i < numWorkers; i++ {
-		dp:= NewMatrixPool(defaultMatrixSize)
-		go RoutineFqPairToGiraf(genome, tiles,config, dp, fastqPipe, samPipe, &workerWaiter)
+		dp := NewMatrixPool(defaultMatrixSize)
+		go RoutineFqPairToGiraf(genome, tiles, config, dp, fastqPipe, samPipe, &workerWaiter)
 	}
 	go giraf.GirafPairChanToFile(output, samPipe, &writerWaiter)
 	writerWaiter.Add(1)
