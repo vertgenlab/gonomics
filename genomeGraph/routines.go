@@ -24,7 +24,6 @@ func RoutineFqToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, seedLen int
 }
 
 func RoutineFqPairToGiraf(gg *GenomeGraph, seedHash map[uint64][]uint64, config *GraphSettings, matrix *sync.Pool, input <-chan fastq.PairedEndBig, output chan<- giraf.GirafPair, wg *sync.WaitGroup) {
-	
 	seedPool := NewMemSeedPool()
 	dnaPool := NewDnaPool()
 	seedBuildHelper := newSeedBuilder()

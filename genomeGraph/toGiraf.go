@@ -29,13 +29,16 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 		Notes:     []giraf.Note{{Tag: []byte{'X', 'O'}, Type: 'Z', Value: "~"}},
 	}
 	resetScoreKeeper(sk)
+	queryLen := len(read.Seq)
 	sk.perfectScore = perfectMatchBig(read, config.ScoreMatrix)
-	sk.extension = int(sk.perfectScore/600) + len(read.Seq)
+	sk.extension = int(sk.perfectScore/600) + queryLen
+	
 	seeds := seedPool.Get().(*memoryPool)
 	seeds.Hits = seeds.Hits[:0]
 	seeds.Worker = seeds.Worker[:0]
-	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, config.TileSize, sk.perfectScore, config.ScoreMatrix, seeds.Hits, seeds.Worker, seedBuildHelper)
-	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(len(read.Seq)), 100, 90, -196, -296); i++ {
+
+	seeds.Hits = seedMapMemPool(seedHash, gg.Nodes, &read, config.TileSize, seeds.Hits, seeds.Worker, seedBuildHelper)
+	for i := 0; i < len(seeds.Hits) && seedCouldBeBetter(int64(seeds.Hits[i].TotalLength), int64(currBest.AlnScore), sk.perfectScore, int64(queryLen), 100, 90, -196, -296); i++ {
 		sk.currSeed = seeds.Hits[i]
 		sk.tailSeed = *getLastPart(&sk.currSeed)
 		if sk.currSeed.PosStrand {
@@ -60,14 +63,18 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			currBest.QEnd = int(sk.currSeed.QueryStart) + sk.queryEnd + int(sk.currSeed.TotalLength) - 1
 			currBest.PosStrand = sk.currSeed.PosStrand
 			currBest.Path = setPath(currBest.Path, sk.targetStart, CatPaths(CatPaths(sk.leftPath, getSeedPath(&sk.currSeed)), sk.rightPath), sk.targetEnd)
-			currBest.Cigar = cigar.AppendSoftClips(sk.queryStart, len(sk.currSeq), cigar.Concat(cigar.Append(sk.leftAlignment, cigar.Cigar{RunLength: int(sk.currSeed.TotalLength), Op: cigar.Match}), sk.rightAlignment))
+			currBest.Cigar = cigar.Concat(cigar.Append(sk.leftAlignment, cigar.Cigar{RunLength: int(sk.currSeed.TotalLength), Op: cigar.Match}), sk.rightAlignment)
 			currBest.AlnScore = int(sk.currScore)
 			currBest.Seq = sk.currSeq
 		}
 	}
 	seedPool.Put(seeds)
+
 	if !currBest.PosStrand {
 		fastq.ReverseQualUint8Record(currBest.Qual)
+	}
+	if !cigar.IsUnmapped(currBest.Cigar) {
+		cigar.AppendSoftClips(sk.queryStart, queryLen, currBest.Cigar) 
 	}
 	return &currBest
 }

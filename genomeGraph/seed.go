@@ -69,7 +69,6 @@ func restartSeedHelper(helper *seedHelper) {
 }
 
 
-
 func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool, answer []Seed) []Seed {
 	const basesPerInt int = 32
 	answer = answer[:0]
@@ -178,7 +177,7 @@ func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart Seed) [
 }
 
 // seedBuildHelper.nodeIdx, seedBuildHelper.nodePos int64 = 0, 0.
-func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, perfectScore int64, scoreMatrix [][]int64, finalSeeds []Seed, tempSeeds []Seed, seedBuildHelper *seedHelper) []Seed {
+func seedMapMemPool(seedHash map[uint64][]uint64, nodes []Node, read *fastq.FastqBig, seedLen int, finalSeeds []Seed, tempSeeds []Seed, seedBuildHelper *seedHelper) []Seed {
 	const basesPerInt int64 = 32
 	restartSeedHelper(seedBuildHelper)
 	seedBuildHelper.keyShift = 64 - (uint(seedLen) * 2)

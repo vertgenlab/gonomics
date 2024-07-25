@@ -161,7 +161,6 @@ func LeftAlignTraversal(n *Node, seq []dna.Base, refEnd int, currentPath []uint3
 	copy(s.Path, currentPath)
 	AddPath(s.Path, n.Id)
 	if len(seq)+refEnd >= extension || len(n.Prev) == 0 {
-		
 		sk.leftScore, sk.leftAlignment, sk.targetStart,_, sk.queryStart, _ = LeftLocal(s.Seq, read,config, matrix )
 		sk.targetStart = refEnd - len(s.Seq) - len(seq) + sk.targetStart
 		sk.leftPath = s.Path
@@ -194,7 +193,6 @@ func RightAlignTraversal(n *Node, seq []dna.Base, start int, currentPath []uint3
 	s.Path = make([]uint32, len(currentPath))
 	copy(s.Path, currentPath)
 	if len(seq)+len(n.Seq)-start >= extension || len(n.Next) == 0 {
-		
 		sk.rightScore, sk.rightAlignment, _, sk.targetEnd, _, sk.queryEnd = RightLocal(s.Seq, read, config, matrix)
 		sk.rightPath = s.Path
 		pool.Put(s)

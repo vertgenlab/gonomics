@@ -19,10 +19,9 @@ func BenchmarkGsw(b *testing.B) {
 	var stepSize int = 32
 	var numberOfReads int = 100
 	var readLength int = 150
-	var mutations int = 2
+	var mutations int = 1
 	var workerWaiter, writerWaiter sync.WaitGroup
 	var numWorkers int = 1
-	
 
 	config := DefaultAlignment()
 
@@ -35,7 +34,6 @@ func BenchmarkGsw(b *testing.B) {
 	fastq.WritePair(fqOne, fqTwo, simReads)
 
 	fastqPipe, girafPipe := make(chan fastq.PairedEndBig, 2408), make(chan giraf.GirafPair, 2408)
-
 	go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
 
 	for n := 0; n < b.N; n++ {
