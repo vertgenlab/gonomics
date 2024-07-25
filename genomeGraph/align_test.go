@@ -1,156 +1,102 @@
 package genomeGraph
 
-// import (
-// 	"flag"
-// 	"log"
-// 	"os"
-// 	"runtime"
-// 	"runtime/pprof"
-// 	"strings"
-// 	"sync"
-// 	"testing"
-// 	"time"
+import (
+	"strings"
+	"sync"
+	"testing"
+	"time"
 
-// 	"github.com/vertgenlab/gonomics/fastq"
-// 	"github.com/vertgenlab/gonomics/giraf"
-// 	"github.com/vertgenlab/gonomics/numbers/parse"
-// )
+	"github.com/vertgenlab/gonomics/cigar"
+	"github.com/vertgenlab/gonomics/fastq"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/giraf"
+	"github.com/vertgenlab/gonomics/numbers/parse"
+)
 
-// var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
-// var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+func BenchmarkGsw(b *testing.B) {
+	b.ReportAllocs()
+	var tileSize int = 32
+	var stepSize int = 32
+	var numberOfReads int = 100
+	var readLength int = 150
+	var mutations int = 2
+	var workerWaiter, writerWaiter sync.WaitGroup
+	var numWorkers int = 1
+	
 
-// func BenchmarkGsw(b *testing.B) {
-// 	if *cpuprofile != "" {
-// 		f, err := os.Create(*cpuprofile)
-// 		if err != nil {
-// 			log.Fatal("could not create CPU profile: ", err)
-// 		}
-// 		defer f.Close() // error handling omitted for example
-// 		if err := pprof.StartCPUProfile(f); err != nil {
-// 			log.Fatal("could not start CPU profile: ", err)
-// 		}
-// 		defer pprof.StopCPUProfile()
-// 	}
-// 	b.ReportAllocs()
-// 	//var output string = "/dev/stdout"
-// 	var output string = "testdata/rabs_test.giraf"
-// 	var tileSize int = 32
-// 	var stepSize int = 32
-// 	//var numberOfReads int = 50000
-// 	//var readLength int = 150
-// 	//var mutations int = 1
-// 	var workerWaiter, writerWaiter sync.WaitGroup
-// 	var numWorkers int = 6
-// 	var scoreMatrix = HumanChimpTwoScoreMatrix
-// 	b.ResetTimer()
-// 	genome := Read("testdata/rabsTHREEspine.fa")
-// 	log.Printf("Reading in the genome (simple graph)...\n")
-// 	log.Printf("Indexing the genome...\n")
+	config := DefaultAlignment()
 
-// 	fastqPipe := make(chan fastq.PairedEndBig, 2408)
-// 	girafPipe := make(chan giraf.GirafPair, 2408)
+	b.ResetTimer()
+	genome := Read("testdata/bigGenome.sg")
+	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
 
-// 	//log.Printf("Simulating reads...\n")
-// 	//simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
-// 	//os.Remove("testdata/simReads_R1.fq")
-// 	//os.Remove("testdata/simReads_R2.fq")
+	simReads := RandomPairedReads(genome, readLength, numberOfReads, mutations)
+	fqOne, fqTwo := "testdata/simReads_R1.fq", "testdata/simReads_R2.fq"
+	fastq.WritePair(fqOne, fqTwo, simReads)
 
-// 	//fastq.WritePair("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", simReads)
+	fastqPipe, girafPipe := make(chan fastq.PairedEndBig, 2408), make(chan giraf.GirafPair, 2408)
 
-// 	tiles := IndexGenomeIntoMap(genome.Nodes, tileSize, stepSize)
+	go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
 
-// 	go readFastqGsw("testdata/simReads_R1.fq", "testdata/simReads_R2.fq", fastqPipe)
-// 	log.Printf("Finished Indexing Genome...\n")
+	for n := 0; n < b.N; n++ {
+		start := time.Now()
+		workerWaiter.Add(numWorkers)
+		dp := NewMatrixPool(defaultMatrixSize)
 
-// 	log.Printf("Starting alignment worker...\n")
-// 	workerWaiter.Add(numWorkers)
-// 	start := time.Now()
-// 	for i := 0; i < numWorkers; i++ {
-// 		go RoutineFqPairToGiraf(genome, tiles, tileSize, stepSize, scoreMatrix, fastqPipe, girafPipe, &workerWaiter)
-// 	}
-// 	go SimpleWriteGirafPair(output, girafPipe, &writerWaiter)
-// 	//go isGirafPairCorrect(girafPipe, genome, &writerWaiter, 2*len(simReads))
-// 	writerWaiter.Add(1)
-// 	workerWaiter.Wait()
-// 	close(girafPipe)
+		for i := 0; i < numWorkers; i++ {
+			go RoutineFqPairToGiraf(genome, tiles, config, dp, fastqPipe, girafPipe, &workerWaiter)
+		}
+		go isGirafPairCorrect(girafPipe, &writerWaiter, readLength, 2*len(simReads), b)
+		writerWaiter.Add(1)
 
-// 	writerWaiter.Wait()
+		stop := time.Now()
+		duration := stop.Sub(start)
+		//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
+		b.Logf("Aligned %d reads in %s (%.1f reads per second).\n", 2*len(simReads), duration, float64(2*len(simReads))/duration.Seconds())
+	}
+	workerWaiter.Wait()
+	close(girafPipe)
+	writerWaiter.Wait()
+	fileio.EasyRemove(fqOne)
+	fileio.EasyRemove(fqTwo)
+}
 
-// 	stop := time.Now()
-// 	duration := stop.Sub(start)
-// 	//log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", len(simReads)*2, duration, float64(len(simReads)*2)/duration.Seconds())
-// 	log.Printf("Aligned %d reads in %s (%.1f reads per second).\n", 50000*2, duration, float64(50000*2)/duration.Seconds())
-// 	if *memprofile != "" {
-// 		f, err := os.Create(*memprofile)
-// 		if err != nil {
-// 			log.Fatal("could not create memory profile: ", err)
-// 		}
-// 		defer f.Close() // error handling omitted for example
-// 		runtime.GC()    // get up-to-date statistics
-// 		if err := pprof.WriteHeapProfile(f); err != nil {
-// 			log.Fatal("could not write memory profile: ", err)
-// 		}
-// 	}
-// }
+func checkAlignment(result giraf.Giraf, readLength int) bool {
+	if len(result.Cigar) == 0 {
+		return false
+	}
+	name := strings.Split(result.QName, "_")
+	return parse.StringToInt(name[1]) == result.Path.TStart-result.QStart && parse.StringToInt(name[3]) == result.Path.TEnd+(readLength-result.QEnd-1-result.QStart) && cigar.QueryLength(result.Cigar) == readLength
+}
+func percentOfFloat(part int, total int) float64 {
+	return (float64(part) * float64(100)) / float64(total)
+}
 
-// func checkAlignment(aln giraf.Giraf, genome *GenomeGraph) bool {
-// 	qName := strings.Split(aln.QName, "_")
-// 	//if len(qName) < 5 {
-// 	//	log.Fatalf("Error: input giraf file does not match simulation format...\n")
-// 	//}
-// 	if len(aln.Cigar) < 1 {
-// 		return false
-// 	}
+func isGirafPairCorrect(input <-chan giraf.GirafPair, wg *sync.WaitGroup, readLength int, numReads int, b *testing.B) {
+	var unmapped int = 0
+	for pair := range input {
+		// fmt.Printf("%s\n%s\n", cigar.ToString(pair.Fwd.Cigar), giraf.GirafToString(&pair.Fwd))
+		if !checkAlignment(pair.Fwd, readLength) {
+			unmapped++
+			// if !cigar.IsUnmapped(pair.Fwd.Cigar) {
+			// 	if !cigar.AllEqual(pair.Fwd.Cigar, []cigar.Cigar{{150, cigar.Match}}) {
+			// 		fmt.Printf("%s\n%s\n", cigar.ToString(pair.Fwd.Cigar), giraf.GirafToString(&pair.Fwd))
+			// 	}
+			// }
+				
+			
+			// name := strings.Split(pair.Fwd.QName, "_")
+			// if len(pair.Fwd.Cigar)> 0&& parse.StringToInt(name[3]) != pair.Fwd.Path.TEnd +(readLength-pair.Fwd.QEnd-1-pair.Fwd.QStart) {
+			// 	b.Errorf("read==%s\n", giraf.GirafToString(&pair.Fwd))
+			// 	// b.Errorf("%d != %d\n", parse.StringToInt(name[3]), pair.Fwd.Path.TEnd + (readLength-pair.Fwd.QEnd-1-pair.Fwd.QStart) )
+			// }
 
-// 	targetStart := aln.Path.TStart
-// 	targetEnd := aln.Path.TEnd
-// 	//if len(aln.Aln) < 1 {
-// 	if aln.Cigar[0].Op == 'S' {
-// 		//log.Printf("%s\n", giraf.GirafToString(aln))
-// 		targetStart = targetStart - aln.Cigar[0].RunLength
-// 	}
-// 	if aln.Cigar[len(aln.Cigar)-1].Op == 'S' {
-// 		targetEnd = targetEnd + aln.Cigar[len(aln.Cigar)-1].RunLength
-
-// 		//}
-// 	}
-// 	if parse.StringToInt(qName[0]) == int(aln.Path.Nodes[0]) && parse.StringToInt(qName[1]) == targetStart && targetEnd == parse.StringToInt(qName[3]) {
-// 		//log.Printf("%s\n", giraf.GirafToString(aln))
-// 		//log.Printf("Results: %d != %d or %d != %d\n", headNode, aln.Path.Nodes[0], startPos, aln.Path.TStart)
-// 		//	log.Printf("%s\n", giraf.GirafToString(aln))
-// 		return true
-// 	} else {
-// 		//log.Printf("endPos=%d, right side cigar runLength: %d\n", endPos, aln.Aln[len(aln.Aln)-1].RunLen)
-// 		//log.Printf("%s\n", giraf.GirafToString(aln))
-// 		//log.Printf("Error: this read is not aligning correctly...\n")
-// 	}
-// 	return false
-// }
-// func percentOfFloat(part int, total int) float64 {
-// 	return (float64(part) * float64(100)) / float64(total)
-// }
-
-// func isGirafPairCorrect(input <-chan giraf.GirafPair, genome *GenomeGraph, wg *sync.WaitGroup, numReads int) {
-// 	var unmapped int = 0
-// 	for pair := range input {
-// 		if !checkAlignment(pair.Fwd, genome) {
-// 			unmapped++
-// 			//log.Printf("Error: failed alignment simulation...\n")
-// 			//buf := GirafStringBuilder(pair.Fwd,&bytes.Buffer{})
-// 			//log.Printf("%s\n", buf.String())
-// 			//log.Printf("%s\n", giraf.GirafToString(pair.Rev))
-// 		}
-
-// 		if !checkAlignment(pair.Rev, genome) {
-// 			//log.Printf("Error: failed alignment simulation...\n")
-// 			//buf := GirafStringBuilder(pair.Fwd,&bytes.Buffer{})
-// 			//log.Printf("%s\n", buf.String())
-// 			unmapped++
-// 		}
-// 	}
-
-// 	log.Printf("Mapped %d out of %d\n", numReads-unmapped, numReads)
-// 	log.Printf("%f of the reads are mapping correctly\n", percentOfFloat(numReads-unmapped, numReads))
-
-// 	wg.Done()
-// }
+		}
+		if !checkAlignment(pair.Rev, readLength) {
+			unmapped++
+		}
+	}
+	b.Logf("Mapped %d out of %d\n", numReads-unmapped, numReads)
+	b.Logf("%f of the reads are mapping correctly\n", percentOfFloat(numReads-unmapped, numReads))
+	wg.Done()
+}

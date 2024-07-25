@@ -3,19 +3,33 @@ package genomeGraph
 import (
 	//	"github.com/vertgenlab/gonomics/fastq"
 	"log"
-	"sort"
 
 	"github.com/vertgenlab/gonomics/dna"
 )
 
-type SeedDev struct {
-	TargetId    uint32
-	TargetStart uint32
-	QueryStart  uint32
-	Length      uint32
-	PosStrand   bool
-	TotalLength uint32
-	NextPart    *SeedDev
+func ChromAndPosToNumber(chrom int, start int) uint64 {
+	var chromCode uint64 = uint64(chrom)
+	chromCode = chromCode << 32
+	var answer uint64 = chromCode | uint64(start)
+	return answer
+}
+
+func dnaToNumber(seq []dna.Base, start int, end int) uint64 {
+	var answer uint64 = uint64(seq[start])
+	for i := start + 1; i < end; i++ {
+		answer = answer << 2
+		answer = answer | uint64(seq[i])
+	}
+	return answer
+}
+
+func numberToChromAndPos(code uint64) (int64, int64) {
+	var rightSideOnes uint64 = 4294967295
+	var leftSideOnes uint64 = rightSideOnes << 32
+	var chromIdx uint64 = code & leftSideOnes
+	chromIdx = chromIdx >> 32
+	var pos uint64 = code & rightSideOnes
+	return int64(chromIdx), int64(pos)
 }
 
 func IndexGenomeIntoMap(genome []Node, seedLen int, seedStep int) map[uint64][]uint64 {
@@ -95,31 +109,4 @@ func indexGenomeIntoSliceHelper(prevSeq []dna.Base, currNode *Node, locationCode
 			indexGenomeIntoSliceHelper(append(prevSeq, currNode.Seq...), currNode.Next[edgeIdx].Dest, locationCode, seedLen, seedSlice)
 		}
 	}
-}
-
-// TODO: this does not take into account breaking up seeds by gaps instead of mismatches
-// similar calculations could also be used as the parameters to a banded alignment.
-func seedCouldBeBetter(seedLen int64, currBestScore int64, perfectScore int64, queryLen int64, maxMatch int64, minMatch int64, leastSevereMismatch int64, leastSevereMatchMismatchChange int64) bool {
-	seeds := queryLen / (seedLen + 1)
-	remainder := queryLen % (seedLen + 1)
-
-	// seed by itself could be best
-	if seedLen*maxMatch >= currBestScore &&
-		perfectScore-((queryLen-seedLen)*minMatch) >= currBestScore {
-		return true
-		// seed along with whole seeds, but not the remainder
-	} else if seedLen*seeds*maxMatch+seeds*leastSevereMismatch >= currBestScore &&
-		perfectScore-remainder*minMatch+seeds*leastSevereMatchMismatchChange >= currBestScore {
-		return true
-		// seed along with whole seeds, as well as both remainders
-	} else if seedLen*seeds*maxMatch+remainder*maxMatch+(seeds+1)*leastSevereMismatch >= currBestScore &&
-		perfectScore+(seeds+1)*leastSevereMatchMismatchChange >= currBestScore {
-		return true
-	} else {
-		return false
-	}
-}
-
-func SortSeedDevByTotalLen(seeds []*SeedDev) {
-	sort.Slice(seeds, func(i, j int) bool { return seeds[i].TotalLength > seeds[j].TotalLength })
 }

@@ -189,6 +189,13 @@ func CatPaths(currPaths []uint32, newPaths []uint32) []uint32 {
 	}
 }
 
+func setPath(p giraf.Path, targetStart int, nodes []uint32, targetEnd int) giraf.Path {
+	p.TStart = targetStart
+	p.Nodes = nodes
+	p.TEnd = targetEnd
+	return p
+}
+
 func reversePath(alpha []uint32) {
 	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
 		alpha[i], alpha[j] = alpha[j], alpha[i]
@@ -210,7 +217,7 @@ func PathToString(allPaths []uint32) string {
 	return s
 }
 
-func getSeedPath(seed *SeedDev) []uint32 {
+func getSeedPath(seed *Seed) []uint32 {
 	var path []uint32 = []uint32{seed.TargetId}
 	if seed.NextPart == nil {
 		return path

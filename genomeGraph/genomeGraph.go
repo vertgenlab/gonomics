@@ -7,6 +7,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/dnaTwoBit"
 	"github.com/vertgenlab/gonomics/exception"
@@ -197,7 +198,7 @@ func BasesInGraph(g *GenomeGraph) int {
 
 func DefaultAlignment() *GraphSettings {
 	return &GraphSettings{
-		ScoreMatrix:    HumanChimpTwoScoreMatrix,
+		ScoreMatrix:    align.HumanChimpTwoScoreMatrix,
 		GapPenalty:     -600,
 		OpenGapPenalty: -30,
 		Extention:      600,
