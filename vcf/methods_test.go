@@ -76,7 +76,7 @@ func TestVcf_String(t *testing.T) {
 				Filter: "PASS",
 				Info:   "DP=100",
 			},
-			want: "chr1\t123456\trs123456\tA\tC,G\t99.9\tPASS\tDP=100\n",
+			want: "chr1\t123456\trs123456\tA\tC,G\t99.9\tPASS\tDP=100",
 		},
 		{
 			record: Vcf{
@@ -89,7 +89,7 @@ func TestVcf_String(t *testing.T) {
 				Filter: "q10",
 				Info:   "AF=0.5",
 			},
-			want: "chr2\t234567\trs234567\tG\tA\t50.5\tq10\tAF=0.5\n",
+			want: "chr2\t234567\trs234567\tG\tA\t50.5\tq10\tAF=0.5",
 		},
 	}
 

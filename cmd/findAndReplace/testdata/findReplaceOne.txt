@@ -1,3 +1,0 @@
-Medium	Slow
-Donkey	Bear
-Maybe	No

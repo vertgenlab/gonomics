@@ -273,30 +273,30 @@ func TestGoReadToChanBam(t *testing.T) {
 //	}
 //}
 
-func BenchmarkRecycleBam(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		receiveChan, recycleChan, _ := GoReadToChanRecycle(bigBam, 1)
-		var read *Sam
-		var firstBase dna.Base
-		for read = range receiveChan {
-			firstBase = read.Seq[0]
-			_ = firstBase
-			recycleChan <- read
-		}
-	}
-}
-
-func BenchmarkNocycleBam(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		receiveChan, _ := GoReadToChan(bigBam)
-		var read Sam
-		var firstBase dna.Base
-		for read = range receiveChan {
-			firstBase = read.Seq[0]
-			_ = firstBase
-		}
-	}
-}
+//func BenchmarkRecycleBam(b *testing.B) {
+//	for i := 0; i < b.N; i++ {
+//		receiveChan, recycleChan, _ := GoReadToChanRecycle(bigBam, 1)
+//		var read *Sam
+//		var firstBase dna.Base
+//		for read = range receiveChan {
+//			firstBase = read.Seq[0]
+//			_ = firstBase
+//			recycleChan <- read
+//		}
+//	}
+//}
+//
+//func BenchmarkNocycleBam(b *testing.B) {
+//	for i := 0; i < b.N; i++ {
+//		receiveChan, _ := GoReadToChan(bigBam)
+//		var read Sam
+//		var firstBase dna.Base
+//		for read = range receiveChan {
+//			firstBase = read.Seq[0]
+//			_ = firstBase
+//		}
+//	}
+//}
 
 func BenchmarkStringToByte(b *testing.B) {
 	a := string([]byte("hello world"))

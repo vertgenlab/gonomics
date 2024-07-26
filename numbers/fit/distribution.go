@@ -12,6 +12,20 @@ func Poisson(data []float64) float64 {
 	return numbers.AverageFloat64(data)
 }
 
+// PoissonHistogram fits a histogram to a Poisson distribution, defined by the single
+// parameter lambda, returned as a float64.
+// the histogram is formatted by index:value pairs which correspond to the observed number (index)
+// and the number of times that observation was seen (value).
+func PoissonHistogram(histogram []int) float64 {
+	totalNumOfBins := 0
+	sumOfAllBinValues := 0
+	for bin := 0; bin < len(histogram); bin++ {
+		totalNumOfBins += histogram[bin]
+		sumOfAllBinValues += bin * histogram[bin]
+	}
+	return float64(sumOfAllBinValues) / float64(totalNumOfBins)
+}
+
 // NegativeBinomial fits an input slice of data points []float64 to a negative binomial distribution,
 // defined by two float64 parameters, which are returned.
 // the first return is 'r', also called "shape".

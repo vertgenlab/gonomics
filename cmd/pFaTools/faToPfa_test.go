@@ -3,43 +3,43 @@ package main
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"os"
 	"testing"
 )
 
 var faToPfaTests = []struct {
-	InFile       string
-	OutDir        string
-	Start      int
-	End        int
-	Chrom          string
+	InFile string
+	OutDir string
+	Start  int
+	End    int
+	Chrom  string
 }{
 	{
 		InFile: "testdata/test_faToPfa_input_0.fa",
 		OutDir: "testdata/test_faToPfa_output_0.pfa",
-		Start: 0,
-		End: 10,
-		Chrom: "chr1",
+		Start:  0,
+		End:    10,
+		Chrom:  "chr1",
 	}, {
 		InFile: "testdata/test_faToPfa_input_0.fa",
 		OutDir: "testdata/test_faToPfa_output_0_no_chr.pfa",
-		Start: 0,
-		End: 10,
-		Chrom: "",
+		Start:  0,
+		End:    10,
+		Chrom:  "",
 	}, {
 		InFile: "testdata/test_faToPfa_input_1.fa",
 		OutDir: "testdata/test_faToPfa_output_1.pfa",
-		Start: 0,
-		End: -1,
-		Chrom: "chr1",
+		Start:  0,
+		End:    -1,
+		Chrom:  "chr1",
 	}, {
 		InFile: "testdata/test_faToPfa_input_1.fa",
 		OutDir: "testdata/test_faToPfa_output_1.pfa",
-		Start: 0,
-		End: -1,
-		Chrom: "chr1",
+		Start:  0,
+		End:    -1,
+		Chrom:  "chr1",
 	},
 }
 
@@ -50,12 +50,12 @@ func TestFaToPfa(t *testing.T) {
 		s = FaToPfaSettings{
 			InFile: v.InFile,
 			OutDir: v.OutDir,
-			Start: v.Start,
-			End: v.End,
-			Chrom: v.Chrom,
+			Start:  v.Start,
+			End:    v.End,
+			Chrom:  v.Chrom,
 		}
 
-		pFaFaToPfa(s)
+		faToPfa(s)
 
 		testInput := fasta.Read(v.InFile)
 
@@ -63,7 +63,6 @@ func TestFaToPfa(t *testing.T) {
 		if sampleChrom == "" && len(testInput) == 1 {
 			sampleChrom = testInput[0].Name
 		}
-
 
 		testSample := pFasta.Sample(pFasta.Read(v.OutDir), sampleChrom)
 		sampleOutputFilename := fmt.Sprintf("testdata/output_fa_%v.fa", idx)

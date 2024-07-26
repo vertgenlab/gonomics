@@ -11,11 +11,11 @@ import (
 
 // FaToPfaSettings defines the usage settings for the pFa FaToPfa subcommand.
 type FaToPfaSettings struct {
-	InFile    string
-	OutDir    string
-	Start     int
-	End       int
-	Chrom     string
+	InFile string
+	OutDir string
+	Start  int
+	End    int
+	Chrom  string
 }
 
 // FaToPfaUsage defines the usage statement for the pFaTools FaToPfa subcommand.
@@ -50,18 +50,18 @@ func parseFaToPfaArgs() {
 	outDir := FaToPfaFlags.Arg(1)
 
 	s := FaToPfaSettings{
-		InFile:    inFile,
-		OutDir:    outDir,
-		Start:     *start,
-		End:       *end,
-		Chrom:     *chrom,
+		InFile: inFile,
+		OutDir: outDir,
+		Start:  *start,
+		End:    *end,
+		Chrom:  *chrom,
 	}
 
-	pFaFaToPfa(s)
+	faToPfa(s)
 }
 
-// pFaFaToPfa parses an input pFASTA file and converts the file according to user-defined settings.
-func pFaFaToPfa(s FaToPfaSettings) {
+// faToPfa parses an input pFASTA file and converts the file according to user-defined settings.
+func faToPfa(s FaToPfaSettings) {
 	records := []pFasta.PFasta{pFasta.MultiFaToPfa(s.InFile, s.Start, s.End, s.Chrom)}
 	pFasta.Write(s.OutDir, records)
 }

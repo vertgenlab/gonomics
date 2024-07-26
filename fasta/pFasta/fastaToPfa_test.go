@@ -15,22 +15,22 @@ var FaToPfaTests = []struct {
 	Chrom          string
 }{
 	{
-		InputFilename: "testdata_tools/test_faToPfa_input_0.fa",
+		InputFilename: "testdata/test_faToPfa_input_0.fa",
 		Start: 0,
 		End:   10,
 		Chrom: "chr1",
 	},{
-		InputFilename: "testdata_tools/test_faToPfa_input_0.fa",
+		InputFilename: "testdata/test_faToPfa_input_0.fa",
 		Start: 0,
 		End:   10,
 		Chrom: "",
 	},{
-		InputFilename: "testdata_tools/test_faToPfa_input_1.fa",
+		InputFilename: "testdata/test_faToPfa_input_1.fa",
 		Start: 0,
 		End:   -1,
 		Chrom: "chr1",
 	},{
-		InputFilename: "testdata_tools/test_faToPfa_input_2.fa",
+		InputFilename: "testdata/test_faToPfa_input_2.fa",
 		Start: 3,
 		End:   8,
 		Chrom: "chr1",
@@ -42,7 +42,7 @@ func TestFaToPfa(t *testing.T) {
 	for idx, v := range FaToPfaTests {
 		//running function
 		testOutput := MultiFaToPfa(v.InputFilename, v.Start, v.End, v.Chrom)
-		outputFilename := fmt.Sprintf("testdata_tools/output_%v.pfa", idx)
+		outputFilename := fmt.Sprintf("testdata/output_%v.pfa", idx)
 		Write(outputFilename, []PFasta{testOutput})
 
 		testInput := fasta.Read(v.InputFilename)
@@ -55,12 +55,11 @@ func TestFaToPfa(t *testing.T) {
 
 		// testOutput is 1-hot pFa, sampling from testOutput should return (subsequence of) input Fasta
 		testSample := Sample([]PFasta{testOutput}, sampleChrom)
-		sampleOutputFilename := fmt.Sprintf("testdata_tools/output_fa_%v.fa", idx)
+		sampleOutputFilename := fmt.Sprintf("testdata/output_fa_%v.fa", idx)
 		fasta.Write(sampleOutputFilename, []fasta.Fasta{testSample})
 
 		// compare all sequences in input fasta to testOutput
 		testTrue := false
-		ans := fasta.ExtractMultiHelper(testInput, v.Start, end)
 
 		for _, seq := range testInput {
 			end := v.End
