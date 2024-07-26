@@ -1,55 +1,56 @@
 package simulate
 
 import (
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/popgen"
 	"github.com/vertgenlab/gonomics/vcf"
-	"github.com/vertgenlab/gonomics/"
 )
 
 // VcfToFile generates simulated VCF data.  The inputs are alpha (the selection parameter), the number of sites,
 // the output filename, along with parameters for the bounding function for sampling.  Reasonable parameters
 // choices for boundAlpha, boundBeta, and boundMultiplier are 0.001, 0.001, and 10000. Specify a reference file to base the simulated VCF off on.
-func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha float64, boundBeta float64, boundMultiplier float64, refFile fasta.Fasta, hasRef bool) {
+func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boundAlpha float64, boundBeta float64, boundMultiplier float64, refFile string, hasRef bool) {
 	out := fileio.EasyCreate(outFile)
 	var current vcf.Vcf
 	
 	numGeneratedSites := 0
-	var region bed.bed
+	var region bed.Bed
 	var currKey int
 	var foundInMap bool
+	
 	//for each segregating site, we make a vcf entry and write out
-	// cmt: use faformat to make nogapbed from input fasta ungappdregionsallfromfa in bed/info.go
 	if hasRef {
-		var positions map[int]bool
-		refFa = fasta.Read(refFile)
-		convertedRefFile := UngappedRegionsFromFa(refFa)
-		var length, totalWindows int
-
+		var generatedPos map[int]bool
+		refFa := fasta.Read(refFile)
+		bedRefFile := bed.UngappedRegionsAllFromFa(refFa)
+		regionOffset := mapSearchspaceToOffset(bedRefFile)
+		
+		var totalWindows int
+		var refBase []dna.Base
+		// TODO: refBase, can I use seeker here
+		// var seeker := fasta.NewSeeker()
 		for numGeneratedSites < numSites {
 			// generate random position
-			length, totalWindows = CountWindows(convertedRefFile, 1)
-			region = GenerateBedRegion(convertedRefFile, totalWindows, 1)
+			totalWindows = CountWindows(bedRefFile, 1)
+			region = GenerateBedRegion(bedRefFile, totalWindows, 1)
 			
-			// cmt: region.ChromStart will map to same place on different chroms
-			// helperfunction to map chrom pos to cumulative pos
-			// end cmt
-			currKey = helperFunction(region)
+			currKey = regionOffset[region.Name] + region.ChromStart
 			// check if not overlapping with previously generated positions
-
-			if _, foundInMap = m[currKey]; !foundInMap {
-				current = SingleVcfWithRef(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, region.chrom, region.ChromStart+1, refBase, hasRef)
+			if _, foundInMap = generatedPos[currKey]; !foundInMap {
+				// refBase, _ = SeekByName(seeker, region.Name, region.ChromStart, region.ChromEnd)
+				current = SingleVcfWithRef(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, region.Name, currKey+1, refBase[0])
 				vcf.WriteVcf(out, current)
 				numGeneratedSites++
-				m[currKey] = true
+				generatedPos[currKey] = true
 			}
 		}
 	} else {
 		for i := 0; i < numSites; i++ {
-			current = SingleVcf(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, i+1)
+			current = SingleVcfRandom(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, i+1)
 			vcf.WriteVcf(out, current)
 		}
 	}
@@ -59,16 +60,30 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 	exception.PanicOnErr(err)
 }
 
+func mapSearchspaceToOffset(searchSpace []bed.Bed) map[string]int {
+	var regionOffset map[string]int
+	prevRegionEnd := 0
+	for _, region := range searchSpace {
+		regionOffset[region.Name] = prevRegionEnd
+		prevRegionEnd = prevRegionEnd + region.ChromEnd
+	}
+	return regionOffset
+}
+
 // SingleVcf returns a single simulated Vcf record for a user-specified selection parameter alpha and genomic position.
 // There also needs to be parameters for the bounding function, where alpha, beta, and multiplier parameters of 0.001, 0.001, and 10000 are good
 // for most applications.
-func SingleVcf(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int) vcf.Vcf {
+func SingleVcfRandom(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int) vcf.Vcf {
 	var genotype []vcf.Sample
 	var divergent bool
 	var answer vcf.Vcf
 	genotype, divergent = popgen.SimulateGenotype(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier)
 
-	answer = vcf.Vcf{Chr: "chr1", Pos: pos, Id: ".", Ref: "A", Alt: []string{"T"}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
+	// answer = vcf.Vcf{Chr: "chr1", Pos: pos, Id: ".", Ref: "A", Alt: []string{"T"}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
+	
+	//TODO: should I just randomly select a GC content?
+	ref := ChooseRandomBase(float64(0.42))
+	answer = vcf.Vcf{Chr: "chr1", Pos: pos, Id: ".", Ref: dna.BaseToString(ref), Alt: []string{dna.BaseToString(changeBase(ref))}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
 	if divergent {
 		answer = vcf.AppendAncestor(answer, dna.StringToBases(answer.Alt[0]))
 	} else {
@@ -80,7 +95,7 @@ func SingleVcf(alpha float64, numAlleles int, boundAlpha float64, boundBeta floa
 // SingleVcfWithRef returns a single simulated Vcf record for a user-specified selection parameter alpha, genomic position and reference Fasta file.
 // There also needs to be parameters for the bounding function, where alpha, beta, and multiplier parameters of 0.001, 0.001, and 10000 are good
 // for most applications.
-func SingleVcfWithRef(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, chrom string, pos int, refBase dna.base) vcf.Vcf {
+func SingleVcfWithRef(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, chrom string, pos int, refBase dna.Base) vcf.Vcf {
 	var genotype []vcf.Sample
 	var divergent bool
 	var answer vcf.Vcf

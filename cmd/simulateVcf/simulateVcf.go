@@ -15,7 +15,7 @@ import (
 
 func simulateVcf(s SimulateVcfSettings) {
 	rand.Seed(s.SetSeed)
-	simulate.VcfToFileWithFasta(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, s.RefFile, s.hasRef)
+	simulate.VcfToFile(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, s.RefFile, s.HasRef)
 }
 
 func usage() {
@@ -36,8 +36,8 @@ type SimulateVcfSettings struct {
 	BoundAlpha      float64
 	BoundBeta       float64
 	BoundMultiplier float64
-	RefFile			*string
-	HasRef			bool
+	RefFile         *string
+	HasRef          bool
 }
 
 func main() {
@@ -75,8 +75,8 @@ func main() {
 		BoundAlpha:      *boundAlpha,
 		BoundBeta:       *boundBeta,
 		BoundMultiplier: *boundMultiplier,
-		RefFile: 		 *refFile,
-		HasRef: 		 *hasRef,
+		RefFile:         *refFile,
+		HasRef:          *hasRef,
 	}
 
 	simulateVcf(s)

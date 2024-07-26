@@ -16,7 +16,6 @@ type VcfToPfaSettings struct {
 	OutDir    string
 	Start     int
 	End       int
-	Chrom     string
 }
 
 // VcfToPfaUsage defines the usage statement for the pFaTools VcfToPfa subcommand.
@@ -34,7 +33,7 @@ func parseVcfToPfaArgs() {
 	var err error
 	VcfToPfaFlags := flag.NewFlagSet("VcfToPfa", flag.ExitOnError)
 	var start *int = VcfToPfaFlags.Int("start", 0, "Specify the position of the input sequence to begin build the pfa from. Defaults to 0.")
-	var end *int = VcfToPfaFlags.Int("end", -1, "Specify the position of the input sequence to end building the pfa at. Defaults to the end."))
+	var end *int = VcfToPfaFlags.Int("end", -1, "Specify the position of the input sequence to end building the pfa at. Defaults to the end.")
 
 	err = VcfToPfaFlags.Parse(os.Args[4:])
 	exception.PanicOnErr(err)
@@ -56,14 +55,13 @@ func parseVcfToPfaArgs() {
 		OutDir:    outDir,
 		Start:     *start,
 		End:       *end,
-		Chrom:     *chrom,
 	}
 
-	pFaVcfToPfa(s)
+	vcfToPfa(s)
 }
 
 // pFaVcfToPfa parses an input pFASTA file and converts the file according to user-defined settings.
-func pFaVcfToPfa(s VcfToPfaSettings) {
-	records := []pFasta.PFasta{pFasta.MultiVcfToPfa(s.InFile, s.Start, s.End, s.Chrom)}
+func vcfToPfa(s VcfToPfaSettings) {
+	records := []pFasta.PFasta{pFasta.VcfToPfa(s.InFile, s.RefFile, s.Start, s.End)}
 	pFasta.Write(s.OutDir, records)
 }

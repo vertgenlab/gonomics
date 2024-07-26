@@ -5,8 +5,8 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
-// CountWindows counts thte total viable windows of length regionLength in the sequence searchSpace
-func CountWindows(searchSpace []bed.Bed, regionLength int) (int, int) {
+// CountWindows counts the total viable windows of length regionLength in the sequence searchSpace
+func CountWindows(searchSpace []bed.Bed, regionLength int) int {
 	var length, totalWindows int
 	for i := 0; i < len(searchSpace); i++ {
 		length = searchSpace[i].ChromEnd - searchSpace[i].ChromStart
@@ -16,15 +16,13 @@ func CountWindows(searchSpace []bed.Bed, regionLength int) (int, int) {
 		}
 	}
 
-	return length, totalWindows
+	return totalWindows
 }
 
 // GoSimulateBed takes a searchSpace (represented by a noGap.bed input file, here as a parsed struct) and generates a
 // number of regions (regionCount) of a specified length (regionLength) and sends the simulated regions to an output chan.
 func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-chan bed.Bed {
-	var tmp, chromWindows int
-	
-	length, totalWindows := CountWindows(searchSpace, regionLength)
+	totalWindows := CountWindows(searchSpace, regionLength)
 
 	// this function generates new bed regions and sends them to a channel.
 	c := make(chan bed.Bed, 1000)
@@ -38,24 +36,28 @@ func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-c
 }
 
 // GenerateBedRegion searches the regions of searchSpace (a noGap.bed input file, as a parsed struct) and randomly selects a continuous region of length regionLength 
-func GenerateBedRegion(searchSpace []bed.Bed, totalWindows int, regionLength int) {
-	tmp = numbers.RandIntInRange(0, totalWindows)
-
+func GenerateBedRegion(searchSpace []bed.Bed, totalWindows int, regionLength int) bed.Bed {
+	tmp := numbers.RandIntInRange(0, totalWindows)
+	var chromWindows int
+	var length int
+	var answer bed.Bed
 	// iterating through each ungapped window
 	for j := 0; j < len(searchSpace); j++ {
-		Length = searchSpace[j].ChromEnd - searchSpace[j].ChromStart
+		length = searchSpace[j].ChromEnd - searchSpace[j].ChromStart
 
 		// check that the window can fit a sequence of that length e.g. want 10 bp, but window is 5bp
-		chromWindows = Length - regionLength + 1
+		chromWindows = length - regionLength + 1
 
 		if chromWindows < 1 {
-			continues
+			continue
 		}
 		if tmp-chromWindows > 0 {
 			tmp = tmp - chromWindows
 		} else {
-			return bed.Bed{Chrom: searchSpace[j].Chrom, ChromStart: searchSpace[j].ChromStart + tmp - 1, ChromEnd: searchSpace[j].ChromStart + tmp - 1 + regionLength, Name: searchSpace[j]
-			}
+			answer = bed.Bed{Chrom: searchSpace[j].Chrom, ChromStart: searchSpace[j].ChromStart + tmp - 1, ChromEnd: searchSpace[j].ChromStart + tmp - 1 + regionLength, Name: searchSpace[j].Name}
+			break
 		}
 	}
+	// TODO: I want it to fatal error if it can't generate answer, but when I had it as a return in the if-else above, it kept on giving "no return" error
+	return answer
 }

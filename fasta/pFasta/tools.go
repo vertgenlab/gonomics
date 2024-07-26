@@ -159,12 +159,12 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 }
 
 // vcfToPfa returns a pFasta representation of the given VCF sequence, only accepts single sequence Fasta
-func VcfToPfa(inVcfFilename string, inputFaFilename string) PFasta {
+func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) PFasta {
 	// relax to not-biallelic
 	var vcfRecords <-chan vcf.Vcf
 
 	inputFa := fasta.Read(inputFaFilename)
-	answer := faToPfa(inputFa[0], 0, -1)
+	answer := faToPfa(inputFa[0], start, end)
 
 	vcfRecords, _ = vcf.GoReadToChan(inVcfFilename)
 
