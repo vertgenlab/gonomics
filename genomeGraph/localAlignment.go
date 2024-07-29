@@ -3,7 +3,6 @@ package genomeGraph
 import (
 	"log"
 
-	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 )
@@ -15,24 +14,12 @@ var HumanChimpTwoScoreMatrixNoGap = [][]int64{
 	{-356, -236, -330, 90},
 }
 
-func reverseCigar(alpha []align.Cigar) {
-	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
-		alpha[i], alpha[j] = alpha[j], alpha[i]
-	}
-}
-
-func reverseCigarPointer(alpha []cigar.Cigar) {
-	for i, j := 0, len(alpha)-1; i < j; i, j = i+1, j-1 {
-		alpha[i], alpha[j] = alpha[j], alpha[i]
-	}
-}
-
-func swMatrixSetup(size int64) ([][]int64, [][]rune) {
+func swMatrixSetup(size int64) ([][]int64, [][]byte) {
 	m := make([][]int64, size)
-	trace := make([][]rune, size)
+	trace := make([][]byte, size)
 	for idx := range m {
 		m[idx] = make([]int64, size)
-		trace[idx] = make([]rune, size)
+		trace[idx] = make([]byte, size)
 	}
 	return m, trace
 }
@@ -46,16 +33,7 @@ func initialZeroMatrix(m [][]int64, alphaLen int, betaLen int) {
 	}
 }
 
-func initialTraceMatrix(trace [][]rune, alphaLen int, betaLen int) {
-	for i := 1; i < alphaLen+1; i++ {
-		trace[i][0] = 'D'
-	}
-	for j := 1; j < betaLen+1; j++ {
-		trace[0][j] = 'I'
-	}
-}
-
-func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []cigar.Cigar, int64, int64, int64, int64) {
+func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []cigar.Cigar, int64, int64, int64, int64) {
 	//check if size of alpha is larger than m
 	var currMax int64
 	var maxI int64
@@ -66,7 +44,7 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 	initialZeroMatrix(m, len(alpha), len(beta))
 	for i = 1; i < int64(len(alpha)+1); i++ {
 		for j = 1; j < int64(len(beta)+1); j++ {
-			m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+			m[i][j], trace[i][j] = cigar.TripleMaxTraceExtended(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			if m[i][j] > currMax {
 				currMax = m[i][j]
 				maxI = int64(i)
@@ -93,47 +71,31 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen i
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case '=':
+		case cigar.Equal:
 			i, j = i-1, j-1
-			//refStart = refStart + 1
-		case 'X':
+		case cigar.Mismatch:
 			i, j = i-1, j-1
-		case 'I':
+		case cigar.Insertion:
 			j -= 1
-		case 'D':
+		case cigar.Deletion:
 			i -= 1
-			//refStart = refStart + 1
 		default:
 			log.Fatalf("Error: unexpected traceback")
 		}
 		minI = i
 		minJ = j
 	}
-	reverseCigarPointer(route)
+	cigar.ReverseCigar(route)
 	return m[maxI][maxJ], route, minI, maxI, minJ, maxJ
 }
 
-func tripleMaxTrace(prev int64, a int64, b int64, c int64) (int64, rune) {
-	if a >= b && a >= c {
-		if a > prev {
-			return a, '='
-		} else {
-			return a, 'X'
-		}
-	} else if b >= c {
-		return b, 'I'
-	} else {
-		return c, 'D'
-	}
-}
-
-func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []cigar.Cigar, int, int, int, int) {
+func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []cigar.Cigar, int, int, int, int) {
 	//check if size of alpha is larger than m
 	var i, j, routeIdx int
 	initialZeroMatrix(m, len(alpha), len(beta))
 	for i = 1; i < len(alpha)+1; i++ {
 		for j = 1; j < len(beta)+1; j++ {
-			m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+			m[i][j], trace[i][j] = cigar.TripleMaxTraceExtended(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			if m[i][j] < 0 {
 				m[i][j] = 0
 			}
@@ -155,13 +117,13 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case '=':
+		case cigar.Equal:
 			i, j = i-1, j-1
-		case 'X':
+		case cigar.Mismatch:
 			i, j = i-1, j-1
-		case 'I':
+		case cigar.Insertion:
 			j -= 1
-		case 'D':
+		case cigar.Deletion:
 			i -= 1
 		default:
 			log.Fatalf("Error: unexpected traceback %c\n", trace[i][j])
@@ -170,11 +132,11 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64
 		minJ = j
 	}
 	//TODO: double check if this is tracing back in the correct directions
-	reverseCigarPointer(route)
+	cigar.ReverseCigar(route)
 	return m[len(alpha)][len(beta)], route, minI, len(alpha), minJ, len(beta)
 }
 
-func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]rune) (int64, []cigar.Cigar, int, int, int, int) {
+func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int64, m [][]int64, trace [][]byte) (int64, []cigar.Cigar, int, int, int, int) {
 	//check if size of alpha is larger than m
 	var currMax int64
 	var maxI int
@@ -188,12 +150,12 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 				m[i][j] = 0
 			} else if i == 0 {
 				m[i][j] = m[i][j-1] + gapPen
-				trace[i][j] = 'I'
+				trace[i][j] = cigar.Insertion
 			} else if j == 0 {
 				m[i][j] = m[i-1][j] + gapPen
-				trace[i][j] = 'D'
+				trace[i][j] = cigar.Deletion
 			} else {
-				m[i][j], trace[i][j] = tripleMaxTrace(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
+				m[i][j], trace[i][j] = cigar.TripleMaxTraceExtended(m[i-1][j-1], m[i-1][j-1]+scores[alpha[i-1]][beta[j-1]], m[i][j-1]+gapPen, m[i-1][j]+gapPen)
 			}
 			if m[i][j] > currMax {
 				currMax = m[i][j]
@@ -217,18 +179,18 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapPen int6
 			routeIdx++
 		}
 		switch trace[i][j] {
-		case '=':
+		case cigar.Equal:
 			i, j = i-1, j-1
-		case 'X':
+		case cigar.Mismatch:
 			i, j = i-1, j-1
-		case 'I':
+		case cigar.Insertion:
 			j -= 1
-		case 'D':
+		case cigar.Deletion:
 			i -= 1
 		default:
 			log.Fatalf("Error: unexpected traceback with %c\n", trace[i][j])
 		}
 	}
-	reverseCigarPointer(route)
+	cigar.ReverseCigar(route)
 	return m[maxI][maxJ], route, 0, maxI, 0, maxJ
 }

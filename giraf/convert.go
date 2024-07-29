@@ -2,19 +2,20 @@ package giraf
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
-	"strconv"
-	"strings"
 )
 
 func GirafToString(g *Giraf) string {
 	var answer string
-	answer += fmt.Sprintf("%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, g.Flag, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ByteCigarToString(g.Cigar), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), fastq.QualString(g.Qual), NotesToString(g.Notes))
+	answer += fmt.Sprintf("%s\t%d\t%d\t%d\t%c\t%s\t%s\t%d\t%d\t%s\t%s%s", g.QName, g.QStart, g.QEnd, g.Flag, strandToRune(g.PosStrand), PathToString(g.Path), cigar.ToString(g.Cigar), g.AlnScore, g.MapQ, dna.BasesToString(g.Seq), fastq.QualString(g.Qual), NotesToString(g.Notes))
 	return answer
 }
 
@@ -29,7 +30,7 @@ func stringToGiraf(line string) *Giraf {
 			Flag:      parse.StringToUint8(data[3]),
 			PosStrand: StringToPos(data[4]),
 			Path:      FromStringToPath(data[5]),
-			Cigar:     cigar.ReadToBytesCigar([]byte(data[6])),
+			Cigar:     cigar.FromString(data[6]),
 			AlnScore:  parse.StringToInt(data[7]),
 			MapQ:      uint8(parse.StringToInt(data[8])),
 			Seq:       dna.StringToBases(data[9]),
@@ -161,7 +162,7 @@ func ToString(g *Giraf) string {
 	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
 	exception.PanicOnErr(err)
-	_, err = buf.WriteString(cigar.ByteCigarToString(g.Cigar))
+	_, err = buf.WriteString(cigar.ToString(g.Cigar))
 	exception.PanicOnErr(err)
 	err = buf.WriteByte('\t')
 	exception.PanicOnErr(err)
