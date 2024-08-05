@@ -1,6 +1,7 @@
 package simulate
 
 import (
+	"log"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
@@ -23,16 +24,19 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 	var foundInMap bool
 	
 	//for each segregating site, we make a vcf entry and write out
+	log.Print("Pre hasRef")
 	if hasRef {
-		var generatedPos map[int]bool
+		generatedPos := make(map[int]bool)
 		refFa := fasta.Read(refFile)
 		bedRefFile := bed.UngappedRegionsAllFromFa(refFa)
+		// changes bed region names to reference where they start/end at Ns
+		// something going wrong here !!!!
 		regionOffset := mapSearchspaceToOffset(bedRefFile)
-		
+		faIndices := regionNameToFaIdx( refFa)
+		// log.Print("Map")
+		// log.Print(faIndices)
 		var totalWindows int
-		var refBase []dna.Base
-		// TODO: refBase, can I use seeker here
-		// var seeker := fasta.NewSeeker()
+		var refBase dna.Base
 		for numGeneratedSites < numSites {
 			// generate random position
 			totalWindows = CountWindows(bedRefFile, 1)
@@ -40,12 +44,22 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 			
 			currKey = regionOffset[region.Name] + region.ChromStart
 			// check if not overlapping with previously generated positions
+			log.Print("Pre-debug if")
 			if _, foundInMap = generatedPos[currKey]; !foundInMap {
-				// refBase, _ = SeekByName(seeker, region.Name, region.ChromStart, region.ChromEnd)
-				current = SingleVcfWithRef(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, region.Name, currKey+1, refBase[0])
+
+				refBaseIndex := faIndices[region.Name]
+				log.Printf("refBaseIndex: %v", refBaseIndex)
+				log.Print("Hi this is the refFa")
+				log.Print(refFa)
+				log.Print(region.Name)
+				log.Printf("region chromstart %v", region.ChromStart)
+				refBase = refFa[refBaseIndex].Seq[region.ChromStart]
+				current = SingleVcfWithRef(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, region.Name, currKey+1, refBase)
 				vcf.WriteVcf(out, current)
 				numGeneratedSites++
+				log.Print("end generate single vcf")
 				generatedPos[currKey] = true
+				log.Print("assign currKey to true")
 			}
 		}
 	} else {
@@ -60,13 +74,28 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 	exception.PanicOnErr(err)
 }
 
+// can i just make these two maps at the same time?
+func regionNameToFaIdx(refFa []fasta.Fasta) map[string]int {
+	faIndices := make(map[string]int)
+	for idx, chrom := range refFa {
+		faIndices[chrom.Name] = idx
+	}
+	return faIndices
+}
+
+// map each chromosome as an offset
+
+// merge 
 func mapSearchspaceToOffset(searchSpace []bed.Bed) map[string]int {
-	var regionOffset map[string]int
+	regionOffset := make(map[string]int)
 	prevRegionEnd := 0
+	log.Print("pre map bed loop")
 	for _, region := range searchSpace {
+		log.Print("in map bed loop")
 		regionOffset[region.Name] = prevRegionEnd
 		prevRegionEnd = prevRegionEnd + region.ChromEnd
 	}
+	log.Print("post map bed loop")
 	return regionOffset
 }
 

@@ -35,7 +35,7 @@ func parseVcfToPfaArgs() {
 	var start *int = VcfToPfaFlags.Int("start", 0, "Specify the position of the input sequence to begin build the pfa from. Defaults to 0.")
 	var end *int = VcfToPfaFlags.Int("end", -1, "Specify the position of the input sequence to end building the pfa at. Defaults to the end.")
 
-	err = VcfToPfaFlags.Parse(os.Args[4:])
+	err = VcfToPfaFlags.Parse(os.Args[3:])
 	exception.PanicOnErr(err)
 	VcfToPfaFlags.Usage = func() { VcfToPfaUsage(VcfToPfaFlags) }
 

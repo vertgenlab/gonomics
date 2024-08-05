@@ -9,20 +9,20 @@ import (
 	"log"
 	"math/rand"
 	"strings"
-
 	"github.com/vertgenlab/gonomics/simulate"
 )
 
 func simulateVcf(s SimulateVcfSettings) {
 	rand.Seed(s.SetSeed)
+	log.Print("Hi")
 	simulate.VcfToFile(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, s.RefFile, s.HasRef)
+	log.Print("Bye")
 }
 
 func usage() {
-	fmt.Print(
-		"simulateVcf - Contains functions for simulating VCF data.\n" +
+	fmt.Print("simulateVcf - Contains functions for simulating VCF data.\n" +
 			"Usage:\n" +
-			" simulateBed [options] output.vcf\n" +
+			"simulateVcf [options] output.vcf\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -36,7 +36,7 @@ type SimulateVcfSettings struct {
 	BoundAlpha      float64
 	BoundBeta       float64
 	BoundMultiplier float64
-	RefFile         *string
+	RefFile         string
 	HasRef          bool
 }
 
@@ -52,11 +52,12 @@ func main() {
 	var boundMultiplier *float64 = SimulateVcfFlags.Float64("boundMultiplier", 10000, "Set the multiplier for the bounding function.")
 	var refFile *string = SimulateVcfFlags.String("refFile", "", "Specify a reference Fasta file.")
 	var hasRef bool = false
-	SimulateVcfFlags.Usage = usage
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	SimulateVcfFlags.Parse()
 
-	if strings.ToLower(refFile) != "" {
+	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	flag.Parse()
+
+	if strings.ToLower(*refFile) != "" {
 		hasRef = true
 	}
 	if len(SimulateVcfFlags.Args()) != expectedNumArgs {
@@ -64,7 +65,7 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(SimulateVcfFlags.Args()))
 	}
-	outFile := SimulateVcfFlags.Arg(0)
+	outFile := flag.Arg(0)
 
 	s := SimulateVcfSettings{
 		OutFile:         outFile,
@@ -76,7 +77,7 @@ func main() {
 		BoundBeta:       *boundBeta,
 		BoundMultiplier: *boundMultiplier,
 		RefFile:         *refFile,
-		HasRef:          *hasRef,
+		HasRef:          hasRef,
 	}
 
 	simulateVcf(s)
