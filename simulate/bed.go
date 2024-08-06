@@ -1,6 +1,7 @@
 package simulate
 
 import (
+	"log"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/numbers"
 )
@@ -8,11 +9,11 @@ import (
 // CountWindows counts the total viable windows of length regionLength in the sequence searchSpace
 func CountWindows(searchSpace []bed.Bed, regionLength int) int {
 	var length, totalWindows int
-	for i := 0; i < len(searchSpace); i++ {
+	for i := range searchSpace {
 		length = searchSpace[i].ChromEnd - searchSpace[i].ChromStart
 
 		if length >= regionLength {
-			totalWindows = totalWindows + (length - regionLength + 1)
+			totalWindows += length - regionLength + 1
 		}
 	}
 
@@ -20,11 +21,11 @@ func CountWindows(searchSpace []bed.Bed, regionLength int) int {
 }
 
 // GenerateBedRegion searches the regions of searchSpace (a noGap.bed input file, as a parsed struct) and randomly selects a continuous region of length regionLength 
-func GenerateBedRegion(searchSpace []bed.Bed, tmp int, regionLength int) (bed.Bed, bool) {
+func GenerateBedRegion(searchSpace []bed.Bed, randPos int, regionLength int) (bed.Bed, bool) {
 	var chromWindows int
 	var length int
 	// iterating through each ungapped window
-	for j := 0; j < len(searchSpace); j++ {
+	for j := range searchSpace {
 		length = searchSpace[j].ChromEnd - searchSpace[j].ChromStart
 
 		// check that the window can fit a sequence of that length e.g. want 10 bp, but window is 5bp
@@ -33,34 +34,37 @@ func GenerateBedRegion(searchSpace []bed.Bed, tmp int, regionLength int) (bed.Be
 		if chromWindows < 1 {
 			continue
 		}
-		if tmp-chromWindows > 0 {
-			tmp -= chromWindows
+
+		// Decrement randomly generated overall position until it fits within the region
+		if randPos > chromWindows {
+			randPos -= chromWindows
 		} else {
 			return bed.Bed{
 				Chrom: searchSpace[j].Chrom, 
-				ChromStart: searchSpace[j].ChromStart + tmp - 1, 
-				ChromEnd: searchSpace[j].ChromStart + tmp - 1 + regionLength, 
+				ChromStart: searchSpace[j].ChromStart + randPos - 1, 
+				ChromEnd: searchSpace[j].ChromStart + randPos - 1 + regionLength, 
 				Name: searchSpace[j].Name,
 				FieldsInitialized: 4}, true
 		}
 	}
 	// TODO: I want it to fatal error if it can't generate answer, but when I had it as a return in the if-else above, it kept on giving "no return" error
+	log.Panic("Unable to generate region")
 	return bed.Bed{}, false
 }
 
 // GoSimulateBed takes a searchSpace (represented by a noGap.bed input file, here as a parsed struct) and generates a
 // number of regions (regionCount) of a specified length (regionLength) and sends the simulated regions to an output chan.
 func GoSimulateBed(searchSpace []bed.Bed, regionCount int, regionLength int) <-chan bed.Bed {
-	var tmp int
+	var randPos int
 	c := make(chan bed.Bed, 1000)
 
 	totalWindows := CountWindows(searchSpace, regionLength)
 
-	//this function generates new bed regions and sends them to a channel.
+	// this function generates new bed regions and sends them to a channel.
 	go func() {
 		for i := 0; i < regionCount; i++ {
-			tmp = numbers.RandIntInRange(0, totalWindows)
-			if region, found := GenerateBedRegion(searchSpace, tmp, regionLength); found {
+			randPos = numbers.RandIntInRange(0, totalWindows)
+			if region, found := GenerateBedRegion(searchSpace, randPos, regionLength); found {
 				c <- region
 			}
 		}
