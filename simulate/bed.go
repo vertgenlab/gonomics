@@ -47,7 +47,7 @@ func GenerateBedRegion(searchSpace []bed.Bed, randPos int, regionLength int) (be
 				FieldsInitialized: 4}, true
 		}
 	}
-	// TODO: I want it to fatal error if it can't generate answer, but when I had it as a return in the if-else above, it kept on giving "no return" error
+
 	log.Panic("Unable to generate region")
 	return bed.Bed{}, false
 }
