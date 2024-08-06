@@ -35,7 +35,7 @@ func init() {
 
 	err := os.Setenv("GODEBUG", strings.Join(variables, ","))
 	PanicOnErr(err)
-	rand.Seed(0)
+	rand.New(rand.NewSource(0))
 }
 
 // PanicOnErr will panic if input error is not nil.
@@ -58,5 +58,13 @@ func FatalOnErr(err error) {
 func WarningOnErr(err error) {
 	if err != nil {
 		log.Printf("WARNING: %s", err)
+	}
+}
+
+// RecoverPanicErr recovers non-nil panics errors that occurrs.
+func RecoverPanicErr() {
+	r := recover()
+	if r == nil {
+		log.Printf("Expected panic, but none occurred.\n")
 	}
 }
