@@ -212,6 +212,14 @@ func AbsInt(x int) int {
 
 // ApproxEqual determines if two floating-point numbers are equal within a specified tolerance level.
 func ApproxEqual(a, b, epsilon float64) bool {
-	// TODO: Improve this solution using the function at: https: github.com/gonum/gonum/blob/v0.14.0/mat/matrix.go#L525-L592
-	return math.Abs(a-b) <= epsilon
+	if math.IsInf(a, 0) && math.IsInf(b, 0) && math.Signbit(a) == math.Signbit(b) {
+		return true // Both are the same kind of infinity (positive or negative)
+	}
+	if a == 0 && b == 0 { // Handle the case where both a and b is zero.
+		return true
+	}
+	if a== 0 || b == 0 { // Where a or b is zero, assuming, one is non-zero
+		return math.Abs(a-b) <= epsilon 
+	}
+	return math.Abs(a-b)/math.Max(math.Abs(a), math.Abs(b)) <= epsilon
 }
