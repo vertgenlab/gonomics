@@ -11,6 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 )
 
+const basesPerInt int = 32
 type Seed struct {
 	TargetId    uint32
 	TargetStart uint32
@@ -67,12 +68,9 @@ func restartSeedHelper(helper *seedHelper) {
 }
 
 func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeStart int, posStrand bool, answer []Seed) []Seed {
-	const basesPerInt int = 32
 	answer = answer[:0]
-	var nodeOffset int = nodeStart % basesPerInt
-	var readOffset int = 31 - ((readStart - nodeOffset + 31) % 32)
+	var readOffset int = 31 - ((readStart - nodeStart % basesPerInt + 31) % 32)
 	var rightMatches int = 0
-	var currNode Seed
 	var nextParts []Seed
 	var i, j int = 0, 0
 	if posStrand {
@@ -90,17 +88,14 @@ func extendToTheRightDev(node *Node, read *fastq.FastqBig, readStart int, nodeSt
 			nextParts = extendToTheRightDev(node.Next[i].Dest, read, readStart+rightMatches, 0, posStrand, nextParts)
 			// if we aligned into the next node, make a seed for this node and point it to the next one
 			for j = 0; j < len(nextParts); j++ {
-				currNode = Seed{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches) + nextParts[j].TotalLength, NextPart: &nextParts[j]}
-				answer = append(answer, currNode)
+				answer = append(answer, Seed{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches) + nextParts[j].TotalLength, NextPart: &nextParts[j]})
 			}
 		}
 	}
 	// if the alignment did not go to another node, return the match for this node
 	if len(answer) == 0 {
-		currNode = Seed{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches), NextPart: nil}
-		answer = []Seed{currNode}
+		answer = []Seed{{TargetId: node.Id, TargetStart: uint32(nodeStart), QueryStart: uint32(readStart), Length: uint32(rightMatches), PosStrand: posStrand, TotalLength: uint32(rightMatches), NextPart: nil}}
 	}
-
 	return answer
 }
 
@@ -108,7 +103,6 @@ func extendToTheLeftDev(node *Node, read *fastq.FastqBig, currPart Seed) []Seed 
 	var answer, prevParts []Seed
 	var i int
 	var readBase dna.Base
-
 	if currPart.QueryStart > 0 && currPart.TargetStart == 0 {
 		for i = 0; i < len(node.Prev); i++ {
 			if currPart.PosStrand {
@@ -122,7 +116,6 @@ func extendToTheLeftDev(node *Node, read *fastq.FastqBig, currPart Seed) []Seed 
 			}
 		}
 	}
-
 	if len(answer) == 0 {
 		return []Seed{currPart}
 	} else {
@@ -131,11 +124,9 @@ func extendToTheLeftDev(node *Node, read *fastq.FastqBig, currPart Seed) []Seed 
 }
 
 func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart Seed) []Seed {
-	const basesPerInt int = 32
 	var nodePos int = node.SeqTwoBit.Len - 1
 	var readPos int = int(nextPart.QueryStart) - 1
-	var nodeOffset int = nodePos % basesPerInt
-	var readOffset int = 31 - ((readPos - nodeOffset + 31) % 32)
+	var readOffset int = 31 - ((readPos - nodePos % basesPerInt + 31) % 32)
 	var leftMatches int = 0
 	var currPart Seed
 	var prevParts, answer []Seed
@@ -147,7 +138,6 @@ func extendToTheLeftHelperDev(node *Node, read *fastq.FastqBig, nextPart Seed) [
 	} else {
 		leftMatches = numbers.Min(readPos+1, dnaTwoBit.CountLeftMatches(node.SeqTwoBit, nodePos, &read.RainbowRc[readOffset], readPos+readOffset))
 	}
-
 	if leftMatches == 0 {
 		log.Fatal("Error: should not have zero matches to the left\n")
 	}

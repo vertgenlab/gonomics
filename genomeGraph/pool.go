@@ -46,12 +46,5 @@ func (m *Matrix) Reset(rows, cols int) {
 		}
 		m.matrix[m.index] = m.matrix[m.index][:cols]
 		m.trace[m.index] = m.trace[m.index][:cols]
-
-		// m.matrix[m.index][0] = 0
-		// m.trace[m.index][0] = cigar.Insertion
 	}
-	// for m.index = 0; m.index < cols; m.index++ {
-	// 	m.matrix[0][m.index] = 0
-	// 	m.trace[0][m.index] = cigar.Insertion
-	// }
 }

@@ -57,11 +57,9 @@ func BasesToUint64RightAln(seq []dna.Base, start int, end int) uint64 {
 
 // GetBase decodes a dna.Base struct from a position of an input TwoBit sequence.
 func GetBase(frag *TwoBit, pos uint) dna.Base {
-	var lastBase uint64 = 3
-	var idx uint = pos / 32
-	var remainder uint = pos % 32
-	var shift uint = 64 - 2*(remainder+1)
-	return dna.Base((frag.Seq[idx] >> (shift)) & lastBase)
+	remainder := pos % 32
+	shift := 62 - 2*remainder // 64 - 2*(remainder+1) simplifies to 62 - 2*remainder
+	return dna.Base((frag.Seq[pos / 32] >> shift) & 3)
 }
 
 // NewTwoBit parses a TwoBit sequence struct from an input slice of dna.Base structs. Remainder bases will be left-aligned.

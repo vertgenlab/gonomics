@@ -11,7 +11,6 @@ func CountRightMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int
 	const bitsPerBase int = 2
 	const bitsPerInt int = 64
 	const basesPerInt int = bitsPerInt / bitsPerBase
-	const ones uint64 = 0xFFFFFFFFFFFFFFFF
 
 	var i, j int
 	var seqDiff uint64 = 0
@@ -30,7 +29,7 @@ func CountRightMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int
 	jEnd := (two.Len + basesPerInt - 1) / basesPerInt
 
 	seqDiff = one.Seq[i] ^ two.Seq[j]
-	seqDiff = seqDiff & (ones >> uint(offsetOne))
+	seqDiff = seqDiff & (LeftOnes >> uint(offsetOne))
 
 	bitMatches = bits.LeadingZeros64(seqDiff)
 	totalMatches = bitMatches - offsetOne
@@ -52,7 +51,6 @@ func CountLeftMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int 
 	const bitsPerBase int = 2
 	const bitsPerInt int = 64
 	const basesPerInt int = bitsPerInt / bitsPerBase
-	const ones uint64 = 0xFFFFFFFFFFFFFFFF
 
 	var i, j int
 	var seqDiff uint64 = 0
@@ -70,7 +68,7 @@ func CountLeftMatches(one *TwoBit, startOne int, two *TwoBit, startTwo int) int 
 	j = startTwo / basesPerInt
 
 	seqDiff = one.Seq[i] ^ two.Seq[j]
-	seqDiff = seqDiff & (ones << uint(firstBitsNoLook))
+	seqDiff = seqDiff & (LeftOnes << uint(firstBitsNoLook))
 
 	bitMatches = bits.TrailingZeros64(seqDiff)
 	totalMatches = bitMatches - (firstBitsNoLook)

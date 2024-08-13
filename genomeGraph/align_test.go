@@ -75,7 +75,8 @@ func percentOfFloat(part int, total int) float64 {
 func isGirafPairCorrect(input <-chan giraf.GirafPair, wg *sync.WaitGroup, readLength int, numReads int, b *testing.B) {
 	var unmapped int = 0
 	for pair := range input {
-		// fmt.Printf("%s\n%s\n", cigar.ToString(pair.Fwd.Cigar), giraf.GirafToString(&pair.Fwd))
+		//fmt.Printf("%s\n", cigar.ToString(pair.Fwd.Cigar))
+		//fmt.Printf("%s\n%s\n", cigar.ToString(pair.Fwd.Cigar), giraf.GirafToString(&pair.Fwd))
 		if !checkAlignment(pair.Fwd, readLength) {
 			unmapped++
 			// if !cigar.IsUnmapped(pair.Fwd.Cigar) {

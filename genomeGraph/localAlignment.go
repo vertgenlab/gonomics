@@ -70,13 +70,12 @@ func SmithWaterman(alpha []dna.Base, beta []dna.Base, config *GraphSettings, poo
 }
 
 func LeftLocal(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *sync.Pool) (int64, []cigar.Cigar, int, int, int, int) {
-	var i, j int
 	rows, columns := len(alpha), len(beta)
-
 	dp := pool.Get().(*Matrix)
 	defer pool.Put(dp)
 	dp.Reset(rows+1, columns+1)
 
+	var i, j int
 	for i = 0; i <= numbers.Max(rows, columns); i++ {
 		if i <= rows {
 			dp.matrix[i][0] = 0
@@ -117,7 +116,11 @@ func LeftLocal(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *s
 		minI = i
 		minJ = j
 	}
-	cigar.ReverseCigar(route)
+	if route[len(route)-1].RunLength == 0 {
+		route = route[:0]
+	} else {
+		cigar.ReverseCigar(route)
+	}
 	return dp.matrix[rows][columns], route, minI, rows, minJ, columns
 }
 
@@ -129,7 +132,6 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *
 
 	var currMax int64 = math.MinInt64
 	var i, j, maxI, maxJ int
-
 	for i = 0; i < rows; i++ {
 		for j = 0; j < columns; j++ {
 			if i == 0 && j == 0 {
@@ -169,6 +171,10 @@ func RightLocal(alpha []dna.Base, beta []dna.Base, config *GraphSettings, pool *
 			log.Fatalf("Error: unexpected traceback with %c\n", dp.trace[i][j])
 		}
 	}
-	cigar.ReverseCigar(route)
+	if route[len(route)-1].RunLength == 0 {
+		route = route[:0]
+	} else {
+		cigar.ReverseCigar(route)
+	}
 	return dp.matrix[maxI][maxJ], route, 0, maxI, 0, maxJ
 }

@@ -2,10 +2,12 @@ package genomeGraph
 
 import (
 	"math/rand"
+	"reflect"
+	"sync"
 	"testing"
 
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/numbers"
 )
 
 func TestGetTargetBases(t *testing.T) {
@@ -105,46 +107,49 @@ func BenchmarkGetLeftBases(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func leftBases(n *Node, extension int, index int, ans []dna.Base) []dna.Base {
-	seqLen := len(ans)
-	var basesToTake int = (numbers.Min(seqLen+index, extension) - seqLen)
+func TestRightAlignTraversal(t *testing.T) {
+    // Test Data Setup
+    config := DefaultAlignment()
+	matrix := NewMatrixPool(defaultMatrixSize)
+    pool := &sync.Pool{
+        New: func() interface{} { return &dnaPool{} },
+    }
 
-	ans = append(ans, make([]dna.Base, basesToTake)...)
-	copy(ans[seqLen:], n.Seq[index-basesToTake:index])
-	return ans
+    // Create sample nodes, sequences, and reads
+    n1 := &Node{Seq: dna.StringToBases("ACGT")}
+	n2 := &Node{Seq: dna.StringToBases("TTG")}
+	AddEdge(n1, n2, 1)
+    seq :=  dna.StringToBases("ACTG")
+    read :=  dna.StringToBases("TG")
+
+    // Test Cases
+    testCases := []struct {
+        name       string
+        start      int
+        extension  int
+        expected   []cigar.Cigar
+        expectScore int64
+    }{
+        {"Simple Path", 0, 2, []cigar.Cigar{{Op: 'M', RunLength: 2}}, 10}, // Adjust expected score as needed
+        // ... add more test cases with different scenarios ...
+    }
+
+    for _, tc := range testCases {
+        t.Run(tc.name, func(t *testing.T) {
+            sk := scoreKeeper{}
+            dynamicScore := dynamicScoreKeeper{}
+
+            // Call the function under test
+            result, score, _, _, _ := RightAlignTraversal(n1, seq, tc.start, []uint32{}, read, tc.extension, config, matrix, sk, dynamicScore, pool)
+
+            // Assertions
+            if !reflect.DeepEqual(result, tc.expected) {
+                t.Errorf("Expected alignment %v, got %v", tc.expected, result)
+            }
+            if score != tc.expectScore {
+                t.Errorf("Expected score %d, got %d", tc.expectScore, score)
+            }
+
+        })
+    }
 }
-
-func BenchmarkNewGetLeftBases(b *testing.B) {
-	// Create test data
-	n := &Node{Seq: make([]dna.Base, 1000)} // Example 1000-base sequence
-	for i := range n.Seq {
-		n.Seq[i] = dna.Base(rand.Intn(4)) // Random bases
-	}
-
-	seq := make([]dna.Base, 100)    // Example 100-base query
-	ans := make([]dna.Base, 0, 200) // Preallocate to avoid reallocations
-
-	ans = append(ans, seq...)
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		leftBases(n, 200, 500, ans) // Example parameters
-	}
-	b.ReportAllocs()
-}
-
-// func BenchmarkGetRightBases(b *testing.B) {
-//      n := &Node{Seq: make([]dna.Base, 1000)} // Example 1000-base sequence
-//     for i := range n.Seq {
-//         n.Seq[i] = dna.Base(rand.Intn(4)) // Random bases
-//     }
-
-//     seq := make([]dna.Base, 100)        // Example 100-base query
-//     ans := make([]dna.Base, 0, 200)     // Preallocate to avoid reallocations
-
-//     b.ResetTimer()
-
-//     for i := 0; i < b.N; i++ {
-//         getRightBases(n, 200, 500, append(ans, seq...))
-//     }
-// }

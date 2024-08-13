@@ -1,8 +1,6 @@
 package genomeGraph
 
 import (
-	"fmt"
-
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fastq"
 )
@@ -52,15 +50,6 @@ func scoreSeed(seed *Seed, read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	return score
 }
 
-// perfect match.
-func perfectMatch(read fastq.Fastq, scoreMatrix [][]int64) int64 {
-	var perfectScore int64 = 0
-	for i := 0; i < len(read.Seq); i++ {
-		perfectScore += scoreMatrix[read.Seq[i]][read.Seq[i]]
-	}
-	return perfectScore
-}
-
 /*func NodesHeader(ref []*Node) *sam.Header {
 	var header sam.Header
 	header.Text = append(header.Text, "@HD\tVN:1.6\tSO:unsorted")
@@ -72,9 +61,3 @@ func perfectMatch(read fastq.Fastq, scoreMatrix [][]int64) int64 {
 	}
 	return &header
 }*/
-
-func ViewMatrix(m [][]int64) string {
-	var message string = ""
-	message += fmt.Sprintf("\t\t %d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t%d\n\t\t%d\t%d\t%d\t %d\n", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3])
-	return message
-}

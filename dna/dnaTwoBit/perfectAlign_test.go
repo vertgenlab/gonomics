@@ -200,4 +200,5 @@ func BenchmarkNewLongRight(b *testing.B) {
 			}
 		}
 	}
+	b.ReportAllocs()
 }
