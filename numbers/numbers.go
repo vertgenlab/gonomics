@@ -221,5 +221,5 @@ func ApproxEqual(a, b, epsilon float64) bool {
 	if a == 0 || b == 0 { // Where a or b is zero, assuming, one is non-zero
 		return math.Abs(a-b) <= epsilon
 	}
-	return math.Abs(a-b)/(math.Abs(a)+math.Abs(b)/2) <= epsilon
+	return math.Abs(a-b)/(math.Abs(a+b)/2) <= epsilon
 }
