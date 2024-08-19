@@ -3,6 +3,7 @@ package fasta
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
+	"strings"
 )
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
@@ -161,37 +162,30 @@ func SegregatingSites(aln []Fasta) []Fasta {
 }
 
 // SegregatingSitesWithBed takes in a multiFa alignment and returns a new alignment containing only the columns with segregating sites, along with the positions of segregating sites in the reference species
-func SegregatingSitesWithBed(aln []Fasta) ([]Fasta, [][]int) {
+func SegregatingSitesWithBed(aln []Fasta) ([]Fasta, [][]int, []string) {
 	// define variables
 	var answer []Fasta = emptyCopy(aln)
-	var i, k, bedChromStart, bedChromEnd int
-	var bedOpen bool = false
+	var i, k int
 	var bedPos [][]int
+	speciesSeq := make([]string, len(aln))
+	var bedName string
+	var bedNames []string
 
 	// loop through multiFa
 	for i = 0; i < len(aln[0].Seq); i++ {
 		if isSegregating(aln, i) {
-			// report multiFa
+			// report multiFa, collect base sequence in each species in preparation for reporting bed
 			for k = 0; k < len(aln); k++ {
 				answer[k].Seq = append(answer[k].Seq, aln[k].Seq[i])
+				speciesSeq[k] = dna.BaseToString(aln[k].Seq[i])
+				bedName = strings.Join(speciesSeq, "_")
 			}
-			// keep track of bed
-			if !bedOpen { // if current position is segregating and bed region is not open, then open bed region
-				bedOpen = true
-				bedChromStart = i
-			}
-			if i == len(aln[0].Seq)-1 { // if current position is segregating (bed region is open now), but reached multiFa end, then close bed region and report bed
-				bedOpen = false
-				bedChromEnd = i + 1
-				bedPos = append(bedPos, []int{bedChromStart, bedChromEnd})
-			}
-		} else if bedOpen { // if current position is not segregating but bed region is open, then close bed region and report bed
-			bedOpen = false
-			bedChromEnd = i // i not i+1 because this position is already not included in the bed region
-			bedPos = append(bedPos, []int{bedChromStart, bedChromEnd})
+			// report bed entry for that 1 base position
+			bedPos = append(bedPos, []int{i, i + 1})
+			bedNames = append(bedNames, bedName)
 		}
 	}
-	return answer, bedPos
+	return answer, bedPos, bedNames
 }
 
 // NumSegregatingSites returns the number of sites in an alignment block that are segregating.

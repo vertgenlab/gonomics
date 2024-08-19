@@ -1,1 +1,4 @@
-chrTest	4	8	one
+chrTest	4	5	A_A_A_C
+chrTest	5	6	A_A_A_C
+chrTest	6	7	C_A_A_A
+chrTest	7	8	C_A_A_A

@@ -21,6 +21,7 @@ var MfaReduceTests = []struct {
 	{"testdata/test.mfa", "testdata/output.mfa", "testdata/expected.mfa", "testdata/output.bed", "chrTest", "testdata/expected.bed"},
 	{"testdata/test2.mfa", "testdata/output2.mfa", "testdata/expected2.mfa", "testdata/output2.bed", "chrTest", "testdata/expected2.bed"},
 	{"testdata/test3.mfa", "testdata/output3.mfa", "testdata/expected3.mfa", "testdata/output3.bed", "chrTest", "testdata/expected3.bed"},
+	{"testdata/test4.mfa", "testdata/output4.mfa", "testdata/expected4.mfa", "testdata.output4.bed", "chrTest", "testdata/expected4.bed"},
 }
 
 func TestMfaReduce(t *testing.T) {

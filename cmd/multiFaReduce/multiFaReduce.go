@@ -13,15 +13,15 @@ import (
 
 func mfaReduce(inFilename, outFilename, bedFilename, chrom string) {
 	aln := fasta.Read(inFilename)
-	// TODO: don't do function for all aln, but only positions specified in an input []bed
 	var answer []fasta.Fasta
-	var answerBedPos [][]int // answerBedPos is [][]int not [][]bed.Bed to avoid circular dependencies, aka trying to import bed package in fasta package
+	var answerBedPos [][]int    // answerBedPos is [][]int not [][]bed.Bed to avoid circular dependencies, aka trying to import bed package in fasta package
+	var answerBedNames []string // answerBedName holds the referenceSpecies1base_alignSpecies2base of each segregating site
 	if bedFilename != "" {
 		var answerBed []bed.Bed
 		var currentBed bed.Bed
-		answer, answerBedPos = fasta.SegregatingSitesWithBed(aln)
+		answer, answerBedPos, answerBedNames = fasta.SegregatingSitesWithBed(aln)
 		for i := 0; i < len(answerBedPos); i++ {
-			currentBed = bed.Bed{Chrom: chrom, ChromStart: answerBedPos[i][0], ChromEnd: answerBedPos[i][1], Name: aln[0].Name, FieldsInitialized: 4} // Name field is reference species name
+			currentBed = bed.Bed{Chrom: chrom, ChromStart: answerBedPos[i][0], ChromEnd: answerBedPos[i][1], Name: answerBedNames[i], FieldsInitialized: 4} // Name field is reference species name
 			answerBed = append(answerBed, currentBed)
 		}
 		bed.Write(bedFilename, answerBed)
@@ -42,7 +42,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var bedFilename *string = flag.String("bedFilename", "", "Output the positions of variable sites in the reference species into a bed file with this name")
+	var bedFilename *string = flag.String("bedFilename", "", "Output the positions of variable sites in the reference species into a bed file with this name. Variable sites are reported 1 base/line")
 	var chrom *string = flag.String("chrom", "", "Required when using -bedFilename, to specify the chromosome name of the reference species in the output bed file")
 
 	flag.Usage = usage
