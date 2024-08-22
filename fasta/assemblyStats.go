@@ -10,8 +10,8 @@ import (
 )
 
 // AssemblyStats takes the path to a fasta file and a flag for whether lower case letters
-// should count as assembly gaps.  Five ints are returned, which encode:
-// the N50 size, half the size of the genome, size of the genome, size of the largest contig, and the number of contigs.
+// should count as assembly gaps.  Six ints are returned, which encode:
+// the N50 size, the L50 size, half the size of the genome, size of the genome, size of the largest contig, and the number of contigs.
 func AssemblyStats(infile string, countLowerAsGaps bool) (int, int, int, int, int, int) {
 	records := Read(infile)
 
@@ -41,7 +41,7 @@ func calculateGenomeLength(contigList []int) int {
 	return genomeLength
 }
 
-// CalculateN50L50 takes a slice of contig lengths and the size of half the genome. It returns the N50 size and L50 size.
+// CalculateN50L50 takes a sorted slice of contig lengths and the size of half the genome. It returns the N50 size and L50 size.
 func CalculateN50L50(contigList []int, halfGenome int) (int, int) {
 	var sum int = 0
 	var L50 int = 0
@@ -52,7 +52,7 @@ func CalculateN50L50(contigList []int, halfGenome int) (int, int) {
 			return contigList[i], L50
 		}
 	}
-	log.Fatalf("Unable to calculate N50.")
+	log.Fatalf("Unable to calculate N50 / L50.")
 	return -1, -1
 }
 
