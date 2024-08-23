@@ -40,11 +40,11 @@ func MatchComp(s MatchCompSettings) {
 	switch s.MotifType {
 	case "Frequency":
 		motifsUnfiltered = ReadJaspar(s.MotifFile, "Frequency")
-		motifsUnfiltered = PfmSliceToPpmSlice(motifs, s.Pseudocounts)
-		motifsUnfiltered = PpmSliceToPwmSlice(motifs, s.GcContent)
+		motifsUnfiltered = PfmSliceToPpmSlice(motifsUnfiltered, s.Pseudocounts)
+		motifsUnfiltered = PpmSliceToPwmSlice(motifsUnfiltered, s.GcContent)
 	case "Probability":
 		motifsUnfiltered = ReadJaspar(s.MotifFile, "Probability")
-		motifsUnfiltered = PpmSliceToPwmSlice(motifs, s.GcContent)
+		motifsUnfiltered = PpmSliceToPwmSlice(motifsUnfiltered, s.GcContent)
 	case "Weight":
 		motifsUnfiltered = ReadJaspar(s.MotifFile, "Weight")
 	default:
@@ -57,15 +57,16 @@ func MatchComp(s MatchCompSettings) {
 	for i := range motifsUnfiltered {
 		motifLen = len(motifsUnfiltered[i].Mat[0])
 		if motifLen <= 32 {
-			log.Printf("Filtered out matrix with motif length greater than 32. Matrix ID: %v. Motif length: %v.\n", motifsUnfiltered[i].Id, motifLen)
 			motifs = append(motifs, motifsUnfiltered[i])
+		} else {
+			fmt.Printf("Filtered out matrix with motif length greater than 32. Matrix ID: %v. Motif length: %v.\n", motifsUnfiltered[i].Id, motifLen)
 		}
 	}
 
 	for i := range motifs {
 		motifLen = len(motifs[i].Mat[0])
 		if motifLen > 32 {
-			log.Fatalf("Error: MatchComp cannot accommodate Position Matrices with a motif length greater than 32. Plese filter out the matrix with this ID: %v.\n", motifs[i].Id)
+			log.Fatalf("Error: MatchComp cannot accommodate Position Matrices with a motif length greater than 32. Please filter out the matrix with this ID: %v.\n", motifs[i].Id)
 		}
 		var currSeq = ConsensusSequence(motifs[i], false)
 		consensusScore, _, couldScoreConsensus = ScoreWindow(motifs[i], currSeq.Seq, 0)
