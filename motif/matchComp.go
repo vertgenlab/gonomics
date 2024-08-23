@@ -36,22 +36,31 @@ func MatchComp(s MatchCompSettings) {
 	var couldScoreConsensus bool
 	var revCompMotif PositionMatrix
 
-	var motifs []PositionMatrix
+	var motifsUnfiltered, motifs []PositionMatrix
 	switch s.MotifType {
 	case "Frequency":
-		motifs = ReadJaspar(s.MotifFile, "Frequency")
-		motifs = PfmSliceToPpmSlice(motifs, s.Pseudocounts)
-		motifs = PpmSliceToPwmSlice(motifs, s.GcContent)
+		motifsUnfiltered = ReadJaspar(s.MotifFile, "Frequency")
+		motifsUnfiltered = PfmSliceToPpmSlice(motifs, s.Pseudocounts)
+		motifsUnfiltered = PpmSliceToPwmSlice(motifs, s.GcContent)
 	case "Probability":
-		motifs = ReadJaspar(s.MotifFile, "Probability")
-		motifs = PpmSliceToPwmSlice(motifs, s.GcContent)
+		motifsUnfiltered = ReadJaspar(s.MotifFile, "Probability")
+		motifsUnfiltered = PpmSliceToPwmSlice(motifs, s.GcContent)
 	case "Weight":
-		motifs = ReadJaspar(s.MotifFile, "Weight")
+		motifsUnfiltered = ReadJaspar(s.MotifFile, "Weight")
 	default:
 		log.Fatalf("Error. Unexpected motif file format. Options are 'Frequency', 'Probability', and 'Weight'.")
 	}
 
 	out := fileio.EasyCreate(s.OutFile)
+
+	// filter motifs to only retain motifs with length <= 32
+	for i := range motifsUnfiltered {
+		motifLen = len(motifsUnfiltered[i].Mat[0])
+		if motifLen <= 32 {
+			log.Printf("Filtered out matrix with motif length greater than 32. Matrix ID: %v. Motif length: %v.\n", motifsUnfiltered[i].Id, motifLen)
+			motifs = append(motifs, motifsUnfiltered[i])
+		}
+	}
 
 	for i := range motifs {
 		motifLen = len(motifs[i].Mat[0])
