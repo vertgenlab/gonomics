@@ -15,7 +15,7 @@ func usage() {
 	fmt.Print(
 		"ANCoRA - Ancient-DNA Nucleotide-damage Correction and Reference-guided Assembly.\n" +
 			"This program builds reference-guided assemblies from input short-read sequencing libraries.\n" +
-			"Optimized for ancient DNA libraries, and learns ancient DNA damage profiles for genotyping corretion.\n" +
+			"Optimized for ancient DNA libraries, and learns ancient DNA damage profiles for genotype correction.\n" +
 			"Can be used in three modes:\n\t'build' generates diploid assemblies.\n" +
 			"\t'score' validates assembly accuracy with a five way alignment including the known divergent sequences\n" +
 			"\t'prior' constructs an empirical prior for output diploid genotypes based on a maximum likelihood estimate from the input reads.\n" +
