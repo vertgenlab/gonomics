@@ -14,7 +14,7 @@ import (
 	"github.com/vertgenlab/gonomics/sam"
 )
 
-// PriorSettings defines the set of options and arguments for the samAssembler prior subcommand.
+// PriorSettings defines the set of options and arguments for the ancora prior subcommand.
 type PriorSettings struct {
 	SamFileName         string
 	ReferenceFile       string
@@ -35,17 +35,17 @@ type EmpiricalErrorEstimator struct {
 	TotalLambdaPlusEpsilon int
 }
 
-// priorUsage defines the help message for the samAssembler prior subcommand and prints default options.
+// priorUsage defines the help message for the ancora prior subcommand and prints default options.
 func priorUsage(priorFlags *flag.FlagSet) {
-	fmt.Print("samAssembler prior - Construct an empirical conditional Dirichlet prior for output diploid" +
+	fmt.Print("ancora prior - Construct an empirical conditional Dirichlet prior for output diploid" +
 		"genotypes based on maximum likelihood estimation of genotypes from aligned short reads.\n" +
 		"Usage: \n" +
-		"samAssembler [options] prior reads.sam/bam ref.fa output.txt\n" +
+		"ancora [options] prior reads.sam/bam ref.fa output.txt\n" +
 		"Options:\n")
 	priorFlags.PrintDefaults()
 }
 
-// parsePriorArgs is the main function of the samAssembler prior subcommand. Defines and parses arguments before running the SamAssemblerPrior function.
+// parsePriorArgs is the main function of the ancora prior subcommand. Defines and parses arguments before running the ancoraPrior function.
 func parsePriorArgs() {
 	var err error
 	var expectedNumArgs int = 3
@@ -83,11 +83,11 @@ func parsePriorArgs() {
 		AsCounts:            *asCounts,
 		MinCoverage:         *minCoverage,
 	}
-	SamAssemblerPrior(s)
+	ancoraPrior(s)
 }
 
-// SamAssemblerPrior creates an empirical prior from SAM/BAM pileup data for the samAssembler build command.
-func SamAssemblerPrior(s PriorSettings) {
+// ancoraPrior creates an empirical prior from SAM/BAM pileup data for the ancora build command.
+func ancoraPrior(s PriorSettings) {
 	// substitution matrix for priors
 	var answer = make([][]float64, 4)
 	// set pseudocount in matrix

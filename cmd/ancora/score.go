@@ -20,11 +20,11 @@ type ScoreSettings struct {
 }
 
 func scoreUsage(scoreFlags *flag.FlagSet) {
-	fmt.Print("samAssembler score - Validate assembly accuracy from five-way alignment including known divergent sequences.\n" +
+	fmt.Print("ancora score - Validate assembly accuracy from five-way alignment including known divergent sequences.\n" +
 		"The user must specify a list of filenames, corresponding to each multiFa to be used in joint scoring (usually one file per chromosome).\n" +
 		"'scoreType' may be chosen from the following strings: baseMatrix, baseMatrixByRefBase\n" +
 		"Usage:\n" +
-		"samAssembler score scoreType inFileList outFile.txt\n" +
+		"ancora score scoreType inFileList outFile.txt\n" +
 		"Options:\n")
 	scoreFlags.PrintDefaults()
 }
@@ -51,13 +51,13 @@ func parseScoreArgs() {
 		InFileList: inFileList,
 		OutFile:    outFile,
 	}
-	samAssemblerScore(s)
+	ancoraScore(s)
 }
 
-// samAssemblerScore provides tools for scoring diploid assembly results from samAssembler.
+// ancoraScore provides tools for scoring diploid assembly results from ANCoRA.
 // Currently, two modes are supported: baseMatrix, and baseMatrixByRefBase. The details of
 // these modes are described in their respective helper functions below.
-func samAssemblerScore(s ScoreSettings) {
+func ancoraScore(s ScoreSettings) {
 	switch s.ScoreType {
 	case "baseMatrix":
 		baseMatrixByRefBase(s.InFileList, s.OutFile, false)
@@ -69,7 +69,7 @@ func samAssemblerScore(s ScoreSettings) {
 }
 
 // baseMatrixByRefBase returns a confusion matrix for diploid genotype multiclass classification validation
-// of samAssembler results. The inFileList represents a new line delimited list of multiFa files to consider.
+// of ANCoRA results. The inFileList represents a new line delimited list of multiFa files to consider.
 // the outFile should specify the ".txt" destination file location.
 // When byRefBase is true, this program produces 4 output matrices, one for each reference base state (A, C, G, or T).
 func baseMatrixByRefBase(inFileList string, outFile string, byRefBase bool) {
