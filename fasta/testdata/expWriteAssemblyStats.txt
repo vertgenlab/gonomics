@@ -1,0 +1,7 @@
+Assembly Name: testAssembly
+halfGenome: 1000
+genomeLength: 2000
+Number of contigs: 20
+Largest Contig: 100
+N50: 100
+L50: 50
