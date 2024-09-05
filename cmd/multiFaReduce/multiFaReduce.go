@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-func mfaReduce(inFilename, outFilename, bedFilename, chrom string) {
+func mfaReduce(inFilename, outFilename, bedFilename, chrom string, refStart int) {
 	aln := fasta.Read(inFilename)
 	var answer []fasta.Fasta
 	var answerBedPos []int      // answerBedPos is []int not [][]bed.Bed to avoid circular dependencies, aka trying to import bed package in fasta package
@@ -28,7 +28,7 @@ func mfaReduce(inFilename, outFilename, bedFilename, chrom string) {
 			chromStartRefPos = fasta.AlnPosToRefPosCounter(aln[0], chromStartAlnPos, lastRefPosConverted, lastAlnPosConverted)
 			lastAlnPosConverted = chromStartAlnPos
 			lastRefPosConverted = chromStartRefPos
-			currentBed = bed.Bed{Chrom: chrom, ChromStart: chromStartRefPos, ChromEnd: chromStartRefPos + 1, Name: answerBedNames[i], Score: chromStartAlnPos, FieldsInitialized: 5} // Name field is reference species name, Score field is AlnPos
+			currentBed = bed.Bed{Chrom: chrom, ChromStart: refStart + chromStartRefPos, ChromEnd: refStart + chromStartRefPos + 1, Name: answerBedNames[i], Score: refStart + chromStartAlnPos, FieldsInitialized: 5} // Name field is reference species name, Score field is AlnPos
 			answerBed = append(answerBed, currentBed)
 		}
 		bed.Write(bedFilename, answerBed)
@@ -49,8 +49,9 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var bedFilename *string = flag.String("bedFilename", "", "Output the positions of variable sites in the reference species into a bed file with this name. Variable sites are reported 1 base/line")
-	var chrom *string = flag.String("chrom", "", "Required when using -bedFilename, to specify the chromosome name of the reference species in the output bed file")
+	var bedFilename *string = flag.String("bedFilename", "", "Output the positions of variable sites in the reference species into a bed file with this name. Variable sites are reported 1 base/line.")
+	var chrom *string = flag.String("chrom", "", "Required when using -bedFilename, to specify the chromosome name of the reference species in the output bed file.")
+	var refStart *int = flag.Int("refStart", 0, "Optional when using -befFilename, to set the reference position for the beginning of the input multiFa alignment.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -69,5 +70,5 @@ func main() {
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	mfaReduce(inFile, outFile, *bedFilename, *chrom)
+	mfaReduce(inFile, outFile, *bedFilename, *chrom, *refStart)
 }
