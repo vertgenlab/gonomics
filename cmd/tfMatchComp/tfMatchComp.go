@@ -33,7 +33,7 @@ func usage() {
 	fmt.Print(
 		"tfMatchComp - Compare the motif profiles between two input aligned genomic sequences." +
 			"Output lines are as follows:\n" +
-			"CHR\tCHROMSTART\tCHROMEND\tMOTIF_NAME\t0\tMOTIF_STRAND\tREF_SCORE\tALT_SCORE\tRESIDUAL" +
+			"CHR\tCHROMSTART\tCHROMEND\tMOTIF_NAME\t0\tMOTIF_STRAND\tREF_SCORE\tALT_SCORE\tRESIDUAL\n" +
 			"Usage:\n" +
 			"tfMatchComp input.fa matrices.pfm/ppm/pwm chromName output.bed\n" +
 			"options:\n")
