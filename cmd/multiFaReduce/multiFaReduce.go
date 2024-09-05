@@ -19,9 +19,16 @@ func mfaReduce(inFilename, outFilename, bedFilename, chrom string) {
 	if bedFilename != "" {
 		var answerBed []bed.Bed
 		var currentBed bed.Bed
+		var chromStartAlnPos, chromStartRefPos int
+		lastAlnPosConverted := 0
+		lastRefPosConverted := 0
 		answer, answerBedPos, answerBedNames = fasta.SegregatingSitesWithBed(aln)
 		for i := 0; i < len(answerBedPos); i++ {
-			currentBed = bed.Bed{Chrom: chrom, ChromStart: answerBedPos[i][0], ChromEnd: answerBedPos[i][1], Name: answerBedNames[i], FieldsInitialized: 4} // Name field is reference species name
+			chromStartAlnPos = answerBedPos[i][0]
+			chromStartRefPos = fasta.AlnPosToRefPosCounter(aln[0], chromStartAlnPos, lastRefPosConverted, lastAlnPosConverted)
+			lastAlnPosConverted = chromStartAlnPos
+			lastRefPosConverted = chromStartRefPos
+			currentBed = bed.Bed{Chrom: chrom, ChromStart: chromStartRefPos, ChromEnd: chromStartRefPos + 1, Name: answerBedNames[i], Score: chromStartAlnPos, FieldsInitialized: 5} // Name field is reference species name, Score field is AlnPos
 			answerBed = append(answerBed, currentBed)
 		}
 		bed.Write(bedFilename, answerBed)
