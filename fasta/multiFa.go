@@ -162,11 +162,11 @@ func SegregatingSites(aln []Fasta) []Fasta {
 }
 
 // SegregatingSitesWithBed takes in a multiFa alignment and returns a new alignment containing only the columns with segregating sites, along with the positions of segregating sites in the reference species
-func SegregatingSitesWithBed(aln []Fasta) ([]Fasta, [][]int, []string) {
+func SegregatingSitesWithBed(aln []Fasta) ([]Fasta, []int, []string) {
 	// define variables
 	var answer []Fasta = emptyCopy(aln)
 	var i, k int
-	var bedPos [][]int
+	var bedPos []int
 	speciesSeq := make([]string, len(aln))
 	var bedName string
 	var bedNames []string
@@ -181,7 +181,7 @@ func SegregatingSitesWithBed(aln []Fasta) ([]Fasta, [][]int, []string) {
 				bedName = strings.Join(speciesSeq, "_")
 			}
 			// report bed entry for that 1 base position
-			bedPos = append(bedPos, []int{i, i + 1})
+			bedPos = append(bedPos, i)
 			bedNames = append(bedNames, bedName)
 		}
 	}

@@ -14,7 +14,7 @@ import (
 func mfaReduce(inFilename, outFilename, bedFilename, chrom string) {
 	aln := fasta.Read(inFilename)
 	var answer []fasta.Fasta
-	var answerBedPos [][]int    // answerBedPos is [][]int not [][]bed.Bed to avoid circular dependencies, aka trying to import bed package in fasta package
+	var answerBedPos []int      // answerBedPos is []int not [][]bed.Bed to avoid circular dependencies, aka trying to import bed package in fasta package
 	var answerBedNames []string // answerBedName holds the referenceSpecies1base_alignSpecies2base of each segregating site
 	if bedFilename != "" {
 		var answerBed []bed.Bed
@@ -24,7 +24,7 @@ func mfaReduce(inFilename, outFilename, bedFilename, chrom string) {
 		lastRefPosConverted := 0
 		answer, answerBedPos, answerBedNames = fasta.SegregatingSitesWithBed(aln)
 		for i := 0; i < len(answerBedPos); i++ {
-			chromStartAlnPos = answerBedPos[i][0]
+			chromStartAlnPos = answerBedPos[i]
 			chromStartRefPos = fasta.AlnPosToRefPosCounter(aln[0], chromStartAlnPos, lastRefPosConverted, lastAlnPosConverted)
 			lastAlnPosConverted = chromStartAlnPos
 			lastRefPosConverted = chromStartRefPos
