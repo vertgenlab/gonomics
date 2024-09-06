@@ -49,7 +49,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
-	var bedFilename *string = flag.String("bedFilename", "", "Output the positions of variable sites in the reference species into a bed file with this name. Variable sites are reported 1 base/line.")
+	var bedFilename *string = flag.String("bedFilename", "", "Output the positions of variable sites into a bed file with this name. Positions are reported on the reference species (the top/first sequence in the multiFa alignment). Variable sites are reported 1 base/line.")
 	var chrom *string = flag.String("chrom", "", "Required when using -bedFilename, to specify the chromosome name of the reference species in the output bed file.")
 	var refStart *int = flag.Int("refStart", 0, "Optional when using -befFilename, to set the reference position for the beginning of the input multiFa alignment.")
 
