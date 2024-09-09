@@ -21,13 +21,24 @@ const (
 	InQGap State = 2
 )
 
-func multiFaToChain(inFile string, tName string, qName string, outFile string, swapTandQ bool) {
-	var records []fasta.Fasta = fasta.Read(inFile)
+type Settings struct {
+	InFile       string
+	TName        string
+	QName        string
+	OutFile      string
+	SwapTandQ    bool
+	QuerySeqName string
+}
+
+func multiFaToChain(s Settings) {
+	var records []fasta.Fasta = fasta.Read(s.InFile)
 
 	//preflight checks
-	if len(records) != 2 {
-		log.Fatalf("multiFaToChain accepts only pairwise multiFa alignment files.")
+	if s.QuerySeqName != "" {
+		querySeqIndex := findQuerySeqNameIndex(records, s.QuerySeqName)
+		records[1] = records[querySeqIndex]
 	}
+
 	if len(records[0].Seq) != len(records[1].Seq) {
 		log.Fatalf("Both sequences must be of the same alignment length.")
 	}
@@ -35,7 +46,7 @@ func multiFaToChain(inFile string, tName string, qName string, outFile string, s
 		log.Fatalf("MultiFaToChain expects non-empty DNA sequences.")
 	}
 
-	if swapTandQ {
+	if s.SwapTandQ {
 		records[0], records[1] = records[1], records[0]
 	}
 
@@ -120,12 +131,12 @@ func multiFaToChain(inFile string, tName string, qName string, outFile string, s
 
 	var currAnswer chain.Chain = chain.Chain{
 		Score:     100, //dummy value
-		TName:     tName,
+		TName:     s.TName,
 		TSize:     len(recordsCopy[0].Seq),
 		TStrand:   true,
 		TStart:    0,
 		TEnd:      TEnd,
-		QName:     qName,
+		QName:     s.QName,
 		QSize:     len(recordsCopy[1].Seq),
 		QStrand:   true,
 		QStart:    0,
@@ -135,7 +146,17 @@ func multiFaToChain(inFile string, tName string, qName string, outFile string, s
 	}
 
 	answer = append(answer, currAnswer)
-	chain.Write(outFile, answer, header)
+	chain.Write(s.OutFile, answer, header)
+}
+
+func findQuerySeqNameIndex(records []fasta.Fasta, querySeqName string) int {
+	for currIndex := range records {
+		if records[currIndex].Name == querySeqName {
+			return currIndex
+		}
+	}
+	log.Fatalf("Error: querySeqName, %v, not found in input fasta.\n", querySeqName)
+	return -1
 }
 
 // queryState determines the State of a multiFa alignment at a particular input index position. Second bool returns true
@@ -164,9 +185,14 @@ func queryState(records []fasta.Fasta, index int) (State, bool) {
 
 func usage() {
 	fmt.Print(
-		"multiFaToChain - Convert a pairwise multiFa format alignment to a chain file. First species is the target by default.\n" +
+		"multiFaToChain - Convert a multiFa format alignment to a chain file. First species is the target by default.\n" +
+			"Arguments:\n" +
+			"\tinFile: a multiFa format alignment, where the first sequence defines the coordinate system.\n" +
+			"\ttName: specifies the name of the target sequence (tName field) in the output chain. This will be a chromosome, construct, or plasmid name.\n" +
+			"\tqName: specifies the name of the query chromosome (qName field) in the output chain. This will be a chromosome, construct, or plasmid name.\n" +
+			"\toutFile: a UCSC chain format file, specifying a coordinate mapping between the target and query sequence.\n" +
 			"Usage:\n" +
-			" multiFaToChain input.fa tName qName output.chain\n" +
+			"\tmultiFaToChain input.fa tName qName output.chain\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
@@ -174,6 +200,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 4
 	var swapTandQ *bool = flag.Bool("swapTandQ", false, "Swap the target and query in the output chain file.")
+	var querySeqName *string = flag.String("querySeqName", "", "Specify which sequence in the multiFa to use as the query for chain conversion.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -189,5 +216,14 @@ func main() {
 	qName := flag.Arg(2)
 	outFile := flag.Arg(3)
 
-	multiFaToChain(inFile, tName, qName, outFile, *swapTandQ)
+	s := Settings{
+		InFile:       inFile,
+		TName:        tName,
+		QName:        qName,
+		OutFile:      outFile,
+		SwapTandQ:    *swapTandQ,
+		QuerySeqName: *querySeqName,
+	}
+
+	multiFaToChain(s)
 }
