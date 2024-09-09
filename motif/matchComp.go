@@ -150,10 +150,10 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 
 		// now we check if the current key is a significant motif hit
 		if currRefScore, inKmerHash = kmerHash[currRefKey]; inKmerHash {
-			//fmt.Printf("CurrRefKey: %v. CurrRefScore: %v.\n", currRefKey, currRefScore)
+			fmt.Printf("CurrRefKey: %v. CurrRefScore: %v.\n", currRefKey, currRefScore)
 			minResidual = math.Inf(1)
-			fmt.Printf("Just set minResidual to inf. minResidual: %v\n", minResidual)
 			minResidualAltScore = 0
+			fmt.Printf("Just set minResidual to inf, minResidualAltScore to 0\n")
 			for currAltStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currAltStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currAltStart++ {
 				currAltScore, currAltEnd, couldScoreSequence = ScoreWindow(pm, records[1].Seq, currAltStart)
 				//fmt.Printf("AlnPos: %v. currAltStart: %v. CurrAltEnd: %v. CurrAltScore: %v.\n", alnPos, currAltStart, currAltEnd, currAltScore)
@@ -165,6 +165,7 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 					minResidual = currResidual
 					fmt.Printf("Just updated minResidual to = currResidual. minResidual: %v\n", minResidual)
 					minResidualAltScore = currAltScore
+					fmt.Printf("Just updated minResidualAltScore to = currAltScore. minResidualAltScore: %v\n", minResidualAltScore)
 				}
 				if !enforceStrandMatch {
 					currAltScore, currAltEnd, couldScoreSequence = ScoreWindow(revCompPm, records[1].Seq, currAltStart)
@@ -177,6 +178,7 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 						minResidual = currResidual
 						fmt.Printf("Just updated minResidual to = currResidual. minResidual: %v\n", minResidual)
 						minResidualAltScore = currAltScore
+						fmt.Printf("Just updated minResidualAltScore to = currAltScore. minResidualAltScore: %v\n", minResidualAltScore)
 					}
 				}
 				altEndsConsidered[currAltEnd] = true
@@ -185,9 +187,10 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				currRefScore = currRefScore / consensusScore
 				minResidualAltScore = minResidualAltScore / consensusScore
 				minResidual = math.Abs(currRefScore - minResidualAltScore)
-				fmt.Printf("Just updated minResidual to math.Abs(currAltScore - minResidualRefScore). minResidual: %v. currAltScore: %v. minResidualRefScore: %v\n", minResidual, currAltScore, minResidualAltScore)
+				fmt.Printf("Just updated minResidual and minResidualAltScore in outputAsProportion option\n")
 			}
 			if minResidual >= residualFilter {
+				fmt.Printf("scanRefSequenceComp. About to write bed. ChromStart: %v, pm.Name: %v, currRefScore: %v, minResidualAltScore: %v, minResidual: %v\n", refPos-len(pm.Mat[0])+1, pm.Name, currRefScore, minResidualAltScore, minResidual)
 				currBed = bed.Bed{
 					Chrom:             chromName,
 					ChromStart:        refPos - len(pm.Mat[0]) + 1,
@@ -258,12 +261,12 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 		if currAltScore, inKmerHash = kmerHash[currAltKey]; inKmerHash {
 			// now we have to check if we've already considered this hit when looking at the Ref sequence.
 			if _, foundInMap = altEndsConsidered[alnPos]; !foundInMap {
-				//fmt.Printf("AlnPos: %v. RefPos: %v. currAltScore: %v.\n", alnPos, refPos, currAltScore/consensusScore)
+				fmt.Printf("AlnPos: %v. RefPos: %v. currAltScore: %v.\n", alnPos, refPos, currAltScore/consensusScore)
 				minResidual = math.Inf(1)
-				fmt.Printf("Just set minResidual to inf. minResidual: %v\n", minResidual)
 				minResidualRefScore = 0
+				fmt.Printf("Just set minResidual to inf, and minResidualRefSCore to 0.\n")
 				// TODO: maybe the line below is wrong because uses refStart, maybe should be diff variable. refStart should only be used when reporting final bed
-				for currRefStart = alnPos - len(pm.Mat[0]) - residualWindowSize + 1; currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
+				for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
 					//for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, refStart); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
 					currRefScore, _, couldScoreSequence = ScoreWindow(pm, records[0].Seq, currRefStart)
 					if !couldScoreSequence {
@@ -274,6 +277,7 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 						minResidual = currResidual
 						fmt.Printf("Just updated minResidual to = currResidual. minResidual: %v\n", minResidual)
 						minResidualRefScore = currRefScore
+						fmt.Printf("Just updated minResidualRefScore to = currRefScore. minResidualRefScore: %v\n", minResidualRefScore)
 					}
 					if !enforceStrandMatch {
 						currRefScore, _, couldScoreSequence = ScoreWindow(revCompPm, records[0].Seq, currRefStart)
@@ -286,6 +290,7 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 							minResidual = currResidual
 							fmt.Printf("Just updated minResidual to = currResidual. minResidual: %v\n", minResidual)
 							minResidualRefScore = currRefScore
+							fmt.Printf("Just updated minResidualRefScore to = currRefScore. minResidualRefScore: %v\n", minResidualRefScore)
 						}
 					}
 				}
@@ -293,10 +298,10 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 					currAltScore = currAltScore / consensusScore
 					minResidualRefScore = minResidualRefScore / consensusScore
 					minResidual = math.Abs(currAltScore - minResidualRefScore)
-					fmt.Printf("Just updated minResidual to math.Abs(currAltScore - minResidualRefScore). minResidual: %v. currAltScore: %v. minResidualRefScore: %v\n", minResidual, currAltScore, minResidualRefScore)
+					fmt.Printf("Just updated minResidual, minResidualRefScore and currAltScore in outputAsProportion option\n")
 				}
 				if minResidual >= residualFilter {
-					fmt.Printf("About to write bed. minResidualRefScore: %v, minResidual: %v\n", minResidualRefScore, minResidual)
+					fmt.Printf("scanAltSequenceComp. About to write bed. ChromStart: %v, pm.Name: %v, minResidualRefScore: %v, currAltScore: %v, minResidual: %v\n", refPos-len(pm.Mat[0])+1, pm.Name, minResidualRefScore, currAltScore, minResidual)
 					currBed = bed.Bed{
 						Chrom:             chromName,
 						ChromStart:        refPos - len(pm.Mat[0]) + 1,
