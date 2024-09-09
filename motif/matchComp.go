@@ -158,6 +158,8 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 			// mirroring function line below
 			//for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
 			// yes len(pm.Mat[0]) correctly gets how many columns aka bases there are
+			fmt.Printf("for loop component checks. alnPos: %v, len(pm.Mat[0]): %v, residualWindowSize: %v, len(records[0].Seq): %v\n", alnPos, len(pm.Mat[0]), residualWindowSize, len(records[0].Seq))
+			fmt.Printf("for loop endpoint checks. start: max(%v,0), end: min(%v, %v)\n", alnPos-len(pm.Mat[0])-residualWindowSize+1, alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq))
 			for currAltStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currAltStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currAltStart++ {
 				currAltScore, currAltEnd, couldScoreSequence = ScoreWindow(pm, records[1].Seq, currAltStart)
 				//fmt.Printf("AlnPos: %v. currAltStart: %v. CurrAltEnd: %v. CurrAltScore: %v.\n", alnPos, currAltStart, currAltEnd, currAltScore)
