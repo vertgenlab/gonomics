@@ -103,8 +103,8 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 	var currRefKey uint64
 	var couldGetNewKey, inKmerHash, couldScoreSequence bool
 	var currRefScore, currAltScore, currResidual, minResidual, minResidualAltScore float64
-	var refPos, lastRefPos, lastAlnPos, currAltStart, currAltEnd int = refStart, refStart, 0, 0, 0
-	var bitMask uint64 = uint64(math.Pow(2, float64(2*len(pm.Mat[0]))) - 1) // bitmask formula: B_n = 2^{2n} - 1
+	var refPos, lastRefPos, lastAlnPos, currAltStart, currAltEnd int = 0, 0, 0, 0, 0 // original line: var refPos, lastRefPos, lastAlnPos, currAltStart, currAltEnd int = refStart, refStart, 0, 0, 0
+	var bitMask uint64 = uint64(math.Pow(2, float64(2*len(pm.Mat[0]))) - 1)          // bitmask formula: B_n = 2^{2n} - 1
 	var currBed bed.Bed
 	revCompPm := ReverseComplement(pm)
 
@@ -154,6 +154,10 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 			minResidual = math.Inf(1)
 			minResidualAltScore = 0
 			fmt.Printf("Just set minResidual to inf, minResidualAltScore to 0\n")
+			//TODO: fix this line so loop runs?
+			// mirroring function line below
+			//for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
+			// yes len(pm.Mat[0]) correctly gets how many columns aka bases there are
 			for currAltStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currAltStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currAltStart++ {
 				currAltScore, currAltEnd, couldScoreSequence = ScoreWindow(pm, records[1].Seq, currAltStart)
 				//fmt.Printf("AlnPos: %v. currAltStart: %v. CurrAltEnd: %v. CurrAltScore: %v.\n", alnPos, currAltStart, currAltEnd, currAltScore)
@@ -193,8 +197,8 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				fmt.Printf("scanRefSequenceComp. About to write bed. ChromStart: %v, pm.Name: %v, currRefScore: %v, minResidualAltScore: %v, minResidual: %v\n", refPos-len(pm.Mat[0])+1, pm.Name, currRefScore, minResidualAltScore, minResidual)
 				currBed = bed.Bed{
 					Chrom:             chromName,
-					ChromStart:        refPos - len(pm.Mat[0]) + 1,
-					ChromEnd:          refPos + 1,
+					ChromStart:        refStart + refPos - len(pm.Mat[0]) + 1, //original: refPos - len(pm.Mat[0]) + 1,
+					ChromEnd:          refStart + refPos + 1,                  //original: refPos + 1,
 					Name:              pm.Name,
 					Score:             0,
 					Strand:            strand,
@@ -210,9 +214,9 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm PositionMatrix, chromName string, out *fileio.EasyWriter, residualWindowSize int, consensusScore float64, strand bed.Strand, refStart int, enforceStrandMatch bool, outputAsProportion bool, altEndsConsidered map[int]bool, residualFilter float64) {
 	var needNewKey = true
 	var currAltKey uint64
-	var refPos = refStart
+	refPos := 0 //original line: var refPos = refStart
 	var lastAlnPos, currRefStart int
-	var lastRefPos = refStart
+	lastRefPos := 0 //original line: var lastRefPos = refStart
 	var currAltScore, minResidual, minResidualRefScore, currRefScore, currResidual float64
 	var couldGetNewKey, inKmerHash, foundInMap, couldScoreSequence bool
 	var bitMask uint64 = uint64(math.Pow(2, float64(2*len(pm.Mat[0]))) - 1) // bitmask formula: B_n = 2^{2n} - 1
@@ -266,7 +270,10 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				minResidualRefScore = 0
 				fmt.Printf("Just set minResidual to inf, and minResidualRefSCore to 0.\n")
 				// TODO: maybe the line below is wrong because uses refStart, maybe should be diff variable. refStart should only be used when reporting final bed
+				fmt.Printf("for loop component checks. alnPos: %v, len(pm.Mat[0]): %v, residualWindowSize: %v, len(records[0].Seq): %v\n", alnPos, len(pm.Mat[0]), residualWindowSize, len(records[0].Seq))
+				fmt.Printf("for loop endpoint checks. start: max(%v,0), end: min(%v, %v)\n", alnPos-len(pm.Mat[0])-residualWindowSize+1, alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq))
 				for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
+					// original line below
 					//for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, refStart); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
 					currRefScore, _, couldScoreSequence = ScoreWindow(pm, records[0].Seq, currRefStart)
 					if !couldScoreSequence {
@@ -304,8 +311,8 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 					fmt.Printf("scanAltSequenceComp. About to write bed. ChromStart: %v, pm.Name: %v, minResidualRefScore: %v, currAltScore: %v, minResidual: %v\n", refPos-len(pm.Mat[0])+1, pm.Name, minResidualRefScore, currAltScore, minResidual)
 					currBed = bed.Bed{
 						Chrom:             chromName,
-						ChromStart:        refPos - len(pm.Mat[0]) + 1,
-						ChromEnd:          refPos + 1,
+						ChromStart:        refStart + refPos - len(pm.Mat[0]) + 1, //original: refPos - len(pm.Mat[0]) + 1,
+						ChromEnd:          refStart + refPos + 1,                  //original: refPos + 1,
 						Name:              pm.Name,
 						Score:             0,
 						Strand:            strand,
