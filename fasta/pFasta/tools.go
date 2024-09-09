@@ -117,7 +117,7 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 
 // vcfToPfa returns a pFasta representation of the given VCF sequence, only accepts single sequence Fasta
 func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) PFasta {
-	// relax to not-biallelic
+	// TODO: relax to not-biallelic
 	var vcfRecords <- chan vcf.Vcf
 
 	inputFa := fasta.Read(inputFaFilename)
@@ -150,19 +150,6 @@ type alleleCounts struct {
 	C int
 	G int
 	T int
-}
-
-func getFieldPointer(counts interface{}, fieldName string) *alleleCounts {
-	v := reflect.ValueOf(counts).Elem()
-	field := v.FieldByName(fieldName)
-
-	if field.IsValid() && field.CanAddr() {
-		fieldPtr := field.Addr().Interface().(*alleleCounts)
-		return fieldPtr
-	} else {
-		fmt.Printf("Invalid field: %s\n", fieldName)
-		return nil
-	}
 }
 
 // vcfSampleToPdnaBase calculates the distribution of samples at a position
