@@ -16,7 +16,7 @@ var vcfToPfaTests = []struct {
 	Output string
 	Precision	float32
 }{
-	{InputVcf: "testdata/test_vcftoPfa_input_1.vcf",
+	{InputVcf: "testdata/test_vcfToPfa_input_1.vcf",
 		RefFa: "testdata/test_vcfToPfa_input_1.fa",
 		Start: 1,
 		End: 36,
@@ -25,7 +25,7 @@ var vcfToPfaTests = []struct {
 		Output: "testdata/test_vcfToPfa_observed_1.pfa",
 		Precision: 1e-3,
 	},
-	{InputVcf: "testdata/test_vcftoPfa_input_2.vcf",
+	{InputVcf: "testdata/test_vcfToPfa_input_2.vcf",
 		RefFa: "testdata/test_vcfToPfa_input_1.fa",
 		Start: 1,
 		End: 44,
