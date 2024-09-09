@@ -161,7 +161,6 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 					break
 				}
 				currResidual = math.Abs(currRefScore - currAltScore)
-				fmt.Printf("Just calculated currResidual. currRefScore: %v. currAltScore: %v. currResidual: %v.\n", currRefScore, currAltScore, currResidual)
 				if currResidual < minResidual {
 					minResidual = currResidual
 					fmt.Printf("Just updated minResidual to = currResidual. minResidual: %v\n", minResidual)
@@ -174,7 +173,6 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 						break
 					}
 					currResidual = math.Abs(currRefScore - currAltScore)
-					fmt.Printf("Just calculated currResidual. currRefScore: %v. currAltScore: %v. currResidual: %v.\n", currRefScore, currAltScore, currResidual)
 					if currResidual < minResidual {
 						minResidual = currResidual
 						fmt.Printf("Just updated minResidual to = currResidual. minResidual: %v\n", minResidual)
@@ -264,13 +262,14 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				minResidual = math.Inf(1)
 				fmt.Printf("Just set minResidual to inf. minResidual: %v\n", minResidual)
 				minResidualRefScore = 0
-				for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, refStart); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
+				// TODO: maybe the line below is wrong because uses refStart, maybe should be diff variable. refStart should only be used when reporting final bed
+				for currRefStart = alnPos - len(pm.Mat[0]) - residualWindowSize + 1; currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
+					//for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, refStart); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
 					currRefScore, _, couldScoreSequence = ScoreWindow(pm, records[0].Seq, currRefStart)
 					if !couldScoreSequence {
 						break
 					}
 					currResidual = math.Abs(currRefScore - currAltScore)
-					fmt.Printf("Just calculated currResidual. currRefScore: %v. currAltScore: %v. currResidual: %v.\n", currRefScore, currAltScore, currResidual)
 					if currResidual < minResidual {
 						minResidual = currResidual
 						fmt.Printf("Just updated minResidual to = currResidual. minResidual: %v\n", minResidual)
@@ -283,7 +282,6 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 							break
 						}
 						currResidual = math.Abs(currRefScore - currAltScore)
-						fmt.Printf("Just calculated currResidual. currRefScore: %v. currAltScore: %v. currResidual: %v.\n", currRefScore, currAltScore, currResidual)
 						if currResidual < minResidual {
 							minResidual = currResidual
 							fmt.Printf("Just updated minResidual to = currResidual. minResidual: %v\n", minResidual)
