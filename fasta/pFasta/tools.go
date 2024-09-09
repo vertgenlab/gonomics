@@ -118,7 +118,7 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 // vcfToPfa returns a pFasta representation of the given VCF sequence, only accepts single sequence Fasta
 func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) PFasta {
 	// relax to not-biallelic
-	var vcfRecords <-chan vcf.Vcf
+	var vcfRecords <- chan vcf.Vcf
 
 	inputFa := fasta.Read(inputFaFilename)
 	answer := faToPfa(inputFa[0], start, end)
@@ -126,10 +126,15 @@ func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) 
 	vcfRecords, _ = vcf.GoReadToChan(inVcfFilename)
 
 	for v := range vcfRecords {
+		if v.Pos >= end {
+			break
+		}
+
 		if !(vcf.IsBiallelic(v) && vcf.IsSubstitution(v)) {
 			log.Fatal("Error: currently we only handle biallelic substitutions\n")
 		}
 
+		// check that fa matches vcf before editing
 		if inputFa[0].Seq[v.Pos-1] != dna.StringToBase(v.Ref) {
 			log.Fatal("Error: base in fasta didn't match ref base from VCF record\n")
 		}
@@ -147,12 +152,12 @@ type alleleCounts struct {
 	T int
 }
 
-func getFieldPointer(counts interface{}, fieldName string) *int {
+func getFieldPointer(counts interface{}, fieldName string) *alleleCounts {
 	v := reflect.ValueOf(counts).Elem()
 	field := v.FieldByName(fieldName)
 
 	if field.IsValid() && field.CanAddr() {
-		fieldPtr := field.Addr().Interface().(*int)
+		fieldPtr := field.Addr().Interface().(*alleleCounts)
 		return fieldPtr
 	} else {
 		fmt.Printf("Invalid field: %s\n", fieldName)
@@ -162,49 +167,49 @@ func getFieldPointer(counts interface{}, fieldName string) *int {
 
 // vcfSampleToPdnaBase calculates the distribution of samples at a position
 func vcfSampleToPdnaBase(samples []vcf.Sample, ref string, alts []string) pDna.Float32Base {
-	// can i just assume that everything only has 2 alleles and multiple len(samples)*2
-	// try to map it? idx in alts list = what base
 	// struct {A: 0, C: 0, G: 0, T: 0}
 	totalSamples := 2 * len(samples)
 
-	var counts alleleCounts
-	var mapping []*int
+	var Counts alleleCounts
+	mapAlleleIdx := make([]string, 4) // create map between allele number [0, 3] and nucleotide
 
-	// map ref and alt alleles to counts
-	fieldPointer := getFieldPointer(&counts, ref)
-	if fieldPointer != nil {
-		mapping = append(mapping, fieldPointer)
+	// (e.g. if ref=A, mapping[0] = "A")
+	mapAlleleIdx[0] = ref
+	for idx, alt := range alts {
+		mapAlleleIdx[idx+1] = alt
 	}
 
-	for _, alt := range alts {
-		fieldPointer = getFieldPointer(&counts, alt)
-		if fieldPointer != nil {
-			mapping = append(mapping, fieldPointer)
-		}
-	}
-
+	// iterate through each sample and count which alleles are present (given as 0, 1, 2, or 3)
+	tempCounts := make([]int, 4)
 	for _, s := range samples {
+		if len(s.Alleles) > 3 {
+			log.Print("Invalid number of alleles, must have less than 4.")
+		}
+
 		for _, p := range s.Alleles {
-			if p == 0 {
-				*mapping[0] += 1
-			} else if p == 1 {
-				*mapping[1] += 1
-			} else if p == 2 {
-				*mapping[2] += 1
-			} else if p == 3 {
-				*mapping[3] += 1
-			} else {
-				log.Fatalf("Invalid allele value > 4.")
-			}
-			totalSamples += 1
+			tempCounts[p]++
 		}
 	}
+
+	// Update Counts based on tempCounts
+    for i, count := range tempCounts {
+        switch mapAlleleIdx[i] {
+        case "A":
+            Counts.A = count
+        case "C":
+            Counts.C = count
+        case "G":
+            Counts.G = count
+        case "T":
+            Counts.T = count
+        }
+    }
 
 	var answer pDna.Float32Base
-	answer.A = float32(counts.A) / float32(totalSamples)
-	answer.C = float32(counts.C) / float32(totalSamples)
-	answer.G = float32(counts.G) / float32(totalSamples)
-	answer.T = float32(counts.T) / float32(totalSamples)
-
+	answer.A = float32(Counts.A) / float32(totalSamples)
+	answer.C = float32(Counts.C) / float32(totalSamples)
+	answer.G = float32(Counts.G) / float32(totalSamples)
+	answer.T = float32(Counts.T) / float32(totalSamples)
+	// log.Print("\ntempcounts ", tempCounts, " counts ", Counts, " answer ", answer, "\n")
 	return answer
 }

@@ -1,53 +1,12 @@
 ##fileformat=VCFv4.2
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
-Sequence_0	2	.	T	C	100	PASS	.	.	
-Sequence_0	31	.	A	C	100	PASS	.	.	
-Sequence_0	49	.	T	A	100	PASS	.	.	
-Sequence_0	53	.	C	G	100	PASS	.	.	
-Sequence_0	59	.	TT	T	100	PASS	.	.	
-Sequence_0	61	.	TA	T	100	PASS	.	.	
-Sequence_0	70	.	G	GC	100	PASS	.	.	
-Sequence_0	98	.	G	T	100	PASS	.	.	
-Sequence_0	114	.	G	T	100	PASS	.	.	
-Sequence_0	126	.	T	C	100	PASS	.	.	
-Sequence_0	130	.	G	A	100	PASS	.	.	
-Sequence_0	172	.	C	A	100	PASS	.	.	
-Sequence_0	179	.	C	A	100	PASS	.	.	
-Sequence_0	180	.	A	C	100	PASS	.	.	
-Sequence_0	187	.	AA	A	100	PASS	.	.	
-Sequence_0	204	.	G	GG	100	PASS	.	.	
-Sequence_0	214	.	A	G	100	PASS	.	.	
-Sequence_0	218	.	T	A	100	PASS	.	.	
-Sequence_0	219	.	A	ATC	100	PASS	.	.	
-Sequence_0	222	.	A	G	100	PASS	.	.	
-Sequence_0	226	.	C	CTT	100	PASS	.	.	
-Sequence_0	249	.	G	A	100	PASS	.	.	
-Sequence_0	254	.	G	A	100	PASS	.	.	
-Sequence_0	255	.	G	A	100	PASS	.	.	
-Sequence_0	256	.	T	G	100	PASS	.	.	
-Sequence_0	259	.	T	TCA	100	PASS	.	.	
-Sequence_0	261	.	AC	A	100	PASS	.	.	
-Sequence_0	263	.	A	T	100	PASS	.	.	
-Sequence_0	264	.	A	T	100	PASS	.	.	
-Sequence_0	271	.	G	C	100	PASS	.	.	
-Sequence_0	275	.	C	T	100	PASS	.	.	
-Sequence_0	278	.	T	A	100	PASS	.	.	
-Sequence_0	282	.	AT	A	100	PASS	.	.	
-Sequence_0	296	.	T	AA	100	PASS	.	.	
-Sequence_0	304	.	CC	C	100	PASS	.	.	
-Sequence_0	310	.	T	A	100	PASS	.	.	
-Sequence_0	318	.	T	C	100	PASS	.	.	
-Sequence_0	329	.	A	G	100	PASS	.	.	
-Sequence_0	338	.	G	T	100	PASS	.	.	
-Sequence_0	353	.	G	C	100	PASS	.	.	
-Sequence_0	392	.	G	T	100	PASS	.	.	
-Sequence_0	393	.	T	A	100	PASS	.	.	
-Sequence_0	407	.	T	G	100	PASS	.	.	
-Sequence_0	419	.	TT	T	100	PASS	.	.	
-Sequence_0	433	.	C	A	100	PASS	.	.	
-Sequence_0	461	.	G	T	100	PASS	.	.	
-Sequence_0	470	.	T	C	100	PASS	.	.	
-Sequence_0	472	.	G	C	100	PASS	.	.	
-Sequence_0	475	.	T	G	100	PASS	.	.	
-Sequence_0	480	.	C	G	100	PASS	.	.	
-Sequence_0	487	.	T	G	100	PASS	.	.	
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT  sample1 sample2 sample3 sample4
+chr1	2	Testing1	C	T	100.0	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	5	Testing2	C	G	100.0	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	13	Testing3	C	T	100.0	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	18	Testing4	C	G	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr1	19	Testing5	C	A	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr1	20	Testing6	C	T	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr1	21	Testing7	C	G	100.0	PASS	.	GT:DP	0|0:10	0|0:250	0|0:3	0|0:0
+chr1	42	Testing5	C	A	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr1	43	Testing6	C	T	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr1	44	Testing7	C	G	100.0	PASS	.	GT:DP	0|0:10	0|0:250	0|0:3	0|0:0
