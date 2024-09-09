@@ -26,6 +26,7 @@ type MatchCompSettings struct {
 	EnforceStrandMatch bool
 	ResidualFilter     float64
 	GcContent          float64
+	MatrixFilter       bool
 }
 
 func MatchComp(s MatchCompSettings) {
@@ -36,27 +37,42 @@ func MatchComp(s MatchCompSettings) {
 	var couldScoreConsensus bool
 	var revCompMotif PositionMatrix
 
-	var motifs []PositionMatrix
+	var motifsUnfiltered, motifs []PositionMatrix
 	switch s.MotifType {
 	case "Frequency":
-		motifs = ReadJaspar(s.MotifFile, "Frequency")
-		motifs = PfmSliceToPpmSlice(motifs, s.Pseudocounts)
-		motifs = PpmSliceToPwmSlice(motifs, s.GcContent)
+		motifsUnfiltered = ReadJaspar(s.MotifFile, "Frequency")
+		motifsUnfiltered = PfmSliceToPpmSlice(motifsUnfiltered, s.Pseudocounts)
+		motifsUnfiltered = PpmSliceToPwmSlice(motifsUnfiltered, s.GcContent)
 	case "Probability":
-		motifs = ReadJaspar(s.MotifFile, "Probability")
-		motifs = PpmSliceToPwmSlice(motifs, s.GcContent)
+		motifsUnfiltered = ReadJaspar(s.MotifFile, "Probability")
+		motifsUnfiltered = PpmSliceToPwmSlice(motifsUnfiltered, s.GcContent)
 	case "Weight":
-		motifs = ReadJaspar(s.MotifFile, "Weight")
+		motifsUnfiltered = ReadJaspar(s.MotifFile, "Weight")
 	default:
 		log.Fatalf("Error. Unexpected motif file format. Options are 'Frequency', 'Probability', and 'Weight'.")
 	}
 
 	out := fileio.EasyCreate(s.OutFile)
 
+	// when using the matrixFilter option, filter motifs to only retain motifs with length <= 32
+	if s.MatrixFilter {
+		for i := range motifsUnfiltered {
+			motifLen = len(motifsUnfiltered[i].Mat[0])
+			if motifLen <= 32 {
+				motifs = append(motifs, motifsUnfiltered[i])
+			} else {
+				fmt.Printf("Filtered out matrix with motif length greater than 32. Matrix ID: %v. Motif length: %v.\n", motifsUnfiltered[i].Id, motifLen)
+			}
+		}
+	} else {
+		motifs = make([]PositionMatrix, len(motifsUnfiltered))
+		copy(motifs, motifsUnfiltered)
+	}
+
 	for i := range motifs {
 		motifLen = len(motifs[i].Mat[0])
 		if motifLen > 32 {
-			log.Fatalf("Error: MatchComp cannot accommodate Position Matrices with a motif length greater than 32. Plese filter out the matrix with this ID: %v.\n", motifs[i].Id)
+			log.Fatalf("Error: MatchComp cannot accommodate Position Matrices with a motif length greater than 32. Please filter out the matrix with this ID: %v.\n", motifs[i].Id)
 		}
 		var currSeq = ConsensusSequence(motifs[i], false)
 		consensusScore, _, couldScoreConsensus = ScoreWindow(motifs[i], currSeq.Seq, 0)

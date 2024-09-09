@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var SubsequenceSwapTestCases = []struct {
@@ -12,8 +13,8 @@ var SubsequenceSwapTestCases = []struct {
 	BackgroundName string
 	ForegroundName string
 	SwapRegions    string
+	ChromName      string
 	OutFile        string
-	OutSeqName     string
 	ExpectedFile   string
 }{
 	{
@@ -21,8 +22,8 @@ var SubsequenceSwapTestCases = []struct {
 		BackgroundName: "Seq4",
 		ForegroundName: "Seq3",
 		SwapRegions:    "testdata/swapRegionsTest.bed",
+		ChromName:      "chr1",
 		OutFile:        "testdata/outputFile.fa",
-		OutSeqName:     "Seq5",
 		ExpectedFile:   "testdata/expectedSwap.fa",
 	},
 	{
@@ -30,9 +31,18 @@ var SubsequenceSwapTestCases = []struct {
 		BackgroundName: "hg38",
 		ForegroundName: "hca",
 		SwapRegions:    "testdata/swapWithIndels.bed",
+		ChromName:      "chr1",
 		OutFile:        "testdata/test.OutputWithIndels.fa",
-		OutSeqName:     "hg38_Ancestralized",
 		ExpectedFile:   "testdata/expected.SwapWithIndel.fa",
+	},
+	{
+		InFile:         "testdata/test.fa",
+		BackgroundName: "Seq1",
+		ForegroundName: "Seq2",
+		SwapRegions:    "testdata/swapWithChrom.bed",
+		ChromName:      "chr1",
+		OutFile:        "testdata/test.OutputWithChrom.fa",
+		ExpectedFile:   "testdata/expected.SwapWithChrom.fa",
 	},
 }
 
@@ -40,7 +50,7 @@ func TestSubsequenceSwap(t *testing.T) {
 	var err error
 	for _, tc := range SubsequenceSwapTestCases {
 		//loop through all test cases
-		multiFaSubsequenceSwap(tc.InFile, tc.SwapRegions, tc.BackgroundName, tc.ForegroundName, tc.OutFile, tc.OutSeqName)
+		multiFaSubsequenceSwap(tc.InFile, tc.SwapRegions, tc.BackgroundName, tc.ForegroundName, tc.ChromName, tc.OutFile)
 
 		if !fileio.AreEqual(tc.OutFile, tc.ExpectedFile) {
 			t.Errorf("Error: Output was not as expected. \n")
