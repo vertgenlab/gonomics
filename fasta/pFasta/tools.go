@@ -3,8 +3,6 @@ package pFasta
 import (
 	"log"
 	"math/rand"
-	"reflect"
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
