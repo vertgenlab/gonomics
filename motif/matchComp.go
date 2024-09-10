@@ -153,8 +153,8 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 			fmt.Printf("scanRefSequenceComp\n")
 			fmt.Printf("CurrRefKey: %v. CurrRefScore: %v.\n", currRefKey, currRefScore)
 			minResidual = math.Inf(1)
-			minResidualAltScore = 0
-			fmt.Printf("Just set minResidual to inf, minResidualAltScore to 0\n")
+			minResidualAltScore = math.Inf(0) // old version: minResidualAltScore = 0. -Inf should still work because minResidualAltScore will be overwritten later in for loop if there is a more appropriate value
+			fmt.Printf("Just set minResidual to +inf, minResidualAltScore to -inf\n")
 			for currAltStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currAltStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currAltStart++ {
 				fmt.Printf("entered for loop\n")
 				currAltScore, currAltEnd, couldScoreSequence = ScoreWindow(pm, records[1].Seq, currAltStart)
@@ -182,7 +182,9 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				}
 				altEndsConsidered[currAltEnd] = true
 			}
-			minResidual = math.Abs(currRefScore - minResidualAltScore) // I think this line needs to exist after for loop, in case minResidual never gets updated in for loop, and also not using outputAsProportion?
+			// Option 1: when !couldScoreSequence, minResidualAltScore and minResidual remain as initialized values, -Inf and +Inf, indicating "N/A", can be filtered out / ignored by user in output
+			// Option 2: when !couldScoreSequence, treat score as 0, calculate residual using line of code below
+			//minResidual = math.Abs(currRefScore - minResidualAltScore)
 			if outputAsProportion {
 				currRefScore = currRefScore / consensusScore
 				minResidualAltScore = minResidualAltScore / consensusScore
@@ -262,8 +264,8 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				fmt.Printf("scanAltSequenceComp\n")
 				fmt.Printf("AlnPos: %v. RefPos: %v. currAltScore: %v.\n", alnPos, refPos, currAltScore/consensusScore)
 				minResidual = math.Inf(1)
-				minResidualRefScore = 0
-				fmt.Printf("Just set minResidual to inf, and minResidualRefSCore to 0.\n")
+				minResidualRefScore = math.Inf(0) // old version: minResidualRefScore = 0. -Inf should still work because minResidualRefScore will be overwritten later in for loop if there is a more appropriate value
+				fmt.Printf("Just set minResidual to +inf, and minResidualRefScore to -inf.\n")
 				for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
 					fmt.Printf("entered for loop\n")
 					currRefScore, _, couldScoreSequence = ScoreWindow(pm, records[0].Seq, currRefStart)
@@ -289,6 +291,9 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 						}
 					}
 				}
+				// Option 1: when !couldScoreSequence, minResidualRefScore and minResidual remain as initialized values, -Inf and +Inf, indicating "N/A", can be filtered out / ignored by user in output
+				// Option 2: when !couldScoreSequence, treat score as 0, calculate residual
+				//minResidual = math.Abs(currAltScore - minResidualRefScore)
 				if outputAsProportion {
 					currAltScore = currAltScore / consensusScore
 					minResidualRefScore = minResidualRefScore / consensusScore
