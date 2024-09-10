@@ -158,15 +158,19 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 			// mirroring function line below
 			//for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
 			// yes len(pm.Mat[0]) correctly gets how many columns aka bases there are
+			fmt.Printf("scanRefSequenceComp\n")
 			fmt.Printf("for loop component checks. alnPos: %v, len(pm.Mat[0]): %v, residualWindowSize: %v, len(records[0].Seq): %v\n", alnPos, len(pm.Mat[0]), residualWindowSize, len(records[0].Seq))
 			fmt.Printf("for loop endpoint checks. start: max(%v,0), end: min(%v, %v)\n", alnPos-len(pm.Mat[0])-residualWindowSize+1, alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq))
 			for currAltStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currAltStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currAltStart++ {
+				fmt.Printf("entered for loop\n")
 				currAltScore, currAltEnd, couldScoreSequence = ScoreWindow(pm, records[1].Seq, currAltStart)
 				//fmt.Printf("AlnPos: %v. currAltStart: %v. CurrAltEnd: %v. CurrAltScore: %v.\n", alnPos, currAltStart, currAltEnd, currAltScore)
 				if !couldScoreSequence {
+					fmt.Printf("!couldScoreSequence\n")
 					break
 				}
 				currResidual = math.Abs(currRefScore - currAltScore)
+				fmt.Printf("Just updated currResidual. currResidual: %v, currRefScore: %v, currAltScore: %v\n", currResidual, currRefScore, currAltScore)
 				if currResidual < minResidual {
 					minResidual = currResidual
 					fmt.Printf("Just updated minResidual to = currResidual. minResidual: %v\n", minResidual)
@@ -189,6 +193,7 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				}
 				altEndsConsidered[currAltEnd] = true
 			}
+			minResidual = math.Abs(currRefScore - minResidualAltScore) // I think this line needs to exist after for loop, in case minResidual never gets updated in for loop, and also not using outputAsProportion?
 			if outputAsProportion {
 				currRefScore = currRefScore / consensusScore
 				minResidualAltScore = minResidualAltScore / consensusScore
@@ -277,11 +282,14 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
 					// original line below
 					//for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, refStart); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
+					fmt.Printf("entered for loop\n")
 					currRefScore, _, couldScoreSequence = ScoreWindow(pm, records[0].Seq, currRefStart)
 					if !couldScoreSequence {
+						fmt.Printf("!couldScoreSequence\n")
 						break
 					}
 					currResidual = math.Abs(currRefScore - currAltScore)
+					fmt.Printf("Just updated currResidual\n")
 					if currResidual < minResidual {
 						minResidual = currResidual
 						fmt.Printf("Just updated minResidual to = currResidual. minResidual: %v\n", minResidual)
