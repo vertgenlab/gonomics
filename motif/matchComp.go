@@ -150,17 +150,17 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 
 		// now we check if the current key is a significant motif hit
 		if currRefScore, inKmerHash = kmerHash[currRefKey]; inKmerHash {
-			fmt.Printf("scanRefSequenceComp\n")
-			fmt.Printf("CurrRefKey: %v. CurrRefScore: %v.\n", currRefKey, currRefScore)
+			//fmt.Printf("scanRefSequenceComp\n")
+			//fmt.Printf("CurrRefKey: %v. CurrRefScore: %v.\n", currRefKey, currRefScore)
 			minResidual = math.Inf(1)
-			minResidualAltScore = math.Inf(0) // old version: minResidualAltScore = 0. -Inf should still work because minResidualAltScore will be overwritten later in for loop if there is a more appropriate value
-			fmt.Printf("Just set minResidual to +inf, minResidualAltScore to -inf\n")
+			minResidualAltScore = math.Inf(-1) // old version: minResidualAltScore = 0. -Inf should still work because minResidualAltScore will be overwritten later in for loop if there is a more appropriate value
+			//fmt.Printf("Just set minResidual to +inf, minResidualAltScore to -inf\n")
 			for currAltStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currAltStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currAltStart++ {
-				fmt.Printf("entered for loop\n")
+				//fmt.Printf("entered for loop\n")
 				currAltScore, currAltEnd, couldScoreSequence = ScoreWindow(pm, records[1].Seq, currAltStart)
 				//fmt.Printf("AlnPos: %v. currAltStart: %v. CurrAltEnd: %v. CurrAltScore: %v.\n", alnPos, currAltStart, currAltEnd, currAltScore)
 				if !couldScoreSequence {
-					fmt.Printf("!couldScoreSequence\n")
+					//fmt.Printf("!couldScoreSequence\n")
 					break
 				}
 				currResidual = math.Abs(currRefScore - currAltScore)
@@ -191,7 +191,7 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				minResidual = math.Abs(currRefScore - minResidualAltScore)
 			}
 			if minResidual >= residualFilter {
-				fmt.Printf("scanRefSequenceComp. About to write bed. ChromStart: %v, pm.Name: %v, currRefScore: %v, minResidualAltScore: %v, minResidual: %v\n", refPos-len(pm.Mat[0])+1, pm.Name, currRefScore, minResidualAltScore, minResidual)
+				//fmt.Printf("scanRefSequenceComp. About to write bed. ChromStart: %v, pm.Name: %v, currRefScore: %v, minResidualAltScore: %v, minResidual: %v\n", refPos-len(pm.Mat[0])+1, pm.Name, currRefScore, minResidualAltScore, minResidual)
 				currBed = bed.Bed{
 					Chrom:             chromName,
 					ChromStart:        refStart + refPos - len(pm.Mat[0]) + 1, // add refStart (externally-provided constant) to the ChromStart calculated from the input multiFa (refPos - len(pm.Mat[0]) + 1)
@@ -261,16 +261,16 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 		if currAltScore, inKmerHash = kmerHash[currAltKey]; inKmerHash {
 			// now we have to check if we've already considered this hit when looking at the Ref sequence.
 			if _, foundInMap = altEndsConsidered[alnPos]; !foundInMap {
-				fmt.Printf("scanAltSequenceComp\n")
-				fmt.Printf("AlnPos: %v. RefPos: %v. currAltScore: %v.\n", alnPos, refPos, currAltScore/consensusScore)
+				//fmt.Printf("scanAltSequenceComp\n")
+				//fmt.Printf("AlnPos: %v. RefPos: %v. currAltScore: %v.\n", alnPos, refPos, currAltScore/consensusScore)
 				minResidual = math.Inf(1)
-				minResidualRefScore = math.Inf(0) // old version: minResidualRefScore = 0. -Inf should still work because minResidualRefScore will be overwritten later in for loop if there is a more appropriate value
-				fmt.Printf("Just set minResidual to +inf, and minResidualRefScore to -inf.\n")
+				minResidualRefScore = math.Inf(-1) // old version: minResidualRefScore = 0. -Inf should still work because minResidualRefScore will be overwritten later in for loop if there is a more appropriate value
+				//fmt.Printf("Just set minResidual to +inf, and minResidualRefScore to -inf.\n")
 				for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
-					fmt.Printf("entered for loop\n")
+					//fmt.Printf("entered for loop\n")
 					currRefScore, _, couldScoreSequence = ScoreWindow(pm, records[0].Seq, currRefStart)
 					if !couldScoreSequence {
-						fmt.Printf("!couldScoreSequence\n")
+						//fmt.Printf("!couldScoreSequence\n")
 						break
 					}
 					currResidual = math.Abs(currRefScore - currAltScore)
@@ -300,7 +300,7 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 					minResidual = math.Abs(currAltScore - minResidualRefScore)
 				}
 				if minResidual >= residualFilter {
-					fmt.Printf("scanAltSequenceComp. About to write bed. ChromStart: %v, pm.Name: %v, minResidualRefScore: %v, currAltScore: %v, minResidual: %v\n", refPos-len(pm.Mat[0])+1, pm.Name, minResidualRefScore, currAltScore, minResidual)
+					//fmt.Printf("scanAltSequenceComp. About to write bed. ChromStart: %v, pm.Name: %v, minResidualRefScore: %v, currAltScore: %v, minResidual: %v\n", refPos-len(pm.Mat[0])+1, pm.Name, minResidualRefScore, currAltScore, minResidual)
 					currBed = bed.Bed{
 						Chrom:             chromName,
 						ChromStart:        refStart + refPos - len(pm.Mat[0]) + 1, // add refStart (externally-provided constant) to the ChromStart calculated from the input multiFa (refPos - len(pm.Mat[0]) + 1)
