@@ -1,20 +1,22 @@
 package numbers
 
-import "strings"
+import (
+	"strings"
+)
 
-// intToRoman converts an integer to its Roman numeral representation.
-func intToRoman(num int) string {
-	var builder strings.Builder
-	for num > 0 {
+// intToRoman converts an integer to its Roman numeral representation returning an integer.
+func intToRoman(numeral int) string {
+	var answer strings.Builder
+	for numeral > 0 {
 		for i := range numerals {
-			if num >= numerals[i] {
-				builder.WriteString(romans[i])
-				num -= numerals[i]
+			if numeral >= numerals[i] {
+				answer.WriteString(romans[i])
+				numeral -= numerals[i]
 				break
 			}
 		}
 	}
-	return builder.String()
+	return answer.String()
 }
 
 // romanToInt converts a Roman numeral string to its corresponding integer value.
