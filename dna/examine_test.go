@@ -1,6 +1,8 @@
 package dna
 
-import "testing"
+import (
+	"testing"
+)
 
 var alpha = StringToBases("ACTGacgtAAACC--ACacgnnnNNNactg")
 var beta = StringToBases("ACGGacgtAATCC--ACacgnnnNCNaCtg")
@@ -64,5 +66,15 @@ func TestDefineBase(t *testing.T) {
 		!DefineBase(LowerT) || DefineBase(N) || DefineBase(LowerN) ||
 		DefineBase(Gap) || DefineBase(Dot) || DefineBase(Nil) {
 		t.Errorf("Error: Problem with DefineBase")
+	}
+}
+
+func TestTestForHomopolymer(t *testing.T) {
+	var testSeqs [][]Base = [][]Base{StringToBases("ATCCCAGTCG"), StringToBases("AGTGCCNAGC"), StringToBases("AGTGNNNNGC")}
+	var expRes []bool = []bool{true, false, true}
+	for i := range testSeqs {
+		if TestForHomopolymer(testSeqs[i], 3) != expRes[i] {
+			t.Errorf("Error in TestForHomopolymer: %s. Expected %t, got %t", BasesToString(testSeqs[i]), expRes[i], TestForHomopolymer(testSeqs[i], 3))
+		}
 	}
 }
