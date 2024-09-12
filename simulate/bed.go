@@ -25,6 +25,7 @@ func GenerateBedRegion(searchSpace []bed.Bed, tmp int, regionLength int) (bed.Be
 	var chromWindows int
 	var length int
 	// iterating through each ungapped window
+	
 	for j := 0; j < len(searchSpace); j++ {
 		length = searchSpace[j].ChromEnd - searchSpace[j].ChromStart
 
@@ -34,16 +35,15 @@ func GenerateBedRegion(searchSpace []bed.Bed, tmp int, regionLength int) (bed.Be
 		if chromWindows < 1 {
 			continue
 		}
-		if tmp-chromWindows > 0 {
-			log.Print("decrement\n")
+
+		// tmp < chromWindows (tmp is 0-indexed, chromWindows is not), at most tmp + 1 = chromWindows
+		if tmp-chromWindows > -1 {
 			tmp -= chromWindows
 		} else {
-			log.Print("searchspace chromstart: ", searchSpace[j].ChromStart, "\t temp: ", tmp, "\n")
-			log.Print("chromstart: ", searchSpace[j].ChromStart + tmp - 1, "\n")
 			return bed.Bed{
 				Chrom: searchSpace[j].Chrom, 
-				ChromStart: searchSpace[j].ChromStart + tmp - 1, 
-				ChromEnd: searchSpace[j].ChromStart + tmp - 1 + regionLength, 
+				ChromStart: searchSpace[j].ChromStart + tmp, 
+				ChromEnd: searchSpace[j].ChromStart + tmp + regionLength, 
 				Name: searchSpace[j].Name,
 				FieldsInitialized: 4}, true
 		}

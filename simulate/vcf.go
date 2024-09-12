@@ -10,8 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/vcf"
 	"strings"
-	"log"
-)
+)	
 
 // VcfToFile generates simulated VCF data.  The inputs are alpha (the selection parameter), the number of sites,
 // the output filename, along with parameters for the bounding function for sampling.  Reasonable parameters
@@ -44,23 +43,19 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 			// generate a random position in the ungapped bed
 			windowNumber = numbers.RandIntInRange(0, totalWindows) 
 			region, _ = GenerateBedRegion(bedRefFile, windowNumber, 1)
-			regionNameSplit = strings.Split(region.Name, "_")
-			regionNameStripped = regionNameSplit[0] // split bed name to get fasta sequence original name
+			regionNameSplit = strings.Split(region.Name, "_") // split bed name to get fasta sequence original name
+			regionNameStripped = regionNameSplit[0]
 			
 			currKey = regionOffset[regionNameStripped] + region.ChromStart
-			// check if not overlapping with previously generated positions
+			// check if currKey not overlapping with previously generated positions
 			if _, foundInMap = generatedPos[currKey]; !foundInMap {
-				log.Print("regionNameStripped: ", regionNameStripped, "\n")
 				refBaseIndex := faIndices[regionNameStripped]
-				log.Print("base index in the reference fa: ", refBaseIndex, "\n")
-				log.Print("refBaseIndex: ", refBaseIndex, "region.chromStart: ", region.ChromStart, "\n")
 				refBase = refFa[refBaseIndex].Seq[region.ChromStart]
 				current = SingleVcfWithRef(alpha, numAlleles, boundAlpha, boundBeta, boundMultiplier, regionNameStripped, currKey+1, refBase)
 				vcf.WriteVcf(out, current)
 				numGeneratedSites++
 				generatedPos[currKey] = true
 			}
-			log.Print("\n")
 		}
 	} else {
 		for i := 0; i < numSites; i++ {
