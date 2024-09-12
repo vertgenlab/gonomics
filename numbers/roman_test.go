@@ -19,9 +19,9 @@ func TestIntToRoman(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		result := intToRoman(test.input)
+		result := IntToRoman(test.input)
 		if result != test.expected {
-			t.Errorf("Error: intToRoman(%d) = %s; expected = %s", test.input, result, test.expected)
+			t.Errorf("Error: IntToRoman(%d) = %s; expected = %s", test.input, result, test.expected)
 		}
 	}
 }
@@ -43,9 +43,9 @@ func TestRomanToInt(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		result := romanToInt(test.input)
+		result := RomanToInt(test.input)
 		if result != test.expected {
-			t.Errorf("Error: romanToInt(%s) = %d; expected = %d", test.input, result, test.expected)
+			t.Errorf("Error: RomanToInt(%s) = %d; expected = %d", test.input, result, test.expected)
 		}
 	}
 }
