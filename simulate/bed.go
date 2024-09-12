@@ -3,6 +3,7 @@ package simulate
 import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
 )
 
 // CountWindows counts the total viable windows of length regionLength in the sequence searchSpace
@@ -34,8 +35,11 @@ func GenerateBedRegion(searchSpace []bed.Bed, tmp int, regionLength int) (bed.Be
 			continue
 		}
 		if tmp-chromWindows > 0 {
+			log.Print("decrement\n")
 			tmp -= chromWindows
 		} else {
+			log.Print("searchspace chromstart: ", searchSpace[j].ChromStart, "\t temp: ", tmp, "\n")
+			log.Print("chromstart: ", searchSpace[j].ChromStart + tmp - 1, "\n")
 			return bed.Bed{
 				Chrom: searchSpace[j].Chrom, 
 				ChromStart: searchSpace[j].ChromStart + tmp - 1, 
@@ -44,7 +48,8 @@ func GenerateBedRegion(searchSpace []bed.Bed, tmp int, regionLength int) (bed.Be
 				FieldsInitialized: 4}, true
 		}
 	}
-	// TODO: I want it to fatal error if it can't generate answer, but when I had it as a return in the if-else above, it kept on giving "no return" error
+
+	log.Panic("Error")
 	return bed.Bed{}, false
 }
 
