@@ -11,13 +11,15 @@ import (
 	"sort"
 )
 
+// createBx is a function that selects dna barcodes. The number of barcodes, the length (bp) and how many bases must differ
+// between barcodes are all user-input variables. It works by initializing a barcode, it then randomly mutates the sequence
+// and tests if it has created an acceptable barcode every few iterations. Homopolymers >= 3 are not accepted
 func createBx(length int, num int, dist int, outfile string) {
-	var bx []dna.Base
+	var bx, prevBx []dna.Base = initializeBx(length), make([]dna.Base, length)
 	var i int
-	var r float64 = 1.0 / float64(length)
+	var proportion float64 = 1.0 / float64(length)
 	var pass bool
 	bx = initializeBx(length)
-	var prevBx []dna.Base = make([]dna.Base, length)
 	mp := map[string]int{
 		dna.BasesToString(bx): 0,
 	}
@@ -31,7 +33,7 @@ func createBx(length int, num int, dist int, outfile string) {
 			}
 		}
 		copy(prevBx, bx)
-		modifyBase(r, bx)
+		modifyBase(proportion, bx)
 		if dna.TestForHomopolymer(bx, 3) {
 			copy(bx, prevBx)
 			i--
@@ -43,6 +45,7 @@ func createBx(length int, num int, dist int, outfile string) {
 	writeRes(mp, outfile)
 }
 
+// this function writes the output in fasta format
 func writeRes(mp map[string]int, outfile string) {
 	var writeSlice []string
 	o := fileio.EasyCreate(outfile)
@@ -57,6 +60,8 @@ func writeRes(mp map[string]int, outfile string) {
 	exception.PanicOnErr(err)
 }
 
+// testBx tests to see if the current barcode is an acceptable barcode to add to the output. It takes the map of currently
+// accepted barcodes, the test barcodes, and the user variable of how many bases must differ between barcodes
 func testBx(mp map[string]int, bx []dna.Base, dist int) bool {
 	_, found := mp[dna.BasesToString(bx)]
 	if found {
@@ -70,8 +75,10 @@ func testBx(mp map[string]int, bx []dna.Base, dist int) bool {
 	return true
 }
 
-func modifyBase(r float64, bx []dna.Base) {
-	idx := choseIdx(r)
+// modifyBase is the function which alters the barcode from one iteration of the loop to the next. It has helper functions
+// that select the index and the new identity of a single base. It edits the bx slice directly
+func modifyBase(proportion float64, bx []dna.Base) {
+	idx := choseIdx(proportion)
 	mod := choseBase()
 	switch int(bx[idx]) + mod {
 	case 1, 5:
@@ -85,29 +92,33 @@ func modifyBase(r float64, bx []dna.Base) {
 	}
 }
 
-func choseIdx(r float64) int {
-	var i int = 1
-	f := rand.Float64()
+// choseIdx uses a random float to pick the base at what index of the barcode that will be modified. It takes a "proportion"
+// which is calculated with 1.0 / length(barcode). The index (i) is selected with: i * proportion < randomFloat < i+1 * proportion.
+func choseIdx(proportion float64) int {
+	var idx int = 1
+	randfloat := rand.Float64()
 	for true {
-		if f <= r*float64(i) {
-			return i - 1
+		if randfloat <= proportion*float64(idx) {
+			return idx - 1
 		}
-		i++
+		idx++
 	}
 	return -1
 }
 
+// choseBase uses a random float to pick if the base to be modified will be iterated by 1, 2, or 3
 func choseBase() int {
-	randFloat := rand.Float64()
-	if randFloat < 0.33 {
+	randfloat := rand.Float64()
+	if randfloat <= 0.33 {
 		return 1
 	}
-	if randFloat < 0.66 {
+	if randfloat <= 0.66 {
 		return 2
 	}
 	return 3
 }
 
+// initializeBx creates the initial barcode by repeating ACGT... until the length is satisfied
 func initializeBx(length int) []dna.Base {
 	var bx []dna.Base
 	var b dna.Base = 0
@@ -131,7 +142,7 @@ func main() {
 	if len(flag.Args()) != 1 {
 		log.Fatalf("Expected 1 argument, got %d", len(flag.Args()))
 	}
-
-	createBx(*L, *N, *D, flag.Arg(0))
+	outfile := flag.Arg(0)
+	createBx(*L, *N, *D, outfile)
 
 }
