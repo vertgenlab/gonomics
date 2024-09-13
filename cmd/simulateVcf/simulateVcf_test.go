@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"github.com/vertgenlab/gonomics/exception"
 )
@@ -20,8 +21,8 @@ var SimulateVcfTests = []struct {
 	HasRef          bool
 }{
 	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000, "", false},
-	{"testdata/expected.vcf", "testdata/out_2.vcf", 4, 100, 10, 11, 0.001, 0.001, 10000, "testdata/refFa_short.fasta", true},
-	{"testdata/expected.vcf", "testdata/out_3.vcf", 4, 100, 20, 29, 0.001, 0.001, 10000, "testdata/refFa_short.fasta", true},
+	{"testdata/expected_2.vcf", "testdata/out_2.vcf", 4, 100, 10, 11, 0.001, 0.001, 10000, "testdata/refFa_short.fasta", true},
+	{"testdata/expected_3.vcf", "testdata/out_3.vcf", 4, 100, 20, 29, 0.001, 0.001, 10000, "testdata/refFa_short.fasta", true},
 }
 
 func TestSimulateVcf(t *testing.T) {
@@ -41,13 +42,11 @@ func TestSimulateVcf(t *testing.T) {
 			HasRef:          v.HasRef,
 		}
 		simulateVcf(s)
-		// if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-		// 	t.Errorf("Error in simulateVcf.")
-		// } else {
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("Error in simulateVcf.")
+		} else {
 		err = os.Remove(v.OutFile)
 		exception.PanicOnErr(err)
-		// }
-
-		// "github.com/vertgenlab/gonomics/fileio"
+		}
 	}
 }
