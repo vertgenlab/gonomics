@@ -13,11 +13,13 @@ const bufferSize = 10_000_000
 
 func usage() {
 	fmt.Print(
-		"samAssembler - Reference-based diploid assembly of aligned short reads.\n" +
+		"ANCoRA - Ancient-DNA Nucleotide-damage Correction and Reference-guided Assembly.\n" +
+			"This program builds reference-guided assemblies from input short-read sequencing libraries.\n" +
+			"Optimized for ancient DNA libraries, and learns ancient DNA damage profiles for genotype correction.\n" +
 			"Can be used in three modes:\n\t'build' generates diploid assemblies.\n" +
 			"\t'score' validates assembly accuracy with a five way alignment including the known divergent sequences\n" +
 			"\t'prior' constructs an empirical prior for output diploid genotypes based on a maximum likelihood estimate from the input reads.\n" +
-			"Enter: 'samAssembler build' OR 'samAssembler score' OR 'samAssembler prior' to view usage and options.\n")
+			"Enter: 'ancora build' OR 'ancora score' OR 'ancora prior' to view usage and options.\n")
 }
 
 func main() {
@@ -40,6 +42,6 @@ func main() {
 	case "prior":
 		parsePriorArgs()
 	default:
-		log.Fatalf("Unknown mode. samAssembler can be run with the first argument as 'build', 'prior', or 'score'.")
+		log.Fatalf("Unknown mode. ANCoRA can be run with the first argument as 'build', 'prior', or 'score'.")
 	}
 }
