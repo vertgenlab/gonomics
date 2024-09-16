@@ -53,7 +53,7 @@ func readLength(s ReadLengthSettings) {
 
 	for read := range data {
 		currReadLength = len(read.Seq)
-		if currReadLength > len(histogram) {
+		if currReadLength >= len(histogram) {
 			histogramBuffer := make([]int, currReadLength+10)
 			copy(histogramBuffer, histogram)
 			histogram = histogramBuffer
