@@ -25,6 +25,7 @@ func GenerateBedRegion(searchSpace []bed.Bed, randPos int, regionLength int) (be
 	var chromWindows int
 	var length int
 	// iterating through each ungapped window
+	// testing somethingg
 	for j := range searchSpace {
 		length = searchSpace[j].ChromEnd - searchSpace[j].ChromStart
 
