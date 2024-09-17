@@ -1,7 +1,7 @@
 package simulate
 
 import (
-	// "os"
+	"os"
 	"testing"
 	"math/rand"
 
@@ -9,8 +9,6 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fasta"
-	// "log"
-
 )
 
 var CountWindowsTests = []struct {
@@ -87,7 +85,6 @@ var GoSimulateBedTests = []struct {
 func TestGoSimulateBed(t * testing.T) {
 	var searchSpace []bed.Bed
 	var inputFile []fasta.Fasta
-	// var simRegions []bed.Bed
 	var err error
 	for idx, v := range GoSimulateBedTests {
 		rand.Seed(v.SetSeed)
@@ -102,6 +99,9 @@ func TestGoSimulateBed(t * testing.T) {
 		exception.PanicOnErr(err)
 		if !fileio.AreEqual(v.OutFile, v.Expected) {
 			t.Errorf("Error in GoSimulateBed testcase %v", idx)
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
 		}
 	}
 }
