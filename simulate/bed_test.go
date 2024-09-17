@@ -1,25 +1,25 @@
 package simulate
 
 import (
+	"math/rand"
 	"os"
 	"testing"
-	"math/rand"
 
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var CountWindowsTests = []struct {
-	InputFa string
+	InputFa      string
 	RegionLength int
-	Expected int
+	Expected     int
 }{
-	{"testdata/ref_short.fasta", 3, 59}, // regionlength>1
-	{"testdata/ref_short.fasta", 1, 69}, // regionlength=1
+	{"testdata/ref_short.fasta", 3, 59},        // regionlength>1
+	{"testdata/ref_short.fasta", 1, 69},        // regionlength=1
 	{"testdata/ref_short_allGaps.fasta", 5, 0}, // all gaps
-	{"testdata/ref_short_2.fasta", 50, 1}, // all gaps
+	{"testdata/ref_short_2.fasta", 50, 1},      // all gaps
 }
 
 func TestCountWindows(t *testing.T) {
@@ -37,20 +37,20 @@ func TestCountWindows(t *testing.T) {
 }
 
 var GenerateBedRegionTests = []struct {
-	InputFa string
-	Pos int
+	InputFa      string
+	Pos          int
 	RegionLength int
-	Expected string
-} {
-	{"testdata/ref_short.fasta", 49, 1, "testdata/generateBedRegion_expected_1.bed"}, // end of region, len=1
-	{"testdata/ref_short.fasta", 10, 3, "testdata/generateBedRegion_expected_2.bed"}, // end of region before gap, len>1
-	{"testdata/ref_short.fasta", 0, 1,"testdata/generateBedRegion_expected_3.bed"}, // beginning of region, len=1
-	{"testdata/ref_short.fasta", 50, 1,"testdata/generateBedRegion_expected_4.bed"}, // beginning of new region, len=1
+	Expected     string
+}{
+	{"testdata/ref_short.fasta", 49, 1, "testdata/generateBedRegion_expected_1.bed"},   // end of region, len=1
+	{"testdata/ref_short.fasta", 10, 3, "testdata/generateBedRegion_expected_2.bed"},   // end of region before gap, len>1
+	{"testdata/ref_short.fasta", 0, 1, "testdata/generateBedRegion_expected_3.bed"},    // beginning of region, len=1
+	{"testdata/ref_short.fasta", 50, 1, "testdata/generateBedRegion_expected_4.bed"},   // beginning of new region, len=1
 	{"testdata/ref_short_2.fasta", 0, 50, "testdata/generateBedRegion_expected_5.bed"}, // entire region
-	{"testdata/ref_short.fasta", 14, 13,"testdata/generateBedRegion_expected_6.bed"}, // after gap, to end of region, len>1
+	{"testdata/ref_short.fasta", 14, 13, "testdata/generateBedRegion_expected_6.bed"},  // after gap, to end of region, len>1
 }
 
-func TestGenerateBedRegion(t * testing.T) {
+func TestGenerateBedRegion(t *testing.T) {
 	var searchSpace []bed.Bed
 	var inputFile []fasta.Fasta
 	var region bed.Bed
@@ -64,25 +64,25 @@ func TestGenerateBedRegion(t * testing.T) {
 		if !generatedBool {
 			t.Errorf("No bed generated.")
 		}
-		if !bed.Equal(region, expected){
+		if !bed.Equal(region, expected) {
 			t.Errorf("Error in GenerateBedRegion testcase %v.", idx)
 		}
 	}
 }
 
 var GoSimulateBedTests = []struct {
-	InputFa string
-	RegionCount int
+	InputFa      string
+	RegionCount  int
 	RegionLength int
-	SetSeed int64
-	Expected string
-	OutFile string
-} {
+	SetSeed      int64
+	Expected     string
+	OutFile      string
+}{
 	{"testdata/ref_short.fasta", 3, 1, 8, "testdata/goSimulateBed_expected_1.bed", "testdata/goSimulateBed_out_1.bed"},
 	{"testdata/ref_short.fasta", 100, 3, 3, "testdata/goSimulateBed_expected_2.bed", "testdata/goSimulateBed_out_2.bed"},
 }
 
-func TestGoSimulateBed(t * testing.T) {
+func TestGoSimulateBed(t *testing.T) {
 	var searchSpace []bed.Bed
 	var inputFile []fasta.Fasta
 	var err error
