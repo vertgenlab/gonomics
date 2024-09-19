@@ -89,7 +89,7 @@ func mapSearchspaceToOffset(searchSpace []bed.Bed) map[string]int {
 	return regionOffset
 }
 
-// SingleVcf returns a single simulated Vcf record for a user-specified selection parameter alpha and genomic position.
+// SingleVcfRandom returns a single simulated Vcf record for a user-specified selection parameter alpha and genomic position.
 // There also needs to be parameters for the bounding function, where alpha, beta, and multiplier parameters of 0.001, 0.001, and 10000 are good
 // for most applications.
 func SingleVcfRandom(alpha float64, numAlleles int, boundAlpha float64, boundBeta float64, boundMultiplier float64, pos int) vcf.Vcf {
