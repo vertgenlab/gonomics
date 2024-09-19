@@ -11,11 +11,11 @@ import (
 
 // VcfToPfaSettings defines the usage settings for the pFa VcfToPfa subcommand.
 type VcfToPfaSettings struct {
-	InFile    string
-	RefFile	  string
-	OutDir    string
-	Start     int
-	End       int
+	InFile  string
+	RefFile string
+	OutDir  string
+	Start   int
+	End     int
 }
 
 // VcfToPfaUsage defines the usage statement for the pFaTools VcfToPfa subcommand.
@@ -50,11 +50,11 @@ func parseVcfToPfaArgs() {
 	outDir := VcfToPfaFlags.Arg(2)
 
 	s := VcfToPfaSettings{
-		InFile:    inFile,
-		RefFile:   refFile,
-		OutDir:    outDir,
-		Start:     *start,
-		End:       *end,
+		InFile:  inFile,
+		RefFile: refFile,
+		OutDir:  outDir,
+		Start:   *start,
+		End:     *end,
 	}
 
 	vcfToPfa(s)

@@ -1,12 +1,12 @@
 package pFasta
 
 import (
-	"log"
-	"math/rand"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/vcf"
+	"log"
+	"math/rand"
 )
 
 // checks if input pFasta has a sequence with chrom as name and returns its index
@@ -116,7 +116,7 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 // vcfToPfa returns a pFasta representation of the given VCF sequence, only accepts single sequence Fasta
 func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) PFasta {
 	// TODO: relax to not-biallelic
-	var vcfRecords <- chan vcf.Vcf
+	var vcfRecords <-chan vcf.Vcf
 
 	inputFa := fasta.Read(inputFaFilename)
 	answer := faToPfa(inputFa[0], start, end)
@@ -177,18 +177,18 @@ func vcfSampleToPdnaBase(samples []vcf.Sample, ref string, alts []string) pDna.F
 	}
 
 	// Update Counts based on tempCounts
-    for i, count := range tempCounts {
-        switch mapAlleleIdx[i] {
-        case "A":
-            Counts.A = count
-        case "C":
-            Counts.C = count
-        case "G":
-            Counts.G = count
-        case "T":
-            Counts.T = count
-        }
-    }
+	for i, count := range tempCounts {
+		switch mapAlleleIdx[i] {
+		case "A":
+			Counts.A = count
+		case "C":
+			Counts.C = count
+		case "G":
+			Counts.G = count
+		case "T":
+			Counts.T = count
+		}
+	}
 
 	var answer pDna.Float32Base
 	answer.A = float32(Counts.A) / float32(totalSamples)
