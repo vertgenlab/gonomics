@@ -208,7 +208,9 @@ func ThreeWayFaToVcf(f []fasta.Fasta, chr string, out *fileio.EasyWriter) {
 	}
 
 	for i := range f[0].Seq {
-
+		if f[0].Seq[i] == dna.Gap || f[1].Seq[i] == dna.Gap || f[2].Seq[i] == dna.Gap {
+			continue
+		}
 		if f[0].Seq[i] != f[1].Seq[i] || f[0].Seq[i] != f[2].Seq[i] { // normal substitution
 			currRefPos = fasta.AlnPosToRefPosCounter(f[0], i, currRefPos, currAlnPos)
 			currAlnPos = i
