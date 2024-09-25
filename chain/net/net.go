@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// Net represents an alignment block built off of chains, it represents the UCSC net file type
 type Net struct {
 	TName       string
 	Level       int
@@ -22,6 +23,7 @@ type Net struct {
 	ExtraFields string
 }
 
+// Read parses a net file and returns a slice of Net and a map with chromosome names and sizes in the net file
 func Read(filename string) ([]Net, map[string]chromInfo.ChromInfo) {
 	var currTName string
 	var done bool
@@ -38,6 +40,8 @@ func Read(filename string) ([]Net, map[string]chromInfo.ChromInfo) {
 	return answer, mp
 }
 
+// NextNet is a helper function for the Read function. It reads lines from an EasyReader and returns a Net struct, the
+// current chromosome, and a bool which will return true once it has reached the end of the file
 func NextNet(reader *fileio.EasyReader, currTName string, mp map[string]chromInfo.ChromInfo) (Net, string, bool) {
 	line, done := fileio.EasyNextRealLine(reader)
 	if done {
@@ -47,6 +51,8 @@ func NextNet(reader *fileio.EasyReader, currTName string, mp map[string]chromInf
 	return n, currTName, false
 }
 
+// NewNet is a helper function for the Read function. It takes in a single line of the file representing a Net entry
+// and returns a filled in Net struct and the current chromosome
 func NewNet(text string, currTName string, mp map[string]chromInfo.ChromInfo) (Net, string) {
 	data := strings.Split(text, " ")
 	if data[0] == "net" {
@@ -77,6 +83,8 @@ func NewNet(text string, currTName string, mp map[string]chromInfo.ChromInfo) (N
 	return curr, currTName
 }
 
+// countLevel is a helper struct for the NewNet function. It parses how many spaces proceed the data on the line
+// of the file to determine the Level of the net. It also returns the data without the proceeding spaces for easy parsing
 func countLevel(data []string) (int, []string) {
 	var c int
 	for i := range data {
@@ -89,6 +97,7 @@ func countLevel(data []string) (int, []string) {
 	return -1, []string{}
 }
 
+// Write takes in a file name, a slice of Net and a map of chromInfo and writes out a properly formatted net file.
 func Write(outfile string, nets []Net, chromSizes map[string]chromInfo.ChromInfo) {
 	var currChrom, prevChrom string
 	file := fileio.EasyCreate(outfile)
@@ -104,6 +113,7 @@ func Write(outfile string, nets []Net, chromSizes map[string]chromInfo.ChromInfo
 	exception.PanicOnErr(err)
 }
 
+// ToString takes a Net struct and formats it for writing
 func ToString(n Net) string {
 	var rec string = fmt.Sprintf("%s %d %d %s %c %d %d %s", n.Class, n.TStart, n.TSize, n.QName, parse.StrandToRune(n.Orientation), n.QStart, n.QSize, n.ExtraFields)
 	for i := 0; i < n.Level; i++ {
