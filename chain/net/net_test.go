@@ -8,12 +8,12 @@ import (
 )
 
 func TestReadAndWrite(t *testing.T) {
-	var out, exp string = "testdata/out.net", "testdata/exp.net"
-	in, mp := Read("testdata/test.in.net")
-	Write(out, in, mp)
-	if !fileio.AreEqual(out, exp) {
+	var outfile, infile string = "testdata/out.net", "testdata/test.in.net"
+	in, mp := Read(infile)
+	Write(outfile, in, mp)
+	if !fileio.AreEqual(outfile, infile) {
 		t.Errorf("Error in Net reading and writing\n")
 	}
-	err := os.Remove(out)
+	err := os.Remove(outfile)
 	exception.PanicOnErr(err)
 }
