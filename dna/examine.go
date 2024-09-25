@@ -115,3 +115,22 @@ func CountBaseInterval(seq []Base, b Base, start int, end int) int {
 	}
 	return answer
 }
+
+// TestForHomopolymer retuns true if there is a run of a single base that is equal or longer than the input variable n.
+func TestForHomopolymer(seq []Base, n int) bool {
+	var count int = 0
+	var currBase Base = seq[0]
+
+	for i := range seq {
+		if currBase == seq[i] {
+			count++
+		} else {
+			count = 1
+		}
+		currBase = seq[i]
+		if count >= n {
+			return true
+		}
+	}
+	return false
+}
