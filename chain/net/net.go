@@ -1,6 +1,9 @@
 package net
 
 import (
+	"fmt"
+	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"strings"
@@ -19,34 +22,36 @@ type Net struct {
 	ExtraFields string
 }
 
-func Read(filename string) []Net {
+func Read(filename string) ([]Net, map[string]chromInfo.ChromInfo) {
 	var currTName string
 	var done bool
 	var block Net
+	mp := make(map[string]chromInfo.ChromInfo)
 	file := fileio.EasyOpen(filename)
 	var answer []Net
 	defer file.Close()
-	for block, currTName, done = NextNet(file, currTName); !done; block, currTName, done = NextNet(file, currTName) {
+	for block, currTName, done = NextNet(file, currTName, mp); !done; block, currTName, done = NextNet(file, currTName, mp) {
 		if block.Class != "" {
 			answer = append(answer, block)
 		}
 	}
-	return answer
+	return answer, mp
 }
 
-func NextNet(reader *fileio.EasyReader, currTName string) (Net, string, bool) {
+func NextNet(reader *fileio.EasyReader, currTName string, mp map[string]chromInfo.ChromInfo) (Net, string, bool) {
 	line, done := fileio.EasyNextRealLine(reader)
 	if done {
 		return Net{}, currTName, true
 	}
-	n, currTName := NewNet(line, currTName)
+	n, currTName := NewNet(line, currTName, mp)
 	return n, currTName, false
 }
 
-func NewNet(text string, currTName string) (Net, string) {
+func NewNet(text string, currTName string, mp map[string]chromInfo.ChromInfo) (Net, string) {
 	data := strings.Split(text, " ")
 	if data[0] == "net" {
 		currTName = data[1]
+		mp[data[1]] = chromInfo.ChromInfo{Name: data[1], Size: parse.StringToInt(data[2])}
 		return Net{}, currTName
 	}
 	lvl, newData := countLevel(data)
@@ -82,4 +87,33 @@ func countLevel(data []string) (int, []string) {
 		}
 	}
 	return -1, []string{}
+}
+
+func Write(outfile string, nets []Net, chromSizes map[string]chromInfo.ChromInfo) {
+	var currChrom, prevChrom string
+	file := fileio.EasyCreate(outfile)
+	for i := range nets {
+		currChrom = nets[i].TName
+		if currChrom != prevChrom {
+			fileio.WriteToFileHandle(file, fmt.Sprintf("net %s %d", currChrom, chromSizes[currChrom].Size))
+		}
+		fileio.WriteToFileHandle(file, ToString(nets[i]))
+		prevChrom = currChrom
+	}
+	err := file.Close()
+	exception.PanicOnErr(err)
+}
+
+func ToString(n Net) string {
+	var rec string = fmt.Sprintf("%s %d %d %s %c %d %d %s", n.Class, n.TStart, n.TSize, n.QName, parse.StrandToRune(n.Orientation), n.QStart, n.QSize, n.ExtraFields)
+	for i := 0; i < n.Level; i++ {
+		rec = fmt.Sprintf(" %s", rec)
+	}
+	if n.Class == "gap" {
+		rec = fmt.Sprintf(" %s", rec)
+	}
+	if n.Level > 1 {
+		rec = fmt.Sprintf(" %s", rec)
+	}
+	return rec
 }
