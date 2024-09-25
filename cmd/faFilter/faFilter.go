@@ -13,7 +13,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-func faFilter(infile string, outfile string, name string, notName string, nameContains string, refPositions bool, start int, end int, minSize int, maxGC float64, minGC float64, finalBases int) {
+func faFilter(infile string, outfile string, name string, notName string, nameContains string, refPositions bool, start int, end int, minSize int, maxGC float64, minGC float64, finalNBases int, cutFinalNbases int) {
 	records := fasta.Read(infile) //read the fasta infile
 	var length int
 	var outlist []fasta.Fasta //make the variable to store the fasta records that will be written out
@@ -49,13 +49,21 @@ func faFilter(infile string, outfile string, name string, notName string, nameCo
 			pass = false
 		}
 		if pass { //if checks passed on a record
-			if finalBases > 0 {
+			if finalNBases > 0 {
 				length = len(records[i].Seq)
-				if finalBases > length {
-					length = finalBases
+				if finalNBases > length {
+					length = finalNBases
 				}
-				records[i].Seq = records[i].Seq[length-finalBases:]
+				records[i].Seq = records[i].Seq[length-finalNBases:]
 				outlist = append(outlist, records[i]) //write any records to the outlist
+				continue
+			} else if cutFinalNbases > 0 {
+				length = len(records[i].Seq)
+				if cutFinalNbases >= length {
+					continue
+				}
+				records[i].Seq = records[i].Seq[:length-cutFinalNbases]
+				outlist = append(outlist, records[i])
 				continue
 			}
 			if end == -1 { //if the user didn't ask the record to stop at a specific location, append the fasta until the end of the record
@@ -91,7 +99,8 @@ func main() {
 	var minSize *int = flag.Int("minSize", 0, "Retains all fasta records with a sequence of at least that size")
 	var maxGC *float64 = flag.Float64("maxGC", 100, "Retains all fasta records with GC content less than or equal to this percentage.")
 	var minGC *float64 = flag.Float64("minGC", 0, "Retains all fasta records with GC content greater than or equal to this percentage")
-	var finalBases *int = flag.Int("finalBases", -1, "Retains the final N bases in the fasta record. Not compatible with -start or -end")
+	var finalNBases *int = flag.Int("finalNBases", -1, "Retains the final N bases in the fasta record. Not compatible with -start or -end")
+	var cutFinalNBases *int = flag.Int("cutFinalNbases", -1, "cuts the final N bases from each fasta record. Not compatible with -finalNbases, -start or -end")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -103,13 +112,18 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
-	if *finalBases > 0 && (*start > 0 || *end > 0) {
+	if (*finalNBases > 0 || *cutFinalNBases > 0) && (*start > 0 || *end > 0) {
 		flag.Usage()
-		log.Fatalf("-finalBases and -start/-end are not compatible with each other.")
+		log.Fatalf("Error: -finalNbases/-cutFinalNbases and -start/-end are not compatible with each other.")
+	}
+
+	if *finalNBases > 0 && *cutFinalNBases > 0 {
+		flag.Usage()
+		log.Fatalf("Error: -finalNbases and -cutFinalNbases are not compatible with each other.")
 	}
 
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFilter(inFile, outFile, *name, *notName, *nameContains, *refPositions, *start, *end, *minSize, *maxGC, *minGC, *finalBases) //all options exist as pointers in the arguments of the function call, since they may or may not exist when the user calls the function.
+	faFilter(inFile, outFile, *name, *notName, *nameContains, *refPositions, *start, *end, *minSize, *maxGC, *minGC, *finalNBases, *cutFinalNBases) //all options exist as pointers in the arguments of the function call, since they may or may not exist when the user calls the function.
 }
