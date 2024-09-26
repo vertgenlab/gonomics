@@ -6,7 +6,9 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/parse"
+	"io"
 	"strings"
+	"sync"
 )
 
 // Net represents an alignment block built off of chains, it represents the UCSC net file type
@@ -126,4 +128,37 @@ func ToString(n Net) string {
 		rec = fmt.Sprintf(" %s", rec)
 	}
 	return rec
+}
+
+func GoReadToChan(filename string) (<-chan Net, map[string]chromInfo.ChromInfo) {
+	var wg sync.WaitGroup
+	var currTName string
+	chromSizes := make(map[string]chromInfo.ChromInfo)
+	file := fileio.EasyOpen(filename)
+	data := make(chan Net, 1000)
+	wg.Add(1)
+	go ReadToChan(file, data, currTName, chromSizes, &wg)
+
+	go func() {
+		wg.Wait()
+		close(data)
+	}()
+
+	return data, chromSizes
+}
+
+func ReadToChan(file *fileio.EasyReader, data chan<- Net, currTName string, chromSizes map[string]chromInfo.ChromInfo, wg *sync.WaitGroup) {
+	for curr, currTName, done := NextNet(file, currTName, chromSizes); !done; curr, currTName, done = NextNet(file, currTName, chromSizes) {
+		if curr.Class != "" {
+			data <- curr
+		}
+	}
+	file.Close()
+	wg.Done()
+}
+
+func WriteToFileHandle(file io.Writer, n Net) {
+	var err error
+	_, err = fmt.Fprintf(file, "%s\n", ToString(n))
+	exception.PanicOnErr(err)
 }
