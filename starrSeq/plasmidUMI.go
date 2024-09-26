@@ -91,16 +91,16 @@ func findUMI(s sam.Sam) string {
 			continue
 		}
 		if ans == 1 {
-			if i+20 >= len(s.Seq) {
+			if i+16 >= len(s.Seq) {
 				return ""
 			}
-			return dna.BasesToString(s.Seq[i+10 : i+20])
+			return dna.BasesToString(s.Seq[i+10 : i+16])
 		}
 		if ans == 2 {
-			if i-10 < 0 {
+			if i-6 < 0 {
 				return ""
 			}
-			bs = s.Seq[i-10 : i]
+			bs = s.Seq[i-6 : i]
 			dna.ReverseComplement(bs)
 			return dna.BasesToString(bs)
 		}
