@@ -6,7 +6,6 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"io"
 	"strings"
 	"sync"
 )
@@ -155,10 +154,4 @@ func ReadToChan(file *fileio.EasyReader, data chan<- Net, currTName string, chro
 	}
 	file.Close()
 	wg.Done()
-}
-
-func WriteToFileHandle(file io.Writer, n Net) {
-	var err error
-	_, err = fmt.Fprintf(file, "%s\n", ToString(n))
-	exception.PanicOnErr(err)
 }
