@@ -29,11 +29,12 @@ func Read(filename string) ([]Net, map[string]chromInfo.ChromInfo) {
 	var currTName string
 	var done bool
 	var block Net
+	var currLvl []int = []int{1, 1} //level, spaces
 	mp := make(map[string]chromInfo.ChromInfo)
 	file := fileio.EasyOpen(filename)
 	var answer []Net
 	defer file.Close()
-	for block, currTName, done = NextNet(file, currTName, mp); !done; block, currTName, done = NextNet(file, currTName, mp) {
+	for block, currTName, currLvl, done = NextNet(file, currTName, currLvl, mp); !done; block, currTName, currLvl, done = NextNet(file, currTName, currLvl, mp) {
 		if block.Class != "" {
 			answer = append(answer, block)
 		}
@@ -43,28 +44,28 @@ func Read(filename string) ([]Net, map[string]chromInfo.ChromInfo) {
 
 // NextNet is a helper function for the Read function. It reads lines from an EasyReader and returns a Net struct, the
 // current chromosome, and a bool which will return true once it has reached the end of the file
-func NextNet(reader *fileio.EasyReader, currTName string, mp map[string]chromInfo.ChromInfo) (Net, string, bool) {
+func NextNet(reader *fileio.EasyReader, currTName string, currLvl []int, mp map[string]chromInfo.ChromInfo) (Net, string, []int, bool) {
 	line, done := fileio.EasyNextRealLine(reader)
 	if done {
-		return Net{}, currTName, true
+		return Net{}, currTName, currLvl, true
 	}
-	n, currTName := NewNet(line, currTName, mp)
-	return n, currTName, false
+	n, currTName, currLvl := NewNet(line, currTName, currLvl, mp)
+	return n, currTName, currLvl, false
 }
 
 // NewNet is a helper function for the Read function. It takes in a single line of the file representing a Net entry
 // and returns a filled in Net struct and the current chromosome
-func NewNet(text string, currTName string, mp map[string]chromInfo.ChromInfo) (Net, string) {
+func NewNet(text string, currTName string, currLvl []int, mp map[string]chromInfo.ChromInfo) (Net, string, []int) {
 	data := strings.Split(text, " ")
 	if data[0] == "net" {
 		currTName = data[1]
 		mp[data[1]] = chromInfo.ChromInfo{Name: data[1], Size: parse.StringToInt(data[2])}
-		return Net{}, currTName
+		return Net{}, currTName, []int{1, 1}
 	}
-	lvl, newData := countLevel(data)
+	currLvl, newData := determineLevel(data, currLvl)
 	curr := Net{
 		TName:       currTName,
-		Level:       lvl,
+		Level:       currLvl[0],
 		Class:       newData[0],
 		TStart:      parse.StringToInt(newData[1]),
 		TSize:       parse.StringToInt(newData[2]),
@@ -75,27 +76,43 @@ func NewNet(text string, currTName string, mp map[string]chromInfo.ChromInfo) (N
 		ExtraFields: strings.Join(newData[7:], " "),
 	}
 
-	if curr.Class == "gap" {
-		curr.Level--
-	}
-	if curr.Level > 1 {
-		curr.Level--
-	}
-	return curr, currTName
+	return curr, currTName, currLvl
 }
 
-// countLevel is a helper struct for the NewNet function. It parses how many spaces proceed the data on the line
+// determineLevel is a helper struct for the NewNet function. It parses how many spaces proceed the data on the line
 // of the file to determine the Level of the net. It also returns the data without the proceeding spaces for easy parsing
-func countLevel(data []string) (int, []string) {
-	var c int
+func determineLevel(data []string, currLvl []int) ([]int, []string) {
+	var spaces int
 	for i := range data {
 		if data[i] == "" {
-			c++
+			spaces++
 		} else {
-			return c, data[i:]
+			break
 		}
 	}
-	return -1, []string{}
+	data = data[spaces:]
+
+	if spaces == currLvl[1] {
+		return currLvl, data
+	} else if spaces > currLvl[1] && data[0] == "gap" {
+		currLvl[1] = spaces
+		return currLvl, data
+	} else if spaces > currLvl[1] && data[0] == "fill" {
+		currLvl[0]++
+		currLvl[1] = spaces
+		return currLvl, data
+	} else if spaces < currLvl[1] {
+		if spaces == 2 && data[0] == "gap" {
+			return []int{1, spaces}, data
+		}
+		diff := currLvl[1] - spaces
+		if data[0] == "gap" {
+			diff--
+		}
+		return []int{diff, spaces}, data
+	}
+
+	return []int{}, []string{}
 }
 
 // Write takes in a file name, a slice of Net and a map of chromInfo and writes out a properly formatted net file.
@@ -132,11 +149,12 @@ func ToString(n Net) string {
 func GoReadToChan(filename string) (<-chan Net, map[string]chromInfo.ChromInfo) {
 	var wg sync.WaitGroup
 	var currTName string
+	var currLvl []int = []int{1, 1}
 	chromSizes := make(map[string]chromInfo.ChromInfo)
 	file := fileio.EasyOpen(filename)
 	data := make(chan Net, 1000)
 	wg.Add(1)
-	go ReadToChan(file, data, currTName, chromSizes, &wg)
+	go ReadToChan(file, data, currTName, currLvl, chromSizes, &wg)
 
 	go func() {
 		wg.Wait()
@@ -146,8 +164,8 @@ func GoReadToChan(filename string) (<-chan Net, map[string]chromInfo.ChromInfo) 
 	return data, chromSizes
 }
 
-func ReadToChan(file *fileio.EasyReader, data chan<- Net, currTName string, chromSizes map[string]chromInfo.ChromInfo, wg *sync.WaitGroup) {
-	for curr, currTName, done := NextNet(file, currTName, chromSizes); !done; curr, currTName, done = NextNet(file, currTName, chromSizes) {
+func ReadToChan(file *fileio.EasyReader, data chan<- Net, currTName string, currLvl []int, chromSizes map[string]chromInfo.ChromInfo, wg *sync.WaitGroup) {
+	for curr, currTName, currLvl, done := NextNet(file, currTName, currLvl, chromSizes); !done; curr, currTName, currLvl, done = NextNet(file, currTName, currLvl, chromSizes) {
 		if curr.Class != "" {
 			data <- curr
 		}

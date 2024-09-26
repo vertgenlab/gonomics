@@ -28,7 +28,8 @@ func TestGoReadToChan(t *testing.T) {
 	Write(outfile, n, mp)
 	if !fileio.AreEqual(outfile, infile) {
 		t.Errorf("Error in GoReadToChan\n")
+	} else {
+		err := os.Remove(outfile)
+		exception.PanicOnErr(err)
 	}
-	err := os.Remove(outfile)
-	exception.PanicOnErr(err)
 }
