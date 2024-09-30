@@ -87,6 +87,25 @@ func DiploidBaseString(base DiploidBase) string {
 	return ""
 }
 
+// RefBaseToRefGenotype converts a base in dna.Base format to a DiploidBase with the corresponding homozygous genotype.
+func RefBaseToRefGenotype(refBase dna.Base) DiploidBase {
+	switch refBase {
+	case dna.A:
+		return AA
+	case dna.C:
+		return CC
+	case dna.G:
+		return GG
+	case dna.T:
+		return TT
+	case dna.N: // should be redundant with catch above
+		return NN
+	default:
+		log.Fatalf("Error: Reference base was not N, A, C, G, or T. Found: %s.\n", dna.BaseToString(refBase))
+		return NN
+	}
+}
+
 // DiploidBaseCallFromPile determines which of 10 DiploidBase genotypes
 // are present at the position of an input Pile, preconditioned on the assumption of
 // a diploid base at that position (in other words, not considering INDELs).
@@ -103,20 +122,7 @@ func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, h
 	var baseCount = aCount + cCount + gCount + tCount
 
 	if baseCount < 1 {
-		switch refBase {
-		case dna.A:
-			return AA
-		case dna.C:
-			return CC
-		case dna.G:
-			return GG
-		case dna.T:
-			return TT
-		case dna.N: // should be redundant with catch above
-			return NN
-		default:
-			log.Fatalf("Error: Reference base was not N, A, C, G, or T. Found: %s.\n", dna.BaseToString(refBase))
-		}
+		return RefBaseToRefGenotype(refBase)
 	}
 
 	var maxDiploid []DiploidBase

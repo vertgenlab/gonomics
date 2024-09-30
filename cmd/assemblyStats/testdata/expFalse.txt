@@ -1,0 +1,7 @@
+Assembly Name: testdata/test.fa
+halfGenome: 21
+genomeLength: 43
+Number of contigs: 4
+Largest Contig: 30
+N50: 30
+L50: 1

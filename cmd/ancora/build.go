@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/sam"
 	"log"
 	"math/rand"
@@ -13,32 +15,33 @@ import (
 )
 
 func buildUsage(buildFlags *flag.FlagSet) {
-	fmt.Print("samAssembler build - Reference-based diploid assembly from aligned short reads.\n" +
+	fmt.Print("ancora build - Reference-based diploid assembly from aligned short reads.\n" +
 		"Usage:\n" +
-		"samAssembler build individual.sam ref.fa outputA.fa outputB.fa\n" +
+		"ancora build individual.sam ref.fa outputA.fa outputB.fa\n" +
 		"Options:\n")
 	buildFlags.PrintDefaults()
 }
 
 // BuildSettings specifies all user options and arguments for the build subcommand.
 type BuildSettings struct {
-	SamFileName         string
-	RefFile             string
-	OutFileA            string
-	OutFileB            string
-	MultiFaDir          string
-	qNameA              string
-	qNameB              string
-	Delta               float64 // expected divergence rate
-	Gamma               float64 // expected transition bias
-	Epsilon             float64 // expected PCR/sequencing error rate
-	Kappa               float64 // expected proportion of divergent sites that are INDELs
-	Lambda              float64 // expected rate of cytosine deamination
-	LikelihoodCacheSize int
-	SetSeed             int64
-	Verbose             int
-	FlatPrior           bool   // use an uninformative prior, as opposed to a fixed mutation model or empirical prior.
-	EmpiricalPrior      string // use an empirical prior for variant calling, specified by a filename
+	SamFileName           string
+	RefFile               string
+	OutFileA              string
+	OutFileB              string
+	MultiFaDir            string
+	qNameA                string
+	qNameB                string
+	Delta                 float64 // expected divergence rate
+	Gamma                 float64 // expected transition bias
+	Epsilon               float64 // expected PCR/sequencing error rate
+	Kappa                 float64 // expected proportion of divergent sites that are INDELs
+	Lambda                float64 // expected rate of cytosine deamination
+	LikelihoodCacheSize   int
+	SetSeed               int64
+	Verbose               int
+	FlatPrior             bool   // use an uninformative prior, as opposed to a fixed mutation model or empirical prior.
+	EmpiricalPrior        string // use an empirical prior for variant calling, specified by a filename
+	ProblematicRegionsBed string // specify a filename containing genomic positions of 'problematic regions' to be skipped in assembly. These regions will be set as homozygous reference in the output.
 }
 
 // AnswerStruct contains all variables related to the two output assembled sequences, here labeled A and B.
@@ -66,7 +69,7 @@ type MultiFaStruct struct {
 	NewBufferRoom            []dna.Base
 }
 
-// preCheck is a helper function of samAssemblerBuild that confirms the settings are within valid ranges.
+// preCheck is a helper function of ancoraBuild that confirms the settings are within valid ranges.
 func preCheck(s BuildSettings) {
 	if s.Delta < 0 || s.Delta > 1 {
 		log.Fatalf("Error: Delta must be a value between 0 and 1. Found: %v.\n", s.Delta)
@@ -106,6 +109,7 @@ func parseBuildArgs() {
 	var verbose *int = buildFlags.Int("verbose", 0, "Set to 1 to enable additional debug prints.")
 	var flatPrior *bool = buildFlags.Bool("flatPrior", false, "Use a flat prior instead of the default informative prior distribution.")
 	var empiricalPrior *string = buildFlags.String("empiricalPrior", "", "Use an empirical prior instead, based on an input prior file. New empirical priors can be generated with the 'prior' subcommand.")
+	var problematicRegionsBed *string = buildFlags.String("problematicRegionsBed", "", "Specify a set of regions to ignore in assembly. These regions will not be genotyped, and will be set to the homozygous reference sequence in the output assembly.")
 
 	err = buildFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
@@ -123,31 +127,32 @@ func parseBuildArgs() {
 	outFileB := buildFlags.Arg(3)
 
 	s := BuildSettings{
-		SamFileName:         inFile,
-		RefFile:             refFile,
-		OutFileA:            outFileA,
-		OutFileB:            outFileB,
-		MultiFaDir:          *multiFaDir,
-		qNameA:              *qNameA,
-		qNameB:              *qNameB,
-		Delta:               *delta,
-		Gamma:               *gamma,
-		Epsilon:             *epsilon,
-		Kappa:               *kappa,
-		Lambda:              *lambda,
-		LikelihoodCacheSize: *likelihoodCacheSize,
-		SetSeed:             *setSeed,
-		Verbose:             *verbose,
-		FlatPrior:           *flatPrior,
-		EmpiricalPrior:      *empiricalPrior,
+		SamFileName:           inFile,
+		RefFile:               refFile,
+		OutFileA:              outFileA,
+		OutFileB:              outFileB,
+		MultiFaDir:            *multiFaDir,
+		qNameA:                *qNameA,
+		qNameB:                *qNameB,
+		Delta:                 *delta,
+		Gamma:                 *gamma,
+		Epsilon:               *epsilon,
+		Kappa:                 *kappa,
+		Lambda:                *lambda,
+		LikelihoodCacheSize:   *likelihoodCacheSize,
+		SetSeed:               *setSeed,
+		Verbose:               *verbose,
+		FlatPrior:             *flatPrior,
+		EmpiricalPrior:        *empiricalPrior,
+		ProblematicRegionsBed: *problematicRegionsBed,
 	}
 
-	samAssemblerBuild(s)
+	ancoraBuild(s)
 }
 
-// samAssemblerBuild is the primary function of the samAssembler build cmd. It creates reference-guided pseudoassemblies
+// ancoraBuild is the primary function of the ancora build cmd. It creates reference-guided assemblies
 // from aligned short reads.
-func samAssemblerBuild(s BuildSettings) {
+func ancoraBuild(s BuildSettings) {
 	rand.Seed(s.SetSeed)
 	var i, refPos, positionsToSkip, haploidBases int
 	var haploidStrand bool // haploidStrand is true when the haploid bases are on the first strand (deletion on second strand)
@@ -159,6 +164,7 @@ func samAssemblerBuild(s BuildSettings) {
 	var currDiploidBases, currHaploidBases []dna.Base
 	var currHaploidCall sam.HaploidCall
 	var currRand float64
+	var inProblematicRegion bool
 
 	preCheck(s)
 
@@ -177,6 +183,16 @@ func samAssemblerBuild(s BuildSettings) {
 	reads, header := sam.GoReadToChan(s.SamFileName)
 	piles := sam.GoPileup(reads, header, false, nil, nil)
 
+	// read problematic regions, if applicable
+	problematicRegions := make([]interval.Interval, 0)
+	if s.ProblematicRegionsBed != "" {
+		tmpBeds := bed.Read(s.ProblematicRegionsBed)
+		for _, currBed := range tmpBeds {
+			problematicRegions = append(problematicRegions, currBed)
+		}
+	}
+	problematicRegionTree := interval.BuildTree(problematicRegions)
+
 	// initialize output
 	ans := AnswerStruct{
 		AnswerA:       make([]fasta.Fasta, len(ref)),
@@ -191,6 +207,7 @@ func samAssemblerBuild(s BuildSettings) {
 
 	// now time for the main loop, we look through each pile
 	for p := range piles {
+		inProblematicRegion = false
 		if s.Verbose > 0 && !firstTime && p.Pos%1_000_000 == 0 {
 			fmt.Printf("Current Chrom: %s. Current Position: %v.\n", currChrom, p.Pos)
 		}
@@ -258,8 +275,12 @@ func samAssemblerBuild(s BuildSettings) {
 		}
 
 		if currPloidy == 2 {
-			// First we handle the base call for the current pile
-			diploidBaseCall = sam.DiploidBaseCallFromPile(p, refMap[currChrom][refPos], cacheStruct.DiploidBasePriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, cacheStruct.AncientLikelihoodCache, s.Epsilon, s.Lambda)
+			inProblematicRegion = len(problematicRegions) > 0 && positionInProblematicRegion(p, currChrom, problematicRegionTree)
+			if inProblematicRegion {
+				diploidBaseCall = sam.RefBaseToRefGenotype(refMap[currChrom][refPos])
+			} else {
+				diploidBaseCall = sam.DiploidBaseCallFromPile(p, refMap[currChrom][refPos], cacheStruct.DiploidBasePriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, cacheStruct.AncientLikelihoodCache, s.Epsilon, s.Lambda)
+			}
 			currDiploidBases = sam.DiploidBaseToBases(diploidBaseCall)
 			currRand = rand.Float64()
 			if currRand < 0.5 {
@@ -274,12 +295,24 @@ func samAssemblerBuild(s BuildSettings) {
 			ans = advanceAnswerPos(ans)
 
 			// Now we handle diploid insertion calls in a helper function
-			ans, mlt, cacheStruct, refPos = diploidInsertion(ans, mlt, cacheStruct, p, refPos, s)
+			if !inProblematicRegion {
+				ans, mlt, cacheStruct, refPos = diploidInsertion(ans, mlt, cacheStruct, p, refPos, s)
+			} else {
+				refPos++ // if we are ignoring the pileup, incremeting the refPos is the only part of diploidInsertion that still needs to happen
+			}
 
 			// Now we handle diploid deletion calls
-			mlt, cacheStruct, refPos, haploidStrand, currPloidy, haploidBases, positionsToSkip = diploidDeletion(mlt, cacheStruct, p, refMap, refPos, currChrom, s)
+			if !inProblematicRegion {
+				mlt, cacheStruct, refPos, haploidStrand, currPloidy, haploidBases, positionsToSkip = diploidDeletion(mlt, cacheStruct, p, refMap, refPos, currChrom, s)
+			}
+
 		} else if currPloidy == 1 {
-			currHaploidCall = sam.HaploidCallFromPile(p, refMap[currChrom][refPos], s.Epsilon, s.Lambda, cacheStruct.HaploidBasePriorCache, cacheStruct.HaploidIndelPriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, cacheStruct.HomozygousIndelCache, cacheStruct.AncientLikelihoodCache)
+			inProblematicRegion = len(problematicRegions) > 0 && positionInProblematicRegion(p, currChrom, problematicRegionTree)
+			if inProblematicRegion {
+				currHaploidCall = sam.HaploidCall{Base: refMap[currChrom][refPos], Insertion: "", Deletion: 0}
+			} else {
+				currHaploidCall = sam.HaploidCallFromPile(p, refMap[currChrom][refPos], s.Epsilon, s.Lambda, cacheStruct.HaploidBasePriorCache, cacheStruct.HaploidIndelPriorCache, cacheStruct.HomozygousBaseCache, cacheStruct.HeterozygousBaseCache, cacheStruct.HomozygousIndelCache, cacheStruct.AncientLikelihoodCache)
+			}
 			if haploidStrand {
 				ans = advanceAPos(ans)
 				mlt = updateMultiFa(refMap[currChrom][refPos], currHaploidCall.Base, dna.Gap, mlt)
@@ -362,6 +395,14 @@ func samAssemblerBuild(s BuildSettings) {
 	ans = clearAnswerBuffer(ans)
 	fasta.Write(s.OutFileA, ans.AnswerA)
 	fasta.Write(s.OutFileB, ans.AnswerB)
+}
+
+// positionInProblematicRegion returns true if a sam.Pile p overlaps a problematic region, defined by an interval query tree data structure.
+func positionInProblematicRegion(p sam.Pile, currChrom string, problematicRegionsTree map[string]*interval.IntervalNode) bool {
+	// first, make a bed corresponding to the location of the current pile
+	pileBed := bed.Bed{Chrom: currChrom, ChromStart: int(p.Pos - 1), ChromEnd: int(p.Pos)}
+	// second, return true if any overlaps were found between the bed above and the problematicRegionsTree
+	return len(interval.Query(problematicRegionsTree, pileBed, "any")) > 0
 }
 
 // advanceAnswerPos advances the position of both haplotypes in the AnswerStruct.
