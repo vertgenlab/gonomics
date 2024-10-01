@@ -116,7 +116,7 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 	if len(inputFa) == 1 {
 		if chrom == "" || inputFa[0].Name == chrom {
 			chromInInput = true
-			answer = faToPfa(inputFa[0], start, end)
+			answer = FaToPfa(inputFa[0], start, end)
 		}
 	} else {
 		if chrom == "" {
@@ -126,7 +126,7 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 		for _, seq := range inputFa {
 			if seq.Name == chrom {
 				chromInInput = true
-				answer = faToPfa(seq, start, end)
+				answer = FaToPfa(seq, start, end)
 				break
 			}
 		}
