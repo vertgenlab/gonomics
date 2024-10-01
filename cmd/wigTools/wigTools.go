@@ -13,6 +13,7 @@ func usage() {
 	fmt.Printf(
 		"wigTools - a collection of tools for manipulating Wig files.\n" +
 			"Usage:\n" +
+			"\twigTools peaks in.wig chrom.sizes out.bed\n" +
 			"\twigTools filter in.wig genome.chrom.sizes out.wig\n" +
 			"\tOR\n" +
 			"\twigTools toTrainingSet in.wig genome.fa train.txt validate.txt test.txt\n" +
@@ -36,6 +37,8 @@ func main() {
 	switch flag.Arg(0) {
 	case "filter":
 		parseFilterArgs()
+	case "peaks":
+		parsePeaksArgs()
 	case "toTrainingSet":
 		parseToTrainingSetArgs()
 	case "math":

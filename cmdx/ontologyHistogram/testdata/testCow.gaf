@@ -1,0 +1,50 @@
+UniProtKB	A0A0A8JC39	BCL11A	enables	GO:0046872	GO_REF:0000043	IEA	UniProtKB-KW:KW-0479	F	C2H2-type domain-containing protein	BCL11A	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A0B4J192	FCGRT	located_in	GO:0010008	GO_REF:0000044	IEA	UniProtKB-SubCell:SL-0100	C	IgG receptor FcRn large subunit p51	FCGRT	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A0F7RPV8	GPHB5	enables	GO:0005179	GO_REF:0000002	IEA	InterPro:IPR001545	F	Glycoprotein hormone subunit beta domain-containing protein	GPHB5|GPB5	protein	taxon:9913	20231122	InterPro		
+UniProtKB	A0A0F7RPV8	GPHB5	enables	GO:0031531	GO_REF:0000107	IEA	UniProtKB:Q86YW7|ensembl:ENSP00000478993	F	Glycoprotein hormone subunit beta domain-containing protein	GPHB5|GPB5	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A0F7RPV8	GPHB5	enables	GO:0046982	GO_REF:0000107	IEA	UniProtKB:Q86YW7|ensembl:ENSP00000478993	F	Glycoprotein hormone subunit beta domain-containing protein	GPHB5|GPB5	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A0F7RPV8	GPHB5	involved_in	GO:0007189	GO_REF:0000107	IEA	UniProtKB:Q86YW7|ensembl:ENSP00000478993	P	Glycoprotein hormone subunit beta domain-containing protein	GPHB5|GPB5	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A0M6L0P8	GHE5	enables	GO:0046872	GO_REF:0000043	IEA	UniProtKB-KW:KW-0479	F	Growth hormone E5	GHE5|PRP-VII	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A0M6L0P8	GHE5	involved_in	GO:0007165	GO_REF:0000108	IEA	GO:0005179	P	Growth hormone E5	GHE5|PRP-VII	protein	taxon:9913	20231124	GOC		
+UniProtKB	A0A0M6L0P8	GHE5	involved_in	GO:0031328	GO_REF:0000117	IEA	ARBA:ARBA00028104	P	Growth hormone E5	GHE5|PRP-VII	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A0M6L0Q6	GHE4	enables	GO:0046872	GO_REF:0000043	IEA	UniProtKB-KW:KW-0479	F	Growth hormone E4	GHE4|LOC100298767	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A0M6L0Q6	GHE4	involved_in	GO:0007165	GO_REF:0000108	IEA	GO:0005179	P	Growth hormone E4	GHE4|LOC100298767	protein	taxon:9913	20231124	GOC		
+UniProtKB	A0A0M6L0Q6	GHE4	involved_in	GO:0031328	GO_REF:0000117	IEA	ARBA:ARBA00028104	P	Growth hormone E4	GHE4|LOC100298767	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A0N4STN0	ATP5MG	involved_in	GO:1902600	GO_REF:0000043	IEA	UniProtKB-KW:KW-0375	P	ATP synthase subunit	ATP5MG	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A0N4STN2	COX7B	involved_in	GO:0006123	GO_REF:0000002	IEA	InterPro:IPR008433	P	Cytochrome c oxidase subunit 7B, mitochondrial	COX7B	protein	taxon:9913	20231122	InterPro		
+UniProtKB	A0A0N4STN2	COX7B	located_in	GO:0005746	GO_REF:0000002	IEA	InterPro:IPR008433	C	Cytochrome c oxidase subunit 7B, mitochondrial	COX7B	protein	taxon:9913	20231122	InterPro		
+UniProtKB	A0A140T828	MFAP5	located_in	GO:0005576	GO_REF:0000043	IEA	UniProtKB-KW:KW-0964	C	Microfibril associated protein 5	MFAP5	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A140T828	MFAP5	located_in	GO:0016020	GO_REF:0000043	IEA	UniProtKB-KW:KW-0472	C	Microfibril associated protein 5	MFAP5	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A140T829	ZBTB18	enables	GO:0001227	GO_REF:0000107	IEA	UniProtKB:Q99592|ensembl:ENSP00000351539	F	Zinc finger and BTB domain containing 18	ZBTB18	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T829	ZBTB18	enables	GO:1990837	GO_REF:0000107	IEA	UniProtKB:Q99592|ensembl:ENSP00000351539	F	Zinc finger and BTB domain containing 18	ZBTB18	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T829	ZBTB18	involved_in	GO:0000122	GO_REF:0000107	IEA	UniProtKB:Q99592|ensembl:ENSP00000351539	P	Zinc finger and BTB domain containing 18	ZBTB18	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T829	ZBTB18	involved_in	GO:0045944	GO_REF:0000107	IEA	UniProtKB:Q99592|ensembl:ENSP00000351539	P	Zinc finger and BTB domain containing 18	ZBTB18	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T829	ZBTB18	located_in	GO:0016607	GO_REF:0000107	IEA	UniProtKB:Q99592|ensembl:ENSP00000351539	C	Zinc finger and BTB domain containing 18	ZBTB18	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T829	ZBTB18	part_of	GO:0000792	GO_REF:0000107	IEA	UniProtKB:Q99592|ensembl:ENSP00000351539	C	Zinc finger and BTB domain containing 18	ZBTB18	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T832	RPS17	enables	GO:0003735	GO_REF:0000002	IEA	InterPro:IPR001210|InterPro:IPR018273|InterPro:IPR036401	F	Small ribosomal subunit protein eS17	RPS17	protein	taxon:9913	20231122	InterPro		
+UniProtKB	A0A140T832	RPS17	involved_in	GO:0006412	GO_REF:0000002	IEA	InterPro:IPR001210|InterPro:IPR018273|InterPro:IPR036401	P	Small ribosomal subunit protein eS17	RPS17	protein	taxon:9913	20231122	InterPro		
+UniProtKB	A0A140T832	RPS17	located_in	GO:0005840	GO_REF:0000043	IEA	UniProtKB-KW:KW-0689	C	Small ribosomal subunit protein eS17	RPS17	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A140T832	RPS17	located_in	GO:0016020	GO_REF:0000043	IEA	UniProtKB-KW:KW-0472	C	Small ribosomal subunit protein eS17	RPS17	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A140T832	RPS17	part_of	GO:1990904	GO_REF:0000043	IEA	UniProtKB-KW:KW-0687	C	Small ribosomal subunit protein eS17	RPS17	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A140T834	KLHDC8B	located_in	GO:0005829	GO_REF:0000107	IEA	UniProtKB:Q8IXV7|ensembl:ENSP00000327468	C	Kelch domain-containing protein 8B	KLHDC8B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T837	MAOB	enables	GO:0052595	GO_REF:0000116	IEA	RHEA:16153	F	Amine oxidase	MAOB	protein	taxon:9913	20231122	RHEA		
+UniProtKB	A0A140T837	MAOB	enables	GO:0008131	GO_REF:0000116	IEA	RHEA:25265	F	Amine oxidase	MAOB	protein	taxon:9913	20231122	RHEA		
+UniProtKB	A0A140T837	MAOB	enables	GO:0097621	GO_REF:0000003	IEA	EC:1.4.3.4	F	Amine oxidase	MAOB	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A140T837	MAOB	enables	GO:0097621	GO_REF:0000116	IEA	RHEA:26414	F	Amine oxidase	MAOB	protein	taxon:9913	20231122	RHEA		
+UniProtKB	A0A140T837	MAOB	located_in	GO:0005741	GO_REF:0000044	IEA	UniProtKB-SubCell:SL-0172	C	Amine oxidase	MAOB	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A140T838	IL1B	enables	GO:0005149	GO_REF:0000104	IEA	UniRule:UR000000656	F	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A140T838	IL1B	enables	GO:0005178	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	F	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	enables	GO:0019904	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	F	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0001660	GO_REF:0000104	IEA	UniRule:UR000000656	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	UniProt		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0001934	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0006955	GO_REF:0000002	IEA	InterPro:IPR000975|InterPro:IPR003502	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	InterPro		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0008285	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0010573	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0010575	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0010718	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0030213	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0030335	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0030730	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0031394	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0032725	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		
+UniProtKB	A0A140T838	IL1B	involved_in	GO:0032729	GO_REF:0000107	IEA	UniProtKB:P01584|ensembl:ENSP00000263341	P	Multifunctional fusion protein	IL1B	protein	taxon:9913	20231122	Ensembl		

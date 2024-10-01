@@ -3,8 +3,6 @@ package sam
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
-	"os/exec"
 	"testing"
 
 	//bgBam "github.com/biogo/hts/bam"
@@ -125,9 +123,7 @@ func equalExceptExtra(a, b []Sam) bool {
 	return true
 }
 
-const bigBam string = "/Users/danielsnellings/Desktop/10k.bam"
-const bigSam string = "/Users/danielsnellings/Desktop/10k.sam"
-
+/*
 func BenchmarkBamOpenClose(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		r, _ := OpenBam(bigBam)
@@ -211,3 +207,4 @@ func BenchmarkSamtoolsBamRead(b *testing.B) {
 //		fmt.Print(a)
 //	}
 //}
+*/

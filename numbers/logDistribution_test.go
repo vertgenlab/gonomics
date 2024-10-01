@@ -74,6 +74,20 @@ func TestBinomalDistLogSlice(t *testing.T) {
 	}
 }
 
+func TestPoissonDistLog(t *testing.T) {
+	input1 := math.Exp(PoissonDistLog(4, 5))
+	expected1 := 1.754674e-01
+	input2 := math.Exp(PoissonDistLog(0, 5))
+	expected2 := 6.737947e-03
+	epsilon := 1e-6
+	if !ApproxEqual(input1, expected1, epsilon) {
+		t.Errorf("Erorr: Do not match. Input : %e. Expected: %e.", input1, expected1)
+	}
+	if !ApproxEqual(input2, expected2, epsilon) {
+		t.Errorf("Error: Do not match. Input : %e. Expected: %e.", input2, expected2)
+	}
+}
+
 /*
 var binomMap map[int][]float64
 var BinomialDistLogMapTests = []struct {

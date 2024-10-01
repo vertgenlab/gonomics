@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
 // multiFaSubsequenceSwap swaps a series of specified regions from a bed file between two sequences in a MultiFa object
@@ -14,7 +15,7 @@ import (
 // start and stop indices of the swap regions
 // it will return a file containing a Fasta slice (which includes several sequences), with one more sequence that the sequences in the original
 // multiFa; this extra sequence is the background sequence with relevant foreground spots swapped as dictated by the bed file.
-func multiFaSubsequenceSwap(inFile string, swapRegionsFile string, backgroundName, foregroundName string, outFile string, outSeqName string) {
+func multiFaSubsequenceSwap(inFile string, swapRegionsFile string, backgroundName, foregroundName string, chromName string, outFile string) {
 	var currRefPos, currAlnPos, lastRefPos, lastAlnPos int //these variables will be used to swap regions later in the code
 	// Load the original sequences from the multiFa file.
 	records := fasta.Read(inFile)
@@ -30,6 +31,11 @@ func multiFaSubsequenceSwap(inFile string, swapRegionsFile string, backgroundNam
 	}
 	answerSeq := fasta.Copy(records[background]) //copy of the background sequence is made
 	for _, currRegion := range swapRegions {     //loop over every single swap region in the bed
+		// Check if swap region is on the provided chromsome, otherwise skip iteration
+		if currRegion.Chrom != chromName {
+			continue
+		}
+
 		// Validate the swap region.
 		if currRegion.ChromStart < 0 || currRegion.ChromStart >= currRegion.ChromEnd {
 			log.Fatalf("Error: Invalid swap region. \n")
@@ -50,7 +56,7 @@ func multiFaSubsequenceSwap(inFile string, swapRegionsFile string, backgroundNam
 		}
 	}
 	var finalSeqs []fasta.Fasta
-	answerSeq.Name = outSeqName
+	answerSeq.Name = fmt.Sprintf("%v.swapped", backgroundName)
 	finalSeqs = append(records, answerSeq)
 	fasta.Write(outFile, finalSeqs)
 
@@ -76,9 +82,10 @@ func usage() {
 			"the index of the background and foreground sequences from the multiFa,\n" +
 			"a bed object with the relevant start and stop indices of the swap regions,\n" +
 			"the name of the outfile multiFa, and the name of the resulting sequence.\n" +
-			"It will return a file containing one more multiFa than is in the inFile.\n" +
+			"It will return a file containing one more multiFa than is in the inFile,\n" +
+			"named backgroundName.swapped.\n" +
 			"Usage:  \n" +
-			"multiFaSequenceSwap inFile.fa bedFile.bed background foreground outFile.fa outSeqName \n" +
+			"multiFaSequenceSwap inFile.fa bedFile.bed background foreground chromName outFile.fa \n" +
 			"options: \n",
 	)
 	flag.PrintDefaults()
@@ -102,9 +109,9 @@ func main() {
 	bedFile := flag.Arg(1)
 	backgroundName := flag.Arg(2)
 	foregroundName := flag.Arg(3)
-	outFile := flag.Arg(4)
-	outSeqName := flag.Arg(5)
+	chromName := flag.Arg(4)
+	outFile := flag.Arg(5)
 
-	multiFaSubsequenceSwap(inFile, bedFile, backgroundName, foregroundName, outFile, outSeqName)
+	multiFaSubsequenceSwap(inFile, bedFile, backgroundName, foregroundName, chromName, outFile)
 
 }

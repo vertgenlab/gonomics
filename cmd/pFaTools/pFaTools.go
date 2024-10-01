@@ -22,6 +22,8 @@ func usage() {
 			"\tpFaTools sample in.pfa outDir.Fa\n" +
 			"\tOR\n" +
 			"\tPFaTools visualize in.pfa start end outDir.txt\n" +
+			"\tOR\n" +
+			"\tPFaTools faToPfa inFile outDir.pfa InputType\n" +
 			"Enter a subcommand to view options.\n")
 }
 
@@ -36,6 +38,8 @@ func main() {
 	}
 
 	switch flag.Arg(0) {
+	case "faToPfa":
+		parseFaToPfaArgs()
 	case "entropyTrack":
 		parseEntropyTrackArgs()
 	case "extract":

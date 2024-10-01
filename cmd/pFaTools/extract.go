@@ -26,7 +26,7 @@ func extractUsage(extractFlags *flag.FlagSet) {
 		"A note on input and output file types:\n" +
 		"\tpFa (probabilistic FASTA) encodes position-wise probabilities in matrix entries. Columns should therefore sum to 1.\n" +
 		"Usage:\n" +
-		"pFaTools extract in.pFa chrom out.pFa start end\n" +
+		"pFaTools extract in.pFa chrom start end out.pFa\n" +
 		"options:\n")
 	extractFlags.PrintDefaults()
 }

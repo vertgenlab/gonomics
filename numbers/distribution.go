@@ -1,10 +1,12 @@
 package numbers
 
 import (
-	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"github.com/vertgenlab/gonomics/numbers/parse"
+	"fmt"
 	"log"
 	"math"
+
+	"github.com/vertgenlab/gonomics/numbers/logspace"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 )
 
 // NormalDist returns the normal distribution value x for a distribution with mean mu and standard deviation sigma.
@@ -63,14 +65,23 @@ func ExpDist(x float64) float64 {
 }
 
 // PoissonDist returns the probability density of a poisson distribution with parameter lambda at the integer value k.
-func PoissonDist(k int, lambda float64) float64 {
+// The second return is false if no overflow/underflow was detected. If underflow was detected, the program returns 0 and true.
+// If logOutput is true, answer will be returned as log(answer).
+func PoissonDist(k int, lambda float64, logOutput bool) (float64, bool) {
 	if k < 0 {
 		log.Fatalf("The poisson distribution is supported for k > 0.")
 	}
 	if lambda <= 0 {
 		log.Fatalf("The poisson distribution is supported for lambda >= 0.")
 	}
-	return (math.Pow(lambda, float64(k)) * math.Pow(math.E, -lambda)) / float64(Factorial(k))
+	logAnswer := PoissonDistLog(k, lambda)
+	if logOutput {
+		return logAnswer, false
+	}
+	if logspace.CanConvert(logAnswer) {
+		return math.Exp(logAnswer), false
+	}
+	return 0, true
 }
 
 // BetaDist returns the probability density of a beta distribution with parameters alpha and beta at position x.
@@ -128,10 +139,25 @@ func NormalLeftIntegral(x float64, mu float64, sigma float64) float64 {
 	return DefiniteIntegral(f, mu-200*sigma, x)
 }
 
-// NormalLeftIntegral returns the area under the curve of an input normal probability distribution defined by mean (mu) and standard deviation (sigma) to the right of an input point x.
+// NormalRightIntegral returns the area under the curve of an input normal probability distribution defined by mean (mu) and standard deviation (sigma) to the right of an input point x.
 func NormalRightIntegral(x float64, mu float64, sigma float64) float64 {
 	f := NormalClosure(mu, sigma)
 	return DefiniteIntegral(f, mu+200*sigma, x)
+}
+
+func LogNormalRightTailCDF(x, mu, sigma float64) (float64, error) {
+	z := (x - mu) / sigma
+	logErfc := math.Log(math.Erfc(z / math.Sqrt2))
+	logHalf := math.Log(0.5)
+	result := logHalf + logErfc
+
+	if math.IsInf(result, 0) {
+		return result, fmt.Errorf("overflow detected")
+	}
+	if result == math.Inf(-1) {
+		return result, fmt.Errorf("underflow detected")
+	}
+	return result, nil
 }
 
 // NormalAdaptiveIntegral returns the integral under a normal probability distribution with mean mu and standard deviation sigma from a specified left and right bound.
@@ -225,7 +251,8 @@ func GammaIntegral(left float64, right float64, alpha float64, beta float64) flo
 func PoissonLeftSummation(k int, lambda float64) float64 {
 	var answer float64 = 0
 	for i := 0; i < k+1; i++ {
-		answer = answer + PoissonDist(i, lambda)
+		increment, _ := PoissonDist(i, lambda, false)
+		answer = answer + increment
 	}
 	return answer
 }
@@ -242,7 +269,8 @@ func PoissonSum(left int, right int, lambda float64) float64 {
 	}
 	var answer float64 = 0
 	for i := left; i < right; i++ {
-		answer = answer + PoissonDist(i, lambda)
+		increment, _ := PoissonDist(i, lambda, false)
+		answer = answer + increment
 	}
 	return answer
 }
@@ -268,7 +296,11 @@ func BinomialRightSummation(n int, k int, p float64, logOutput bool) float64 {
 			return 1
 		}
 	}
-	return evaluateRightBinomialSum(n, k, p, logOutput)
+	if float64(n)*p > 10 && float64(n)*(1-p) > 10 {
+		return evaluateRightBinomialSumApproximate(n, k, p, logOutput)
+	} else {
+		return evaluateRightBinomialSum(n, k, p, logOutput)
+	}
 }
 
 // BinomialSum calculates the sum of probabilities in a binomial distribution with n experiments and success probability p between two input k values. Inclusive on both ends.
@@ -316,5 +348,27 @@ func evaluateLeftBinomialSum(n int, k int, p float64, logOutput bool) float64 {
 			answer += curr
 		}
 	}
+	return answer
+}
+
+// evaluateRightBinomialSumApproximate is a helper function that calculates the sum of probabilities under a binomial distribution with parameters n and p to the right of an input k value, inclusive.
+func evaluateRightBinomialSumApproximate(n int, k int, p float64, logOutput bool) float64 {
+	var curr float64
+	var x, mu, sig float64
+	mu = float64(n) * p
+	x = float64(k) - 0.5
+	sig = math.Sqrt(float64(n) * p * (1 - p))
+
+	var answer float64
+	if logOutput {
+		answer, _ = LogNormalRightTailCDF(x, mu, sig)
+	} else {
+		answer = NormalDist(x, mu, sig)
+		for i := int(x) + 1; i <= n; i++ {
+			curr = NormalDist(float64(i), mu, sig)
+			answer += curr
+		}
+	}
+
 	return answer
 }

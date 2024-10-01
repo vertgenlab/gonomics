@@ -1,11 +1,14 @@
 package fileio
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
+	"github.com/klauspost/pgzip"
 	"github.com/vertgenlab/gonomics/exception"
 )
 
@@ -53,18 +56,20 @@ func copyFile(inputFilename string, outputFilename string) {
 }
 
 func BenchmarkRead(b *testing.B) {
-	copyFile("testdata/big.fa.gz", "testdata/big.fa")
+	unzip := "testdata/big.fa"
+	copyFile("testdata/big.fa.gz", unzip)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		var er *EasyReader
 		var done bool
 
-		er = EasyOpen("testdata/big.fa")
+		er = EasyOpen(unzip)
 
 		for _, done = EasyNextLine(er); !done; _, done = EasyNextLine(er) {
 		}
 		er.Close()
 	}
+	EasyRemove(unzip)
 }
 
 func BenchmarkReadGz(b *testing.B) {
@@ -81,52 +86,61 @@ func BenchmarkReadGz(b *testing.B) {
 }
 
 func BenchmarkWriteFileio(b *testing.B) {
+	test := "testdata/testWrite.dna"
 	for n := 0; n < b.N; n++ {
-		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna")
+		var ew *EasyWriter = EasyCreate(test)
 
 		for i := 0; i < 10000; i++ {
 			writeDnaFileio(ew)
 		}
 		ew.Close()
 	}
+	EasyRemove(test)
 }
 
 func BenchmarkWriteFileioGz(b *testing.B) {
+	test := "testdata/testWrite.dna.gz"
 	for n := 0; n < b.N; n++ {
-		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna.gz")
+		var ew *EasyWriter = EasyCreate(test)
 
 		for i := 0; i < 10000; i++ {
 			writeDnaFileio(ew)
 		}
 		ew.Close()
 	}
+	EasyRemove(test)
 }
 
 func BenchmarkWriteIo(b *testing.B) {
+	test := "testdata/testWrite.dna"
 	for n := 0; n < b.N; n++ {
-		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna")
+		var ew *EasyWriter = EasyCreate(test)
 
 		for i := 0; i < 10000; i++ {
 			writeDnaIo(ew)
 		}
 		ew.Close()
 	}
+	EasyRemove(test)
 }
 
 func BenchmarkWriteIoGz(b *testing.B) {
+	test := "testdata/testWrite.dna.gz"
 	for n := 0; n < b.N; n++ {
-		var ew *EasyWriter = EasyCreate("testdata/testWrite.dna.gz")
+		var ew *EasyWriter = EasyCreate(test)
 
 		for i := 0; i < 10000; i++ {
 			writeDnaIo(ew)
 		}
 		ew.Close()
 	}
+	EasyRemove(test)
 }
 
 func BenchmarkWriteFile(b *testing.B) {
+	test := "testdata/testWrite.dna"
 	for n := 0; n < b.N; n++ {
-		osf, err := os.Create("testdata/testWrite.dna")
+		osf, err := os.Create(test)
 		exception.PanicOnErr(err)
 
 		for i := 0; i < 10000; i++ {
@@ -134,6 +148,7 @@ func BenchmarkWriteFile(b *testing.B) {
 		}
 		osf.Close()
 	}
+	EasyRemove(test)
 }
 
 var testfile2 string = "testdata/smallTest"
@@ -162,5 +177,58 @@ func TestWrite(t *testing.T) {
 	} else {
 		err = os.Remove("test.txt")
 		exception.PanicOnErr(err)
+	}
+}
+
+func TestStdinGzip(t *testing.T) {
+	testCases := []string{
+		"fileio stdin with gzip",
+		"stdin.gz",
+	}
+
+	for _, input := range testCases {
+		// Create a temporary file to simulate stdin
+		mockStdin, err := os.CreateTemp("", "mockStdin.gz")
+		if err != nil {
+			t.Fatalf("Error: Failed to create temporary file: %v", err)
+		}
+		defer mockStdin.Close()
+		defer EasyRemove(mockStdin.Name())
+
+		// Gzip the input data
+		var gzippedInput bytes.Buffer
+		gzWriter := pgzip.NewWriter(&gzippedInput)
+		if _, err := gzWriter.Write([]byte(input)); err != nil {
+			t.Fatalf("Error: Failed to gzip input: %v", err)
+		}
+		if err := gzWriter.Close(); err != nil {
+			t.Fatalf("Error: Failed to close gzip writer: %v", err)
+		}
+
+		// Write the gzipped input to the mock stdin
+		if _, err := io.Copy(mockStdin, &gzippedInput); err != nil {
+			t.Fatalf("Error: Failed to write simulated input: %v", err)
+		}
+
+		// Seek to the beginning of the mock stdin
+		if _, err := mockStdin.Seek(0, io.SeekStart); err != nil {
+			t.Fatalf("Error: Failed to seek to the start: %v", err)
+		}
+
+		// Set os.Stdin to the mock stdin
+		os.Stdin = mockStdin
+
+		// Call the function being tested
+		file := EasyOpen("/dev/stdin")
+		defer file.Close()
+
+		// Read from the file and compare with the original input
+		var reader strings.Builder
+		if _, err := io.Copy(&reader, file); err != nil {
+			t.Fatalf("Error: Failed to read from simulated stdin: %v", err)
+		}
+		if reader.String() != input {
+			t.Errorf("Error: Mismatch for input %q. Expected: %q, got %q", input, input, reader.String())
+		}
 	}
 }
