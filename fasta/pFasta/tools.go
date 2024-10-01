@@ -75,8 +75,8 @@ func PAlnPosToRefPosCounterSeq(record []pDna.Float32Base, AlnPos int, refStart i
 	return refStart
 }
 
-// faToPfa returns a pFasta representation of the given Fasta sequence, start inclusive, end exclusive
-func faToPfa(input fasta.Fasta, start int, end int) PFasta {
+// FaToPfa returns a pFasta representation of the given Fasta sequence, start inclusive, end exclusive
+func FaToPfa(input fasta.Fasta, start int, end int) PFasta {
 	if end == -1 {
 		end = len(input.Seq)
 	} else if end > len(input.Seq) {
