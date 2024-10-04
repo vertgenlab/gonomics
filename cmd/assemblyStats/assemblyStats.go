@@ -12,8 +12,8 @@ import (
 )
 
 func assemblyStats(infile string, outfile string, countLowerAsGaps bool) {
-	N50, halfGenome, genomeLength, largestContig, numContigs := fasta.AssemblyStats(infile, countLowerAsGaps)
-	fasta.WriteAssemblyStats(infile, outfile, N50, halfGenome, genomeLength, largestContig, numContigs)
+	N50, L50, halfGenome, genomeLength, largestContig, numContigs := fasta.AssemblyStats(infile, countLowerAsGaps)
+	fasta.WriteAssemblyStats(infile, outfile, N50, L50, halfGenome, genomeLength, largestContig, numContigs)
 }
 
 func usage() {
