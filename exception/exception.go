@@ -60,3 +60,11 @@ func WarningOnErr(err error) {
 		log.Printf("WARNING: %s", err)
 	}
 }
+
+// RecoverPanicErr recovers non-nil panics errors that occurrs.
+func RecoverPanicErr() {
+	r := recover()
+	if r == nil {
+		log.Printf("Expected panic, but none occurred.\n")
+	}
+}
