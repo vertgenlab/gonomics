@@ -13,7 +13,7 @@ import (
 	"log"
 )
 
-func bedMerge(infile string, outfile string, mergeAdjacent bool, lowMem bool, keepAllNames bool) {
+func bedMerge(infile string, outfile string, mergeAdjacent int, lowMem bool, keepAllNames bool) {
 	if lowMem {
 		bedMergeLowMem(infile, outfile, mergeAdjacent)
 	} else {
@@ -21,19 +21,21 @@ func bedMerge(infile string, outfile string, mergeAdjacent bool, lowMem bool, ke
 	}
 }
 
-func bedMergeLowMem(infile string, outfile string, mergeAdjacent bool) {
+func bedMergeLowMem(infile string, outfile string, mergeAdjacent int) {
 	var err error
 	b := bed.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
 	var firstTime bool = true
 	var currentMax bed.Bed
+	var minDist int
 
 	for i := range b {
 		if firstTime {
 			firstTime = false
 			currentMax = i
 		} else {
-			if bed.Overlap(currentMax, i) || mergeAdjacent && bed.Adjacent(currentMax, i) {
+			minDist, err = bed.MinimumDistance(currentMax, i)
+			if bed.Overlap(currentMax, i) || minDist <= mergeAdjacent && err == nil {
 				if i.Score > currentMax.Score {
 					currentMax.Score = i.Score
 				}
@@ -50,7 +52,7 @@ func bedMergeLowMem(infile string, outfile string, mergeAdjacent bool) {
 	exception.PanicOnErr(err)
 }
 
-func bedMergeHighMem(infile string, outfile string, mergeAdjacent bool, keepAllNames bool) {
+func bedMergeHighMem(infile string, outfile string, mergeAdjacent int, keepAllNames bool) {
 	var records = bed.Read(infile)
 	outList := bed.MergeHighMem(records, mergeAdjacent, keepAllNames)
 	bed.Write(outfile, outList)
@@ -68,6 +70,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var mergeAdjacent *bool = flag.Bool("mergeAdjacent", false, "Merge non-overlapping entries with direct adjacency.")
+	var pad *int = flag.Int("pad", -1, "Merge bed entries that are N bases away from each other. A pad value of 0 is equivalent to -mergeAdjacent")
 	var lowMem *bool = flag.Bool("lowMem", false, "Use the low memory algorithm. Requires input file to be pre-sorted.")
 	var keepAllNames *bool = flag.Bool("keepAllNames", false, "If set to true, merged beds will also have a merged name field in a comma separated list, cannot currently be combined with lowMem option")
 
@@ -81,8 +84,16 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
+	if *pad > -1 {
+		*pad++
+	}
+
+	if *mergeAdjacent && *pad < 0 {
+		*pad = 1
+	}
+
 	infile := flag.Arg(0)
 	outfile := flag.Arg(1)
 
-	bedMerge(infile, outfile, *mergeAdjacent, *lowMem, *keepAllNames)
+	bedMerge(infile, outfile, *pad, *lowMem, *keepAllNames)
 }
