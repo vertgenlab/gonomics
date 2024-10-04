@@ -35,7 +35,7 @@ func init() {
 
 	err := os.Setenv("GODEBUG", strings.Join(variables, ","))
 	PanicOnErr(err)
-	rand.New(rand.NewSource(0))
+	rand.Seed(0)
 }
 
 // PanicOnErr will panic if input error is not nil.
