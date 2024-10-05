@@ -23,8 +23,8 @@ func TestToGff3(t *testing.T) {
 		},
 	}
 	actual := ToGff3(line)
-	if !equal(actual, expected) {
-		t.Errorf("ToGff3(%s) = %s; want %s", line, Gff3ToString(actual), Gff3ToString(expected))
+	if !Equal(actual, expected) {
+		t.Errorf("Error: ToGff3(%s) = %s; want %s", line, Gff3ToString(actual), Gff3ToString(expected))
 	}
 
 	// Test case with missing score
@@ -43,8 +43,8 @@ func TestToGff3(t *testing.T) {
 		},
 	}
 	actual = ToGff3(line)
-	if !equal(actual, expected) {
-		t.Errorf("ToGff3(%s) = %v; want %v", line, actual, expected)
+	if !Equal(actual, expected) {
+		t.Errorf("Error: ToGff3(%s) = %v; want %v", line, actual, expected)
 	}
 
 	// Test case with invalid strand
@@ -96,7 +96,7 @@ func TestGff3ToString(t *testing.T) {
 	expected = "chr1\tEnsembl\tgene\t1000\t2000\t.\t+\t.\tID=gene1"
 	actual = Gff3ToString(gff3)
 	if actual != expected {
-		t.Errorf("Gff3ToString(%v) = %s; want %s", gff3, actual, expected)
+		t.Errorf("Error: Gff3ToString(%v) = %s; want %s", gff3, actual, expected)
 	}
 }
 func TestGff3ReadWrite(t *testing.T) {
@@ -123,5 +123,78 @@ func TestGff3ReadWrite(t *testing.T) {
 		if Gff3ToString(got) != Gff3ToString(expected) {
 			t.Errorf("Error: Record %d mismatch:\nExpected: %s\nGot: %s", i, Gff3ToString(expected), Gff3ToString(got))
 		}
+	}
+}
+
+func TestParseTags(t *testing.T) {
+	// Test case with multiple tag-value pairs
+	attrStr := "ID=gene1;Name=MyGene;Alias=G1"
+	expected := []Tag{
+		{Label: "ID", Value: "gene1"},
+		{Label: "Name", Value: "MyGene"},
+		{Label: "Alias", Value: "G1"},
+	}
+	actual := parseTags(attrStr)
+	if tagsToString(actual) != tagsToString(expected) {
+		t.Errorf("Error: parseTags(%s) = %s; want %s", attrStr, tagsToString(actual), tagsToString(expected))
+	}
+
+	// Test case with a single tag-value pair
+	attrStr = "ID=gene1"
+	expected = []Tag{
+		{Label: "ID", Value: "gene1"},
+	}
+	actual = parseTags(attrStr)
+	if tagsToString(actual) != tagsToString(expected) {
+		t.Errorf("Error: parseTags(%s) = %s; want %s", attrStr, tagsToString(actual), tagsToString(expected))
+	}
+
+	// Test case with empty attributes string
+	attrStr = ""
+	expected = []Tag{}
+	actual = parseTags(attrStr)
+	if tagsToString(actual) != tagsToString(expected) {
+		t.Errorf("Error: parseTags(%s) = %s; want %s", attrStr, tagsToString(actual), tagsToString(expected))
+	}
+
+	// Test case with an invalid attribute pair (should panic)
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Error: parseTags with invalid attribute pair did not panic")
+		}
+	}()
+	attrStr = "ID=gene1;Name" // Missing '='
+	parseTags(attrStr)
+}
+
+func TestTagsToString(t *testing.T) {
+	// Test case with multiple tag-value pairs
+	tags := []Tag{
+		{Label: "ID", Value: "gene1"},
+		{Label: "Name", Value: "MyGene"},
+		{Label: "Alias", Value: "G1"},
+	}
+	expected := "ID=gene1;Name=MyGene;Alias=G1"
+	actual := tagsToString(tags)
+	if actual != expected {
+		t.Errorf("Error: tagsToString(%v) = %s; want %s", tags, actual, expected)
+	}
+
+	// Test case with a single tag-value pair
+	tags = []Tag{
+		{Label: "ID", Value: "gene1"},
+	}
+	expected = "ID=gene1"
+	actual = tagsToString(tags)
+	if actual != expected {
+		t.Errorf("Error: tagsToString(%v) = %s; want %s", tags, actual, expected)
+	}
+
+	// Test case with empty tags slice
+	tags = []Tag{}
+	expected = ""
+	actual = tagsToString(tags)
+	if actual != expected {
+		t.Errorf("Error: tagsToString(%v) = %s; want %s", tags, actual, expected)
 	}
 }

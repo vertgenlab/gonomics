@@ -1,6 +1,7 @@
 package gff3
 
-func equal(a, b Gff3) bool {
+// equal compares two Gff3 structs for equality.
+func Equal(a, b Gff3) bool {
 	// Compare basic fields
 	if a.Id != b.Id || a.Source != b.Source || a.Type != b.Type ||
 		a.Start != b.Start || a.End != b.End || a.Score != b.Score ||
