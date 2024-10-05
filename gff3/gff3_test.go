@@ -47,14 +47,22 @@ func TestToGff3(t *testing.T) {
 		t.Errorf("Error: ToGff3(%s) = %v; want %v", line, actual, expected)
 	}
 
-	// Test case with invalid strand
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Error: ToGff3 with invalid strand did not panic")
-		}
-	}()
-	line = "chr1\tEnsembl\tgene\t1000\t2000\t.\t?\t.\tID=gene1"
-	ToGff3(line) // Should panic
+	invalidLines := []string{
+		"chr1\tEnsembl\tgene\t1000\t2000\t.\t+\tID=gene1",    // Missing a field
+		"chr1\tEnsembl\tgene\t1000\t2000\t.\t?\t.\tID=gene1", // Invalid strand
+		"chr1 Ensembl gene 1000 2000 . + . ID=gene1",         // Incorrect delimiter
+	}
+	for _, line := range invalidLines {
+		// Create a closure to capture the current line
+		func(line string) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("Error: ToGff3 with invalid line did not panic: %s", line)
+				}
+			}()
+			ToGff3(line) // Should panic
+		}(line)
+	}
 }
 
 func TestGff3ToString(t *testing.T) {
