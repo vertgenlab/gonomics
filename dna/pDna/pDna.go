@@ -62,3 +62,13 @@ func Entropy(base Float32Base) float64 {
 
 	return answer
 }
+
+// Scale multiplies the four values in a pDNA base (A, C, T, G) by the multiplier
+func Scale(pdnaBase Float32Base, multiplier float32) Float32Base {
+	return Float32Base{A: pdnaBase.A*multiplier, C: pdnaBase.C*multiplier, G: pdnaBase.G*multiplier, T: pdnaBase.T*multiplier}
+}
+
+// Sum adds the respective four values in two pDNA bases (A, C, T, G). Permits bases with values greater than 1. 
+func Sum(base1 Float32Base, base2 Float32Base) Float32Base {
+	return Float32Base{A: base1.A+base2.A, C: base1.C+base2.C, G: base1.G+base2.G, T: base1.T+base2.T}
+}

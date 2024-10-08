@@ -89,3 +89,99 @@ func TestEntropy(t *testing.T) {
 		}
 	}
 }
+
+var ScaleTests = []struct {
+	Base     Float32Base
+	Multiplier float32
+	Expected Float32Base
+}{
+	{Base: Float32Base{
+		A: 1,
+		C: 0,
+		G: 0,
+		T: 0,
+	},
+		Multiplier: .3,
+		Expected: Float32Base{
+			A: .3,
+			C: 0,
+			G: 0,
+			T: 0,
+		},
+	},
+	{Base: Float32Base{
+		A: 0.25,
+		C: 0.25,
+		G: 0.25,
+		T: 0.25,
+	},
+		Multiplier: .2,
+		Expected: Float32Base{
+			A: .05,
+			C: .05,
+			G: .05,
+			T: .05,
+		},
+	},
+	{Base: Float32Base{
+		A: 0.5,
+		C: 0.25,
+		G: 0.25,
+		T: 0,
+	},
+		Multiplier: .9,
+		Expected: Float32Base{
+			A: 0.45,
+			C: 0.225,
+			G: 0.225,
+			T: 0,
+		},
+	},
+}
+
+func TestScale(t *testing.T) {
+	var observed Float32Base
+	for _, v := range ScaleTests {
+		observed = Scale(v.Base, v.Multiplier)
+		if observed != v.Expected {
+			t.Errorf("Error: scaled pDna base is not as expected. Observed: %v. Expected: %v.\n", observed, v.Expected)
+		}
+	}
+}
+
+var SumTests = []struct {
+	Base1     Float32Base
+	Base2 Float32Base
+	Expected Float32Base
+}{
+		{Base1: Float32Base{
+			A: 1,
+			C: 0,
+			G: .25,
+			T: 0.5,
+		},
+		Base2: Float32Base{
+			A: 1,
+			C: 0,
+			G: .75,
+			T: .5,
+		},
+		Expected: Float32Base{
+			A: 2,
+			C: 0,
+			G: 1,
+			T: 1,
+		},
+	},
+}
+
+func TestSum(t *testing.T) {
+	var observed Float32Base
+	for _, v := range ScaleTests {
+		observed = Scale(v.Base, v.Multiplier)
+		if observed != v.Expected {
+			t.Errorf("Error: scaled pDna base is not as expected. Observed: %v. Expected: %v.\n", observed, v.Expected)
+		}
+	}
+}
+
