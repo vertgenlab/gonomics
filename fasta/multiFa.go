@@ -280,7 +280,46 @@ func ScanN(aln []Fasta, queryName string) [][]int {
 	return bedPos
 }
 
-// findSequenceIndex is a helper function for ScanN to find the sequenceIndex of queryName in the multiFa
+// ScanPresentBase takes in a multiFa alignment, scans the user-specified sequence for a user-specified pattern ('present bases (A,C,G,T, not gap- or N)' for now) and reports the count
+func ScanPresentBase(aln []Fasta, queryName string) int {
+	// create variables
+	var presentBaseCount = 0
+
+	// find the sequenceIndex of queryName in the multiFa
+	queryIndex := findSequenceIndex(aln, queryName)
+
+	// loop through the query sequence in the multiFa
+	for i := 0; i < len(aln[queryIndex].Seq); i++ {
+		if aln[queryIndex].Seq[i] == dna.A || aln[queryIndex].Seq[i] == dna.C || aln[queryIndex].Seq[i] == dna.G || aln[queryIndex].Seq[i] == dna.T { // scan for present base (A or C or G or T)
+			presentBaseCount++
+		}
+	}
+
+	return presentBaseCount
+}
+
+// ScanPresentBaseBoth takes in a multiFa alignment, scans the 2 user-specified sequences for a user-specified pattern ('present bases (A,C,G,T, not gap- or N)' for now) and reports the count of positions where both 2 sequences match the pattern
+func ScanPresentBaseBoth(aln []Fasta, firstQueryName string, secondQueryName string) int {
+	// create variables
+	var presentBaseCount = 0
+
+	// find the sequenceIndex of queryNames in the multiFa
+	firstQueryIndex := findSequenceIndex(aln, firstQueryName)
+	secondQueryIndex := findSequenceIndex(aln, secondQueryName)
+
+	// loop through the query sequence in the multiFa
+	for i := 0; i < len(aln[firstQueryIndex].Seq); i++ {
+		if aln[firstQueryIndex].Seq[i] == dna.A || aln[firstQueryIndex].Seq[i] == dna.C || aln[firstQueryIndex].Seq[i] == dna.G || aln[firstQueryIndex].Seq[i] == dna.T { // scan for present base (A or C or G or T)
+			if aln[secondQueryIndex].Seq[i] == dna.A || aln[secondQueryIndex].Seq[i] == dna.C || aln[secondQueryIndex].Seq[i] == dna.G || aln[secondQueryIndex].Seq[i] == dna.T { // in both sequences, requiring AND for both sequences, OR within each sequence
+				presentBaseCount++
+			}
+		}
+	}
+
+	return presentBaseCount
+}
+
+// findSequenceIndex is a helper function to find the sequenceIndex of queryName in the multiFa
 func findSequenceIndex(aln []Fasta, queryName string) int {
 	nameIndexMap := make(map[string]int) // map of [sequenceName]sequenceIndex
 	for i := range aln {                 // range through the entire multiFa to make sure record names are unique
