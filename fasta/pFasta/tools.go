@@ -49,8 +49,34 @@ func Sample(input []PFasta, chrom string) fasta.Fasta {
 	return answer
 }
 
-// faToPfa returns a pFasta representation of the given Fasta sequence, start inclusive, end exclusive
-func faToPfa(input fasta.Fasta, start int, end int) PFasta {
+// PAlnPosToRefPos is AlnPosToRefPos in fasta/multiFa.go but for pFasta
+// Consider using pAlnPosToRefPosCounter instead if tracking refStart and alnStart will be beneficial, e.g. when working through entire chromosomes
+func PAlnPosToRefPos(record PFasta, AlnPos int) int {
+	return PAlnPosToRefPosCounter(record, AlnPos, 0, 0)
+}
+
+// PAlnPosToRefPosCounter is AlnPosToRefPosCounter in fasta/multiFa.go but for pFasta
+func PAlnPosToRefPosCounter(record PFasta, AlnPos int, refStart int, alnStart int) int {
+	return PAlnPosToRefPosCounterSeq(record.Seq, AlnPos, refStart, alnStart)
+}
+
+// PAlnPosToRefPosCounterSeq is AlnPosToRefPosCounterSeq in fasta/multiFa.go but for pFasta
+func PAlnPosToRefPosCounterSeq(record []pDna.Float32Base, AlnPos int, refStart int, alnStart int) int {
+	if alnStart > AlnPos {
+		refStart, alnStart = 0, 0 //in case the alnStart was improperly set (greater than the desired position, we reset the counters to 0.
+	}
+	for t := alnStart; t < AlnPos; t++ {
+		if t == len(record) {
+			log.Fatalf("Ran out of chromosome.")
+		} else if !pDna.IsGap(record[t]) {
+			refStart++
+		}
+	}
+	return refStart
+}
+
+// FaToPfa returns a pFasta representation of the given Fasta sequence, start inclusive, end exclusive
+func FaToPfa(input fasta.Fasta, start int, end int) PFasta {
 	if end == -1 {
 		end = len(input.Seq)
 	} else if end > len(input.Seq) {
@@ -90,7 +116,7 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 	if len(inputFa) == 1 {
 		if chrom == "" || inputFa[0].Name == chrom {
 			chromInInput = true
-			answer = faToPfa(inputFa[0], start, end)
+			answer = FaToPfa(inputFa[0], start, end)
 		}
 	} else {
 		if chrom == "" {
@@ -100,7 +126,7 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 		for _, seq := range inputFa {
 			if seq.Name == chrom {
 				chromInInput = true
-				answer = faToPfa(seq, start, end)
+				answer = FaToPfa(seq, start, end)
 				break
 			}
 		}
