@@ -72,3 +72,11 @@ func Scale(pdnaBase Float32Base, multiplier float32) Float32Base {
 func Sum(base1 Float32Base, base2 Float32Base) Float32Base {
 	return Float32Base{A: base1.A+base2.A, C: base1.C+base2.C, G: base1.G+base2.G, T: base1.T+base2.T}
 }
+
+// IsValid checks if the total probabilities of a pDNA base sum to 1 
+func IsValid(base Float32Base, precision float32) bool {
+	if !equalFloatPrecision(base.A + base.C + base.G + base.T, 1, precision) {
+		return false
+	}
+	return true
+}
