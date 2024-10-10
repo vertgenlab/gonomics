@@ -1,0 +1,2 @@
+#querySequenceName	presentBaseCount
+gibbon	4
