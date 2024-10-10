@@ -35,6 +35,7 @@ func main() {
 
 	var consensus *string = flag.String("fasta", "", "Output `.fa` consensus sequence based on the axt alignment")
 	var minScore *int = flag.Int("minScore", 0, "filter axt alignments by minimum score")
+	var minSize *int = flag.Int("minSize", 0, "Filter axt alignments by minimum target genome alignment size (bp)")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime)
 	flag.Parse()
@@ -48,6 +49,8 @@ func main() {
 		QuerySwapAll(input, output, *tLen, *qLen)
 	} else if *minScore != 0 {
 		filterAxtScore(input, output, *minScore)
+	} else if *minSize > 0 {
+		filterAxtSize(input, output, *minSize)
 	} else {
 		flag.Usage()
 		if len(flag.Args()) != expectedNumArgs {
@@ -102,6 +105,19 @@ func filterAxtScore(input string, output string, minScore int) {
 	var index int
 	for each := range data {
 		if each.Score >= minScore {
+			axt.WriteToFileHandle(ioWriter, each, index)
+			index++
+		}
+	}
+}
+
+func filterAxtSize(input string, output string, minSize int) {
+	ioWriter := fileio.EasyCreate(output)
+	data, _ := axt.GoReadToChan(input)
+
+	var index int
+	for each := range data {
+		if (each.REnd - each.RStart) >= minSize {
 			axt.WriteToFileHandle(ioWriter, each, index)
 			index++
 		}
