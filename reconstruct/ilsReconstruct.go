@@ -38,10 +38,11 @@ func IlsReconstructSeq(allPostProbs [][]float32, allRecons []pFasta.PFasta, prec
 			sum = pDna.Sum(sum, recon.Seq[pos])
 		}
 		
-		if pDna.IsValid(sum, precision) {
+		if pDna.SumsToOne(sum, precision) {
 			weightedSum.Seq[pos] = sum
 		} else {
-			log.Fatalf("This reconstruction returns an invalid pDNA base at %v", pos)
+			// TODO: rename 
+			log.Fatalf("This reconstruction returns a pDNA base that does not sum to 1 at %v", pos)
 		}
 		
 	}
