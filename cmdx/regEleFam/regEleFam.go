@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/bed"
@@ -11,24 +12,26 @@ import (
 
 func buildTree(axtFile string) map[string]*interval.IntervalNode {
 	var intrvls []interval.Interval
-	var c int
 	ch, _ := axt.GoReadToChan(axtFile)
 	for i := range ch {
-		c++
-		fmt.Println(c)
 		intrvls = append(intrvls, i)
 	}
 	return interval.BuildTree(intrvls)
 }
 
 func main() {
+	flag.Parse()
+
+	if len(flag.Args()) != 3 {
+		err := fmt.Errorf("regEleFam selfChain.axt ocr.bed out.txt")
+		fmt.Println(err.Error())
+	}
 	var sb strings.Builder
-	var dir string = "/Users/sethweaver/Downloads/hsSD/"
-	var outfile *fileio.EasyWriter = fileio.EasyCreate(dir + "regEleFam.txt")
+	var outfile *fileio.EasyWriter = fileio.EasyCreate(flag.Arg(2))
 	var ans []interval.Interval
-	axTree := buildTree(dir + "hs1.selfChain.axt")
+	axTree := buildTree(flag.Arg(0))
 	fmt.Println("done building tree")
-	regEleChan := bed.GoReadToChan(dir + "h9_atac_sharedPeaks.bed")
+	regEleChan := bed.GoReadToChan(flag.Arg(1))
 	for i := range regEleChan {
 		sb.Reset()
 		sb.WriteString(bed.ToString(i, 5))
@@ -42,4 +45,5 @@ func main() {
 		}
 		fileio.WriteToFileHandle(outfile, sb.String())
 	}
+	fmt.Printf("done\n")
 }
