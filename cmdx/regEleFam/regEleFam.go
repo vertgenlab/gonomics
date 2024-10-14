@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
+	"log"
 	"strings"
 )
 
@@ -23,8 +24,8 @@ func main() {
 	flag.Parse()
 
 	if len(flag.Args()) != 3 {
-		err := fmt.Errorf("regEleFam selfChain.axt ocr.bed out.txt")
-		fmt.Println(err.Error())
+		log.Fatalf("regEleFam selfChain.axt ocr.bed out.txt\n")
+
 	}
 	var sb strings.Builder
 	var outfile *fileio.EasyWriter = fileio.EasyCreate(flag.Arg(2))
