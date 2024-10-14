@@ -6,6 +6,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
 
 	"github.com/vertgenlab/gonomics/axt"
@@ -109,6 +110,7 @@ func filterAxtScore(input string, output string, minScore int) {
 			index++
 		}
 	}
+	exception.PanicOnErr(ioWriter.Close())
 }
 
 func filterAxtSize(input string, output string, minSize int) {
@@ -122,6 +124,7 @@ func filterAxtSize(input string, output string, minSize int) {
 			index++
 		}
 	}
+	exception.PanicOnErr(ioWriter.Close())
 }
 
 // if target sequence contains Ns, uses query non N bases to fill Ns.
