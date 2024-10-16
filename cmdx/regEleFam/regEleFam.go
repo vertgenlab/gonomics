@@ -31,7 +31,7 @@ func main() {
 	flag.Parse()
 
 	if len(flag.Args()) != 4 {
-		log.Fatalf("regEleFam selfChain.axt ocr.bed out.txt\n")
+		log.Fatalf("regEleFam selfChain.axt ocr.bed chrom.sizes out.txt\n")
 
 	}
 	var sb strings.Builder
