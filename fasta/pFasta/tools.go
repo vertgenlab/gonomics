@@ -113,8 +113,8 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 	return answer
 }
 
-// RandomPfa returns a randomly-generated pFasta of sequence length 'length' and name 'name' where each base sums to 1 across its probabilities
-func RandomPfa(length int, name string, setSeed int64) PFasta {
+// Random returns a randomly-generated pFasta of sequence length 'length' and name 'name' where each base sums to 1 across its probabilities
+func Random(length int, name string, setSeed int64) PFasta {
 	r := rand.New(rand.NewSource(setSeed))
 
 	sum := float32(0)
