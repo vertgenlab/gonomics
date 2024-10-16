@@ -134,10 +134,10 @@ func RandomPfa(length int, name string, setSeed int64) PFasta {
 		gInt = r.Float32()
 		tInt = r.Float32()
 		sum = aInt + cInt + gInt + tInt
-		base.A = float32(aInt/sum)
-		base.C = float32(cInt/sum)
-		base.G = float32(gInt/sum)
-		base.T = float32(tInt/sum)
+		base.A = float32(aInt / sum)
+		base.C = float32(cInt / sum)
+		base.G = float32(gInt / sum)
+		base.T = float32(tInt / sum)
 		out.Seq[pos] = base
 	}
 

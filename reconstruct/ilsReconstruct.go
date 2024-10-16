@@ -1,10 +1,10 @@
 package reconstruct
 
 import (
-	"log"
-	"github.com/vertgenlab/gonomics/wig"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/wig"
+	"log"
 )
 
 // func placeholder() {
@@ -13,14 +13,14 @@ import (
 
 // ilsReconstructSeq takes in a list of posterior probabilities for n sequences and a list of n reconstructed pFasta sequences, and aggregates the pFasta sequences by weighing them by the corresponding posterior probability. Posterior probabilities should sum to 1 at each position.
 func IlsReconstructSeq(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFasta, precision float32) pFasta.PFasta {
-	// check that the posterior probabilities align with the given sequences 
+	// check that the posterior probabilities align with the given sequences
 	if len(allPostProbs) != len(allRecons) {
 		log.Fatalf("IlsReconstructSeq requires the same number of postProbs (%v) as recons (%v)", len(allPostProbs), len(allRecons))
 	}
-	
+
 	// should be len=4 for postprobs
 	//check that all the reconstructed sequences are the same
-	for idx := range len(allRecons)-1 {
+	for idx := range len(allRecons) - 1 {
 		if len(allPostProbs[idx][allRecons[idx].Name].Values) != len(allPostProbs[idx+1][allRecons[idx+1].Name].Values) {
 			log.Fatalf("Requested posterior probabilities do not have the same length.")
 		}
@@ -28,7 +28,7 @@ func IlsReconstructSeq(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFa
 			log.Fatalf("Requested sequences do not have the same length.")
 		}
 	}
-	
+
 	// weight each sequence by the corresponding posterior probability
 	var allWeightedRecons []pFasta.PFasta
 	// iterates through the list of map[string]wig.Wig
@@ -49,15 +49,15 @@ func IlsReconstructSeq(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFa
 		for _, recon := range allWeightedRecons {
 			sum = pDna.Sum(sum, recon.Seq[pos])
 		}
-		
+
 		if pDna.SumsToOne(sum, precision) {
 			weightedSum.Seq[pos] = sum
 		} else {
-			// TODO: rename 
+			// TODO: rename
 			log.Fatalf("This reconstruction returns a pDNA base that does not sum to 1 at %v", pos)
 		}
 		sum = pDna.Float32Base{0, 0, 0, 0}
-		
+
 	}
 
 	return weightedSum

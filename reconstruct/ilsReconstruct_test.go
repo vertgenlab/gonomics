@@ -1,36 +1,34 @@
 package reconstruct
 
 import (
-	"testing"
-	"log"
 	"bufio"
-	"os"
-	"github.com/vertgenlab/gonomics/wig"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/wig"
+	"log"
+	"os"
+	"testing"
 	// "github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	// "math/rand"
 	// "github.com/vertgenlab/gonomics/dna/pDna"
 )
 
-
-
 var IlsReconstructTests = []struct {
-	PostProbsFileName	string
-	ReconsFileName		string
+	PostProbsFileName  string
+	ReconsFileName     string
 	ChromSizesFileName string
-	Precision			float32
-	OutFile				string
-	Expected			string
-	TestcasePrecision	float32
+	Precision          float32
+	OutFile            string
+	Expected           string
+	TestcasePrecision  float32
 }{
 	{PostProbsFileName: "testdata/ilsPostProbs.txt",
-	ReconsFileName: "testdata/ilsReconsInput.txt",
-	ChromSizesFileName: "testdata/ilschromSizes.chrom.sizes",
-	Precision: 0.001,
-	OutFile: "testdata/ilsRecon.pFa",
-	Expected: "testdata/ilsRecon_Expected.pFa",
-	TestcasePrecision: 0.001,
+		ReconsFileName:     "testdata/ilsReconsInput.txt",
+		ChromSizesFileName: "testdata/ilschromSizes.chrom.sizes",
+		Precision:          0.001,
+		OutFile:            "testdata/ilsRecon.pFa",
+		Expected:           "testdata/ilsRecon_Expected.pFa",
+		TestcasePrecision:  0.001,
 	},
 }
 
@@ -45,7 +43,6 @@ func TestIlsReconstruct(t *testing.T) {
 	var postProbs []map[string]wig.Wig
 	var recons []pFasta.PFasta
 	var expected []pFasta.PFasta
-	
 
 	for _, v := range IlsReconstructTests {
 		readRecons, err = os.Open(v.ReconsFileName)
