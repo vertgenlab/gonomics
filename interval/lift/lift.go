@@ -2,6 +2,7 @@
 package lift
 
 import (
+	"github.com/vertgenlab/gonomics/axt"
 	"io"
 	"log"
 	"path"
@@ -131,4 +132,73 @@ func StrictBorderCheck(c chain.Chain, i interval.Interval) bool {
 	}
 	_, border = chain.TPosToQPos(c, i.GetChromEnd()-1) //interval ranges are open right so we want ChromEnd - 1
 	return border
+}
+
+//everything below is for lifting with AXT
+
+func refCoordToRefIdx(a axt.Axt, region interval.Interval) (start, end int) {
+	var stopLoop int
+	for i := range a.RSeq {
+		if stopLoop >= (region.GetChromStart() - (a.RStart - 1)) {
+			break
+		}
+		if a.RSeq[i] != 10 {
+			stopLoop++
+		}
+		start++
+	}
+	end = start
+	stopLoop = 0
+	for i := start; i < len(a.RSeq); i++ {
+		if stopLoop >= (region.GetChromEnd() - region.GetChromStart()) {
+			break
+		}
+		if a.RSeq[i] != 10 {
+			stopLoop++
+		}
+		end++
+	}
+	return start, end
+}
+
+func translateCoord(a axt.Axt, start, end int) (newStart, newEnd int) {
+	var c int
+	for i := 0; i < start; i++ {
+		if a.QSeq[i] != 10 {
+			c++
+		}
+	}
+	newStart = (a.QStart - 1) + c
+	c = 0
+	for i := start; i < end; i++ {
+		if a.QSeq[i] != 10 {
+			c++
+		}
+	}
+	newEnd = newStart + c
+	return newStart, newEnd
+}
+
+func LiftCoordinatesWithAxt(a axt.Axt, region Lift, Qsize int) (chrom string, start, end int) {
+	if !checkCompatability(a, region) {
+		log.Fatalf("The interval you are trying to lift over does not exist withing the axt refernce coordinates.")
+	}
+	chrom = a.QName
+	refStart, refEnd := refCoordToRefIdx(a, region)
+	newStart, newEnd := translateCoord(a, refStart, refEnd)
+	start, end = newStart, newEnd
+	if !a.QStrandPos {
+		tmpStart := Qsize - end
+		tmpEnd := Qsize - start + 1
+		start, end = tmpStart, tmpEnd
+	}
+	return chrom, start, end
+}
+
+func checkCompatability(a axt.Axt, region interval.Interval) bool {
+	if a.RName == region.GetChrom() && a.RStart <= region.GetChromStart() && a.REnd >= region.GetChromEnd() {
+		//The region falls completely within the axt region. We can safely lift.
+		return true
+	}
+	return false
 }
