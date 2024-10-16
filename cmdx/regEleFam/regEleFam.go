@@ -30,7 +30,7 @@ func updateBedTree(intervalSlice []interval.Interval, new interval.Interval) (ma
 func main() {
 	flag.Parse()
 
-	if len(flag.Args()) != 3 {
+	if len(flag.Args()) != 4 {
 		log.Fatalf("regEleFam selfChain.axt ocr.bed out.txt\n")
 
 	}
