@@ -13,9 +13,18 @@ import (
 	"strings"
 )
 
-func buildTree(file string) (map[string]*interval.IntervalNode, []interval.Interval) {
+func buildAxTree(file string) map[string]*interval.IntervalNode {
 	var intrvls []interval.Interval
 	ch, _ := axt.GoReadToChan(file)
+	for i := range ch {
+		intrvls = append(intrvls, i)
+	}
+	return interval.BuildTree(intrvls)
+}
+
+func buildBedTree(file string) (map[string]*interval.IntervalNode, []interval.Interval) {
+	var intrvls []interval.Interval
+	ch := bed.GoReadToChan(file)
 	for i := range ch {
 		intrvls = append(intrvls, i)
 	}
@@ -39,8 +48,8 @@ func main() {
 	var outfile *fileio.EasyWriter = fileio.EasyCreate(flag.Arg(3))
 	var chainOverlap, bedOverlap []interval.Interval
 	var lifted bed.Bed
-	axTree, _ := buildTree(flag.Arg(0))
-	bedTree, bedIntervals := buildTree(flag.Arg(1))
+	axTree := buildAxTree(flag.Arg(0))
+	bedTree, bedIntervals := buildBedTree(flag.Arg(1))
 	fmt.Println("done building trees")
 	regEleChan := bed.GoReadToChan(flag.Arg(1))
 	for i := range regEleChan {
