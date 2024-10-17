@@ -137,6 +137,7 @@ func StrictBorderCheck(c chain.Chain, i interval.Interval) bool {
 
 //everything below is for lifting with AXT
 
+// refCoordToRefIdx is a helper function for LiftCoordinatesWithAxt which identifies the start and end indices in the Axt reference multifa record that corresponds to the interval to be lifted
 func refCoordToRefIdx(a axt.Axt, region interval.Interval) (start, end int) {
 	var stopLoop int
 	for i := range a.RSeq {
@@ -162,12 +163,16 @@ func refCoordToRefIdx(a axt.Axt, region interval.Interval) (start, end int) {
 	return start, end
 }
 
+// translateCoord is a helper function for LiftCoordinatesWithAxt which takes the indices of the multifa for the region to be lifted and put them in query coordinates
 func translateCoord(a axt.Axt, start, end int) (newStart, newEnd int) {
 	newStart = (a.QStart - 1) + dna.CountBasesNoGaps(a.QSeq[0:start])
 	newEnd = newStart + dna.CountBasesNoGaps(a.QSeq[start:end])
 	return newStart, newEnd
 }
 
+// LiftCoordinatesWithAxt takes an Axt record, a lift-compatible interval and chromosome size for the query (in case of a minus strand alignment), and lifts the interval from the reference
+// coordinates to the query coordinates. The interval must be completely contained within the reference Axt region. The output is chromosome name, start (0-based) and end coordinates
+// of the lifted interval
 func LiftCoordinatesWithAxt(a axt.Axt, region Lift, Qsize int) (chrom string, start, end int) {
 	if !checkCompatability(a, region) {
 		log.Fatalf("The interval you are trying to lift is not entirely within the axt refernce coordinates.")
@@ -184,6 +189,7 @@ func LiftCoordinatesWithAxt(a axt.Axt, region Lift, Qsize int) (chrom string, st
 	return chrom, start, end
 }
 
+// checkCompatability is a helper function for LiftCoordinatesWithAxt which determines if the interval is safe to lift over given the Axt alignment
 func checkCompatability(a axt.Axt, region interval.Interval) bool {
 	if a.RName == region.GetChrom() && a.RStart <= (region.GetChromStart()+1) && a.REnd >= region.GetChromEnd() {
 		//The region falls completely within the axt region. We can safely lift.
