@@ -93,7 +93,7 @@ func ReadNext(reader *fileio.EasyReader) (Axt, bool) {
 	qSeq, qDone := fileio.EasyNextRealLine(reader)
 	blank, bDone := fileio.EasyNextRealLine(reader)
 	if blank != "" {
-		log.Fatalf("Error: every fourth line in an axt file should be blank\n")
+		log.Fatalf("Error: every fourth line in an axt file should be blank. Line that was not blank was: %s\n", blank)
 	}
 	if rDone || qDone || bDone {
 		log.Fatalf("Error: number of lines in an axt file must be a multiple of four\n")
