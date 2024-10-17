@@ -185,3 +185,34 @@ func TestSum(t *testing.T) {
 	}
 }
 
+var SumsToOneTests = []struct {
+	Base Float32Base
+	Precision float32
+	Expected bool
+}{
+	{Base: Float32Base{
+		A: 0.25,
+		C: 0.25,
+		G: 0.25, 
+		T: 0.25,
+	},
+		Precision: 1e-3,
+		Expected: true},
+	{Base: Float32Base{
+		A: 0.3345,
+		C: 0.3362,
+		G: 0.33, 
+		T: 0.000009,
+	},
+		Precision: 1e-4,
+		Expected: false},
+}
+
+func TestSumsToOne(t *testing.T) {
+	for _, v := range SumsToOneTests {
+		if SumsToOne(v.Base, v.Precision) != v.Expected {
+			t.Errorf("Error: pDna sumsToOne not as expected")
+		}
+	}
+}
+

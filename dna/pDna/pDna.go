@@ -1,6 +1,9 @@
 package pDna
 
-import "math"
+import (
+	"math"
+	"math/rand"
+)
 
 // Float32Base encodes a DNA base as a probability vector using float32 precision.
 // Note that gap probabilities can be stored implicitly as 1 - (A + C + G + T).
@@ -79,4 +82,31 @@ func SumsToOne(base Float32Base, precision float32) bool {
 		return false
 	}
 	return true
+}
+
+// Random randomly generates a pDNA base that sums to 1
+func RandBase(seedSet bool, setSeed int64) Float32Base {
+	var answer Float32Base
+	if !seedSet {
+		rand.Seed(setSeed)
+	} 
+	sumsToOne := false
+	for !sumsToOne {
+		aFloat := rand.Float32()
+		cFloat := rand.Float32()
+		gFloat := rand.Float32()
+		tFloat := rand.Float32()
+		sum := aFloat + cFloat + gFloat + tFloat
+		answer.A = aFloat / sum
+		answer.C = cFloat / sum
+		answer.G = gFloat / sum
+		answer.T = tFloat / sum
+		if SumsToOne(answer, 1e-3) {
+			sumsToOne = true
+			break
+		} 
+	}
+	
+	
+	return answer
 }
