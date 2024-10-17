@@ -66,3 +66,9 @@ func TestDefineBase(t *testing.T) {
 		t.Errorf("Error: Problem with DefineBase")
 	}
 }
+
+func TestCountBasesNoGaps(t *testing.T) {
+	if CountBasesNoGaps(alpha) != 28 {
+		t.Errorf("Error in CountBasesNoGaps. Expected: %d, Output: %d\n", 28, CountBasesNoGaps(alpha))
+	}
+}
