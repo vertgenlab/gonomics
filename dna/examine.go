@@ -115,3 +115,14 @@ func CountBaseInterval(seq []Base, b Base, start int, end int) int {
 	}
 	return answer
 }
+
+// CountBasesNoGaps counts the number of bases in the sequence, excluding gaps (-)
+func CountBasesNoGaps(seq []Base) int {
+	var n int
+	for i := range seq {
+		if seq[i] != Gap {
+			n++
+		}
+	}
+	return n
+}

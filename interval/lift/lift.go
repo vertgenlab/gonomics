@@ -3,6 +3,7 @@ package lift
 
 import (
 	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/dna"
 	"io"
 	"log"
 	"path"
@@ -162,26 +163,14 @@ func refCoordToRefIdx(a axt.Axt, region interval.Interval) (start, end int) {
 }
 
 func translateCoord(a axt.Axt, start, end int) (newStart, newEnd int) {
-	var c int
-	for i := 0; i < start; i++ {
-		if a.QSeq[i] != 10 {
-			c++
-		}
-	}
-	newStart = (a.QStart - 1) + c
-	c = 0
-	for i := start; i < end; i++ {
-		if a.QSeq[i] != 10 {
-			c++
-		}
-	}
-	newEnd = newStart + c
+	newStart = (a.QStart - 1) + dna.CountBasesNoGaps(a.QSeq[0:start])
+	newEnd = newStart + dna.CountBasesNoGaps(a.QSeq[start:end])
 	return newStart, newEnd
 }
 
 func LiftCoordinatesWithAxt(a axt.Axt, region Lift, Qsize int) (chrom string, start, end int) {
 	if !checkCompatability(a, region) {
-		log.Fatalf("The interval you are trying to lift over does not exist withing the axt refernce coordinates.")
+		log.Fatalf("The interval you are trying to lift is not entirely within the axt refernce coordinates.")
 	}
 	chrom = a.QName
 	refStart, refEnd := refCoordToRefIdx(a, region)
@@ -196,7 +185,7 @@ func LiftCoordinatesWithAxt(a axt.Axt, region Lift, Qsize int) (chrom string, st
 }
 
 func checkCompatability(a axt.Axt, region interval.Interval) bool {
-	if a.RName == region.GetChrom() && a.RStart <= region.GetChromStart() && a.REnd >= region.GetChromEnd() {
+	if a.RName == region.GetChrom() && a.RStart <= (region.GetChromStart()+1) && a.REnd >= region.GetChromEnd() {
 		//The region falls completely within the axt region. We can safely lift.
 		return true
 	}
