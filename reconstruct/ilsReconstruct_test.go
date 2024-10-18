@@ -7,10 +7,7 @@ import (
 	"log"
 	"os"
 	"testing"
-	// "github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	// "math/rand"
-	// "github.com/vertgenlab/gonomics/dna/pDna"
 )
 
 var IlsReconstructTests = []struct {
@@ -96,47 +93,3 @@ func TestIlsReconstruct(t *testing.T) {
 		}
 	}
 }
-
-// var IdxTests = []struct {
-// 	Idx	int64
-// } {
-// 	{Idx: 4,},
-// }
-
-// func TestIdx(t* testing.T) {
-// 	for _, v := range IdxTests {
-// 		var out pFasta.PFasta
-// 		for idx := range v.Idx {
-// 			out.Seq = make([]pDna.Float32Base, 0)
-// 			out.Name = fmt.Sprintf("chr1")
-// 			r := rand.New(rand.NewSource(10+idx))
-// 			sum := float32(0)
-// 			pos := 0
-// 			var aInt float32
-// 			var cInt float32
-// 			var gInt float32
-// 			var tInt float32
-// 			var base pDna.Float32Base
-// 			for pos < 11 {
-// 				aInt = r.Float32()
-// 				cInt = r.Float32()
-// 				gInt = r.Float32()
-// 				tInt = r.Float32()
-// 				sum = aInt + cInt + gInt + tInt
-// 				fmt.Printf("\nsum %v\n", sum)
-// 				base.A = float32(aInt/sum)
-// 				base.C = float32(cInt/sum)
-// 				base.G = float32(gInt/sum)
-// 				base.T = float32(tInt/sum)
-// 				pos += 1
-// 				out.Seq = append(out.Seq, base)
-// 			}
-// 			pos = 0
-// 			outFileName := fmt.Sprintf("testdata/ilsRecon_%v.pfa", idx)
-// 			pFasta.Write(outFileName, []pFasta.PFasta{out})
-// 			fmt.Printf("Finish round %v", idx)
-// 		}
-// 	}
-
-// 	fmt.Print("DONE")
-// }
