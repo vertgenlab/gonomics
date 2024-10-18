@@ -112,3 +112,14 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 
 	return answer
 }
+
+// Random returns a randomly-generated pFasta of sequence length 'length' and name 'name' where each base sums to 1 across its probabilities
+func RandSeq(length int, name string, setSeed int64) PFasta {
+	rand.Seed(setSeed)
+	answer := PFasta{Name: name, Seq: make([]pDna.Float32Base, length)}
+	for pos := range length {
+		temp := pDna.RandBase(true, setSeed)
+		answer.Seq[pos] = temp
+	}
+	return answer
+}
