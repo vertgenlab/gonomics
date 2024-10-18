@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
 	"sort"
 	"strings"
 )
@@ -141,4 +142,22 @@ func BedSliceToIntervals(inBed []bed.Bed) []Interval {
 		intervalSlice = append(intervalSlice, inBed[bd])
 	}
 	return intervalSlice
+}
+
+// OverlapProportionRecursive returns true if both input intervals overlap the other interval by greater than or equal to the input threshold
+// The input threshold must be greater than 0 and less than or equal to 1.
+func OverlapProportionRecursive(a Interval, b Interval, proportion float64) bool {
+	if proportion <= 0 || proportion > 1 {
+		log.Fatalf("The input percentage is outside of the bounds (0, 1]")
+	}
+	if !Overlap(a, b) {
+		return false
+	}
+	sizeA := a.GetChromEnd() - a.GetChromStart()
+	sizeB := b.GetChromEnd() - b.GetChromStart()
+	sizeO := OverlapSize(a, b)
+	if float64(sizeO)/float64(sizeA) >= proportion && float64(sizeO)/float64(sizeB) >= proportion {
+		return true
+	}
+	return false
 }
