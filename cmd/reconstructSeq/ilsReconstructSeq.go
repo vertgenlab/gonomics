@@ -17,6 +17,7 @@ import (
 	"github.com/vertgenlab/gonomics/wig"
 )
 
+// IlsReconstructSeqSettings defines the usage settings for the ilsReconstructSeq command
 type IlsReconstructSeqSettings struct {
 	PostProbFiles string
 	ReconFiles string
@@ -24,11 +25,12 @@ type IlsReconstructSeqSettings struct {
 	Precision float32
 }
 
-// IlsReconstructSeqUsage defines the usage statement for the ilsReconstructSeq command
+// ilsReconstructSeqUsage defines the usage statement for the ilsReconstructSeq command
+// TODO FINISH THIS DESCRIPTION
 func IlsReconstructSeqUsage(IlsReconstructSeqFlags *flag.FlagSet) {
 	fmt.Print(
-		"ilsReconstructSeq accounts for incomplete lineage sorting in ancestral sequence reconstruction, by weighting the input sequence reconstructions by the posterior probability at that position of the associated topology (out of four). Memory scales by pDNA size, so if working with large genomes, make sure to split by chromosome." + 
-			"This program takes as input a txt file containing the addresses of n wig files, and a txt file containing the addresses of n corresponding pFastas."
+		"ilsReconstructSeq accounts for incomplete lineage sorting in ancestral sequence reconstruction, by weighting the input sequence reconstructions by the posterior probability at that position of the associated topology (out of four). Memory scales by pDNA size, so if working with large genomes, make sure to split by chromosome. " + 
+			"This program takes as input a txt file containing the addresses of n wig files, and a txt file containing the addresses of n corresponding pFastas. " +
 			"This program returns a pfasta file containing a sequence representing the ----------------" + 
 			"Usage:\n" + 
 			"ilsReconstructSeq <posterior-probabilities>.txt <recons>.txt outDir\n" + 
@@ -112,4 +114,8 @@ func ilsReconstructSeq(s IlsReconstructSeqSettings) {
 	out := reconstruct.IlsReconstructSeq(postProbs, recons, s.Precision)
 
 	pFasta.Write(s.OutDir, out)
+}
+
+func main() {
+	parseIlsReconstructSeqArgs()
 }
