@@ -21,7 +21,7 @@ var IlsReconstructTests = []struct {
 }{
 	{PostProbsFileName: "testdata/ilsPostProbs.txt",
 		ReconsFileName:     "testdata/ilsReconsInput.txt",
-		ChromSizesFileName: "testdata/ilschromSizes.chrom.sizes",
+		ChromSizesFileName: "testdata/ilsChromSizes.chrom.sizes",
 		Precision:          0.001,
 		OutFile:            "testdata/ilsRecon.pFa",
 		Expected:           "testdata/ilsRecon_Expected.pFa",
