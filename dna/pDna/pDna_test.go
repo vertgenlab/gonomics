@@ -91,9 +91,9 @@ func TestEntropy(t *testing.T) {
 }
 
 var ScaleTests = []struct {
-	Base     Float32Base
+	Base       Float32Base
 	Multiplier float32
-	Expected Float32Base
+	Expected   Float32Base
 }{
 	{Base: Float32Base{
 		A: 1,
@@ -150,16 +150,16 @@ func TestScale(t *testing.T) {
 }
 
 var SumTests = []struct {
-	Base1     Float32Base
-	Base2 Float32Base
+	Base1    Float32Base
+	Base2    Float32Base
 	Expected Float32Base
 }{
-		{Base1: Float32Base{
-			A: 1,
-			C: 0,
-			G: .25,
-			T: 0.5,
-		},
+	{Base1: Float32Base{
+		A: 1,
+		C: 0,
+		G: .25,
+		T: 0.5,
+	},
 		Base2: Float32Base{
 			A: 1,
 			C: 0,
@@ -186,26 +186,26 @@ func TestSum(t *testing.T) {
 }
 
 var SumsToOneTests = []struct {
-	Base Float32Base
+	Base      Float32Base
 	Precision float32
-	Expected bool
+	Expected  bool
 }{
 	{Base: Float32Base{
 		A: 0.25,
 		C: 0.25,
-		G: 0.25, 
+		G: 0.25,
 		T: 0.25,
 	},
 		Precision: 1e-3,
-		Expected: true},
+		Expected:  true},
 	{Base: Float32Base{
 		A: 0.3345,
 		C: 0.3362,
-		G: 0.33, 
+		G: 0.33,
 		T: 0.000009,
 	},
 		Precision: 1e-4,
-		Expected: false},
+		Expected:  false},
 }
 
 func TestSumsToOne(t *testing.T) {
@@ -215,4 +215,3 @@ func TestSumsToOne(t *testing.T) {
 		}
 	}
 }
-

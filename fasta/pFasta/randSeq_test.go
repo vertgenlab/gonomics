@@ -1,30 +1,30 @@
 package pFasta
 
 import (
-	"testing"
 	"github.com/vertgenlab/gonomics/fileio"
+	"testing"
 )
 
 var RandSeqTests = []struct {
-	Length	int
-	Name	string
-	SetSeed  int64
-	Expected string
-	OutFile	string
+	Length    int
+	Name      string
+	SetSeed   int64
+	Expected  string
+	OutFile   string
 	Precision float32
 }{
 	{Length: 5,
-		Name: "chr1",
-		SetSeed: 7,
-		Expected: "testdata/randSeq_Expected_0.pfa",
-		OutFile: "testdata/out.randseq.test.pfa",
+		Name:      "chr1",
+		SetSeed:   7,
+		Expected:  "testdata/randSeq_Expected_0.pfa",
+		OutFile:   "testdata/out.randseq.test.pfa",
 		Precision: 1e-3,
 	},
 	{Length: 100,
-		Name: "chr1",
-		SetSeed: 2,
-		Expected: "testdata/randSeq_Expected_1.pfa",
-		OutFile: "testdata/out.randseq.test.pfa",
+		Name:      "chr1",
+		SetSeed:   2,
+		Expected:  "testdata/randSeq_Expected_1.pfa",
+		OutFile:   "testdata/out.randseq.test.pfa",
 		Precision: 1e-3,
 	},
 }

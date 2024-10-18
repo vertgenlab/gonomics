@@ -78,7 +78,7 @@ func TestWriteAndRead(t *testing.T) {
 	for _, v := range WriteTests {
 		Write(v.OutFile, v.Records)
 		records = Read(v.OutFile)
-		
+
 		if !AllAreEqual(records, v.Records, v.Precision) {
 			t.Errorf("Error: in pFasta. Write and read test was not as expected.\n")
 		} else {
