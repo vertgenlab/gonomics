@@ -55,21 +55,18 @@ func faFilter(infile string, outfile string, name string, notName string, nameCo
 					length = finalNBases
 				}
 				records[i].Seq = records[i].Seq[length-finalNBases:]
-				outlist = append(outlist, records[i]) //write any records to the outlist
-				continue
 			} else if cutFinalNbases > 0 {
 				length = len(records[i].Seq)
 				if cutFinalNbases >= length {
 					continue
 				}
 				records[i].Seq = records[i].Seq[:length-cutFinalNbases]
-				outlist = append(outlist, records[i])
-				continue
-			}
-			if end == -1 { //if the user didn't ask the record to stop at a specific location, append the fasta until the end of the record
-				records[i].Seq = records[i].Seq[start:]
-			} else { //if an endis specified by the user, append from the start to the finish specified
-				records[i].Seq = records[i].Seq[start:end]
+			} else {
+				if end == -1 { //if the user didn't ask the record to stop at a specific location, append the fasta until the end of the record
+					records[i].Seq = records[i].Seq[start:]
+				} else { //if an endis specified by the user, append from the start to the finish specified
+					records[i].Seq = records[i].Seq[start:end]
+				}
 			}
 			outlist = append(outlist, records[i]) //write any records to the outlist
 		}
