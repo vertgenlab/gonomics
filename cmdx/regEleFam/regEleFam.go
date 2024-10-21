@@ -67,11 +67,11 @@ func main() {
 				if interval.OverlapProportionRecursive(lifted, bedOverlap[k], 0.6) {
 					pass = append(pass, bedOverlap[k])
 				}
-			}
+			}bedTree, bedIntervals = updateBedTree(bedIntervals, lifted)
 			switch len(pass) {
 			case 0:
 				lifted.Name = i.Name + fmt.Sprintf("_lift.%d", j)
-				bedTree, bedIntervals = updateBedTree(bedIntervals, lifted)
+
 				sb.WriteString(lifted.Chrom + "_" + fileio.IntToString(lifted.ChromStart) + "_" + fileio.IntToString(lifted.ChromEnd) + "_" + lifted.Name + ";")
 			case 1:
 				for l := range pass {
