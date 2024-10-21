@@ -114,12 +114,33 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 }
 
 // Random returns a randomly-generated pFasta of sequence length 'length' and name 'name' where each base sums to 1 across its probabilities
-func RandSeq(length int, name string, setSeed int64) PFasta {
-	rand.Seed(setSeed)
+func RandSeq(length int, name string, seedSet bool, setSeed int64, randSource *rand.Rand) PFasta {
+	var source *rand.Rand
+	if !seedSet {
+		source = rand.New(rand.NewSource(setSeed))
+	} else {
+		source = randSource
+	}
 	answer := PFasta{Name: name, Seq: make([]pDna.Float32Base, length)}
 	for pos := range length {
-		temp := pDna.RandBase(true, setSeed)
+		temp := pDna.RandBase(true, setSeed, source)
 		answer.Seq[pos] = temp
 	}
 	return answer
 }
+
+// // Random returns a randomly-generated pFasta of sequence length 'length' and name 'name' where each base sums to 1 across its probabilities
+// func RandSeq(length int, name string, seedSet bool, setSeed int64, randSource rand.Source) PFasta {
+// 	var source *rand.Rand
+// 	if !seedSet {
+// 		source = rand.New(rand.NewSource(setSeed))
+// 	} else {
+// 		source = rand.New(randSource)
+// 	}
+// 	answer := PFasta{Name: name, Seq: make([]pDna.Float32Base, length)}
+// 	for pos := range length {
+// 		temp := pDna.RandBaseV2(true, setSeed, source)
+// 		answer.Seq[pos] = temp
+// 	}
+// 	return answer
+// }

@@ -85,17 +85,20 @@ func SumsToOne(base Float32Base, precision float32) bool {
 }
 
 // Random randomly generates a pDNA base that sums to 1
-func RandBase(seedSet bool, setSeed int64) Float32Base {
+func RandBase(seedSet bool, setSeed int64, randSource *rand.Rand) Float32Base {
 	var answer Float32Base
+	var source *rand.Rand
 	if !seedSet {
-		rand.Seed(setSeed)
+		source = rand.New(rand.NewSource(setSeed))
+	} else {
+		source = randSource
 	}
 	sumsToOne := false
 	for !sumsToOne {
-		aFloat := rand.Float32()
-		cFloat := rand.Float32()
-		gFloat := rand.Float32()
-		tFloat := rand.Float32()
+		aFloat := source.Float32()
+		cFloat := source.Float32()
+		gFloat := source.Float32()
+		tFloat := source.Float32()
 		sum := aFloat + cFloat + gFloat + tFloat
 		answer.A = aFloat / sum
 		answer.C = cFloat / sum
@@ -109,3 +112,33 @@ func RandBase(seedSet bool, setSeed int64) Float32Base {
 
 	return answer
 }
+
+// // Random randomly generates a pDNA base that sums to 1
+// func RandBaseV2(seedSet bool, setSeed int64, randSource rand.Source) Float32Base {
+// 	var answer Float32Base
+// 	var source *rand.Rand
+// 	if !seedSet {
+// 		source = rand.New(rand.NewSource(setSeed))
+// 	} else {
+// 		source = rand.New(randSource)
+// 	}
+// 	sumsToOne := false
+// 	for !sumsToOne {
+// 		aFloat := source.Float32()
+// 		cFloat := source.Float32()
+// 		gFloat := source.Float32()
+// 		tFloat := source.Float32()
+// 		sum := aFloat + cFloat + gFloat + tFloat
+// 		answer.A = aFloat / sum
+// 		answer.C = cFloat / sum
+// 		answer.G = gFloat / sum
+// 		answer.T = tFloat / sum
+// 		if SumsToOne(answer, 1e-3) {
+// 			sumsToOne = true
+// 			break
+// 		}
+// 	}
+
+// 	return answer
+// }
+

@@ -2,7 +2,7 @@ package pFasta
 
 import (
 	"testing"
-
+	"fmt"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fileio"
 )
@@ -57,21 +57,23 @@ var WriteTests = []struct {
 	},
 	{
 		OutFile:   "testdata/out.test.pFa",
-		Records:   []PFasta{RandSeq(1000, "test", 8)},
+		Records:   []PFasta{RandSeq(1000, "test", false, 8, nil)},
 		Precision: 1e-2,
 	},
 	{
 		OutFile:   "testdata/out.test.pFa",
-		Records:   []PFasta{RandSeq(10000, "test", 8)},
+		Records:   []PFasta{RandSeq(10000, "test", false, 8, nil)},
 		Precision: 1e-2,
 	},
 	{
 		// TODO: there is a bug caused by relative precision being used for very small numbers when seed is 7 or 8
 		OutFile:   "testdata/out.test.pFa",
-		Records:   []PFasta{RandSeq(100000, "test", 9)},
+		Records:   []PFasta{RandSeq(100000, "test", false, 9, nil)},
 		Precision: 1e-2,
 	},
 }
+
+// testcases originally 9
 
 func TestWriteAndRead(t *testing.T) {
 	var records []PFasta
