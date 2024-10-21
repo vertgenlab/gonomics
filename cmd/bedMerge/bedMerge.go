@@ -21,7 +21,7 @@ func bedMerge(infile string, outfile string, mergeAdjacent int, lowMem bool, kee
 	}
 }
 
-func bedMergeLowMem(infile string, outfile string, mergeAdjacent int) {
+func bedMergeLowMem(infile string, outfile string, mergeThreshold int) {
 	var err error
 	b := bed.GoReadToChan(infile)
 	out := fileio.EasyCreate(outfile)
@@ -35,7 +35,7 @@ func bedMergeLowMem(infile string, outfile string, mergeAdjacent int) {
 			currentMax = i
 		} else {
 			minDist, err = bed.MinimumDistance(currentMax, i)
-			if bed.Overlap(currentMax, i) || minDist <= mergeAdjacent && err == nil {
+			if bed.Overlap(currentMax, i) || minDist <= mergeThreshold && err == nil {
 				if i.Score > currentMax.Score {
 					currentMax.Score = i.Score
 				}
@@ -52,9 +52,9 @@ func bedMergeLowMem(infile string, outfile string, mergeAdjacent int) {
 	exception.PanicOnErr(err)
 }
 
-func bedMergeHighMem(infile string, outfile string, mergeAdjacent int, keepAllNames bool) {
+func bedMergeHighMem(infile string, outfile string, mergeThreshold int, keepAllNames bool) {
 	var records = bed.Read(infile)
-	outList := bed.MergeHighMem(records, mergeAdjacent, keepAllNames)
+	outList := bed.MergeHighMem(records, mergeThreshold, keepAllNames)
 	bed.Write(outfile, outList)
 }
 
@@ -70,7 +70,7 @@ func usage() {
 func main() {
 	var expectedNumArgs int = 2
 	var mergeAdjacent *bool = flag.Bool("mergeAdjacent", false, "Merge non-overlapping entries with direct adjacency.")
-	var pad *int = flag.Int("pad", -1, "Merge bed entries that are N bases away from each other. A pad value of 0 is equivalent to -mergeAdjacent")
+	var pad *int = flag.Int("pad", -1, "Merge bed entries that are N bases or less away from each other. A pad value of 0 is equivalent to -mergeAdjacent")
 	var lowMem *bool = flag.Bool("lowMem", false, "Use the low memory algorithm. Requires input file to be pre-sorted.")
 	var keepAllNames *bool = flag.Bool("keepAllNames", false, "If set to true, merged beds will also have a merged name field in a comma separated list, cannot currently be combined with lowMem option")
 
