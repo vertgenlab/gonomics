@@ -1,11 +1,10 @@
 package main
 
 import (
-	"os"
 	"testing"
-
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"os"
+	"github.com/vertgenlab/gonomics/exception"
 )
 
 var SimulateVcfTests = []struct {
@@ -18,8 +17,12 @@ var SimulateVcfTests = []struct {
 	BoundAlpha      float64
 	BoundBeta       float64
 	BoundMultiplier float64
+	RefFile         string
+	HasRef          bool
 }{
-	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000},
+	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000, "", false},
+	{"testdata/expected_2.vcf", "testdata/out_2.vcf", 4, 100, 10, 11, 0.001, 0.001, 10000, "testdata/refFa_short.fasta", true},
+	{"testdata/expected_3.vcf", "testdata/out_3.vcf", 4, 100, 20, 29, 0.001, 0.001, 10000, "testdata/refFa_short.fasta", true},
 }
 
 func TestSimulateVcf(t *testing.T) {
@@ -35,13 +38,15 @@ func TestSimulateVcf(t *testing.T) {
 			BoundAlpha:      v.BoundAlpha,
 			BoundBeta:       v.BoundBeta,
 			BoundMultiplier: v.BoundMultiplier,
+			RefFile:         v.RefFile,
+			HasRef:          v.HasRef,
 		}
 		simulateVcf(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in simulateVcf.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+		err = os.Remove(v.OutFile)
+		exception.PanicOnErr(err)
 		}
 	}
 }

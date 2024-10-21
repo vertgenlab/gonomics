@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"strings"
 
 	"github.com/vertgenlab/gonomics/simulate"
 )
 
 func simulateVcf(s Settings) {
 	rand.Seed(s.SetSeed)
-	simulate.VcfToFile(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier)
+	simulate.VcfToFile(s.Alpha, s.NumAlleles, s.NumSites, s.OutFile, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, s.RefFile, s.HasRef)
 }
 
 func usage() {
@@ -35,6 +36,8 @@ type Settings struct {
 	BoundAlpha      float64
 	BoundBeta       float64
 	BoundMultiplier float64
+	RefFile         string
+	HasRef          bool
 }
 
 func main() {
@@ -46,10 +49,16 @@ func main() {
 	var boundAlpha *float64 = flag.Float64("boundAlpha", 0.001, "Set the alpha parameter for the bounding function.")
 	var boundBeta *float64 = flag.Float64("boundBeta", 0.001, "Set the beta parameter for the bounding function.")
 	var boundMultiplier *float64 = flag.Float64("boundMultiplier", 10000, "Set the multiplier for the bounding function.")
+	var refFile *string = flag.String("refFile", "", "Specify a reference Fasta file.")
+	var hasRef bool = false
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
+	if strings.ToLower(*refFile) != "" {
+		hasRef = true
+	}
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
@@ -66,6 +75,8 @@ func main() {
 		BoundAlpha:      *boundAlpha,
 		BoundBeta:       *boundBeta,
 		BoundMultiplier: *boundMultiplier,
+		RefFile:         *refFile,
+		HasRef:          hasRef,
 	}
 
 	simulateVcf(s)
