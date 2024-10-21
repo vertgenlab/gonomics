@@ -1,0 +1,6 @@
+chr1	ncbiRefSeq.2022-10-28	transcript	11874	14409	.	+	.	gene_id "DDX11L1"; transcript_id "NR_046018.2";  gene_name "DDX11L1";
+chr1	ncbiRefSeq.2022-10-28	exon	11874	12227	.	+	.	gene_id "DDX11L1"; transcript_id "NR_046018.2"; exon_number "1"; exon_id "NR_046018.2.1"; gene_name "DDX11L1";
+chr1	ncbiRefSeq.2022-10-28	exon	12613	12721	.	+	.	gene_id "DDX11L1"; transcript_id "NR_046018.2"; exon_number "2"; exon_id "NR_046018.2.2"; gene_name "DDX11L1";
+chr1	ncbiRefSeq.2022-10-28	exon	13221	14409	.	+	.	gene_id "DDX11L1"; transcript_id "NR_046018.2"; exon_number "3"; exon_id "NR_046018.2.3"; gene_name "DDX11L1";
+chrM	ncbiRefSeq.2022-10-28	transcript	15888	15953	.	+	.	gene_id "TRNT"; transcript_id "rna-TRNT";  gene_name "TRNT";
+chrM	ncbiRefSeq.2022-10-28	exon	15888	15953	.	+	.	gene_id "TRNT"; transcript_id "rna-TRNT"; exon_number "1"; exon_id "rna-TRNT.1"; gene_name "TRNT";

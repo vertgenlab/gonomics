@@ -24,7 +24,8 @@ func HaploidCallFromPile(p Pile, refBase dna.Base, epsilon float64, lambda float
 	var cCount = p.CountF[dna.C] + p.CountR[dna.C]
 	var gCount = p.CountF[dna.G] + p.CountR[dna.G]
 	var tCount = p.CountF[dna.T] + p.CountR[dna.T]
-	var N = aCount + cCount + gCount + tCount
+	var nCount = p.CountF[dna.N] + p.CountR[dna.N]
+	var N = aCount + cCount + gCount + tCount + nCount // this is the read depth for the pile
 	var maxPosterior, currPosterior float64
 
 	if refBase != dna.N { //if we have a real base, we'll calculate posteriors.

@@ -22,6 +22,7 @@ import (
 type Settings struct {
 	InFile                   string
 	OutFile                  string
+	CoordName                bool
 	UCSCToEnsembl            bool
 	EnsemblToUCSC            bool
 	ScaleNameFloat           float64
@@ -85,6 +86,12 @@ func bedFormat(s Settings) {
 	}
 
 	for v := range ch {
+		if s.CoordName {
+			if v.FieldsInitialized == 3 {
+				v.FieldsInitialized = 4
+			}
+			v.Name = fmt.Sprintf("%s.%v.%v", v.Chrom, v.ChromStart, v.ChromEnd)
+		}
 		if s.ToMidpoint {
 			v = bed.ToMidpoint(v)
 		}
@@ -207,6 +214,7 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 2
+	var coordName *bool = flag.Bool("coordName", false, "If true, set the Name field of the bed to Chrom.Start.End. Will replace existing name.")
 	var evenPadLength *int = flag.Int("evenPadLength", 0, "Add # of bases to both ends of each bed record. Requires chromSizeFile.")
 	var upstreamPadLength *int = flag.Int("upstreamPadLength", 0, "Add # of bases upstream of a bed record, strand-sensitive. Requires chromSizeFile.")
 	var downstreamPadLength *int = flag.Int("downstreamPadLength", 0, "Add # of bases downstream of a bed record, strand-sensitive. Requires chromSizeFile.")
@@ -236,6 +244,7 @@ func main() {
 	s := Settings{
 		InFile:                   infile,
 		OutFile:                  outfile,
+		CoordName:                *coordName,
 		UCSCToEnsembl:            *UCSCToEnsembl,
 		EnsemblToUCSC:            *ensemblToUCSC,
 		ScaleNameFloat:           *scaleNameFloat,

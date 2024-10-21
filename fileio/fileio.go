@@ -18,7 +18,7 @@ import (
 // Fatal/Panics when appropriate.
 func MustCreate(filename string) *os.File {
 	if filename == "" {
-		log.Fatalf("Must write to a non-empty filename")
+		log.Fatalf("Error: Must write to a non-empty filename...")
 	}
 	file, err := os.Create(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrExist) {
@@ -32,6 +32,10 @@ func MustCreate(filename string) *os.File {
 // MustOpen opens the input file.
 // Fatal/Panics when appropriate.
 func MustOpen(filename string) *os.File {
+	if strings.Contains(filename, "stdin") {
+		return os.Stdin
+	}
+
 	file, err := os.Open(filename)
 	if errors.Is(err, os.ErrPermission) || errors.Is(err, os.ErrNotExist) {
 		log.Fatal(err.Error())
@@ -171,6 +175,7 @@ func AreEqualIgnoreComments(a string, b string) bool {
 }
 
 // AreEqual returns true if input files are equal.
+// Expects files to end with a newline character.
 func AreEqual(a string, b string) bool {
 	return equal(a, b, true)
 }

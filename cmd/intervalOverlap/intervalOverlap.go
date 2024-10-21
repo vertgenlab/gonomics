@@ -42,7 +42,7 @@ func intervalOverlap(options *Settings) chan *queryAnswer {
 	var wg sync.WaitGroup
 	for i := 0; i < options.Threads; i++ {
 		wg.Add(1)
-		go queryWorker(tree, queryChan, answerChan, options.Relationship, &wg, options.MergedOutput)
+		go queryWorker(tree, queryChan, answerChan, options.Relationship, &wg, options.MergedOutput, options.ThresholdOverlap)
 	}
 
 	// Spawn a goroutine that closes answerChan once all queryWorkers have finished
@@ -58,7 +58,7 @@ func main() {
 	//var extend *int = flag.Int("extend", 0, "WIP") //TODO
 	var nonOverlap *bool = flag.Bool("nonOverlap", false, "Return records that do NOT have any overlap with records in the select file")
 	var threads *int = flag.Int("threads", 1, "Number of threads to use.")
-	//var percentOverlap *float64 = flag.Float64("percentOverlap", 0, "WIP") //TODO
+	var thresholdOverlap *float64 = flag.Float64("thresholdOverlap", 0, "Returns regions that have a minimum percentage of overlap between select and infile regions.")
 	//var baseOverlap *int = flag.Int("baseOverlap", 0, "WIP")               //TODO
 	var aggregate *bool = flag.Bool("aggregate", false, "Determine overlap based on the sum of overlapping target records rather than individual target records.")
 	var relationship *string = flag.String("relationship", "any", "Choose a specific relationships that target and query records must fulfill to be reported. Use --printRelationships for more information.")
@@ -94,6 +94,10 @@ func main() {
 		log.Fatalln("ERROR: Cannot use both mergedOutput and nonOverlap")
 	}
 
+	if *thresholdOverlap != 0 && *nonOverlap {
+		log.Fatalln("ERROR: Cannot use both thresholdOverlap and nonOverlap")
+	}
+
 	var expectedNumArgs int = 3
 	var err error
 	flag.Usage = usage
@@ -110,9 +114,9 @@ func main() {
 		Output:     outFile,
 		SelectFile: selectFile,
 		//Extend:          *extend,
-		NonOverlap: *nonOverlap,
-		Threads:    *threads,
-		//PercentOverlap:  *percentOverlap,
+		NonOverlap:       *nonOverlap,
+		Threads:          *threads,
+		ThresholdOverlap: *thresholdOverlap,
 		//BaseOverlap:     *baseOverlap,
 		Aggregate:    *aggregate,
 		Relationship: *relationship,
@@ -128,7 +132,7 @@ func main() {
 
 	answerChan := intervalOverlap(options)
 	output := fileio.EasyCreate(options.Output)
-	writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap)
+	writeToFile(answerChan, output, options.MergedOutput, options.NonOverlap, options.ThresholdOverlap)
 	err = output.Close()
 	exception.PanicOnErr(err)
 

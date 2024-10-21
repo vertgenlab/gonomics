@@ -9,6 +9,8 @@ import (
 
 // ReconAccuracy returns the percentage accuracy by base returned by reconstruct of each node and of all reconstructed nodes combined.
 // If calcBaseAcc = true it will also run ReconAccuracyByBase.
+// accTotal return is a map of node names to accuracy float.
+// accBases returns a map of node names to a []float64, corresponding to the accuracy for each base, A, C, G, T.
 func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile string, gpFilename string, calcBaseAcc bool) (accTotal map[string]float64, accBases map[string][]float64) {
 	var accByBase map[string][]float64
 	if calcBaseAcc {
@@ -26,7 +28,10 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 	sim := fasta.Read(simFilename)
 	recon := fasta.Read(reconFilename)
 	leaves := fasta.Read(leavesOnlyFile)
-	genes := genePred.Read(gpFilename)
+	var genes = make([]genePred.GenePred, 0)
+	if gpFilename != "" {
+		genes = genePred.Read(gpFilename)
+	}
 
 	answer := make(map[string]float64)
 
@@ -46,7 +51,6 @@ func ReconAccuracy(simFilename string, reconFilename string, leavesOnlyFile stri
 					}
 				}
 				found = true
-				//DEBUG: log.Printf("\n%s \n%s \n", dna.BasesToString(sim[i].Seq), dna.BasesToString(recon[j].Seq))
 				for g := 0; g < len(genes); g++ {
 					for k := 0; k < len(sim[i].Seq); k++ {
 						exon, _ = simulate.CheckExon(genes[g], k)

@@ -97,3 +97,47 @@ func GenesToPromoterBed(g map[string]*Gene, c map[string]chromInfo.ChromInfo, up
 
 	return answer
 }
+
+// GenesToBedFirstTwoCodonBases takes a map[string]*Gene and returns a []bed.Bed containing the first two bases
+// of each codon. The result will be returned in coordinate sorted order.
+func GenesToBedFirstTwoCodonBases(genes map[string]*Gene) []bed.Bed {
+	var answer = make([]bed.Bed, 0)
+	for currGene := range genes {
+		answer = append(answer, geneToBedFirstTwoCodonBases(*genes[currGene])...)
+	}
+	bed.SortByCoord(answer)
+	return answer
+}
+
+// geneToBedFirstTwoCodonBases is a helper function of GenesToBedFirstTwoCodonBases. It takes a single Gene
+// and produces a slice of bed.Bed structs representing the first two bases of each codon for every coding exon
+// of every transcript.
+func geneToBedFirstTwoCodonBases(g Gene) []bed.Bed {
+	var answer = make([]bed.Bed, 0)
+	for _, t := range g.Transcripts {
+		for _, e := range t.Exons {
+			if e.Cds != nil {
+				answer = append(answer, cdsToBedsFirstTwoCodonBases(*e.Cds, t.Chr, t.Strand)...)
+			}
+		}
+	}
+	return answer
+}
+
+// cdsToBedsFirstTwoCodonBases is a helper function of geneToBedFirstTwoCodonBases. It takes a Cds struct and
+// returns a slice of bed.Bed structs representing the first two bases of each codon. This function is aware of
+// both frame and strand. Useful for conservation analysis as this excludes degenerate sites.
+func cdsToBedsFirstTwoCodonBases(c Cds, chrom string, strand bool) []bed.Bed {
+	var answer = make([]bed.Bed, 0)
+	// we loop through all complete codons in the cds (ranging from start + frame - 1).
+	// the -1 handles the fact that GTF is one-based and BED is 0-based. The + 2 for the end
+	// reflects the fact that BED includes the start and excludes the end.
+	for currPos := c.Start + c.Frame - 1; currPos+2 <= c.End; currPos += 3 {
+		if strand {
+			answer = append(answer, bed.Bed{Chrom: chrom, ChromStart: currPos, ChromEnd: currPos + 2, FieldsInitialized: 3})
+		} else {
+			answer = append(answer, bed.Bed{Chrom: chrom, ChromStart: currPos + 1, ChromEnd: currPos + 3, FieldsInitialized: 3})
+		}
+	}
+	return answer
+}

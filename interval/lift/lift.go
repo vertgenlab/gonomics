@@ -1,3 +1,4 @@
+// Package lift provides an interface and utilities for working with genomic regions and offer flexibility to modify their coordinates.
 package lift
 
 import (

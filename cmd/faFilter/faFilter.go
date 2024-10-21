@@ -9,12 +9,14 @@ import (
 	"log"
 	"strings"
 
+	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-func faFilter(infile string, outfile string, name string, notName string, nameContains string, refPositions bool, start int, end int, minSize int) {
+func faFilter(infile string, outfile string, name string, notName string, nameContains string, refPositions bool, start int, end int, minSize int, maxGC float64, minGC float64, finalBases int) {
 	records := fasta.Read(infile) //read the fasta infile
-	var outlist []fasta.Fasta     //make the variable to store the fasta records that will be written out
+	var length int
+	var outlist []fasta.Fasta //make the variable to store the fasta records that will be written out
 	var pass bool = true
 
 	if start > end && end != -1 { //throws an error if the start and end positions given as options (see more info below) are illogical
@@ -40,7 +42,22 @@ func faFilter(infile string, outfile string, name string, notName string, nameCo
 		if len(records[i].Seq) < minSize { //filtering based on the size of the fasta record, must be larger than the value given to the minSize option
 			pass = false
 		}
+		if dna.GCContent(records[i].Seq) > maxGC { //filtering based on GC content of the fasta record; GC content must be less than or equal to the value given to the maxGC option
+			pass = false
+		}
+		if dna.GCContent(records[i].Seq) < minGC { //filtering based on GC content of the fasta record; GC content must be greater than or equal to the value given to the minGC option
+			pass = false
+		}
 		if pass { //if checks passed on a record
+			if finalBases > 0 {
+				length = len(records[i].Seq)
+				if finalBases > length {
+					length = finalBases
+				}
+				records[i].Seq = records[i].Seq[length-finalBases:]
+				outlist = append(outlist, records[i]) //write any records to the outlist
+				continue
+			}
 			if end == -1 { //if the user didn't ask the record to stop at a specific location, append the fasta until the end of the record
 				records[i].Seq = records[i].Seq[start:]
 			} else { //if an endis specified by the user, append from the start to the finish specified
@@ -72,6 +89,9 @@ func main() {
 	var notName *string = flag.String("notName", "", "Returns all fasta records except for this input.")
 	var nameContains *string = flag.String("nameContains", "", "Returns all fasta records whose name contains this input. String matching is case-sensitive.")
 	var minSize *int = flag.Int("minSize", 0, "Retains all fasta records with a sequence of at least that size")
+	var maxGC *float64 = flag.Float64("maxGC", 100, "Retains all fasta records with GC content less than or equal to this percentage.")
+	var minGC *float64 = flag.Float64("minGC", 0, "Retains all fasta records with GC content greater than or equal to this percentage")
+	var finalBases *int = flag.Int("finalBases", -1, "Retains the final N bases in the fasta record. Not compatible with -start or -end")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -83,8 +103,13 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
+	if *finalBases > 0 && (*start > 0 || *end > 0) {
+		flag.Usage()
+		log.Fatalf("-finalBases and -start/-end are not compatible with each other.")
+	}
+
 	inFile := flag.Arg(0)
 	outFile := flag.Arg(1)
 
-	faFilter(inFile, outFile, *name, *notName, *nameContains, *refPositions, *start, *end, *minSize) //all options exist as pointers in the arguments of the function call, since they may or may not exist when the user calls the function.
+	faFilter(inFile, outFile, *name, *notName, *nameContains, *refPositions, *start, *end, *minSize, *maxGC, *minGC, *finalBases) //all options exist as pointers in the arguments of the function call, since they may or may not exist when the user calls the function.
 }

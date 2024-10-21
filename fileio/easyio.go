@@ -2,13 +2,12 @@ package fileio
 
 import (
 	"bufio"
-	"compress/gzip"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 
+	"github.com/klauspost/pgzip"
 	"github.com/vertgenlab/gonomics/exception"
 )
 
@@ -16,7 +15,7 @@ import (
 // Will silently handle reading gziped files. EasyReader is a valid io.Reader.
 type EasyReader struct {
 	File         *os.File
-	internalGzip *gzip.Reader
+	internalGzip *pgzip.Reader
 	BuffReader   *bufio.Reader
 }
 
@@ -26,7 +25,7 @@ type EasyReader struct {
 type EasyWriter struct {
 	file         *os.File
 	internalBuff *bufio.Writer
-	internalGzip *gzip.Writer
+	internalGzip *pgzip.Writer
 }
 
 // EasyOpen opens the input file. Panics if errors are encountered.
@@ -34,47 +33,18 @@ func EasyOpen(filename string) *EasyReader {
 	if strings.Contains(filename, "http") {
 		return EasyHttp(filename)
 	}
-
-	answer := EasyReader{}
-	var hasMagicGzip bool
-	var readerInput io.Reader
-
-	if strings.HasPrefix(filename, "stdin") {
-		// when reading stdin we will assume the input is gzipped
-		// if the file begins with the two magic gzip bytes 1f8d.
-		// If it does, append .gz to the filename so it is parsed
-		// as gzip in the following switch case.
-		answer.File = os.Stdin
-		readerInput, hasMagicGzip = newStdinMagicReader(magicGzip)
-		if hasMagicGzip {
-			filename += ".gz"
-		}
-	} else {
-		answer.File = MustOpen(filename)
-		hasMagicGzip = IsGzip(answer.File)
-		readerInput = answer.File
+	answer := EasyReader{
+		File: MustOpen(filename),
 	}
-
-	var err error
 	switch {
-	case strings.HasSuffix(filename, ".gz") && hasMagicGzip:
-		answer.internalGzip, err = gzip.NewReader(readerInput)
+	case IsGzip(answer.File):
+		var err error
+		answer.internalGzip, err = pgzip.NewReader(answer.File)
 		exception.PanicOnErr(err)
 		answer.BuffReader = bufio.NewReader(answer.internalGzip)
-
-	case strings.HasSuffix(filename, ".gz"):
-		log.Fatalf("ERROR: input file '%s' has the .gz suffix, but is not a gzip file", filename)
-
-	case hasMagicGzip:
-		log.Printf("WARNING: The input file '%s' looks like it may be gzipped, "+
-			"but does not have the .gz suffix. Processing as a non-gzip file. Add the .gz "+
-			"suffix to process as a gzip file.", filename)
-		fallthrough
-
 	default:
-		answer.BuffReader = bufio.NewReader(readerInput)
+		answer.BuffReader = bufio.NewReader(answer.File)
 	}
-
 	return &answer
 }
 
@@ -94,7 +64,7 @@ func EasyCreate(filename string) *EasyWriter {
 	answer.internalBuff = bufio.NewWriter(answer.file)
 
 	if strings.HasSuffix(filename, ".gz") {
-		answer.internalGzip = gzip.NewWriter(answer.internalBuff)
+		answer.internalGzip = pgzip.NewWriter(answer.internalBuff)
 	} else {
 		answer.internalGzip = nil
 	}

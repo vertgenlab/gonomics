@@ -3,12 +3,14 @@ package pFasta
 import (
 	"bufio"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/x448/float16"
+	"io"
 	"log"
 	"strings"
 )
@@ -25,8 +27,20 @@ func Write(outFile string, records []PFasta) {
 	var err error
 	out := fileio.EasyCreate(outFile)
 
-	// first we write the header
-	_, err = fmt.Fprint(out, "pFasta_format_1.0\n")
+	WriteHeader(out, records)
+	var base pDna.Float32Base
+	for _, record := range records {
+		for _, base = range record.Seq {
+			WriteBase(out, base)
+		}
+	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+func WriteHeader(out *fileio.EasyWriter, records []PFasta) {
+	_, err := fmt.Fprint(out, "pFasta_format_1.0\n")
 	exception.PanicOnErr(err)
 	for i := range records {
 		_, err = fmt.Fprintf(out, "%s\t%v\n", records[i].Name, len(records[i].Seq))
@@ -34,19 +48,13 @@ func Write(outFile string, records []PFasta) {
 	}
 	_, err = fmt.Fprintf(out, "EndHeader\n")
 	exception.PanicOnErr(err)
+}
 
-	var currSeqIndex, currPos int
-	for currSeqIndex = range records {
-		for currPos = range records[currSeqIndex].Seq {
-			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].A)
-			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].C)
-			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].G)
-			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].T)
-		}
-	}
-
-	err = out.Close()
-	exception.PanicOnErr(err)
+func WriteBase(out *fileio.EasyWriter, base pDna.Float32Base) {
+	writeBaseProbability(out, base.A)
+	writeBaseProbability(out, base.C)
+	writeBaseProbability(out, base.G)
+	writeBaseProbability(out, base.T)
 }
 
 // writeBase is a helper function of Write, which write an input float32
@@ -106,26 +114,31 @@ func ReadPfaHeader(reader *bufio.Reader) []string {
 func Read(inFile string) []PFasta {
 	var err error
 	file := fileio.EasyOpen(inFile)
-	reader := bufio.NewReader(file)
-	records := makeEmptyRecords(reader)
+	records := makeEmptyRecords(file.BuffReader)
 	var currBase = make([]byte, 2) //8 bytes, or 64 bit slice. Enough for one pDna base probability.
 	var currSeq, currPos int
 
 	for currSeq = range records {
 		for currPos = range records[currSeq].Seq {
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(file.BuffReader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].A = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(file.BuffReader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].C = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(file.BuffReader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].G = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
-			_, err = reader.Read(currBase)
+			_, err = io.ReadFull(file.BuffReader, currBase)
 			exception.PanicOnErr(err)
 			records[currSeq].Seq[currPos].T = float16.Frombits(binary.LittleEndian.Uint16(currBase)).Float32()
 		}
+	}
+	// check to make sure we are at the end of the file
+	currBase = currBase[0:1]
+	_, err = io.ReadFull(file.BuffReader, currBase)
+	if !errors.Is(err, io.EOF) {
+		log.Fatalf("Error: %s has more sequence than expected from the header\n", inFile)
 	}
 
 	err = file.Close()

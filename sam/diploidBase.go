@@ -87,6 +87,25 @@ func DiploidBaseString(base DiploidBase) string {
 	return ""
 }
 
+// RefBaseToRefGenotype converts a base in dna.Base format to a DiploidBase with the corresponding homozygous genotype.
+func RefBaseToRefGenotype(refBase dna.Base) DiploidBase {
+	switch refBase {
+	case dna.A:
+		return AA
+	case dna.C:
+		return CC
+	case dna.G:
+		return GG
+	case dna.T:
+		return TT
+	case dna.N: // should be redundant with catch above
+		return NN
+	default:
+		log.Fatalf("Error: Reference base was not N, A, C, G, or T. Found: %s.\n", dna.BaseToString(refBase))
+		return NN
+	}
+}
+
 // DiploidBaseCallFromPile determines which of 10 DiploidBase genotypes
 // are present at the position of an input Pile, preconditioned on the assumption of
 // a diploid base at that position (in other words, not considering INDELs).
@@ -103,20 +122,7 @@ func DiploidBaseCallFromPile(p Pile, refBase dna.Base, priorCache [][]float64, h
 	var baseCount = aCount + cCount + gCount + tCount
 
 	if baseCount < 1 {
-		switch refBase {
-		case dna.A:
-			return AA
-		case dna.C:
-			return CC
-		case dna.G:
-			return GG
-		case dna.T:
-			return TT
-		case dna.N: // should be redundant with catch above
-			return NN
-		default:
-			log.Fatalf("Error: Reference base was not N, A, C, G, or T. Found: %s.\n", dna.BaseToString(refBase))
-		}
+		return RefBaseToRefGenotype(refBase)
 	}
 
 	var maxDiploid []DiploidBase
@@ -267,26 +273,35 @@ func MakeDiploidBasePriorCache(delta float64, gamma float64) [][]float64 {
 		{tvSquared, twoTvTr, twoTvSquared, twoOneMinusDeltaTv, trSquared, twoTvTr, twoOneMinusDeltaTr, twoTvSquared, twoOneMinusDeltaTv, oneMinusDeltaSquared}}
 }
 
-func MakeDiploidBaseEmpiricalPriorCache(inFile string) [][]float64 {
+// MakeDiploidBaseEmpiricalPriorCache is a helper function used in samAssembler before running DiploidBaseCallFromPile.
+// The function reads a 4x10 diploid substitution matrix from an input file, as well as empirical values for the parameters
+// epsilon and lambda, which are the second and third return, respectively.
+// Epsilon measures the flat error rate, and lambda is the rate of postmortem cytosine deamination.
+func MakeDiploidBaseEmpiricalPriorCache(inFile string) ([][]float64, float64, float64) {
 	lines := fileio.Read(inFile)
-	if len(lines) != 5 {
-		log.Fatalf("Error: expected five lines in empirical prior file. Found: %v.\n", len(lines))
+	if len(lines) != 7 {
+		log.Fatalf("Error: expected seven lines in empirical prior file. Found: %v.\n", len(lines))
 	}
-	wordsA := strings.Split(lines[1], "\t")
+	wordsEpsilon := strings.Split(lines[0], "\t")
+	epsilon := parse.StringToFloat64(wordsEpsilon[1])
+	wordsLambda := strings.Split(lines[1], "\t")
+	lambda := parse.StringToFloat64(wordsLambda[1])
+
+	wordsA := strings.Split(lines[3], "\t")
 	if len(wordsA) != 11 {
-		log.Fatalf("Error: expected 11 fields in empirical prior file, row 2. Found: %v.\n", len(wordsA))
+		log.Fatalf("Error: expected 11 fields in empirical prior file, row 4. Found: %v.\n", len(wordsA))
 	}
-	wordsC := strings.Split(lines[2], "\t")
+	wordsC := strings.Split(lines[4], "\t")
 	if len(wordsC) != 11 {
-		log.Fatalf("Error: expected 11 fields in empirical prior file, row 3. Found: %v.\n", len(wordsC))
+		log.Fatalf("Error: expected 11 fields in empirical prior file, row 5. Found: %v.\n", len(wordsC))
 	}
-	wordsG := strings.Split(lines[3], "\t")
+	wordsG := strings.Split(lines[5], "\t")
 	if len(wordsG) != 11 {
-		log.Fatalf("Error: expected 11 fields in empirical prior file, row 4. Found: %v.\n", len(wordsG))
+		log.Fatalf("Error: expected 11 fields in empirical prior file, row 6. Found: %v.\n", len(wordsG))
 	}
-	wordsT := strings.Split(lines[4], "\t")
+	wordsT := strings.Split(lines[6], "\t")
 	if len(wordsT) != 11 {
-		log.Fatalf("Error: expected 11 fields in empirical prior file, row 5. Found: %v.\n", len(wordsT))
+		log.Fatalf("Error: expected 11 fields in empirical prior file, row 7. Found: %v.\n", len(wordsT))
 	}
 	return [][]float64{
 		{parse.StringToFloat64(wordsA[1]),
@@ -333,7 +348,7 @@ func MakeDiploidBaseEmpiricalPriorCache(inFile string) [][]float64 {
 			parse.StringToFloat64(wordsT[9]),
 			parse.StringToFloat64(wordsT[10]),
 		},
-	}
+	}, epsilon, lambda
 }
 
 // MakeDiploidBaseFlatPriorCache returns an uninformative prior distribution for genotypes.

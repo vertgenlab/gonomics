@@ -41,3 +41,24 @@ func equalFloatPrecision(a float32, b float32, precision float32) bool {
 	}
 	return float32(math.Abs(float64(a-b)))/a < precision
 }
+
+// Entropy calculates the Shannon Entropy of a pDNA base.
+func Entropy(base Float32Base) float64 {
+	var answer float64 = 0.0
+
+	// for each of these, we'll check p > 0 to avoid log2(0) calculation.
+	if base.A > 0 {
+		answer += -float64(base.A) * math.Log2(float64(base.A))
+	}
+	if base.C > 0 {
+		answer += -float64(base.C) * math.Log2(float64(base.C))
+	}
+	if base.G > 0 {
+		answer += -float64(base.G) * math.Log2(float64(base.G))
+	}
+	if base.T > 0 {
+		answer += -float64(base.T) * math.Log2(float64(base.T))
+	}
+
+	return answer
+}

@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
 	"log"
+	"math"
 )
 
 // MultiFaUngappedRegions takes in a MultiFa format alignment and returns a bed file of all ungapped regions
@@ -107,4 +108,10 @@ func IsSelfOverlapping(b []Bed, verbose int) bool {
 		}
 	}
 	return false
+}
+
+// AverageSize returns the average interval size of a slice of Bed, rounded to the nearest integer
+func AverageSize(b []Bed) int {
+	avg := float64(TotalSize(b)) / float64(len(b))
+	return int(math.Round(avg))
 }
