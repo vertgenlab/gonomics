@@ -1,39 +1,39 @@
 package pFasta
 
 import (
-	"testing"
 	"fmt"
-	"os"
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"os"
+	"testing"
 )
 
 var FaToPfaTests = []struct {
-	InputFilename          string
-	Start          int
-	End            int
-	Chrom          string
+	InputFilename string
+	Start         int
+	End           int
+	Chrom         string
 }{
 	{
 		InputFilename: "testdata/test_faToPfa_input_0.fa",
-		Start: 0,
-		End:   10,
-		Chrom: "chr1",
-	},{
+		Start:         0,
+		End:           10,
+		Chrom:         "chr1",
+	}, {
 		InputFilename: "testdata/test_faToPfa_input_0.fa",
-		Start: 0,
-		End:   10,
-		Chrom: "",
-	},{
+		Start:         0,
+		End:           10,
+		Chrom:         "",
+	}, {
 		InputFilename: "testdata/test_faToPfa_input_1.fa",
-		Start: 0,
-		End:   -1,
-		Chrom: "chr1",
-	},{
+		Start:         0,
+		End:           -1,
+		Chrom:         "chr1",
+	}, {
 		InputFilename: "testdata/test_faToPfa_input_2.fa",
-		Start: 3,
-		End:   8,
-		Chrom: "chr1",
+		Start:         3,
+		End:           8,
+		Chrom:         "chr1",
 	},
 }
 
@@ -66,7 +66,7 @@ func TestFaToPfa(t *testing.T) {
 			if end == -1 {
 				end = len(seq.Seq)
 			}
-			
+
 			extractedSeq := fasta.Extract(seq, v.Start, end, seq.Name)
 			if fasta.IsEqual(testSample, extractedSeq) {
 				testTrue = true
