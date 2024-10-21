@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/axt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/interval/lift"
@@ -46,7 +47,7 @@ func main() {
 	var sb strings.Builder
 	var chromSizes map[string]chromInfo.ChromInfo = chromInfo.ReadToMap(flag.Arg(2))
 	var outfile *fileio.EasyWriter = fileio.EasyCreate(flag.Arg(3))
-	var chainOverlap, bedOverlap []interval.Interval
+	var chainOverlap, bedOverlap, pass []interval.Interval
 	var lifted bed.Bed = bed.Bed{FieldsInitialized: 3}
 	axTree := buildAxTree(flag.Arg(0))
 	bedTree, bedIntervals := buildBedTree(flag.Arg(1))
@@ -61,22 +62,26 @@ func main() {
 		for j := range chainOverlap {
 			lifted.Chrom, lifted.ChromStart, lifted.ChromEnd = lift.LiftCoordinatesWithAxt(chainOverlap[j].(axt.Axt), i, chromSizes[chainOverlap[j].(axt.Axt).QName].Size)
 			bedOverlap = interval.Query(bedTree, lifted, "any")
-			overlap
-			switch len(bedOverlap) {
+			pass = []interval.Interval{}
+			for k := range bedOverlap {
+				if interval.OverlapProportionRecursive(lifted, bedOverlap[k], 0.6) {
+					pass = append(pass, bedOverlap[k])
+				}
+			}
+			switch len(pass) {
 			case 0:
 				lifted.Name = i.Name + fmt.Sprintf("_lift.%d", j)
 				bedTree, bedIntervals = updateBedTree(bedIntervals, lifted)
 				sb.WriteString(lifted.Chrom + "_" + fileio.IntToString(lifted.ChromStart) + "_" + fileio.IntToString(lifted.ChromEnd) + "_" + lifted.Name + ";")
 			case 1:
-				sb.WriteString(bedOverlap[0].(bed.Bed).Chrom + "_" + fileio.IntToString(bedOverlap[0].(bed.Bed).ChromStart) + "_" + fileio.IntToString(bedOverlap[0].(bed.Bed).ChromEnd) + "_" + bedOverlap[0].(bed.Bed).Name + ";")
-			case 2:
-				fmt.Println(bedOverlap, lifted)
-			default:
-				fmt.Println(bedOverlap, lifted)
+				for l := range pass {
+					sb.WriteString(pass[l].(bed.Bed).Chrom + "_" + fileio.IntToString(pass[l].(bed.Bed).ChromStart) + "_" + fileio.IntToString(pass[l].(bed.Bed).ChromEnd) + "_" + pass[l].(bed.Bed).Name + ";")
+				}
 			}
 
 		}
 		fileio.WriteToFileHandle(outfile, sb.String())
 	}
+	exception.PanicOnErr(outfile.Close())
 	fmt.Printf("done\n")
 }
