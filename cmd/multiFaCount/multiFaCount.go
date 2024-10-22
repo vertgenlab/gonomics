@@ -66,7 +66,6 @@ func multiFaCount(s Settings) {
 func usage() {
 	fmt.Print(
 		"multiFaCount - Scan multiple Fasta alignment for a user-specified pattern ('present bases (A,C,G,T, not gap- or N)' for now) and report counts.\n" +
-			"queryName is set to the reference sequence by default\n" +
 			"Usage:\n" +
 			"multiFaCount queryName multi.fa\n" +
 			"options:\n")
@@ -77,8 +76,8 @@ func main() {
 	var expectedNumArgs int = 3
 	var both *bool = flag.Bool("both", false, "When set to true, activates both mode. Count the number of positions where 2 sequences both match the user-specified pattern")
 	var either *bool = flag.Bool("either", false, "When set to true, activates either mode. Count the number of positions where any of the specified sequences matches the user-specified pattern")
-	var secondQueryName *string = flag.String("secondQueryName", "", "Specify the name of the second sequence to count for the user-specified pattern. Required in both and either modes. Set to the reference sequence by default")
-	var thirdQueryName *string = flag.String("thirdQueryName", "", "Specify the name of the third sequence to count for the user-specified pattern. May be used in both or either modes. Set to the reference sequence by default")
+	var secondQueryName *string = flag.String("secondQueryName", "", "Specify the name of the second sequence to count for the user-specified pattern. Required in both and either modes")
+	var thirdQueryName *string = flag.String("thirdQueryName", "", "Specify the name of the third sequence to count for the user-specified pattern. May be used in both or either modes")
 	var s Settings
 
 	flag.Usage = usage
@@ -103,9 +102,5 @@ func main() {
 
 	multiFaCount(s)
 
-	// Caveat: if QueryName or SecondQueryName is misspelled, will be reference sequence by default
-	//TODO: better way to do both and any modes. Maybe take queryNames as a comma-delimited slice that gets parsed. Maybe have mode option for comma-delimited list of AND,OR,etc. instead.
-	// Note: Seems like "any" is a keyword so don't use that word.
-	//TODO: Also, both and either modes shouldn't have to be mutually exclusive if >2 queryNames
-	//TODO: exapnd either mode to not just either mode
+	// Future Direction: Come up with a better way to do both and either modes. Maybe take queryNames as a comma-delimited slice that gets parsed. Maybe have mode option for comma-delimited list of AND,OR,etc. instead. Also, both and either modes shouldn't have to be mutually exclusive if >2 queryNames
 }

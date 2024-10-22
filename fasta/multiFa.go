@@ -342,7 +342,8 @@ func ScanPresentBaseEither(aln []Fasta, firstQueryName string, secondQueryName s
 // findSequenceIndex is a helper function to find the sequenceIndex of queryName in the multiFa
 func findSequenceIndex(aln []Fasta, queryName string) int {
 	nameIndexMap := make(map[string]int) // map of [sequenceName]sequenceIndex
-	for i := range aln {                 // range through the entire multiFa to make sure record names are unique
+
+	for i := range aln { // range through the entire multiFa to make sure record names are unique
 		_, found := nameIndexMap[aln[i].Name]
 		if !found {
 			nameIndexMap[aln[i].Name] = i
@@ -350,5 +351,11 @@ func findSequenceIndex(aln []Fasta, queryName string) int {
 			log.Panicf("%s used for multiple fasta records. record names must be unique.", aln[i].Name)
 		}
 	}
-	return nameIndexMap[queryName]
+
+	index, found := nameIndexMap[queryName]
+	if !found {
+		log.Fatalf("queryName %s not found in fasta records.", queryName)
+	}
+	return index
+
 }
