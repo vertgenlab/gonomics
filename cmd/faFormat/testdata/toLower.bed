@@ -3,4 +3,5 @@ chr1	10	21
 chr1	40	50
 chr3	0	13
 chr2	3	5
+chrDoesntExist	7	14
 chr4	60	61
