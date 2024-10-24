@@ -6,15 +6,17 @@ import (
 	"log"
 )
 
-// ToLower converts bases in a fasta sequence to lowercase in specified bed regions.
-func ToLower(fa fasta.Fasta, regions []Bed) {
-	seq := fa.Seq
-	for currRange := range regions {
+// ToLower converts bases in a fasta sequence to lowercase in specified bed regions, where the bed chrom name matches the fasta record name
+func ToLower(records []fasta.Fasta, regions []Bed) {
+	recordsMap := fasta.ToMap(records)
+	var recordName string
+	for currRegion := range regions { // loop through each bed region
+		recordName = regions[currRegion].Chrom // bed chrom name matches the fasta record name
 		// assumes that the bed is formatted properly, ChromEnd > ChromStart
 		// if asking for a region that exceeds the length of the base sequence, log fatal error
-		if regions[currRange].ChromEnd > len(seq) {
-			log.Fatalf("Error: ran out of sequence. Asking to manipulate a bed region where the exclusive/open-ended ChromEnd (%d) > length of sequence (%d).\n", regions[currRange].ChromEnd, len(seq))
+		if regions[currRegion].ChromEnd > len(recordsMap[recordName]) {
+			log.Fatalf("Error: ran out of sequence. Asking to manipulate a bed region where ChromEnd (%d) > length of sequence (%d).\n", regions[currRegion].ChromEnd, len(recordsMap[recordName]))
 		}
-		dna.RangeToLower(seq, regions[currRange].ChromStart, regions[currRange].ChromEnd)
+		dna.RangeToLower(recordsMap[recordName], regions[currRegion].ChromStart, regions[currRegion].ChromEnd)
 	}
 }

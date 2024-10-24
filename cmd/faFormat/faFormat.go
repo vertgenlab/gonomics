@@ -80,9 +80,9 @@ func faFormat(s Settings) {
 		}
 	}
 
-	var regionsToMask []bed.Bed
 	if s.ToLower != "" {
-		regionsToMask = bed.Read(s.ToLower)
+		regionsToMask := bed.Read(s.ToLower)
+		bed.ToLower(records, regionsToMask) // the ToLower function lives in the bed package, importing fasta and dna packages, to avoid circular dependencies
 	}
 
 	for i := range records {
@@ -96,9 +96,6 @@ func faFormat(s Settings) {
 		}
 		if s.ToUpper {
 			fasta.ToUpper(records[i])
-		}
-		if s.ToLower != "" {
-			bed.ToLower(records[i], regionsToMask) // the ToLower function lives in the bed package, importing fasta and dna packages, to avoid circular dependencies
 		}
 		if s.RevComp {
 			fasta.ReverseComplement(records[i])
@@ -141,7 +138,7 @@ func main() {
 	var fastaNamesFile *string = flag.String("fastaNamesFile", "", "Text file, each line of the file are the fasta records to be manipulated (trimName, toUpper, revComp). Default is all fasta entries.")
 	var trimName *bool = flag.Bool("trimName", false, "if a fasta name contains spaces, retains only the first space delimited field")
 	var toUpper *bool = flag.Bool("toUpper", false, "Convert all DNA bases to upper case.")
-	var toLower *string = flag.String("toLower", "", "Specify a bed file to mask, i.e. convert all DNA bases in these bed regions to lower case. Applied to all fasta entries by default, unless -fastaNamesFile is specified. Note that although bed entries have chr name, fasta entries do not, so bed chr information is not used.")
+	var toLower *string = flag.String("toLower", "", "Specify a bed file to mask, i.e. convert all DNA bases in these bed regions to lower case, where the bed chrom name matches the fasta record name")
 	var revComp *bool = flag.Bool("revComp", false, "Return the reverse complement for each sequence.")
 	var noGaps *bool = flag.Bool("noGaps", false, "Remove gaps from all input sequences.")
 	var noGapBed *string = flag.String("noGapBed", "", "Find genomic coordinates containing regions outside gaps and write to a user-specified bed filename.")
