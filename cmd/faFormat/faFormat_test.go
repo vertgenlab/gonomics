@@ -17,6 +17,7 @@ var FaFormatTests = []struct {
 	NameFile                string
 	TrimName                bool
 	ToUpper                 bool
+	ToLower                 string
 	RevComp                 bool
 	NoGaps                  bool
 	NoGapBed                string
@@ -35,6 +36,7 @@ var FaFormatTests = []struct {
 		NameFile:         "",
 		TrimName:         true,
 		ToUpper:          true,
+		ToLower:          "",
 		RevComp:          false,
 		NoGaps:           true,
 		NoGapBed:         "testdata/test.NoGap.bed",
@@ -47,6 +49,7 @@ var FaFormatTests = []struct {
 		NameFile:         "testdata/fastaNames.txt",
 		TrimName:         true,
 		ToUpper:          true,
+		ToLower:          "",
 		RevComp:          false,
 		NoGaps:           false,
 		NoGapBed:         "",
@@ -59,6 +62,7 @@ var FaFormatTests = []struct {
 		NameFile:         "",
 		TrimName:         false,
 		ToUpper:          false,
+		ToLower:          "",
 		RevComp:          true,
 		NoGaps:           false,
 		NoGapBed:         "",
@@ -71,6 +75,7 @@ var FaFormatTests = []struct {
 		NameFile:         "testdata/fastaNames.txt",
 		TrimName:         false,
 		ToUpper:          false,
+		ToLower:          "",
 		RevComp:          true,
 		NoGaps:           false,
 		NoGapBed:         "",
@@ -83,6 +88,7 @@ var FaFormatTests = []struct {
 		NameFile:         "",
 		TrimName:         false,
 		ToUpper:          false,
+		ToLower:          "",
 		RevComp:          false,
 		NoGaps:           false,
 		NoGapBed:         "",
@@ -95,6 +101,7 @@ var FaFormatTests = []struct {
 		NameFile:                "",
 		TrimName:                false,
 		ToUpper:                 false,
+		ToLower:                 "",
 		RevComp:                 false,
 		NoGaps:                  false,
 		NoGapBed:                "",
@@ -112,12 +119,28 @@ var FaFormatTests = []struct {
 		NameFile:         "",
 		TrimName:         false,
 		ToUpper:          false,
+		ToLower:          "",
 		RevComp:          false,
 		NoGaps:           false,
 		NoGapBed:         "",
 		NoGapBedExpected: "",
 		MaskInvalid:      false,
 		Rename:           "NoGapTest,RenamedField",
+	},
+	{InputFile: "testdata/toLower.fa",
+		OutputFile:       "testdata/out.toLower.fa",
+		ExpectedFile:     "testdata/expected.toLower.fa",
+		LineLength:       50,
+		NameFile:         "",
+		TrimName:         false,
+		ToUpper:          false,
+		ToLower:          "testdata/toLower.bed",
+		RevComp:          false,
+		NoGaps:           false,
+		NoGapBed:         "",
+		NoGapBedExpected: "",
+		MaskInvalid:      false,
+		Rename:           "",
 	},
 }
 
@@ -131,6 +154,7 @@ func TestFaFormat(t *testing.T) {
 			NamesFile:       v.NameFile,
 			TrimName:        v.TrimName,
 			ToUpper:         v.ToUpper,
+			ToLower:         v.ToLower,
 			RevComp:         v.RevComp,
 			NoGaps:          v.NoGaps,
 			NoGapBed:        v.NoGapBed,
