@@ -49,6 +49,7 @@ func main() {
 	var outfile *fileio.EasyWriter = fileio.EasyCreate(flag.Arg(3))
 	var chainOverlap, bedOverlap, pass []interval.Interval
 	var lifted bed.Bed = bed.Bed{FieldsInitialized: 3}
+	var c int
 	axTree := buildAxTree(flag.Arg(0))
 	bedTree, bedIntervals := buildBedTree(flag.Arg(1))
 	fmt.Println("done building trees")
@@ -59,6 +60,7 @@ func main() {
 		sb.WriteString(bed.ToString(i, 5))
 		chainOverlap = interval.Query(axTree, i, "di")
 		sb.WriteString("\t")
+		c = 0
 		for j := range chainOverlap {
 			lifted.Chrom, lifted.ChromStart, lifted.ChromEnd = lift.LiftCoordinatesWithAxt(chainOverlap[j].(axt.Axt), i, chromSizes[chainOverlap[j].(axt.Axt).QName].Size)
 			bedOverlap = interval.Query(bedTree, lifted, "any")
@@ -67,11 +69,12 @@ func main() {
 				if interval.OverlapProportionRecursive(lifted, bedOverlap[k], 0.6) {
 					pass = append(pass, bedOverlap[k])
 				}
-			}bedTree, bedIntervals = updateBedTree(bedIntervals, lifted)
+			}
 			switch len(pass) {
 			case 0:
-				lifted.Name = i.Name + fmt.Sprintf("_lift.%d", j)
-
+				lifted.Name = i.Name + fmt.Sprintf("_lift%d", c)
+				c++
+				bedTree, bedIntervals = updateBedTree(bedIntervals, lifted)
 				sb.WriteString(lifted.Chrom + "_" + fileio.IntToString(lifted.ChromStart) + "_" + fileio.IntToString(lifted.ChromEnd) + "_" + lifted.Name + ";")
 			case 1:
 				for l := range pass {
