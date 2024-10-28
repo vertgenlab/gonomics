@@ -22,7 +22,7 @@ func mfaReduce(inFilename, outFilename, bedFilename, chrom string, refStart int)
 		var chromStartAlnPos, chromStartRefPos int
 		lastAlnPosConverted := 0
 		lastRefPosConverted := 0
-		answer, answerBedPos, answerBedNames = fasta.SegregatingSitesWithBed(aln)
+		answer, answerBedPos, answerBedNames = bed.SegregatingSites(aln)
 		for i := 0; i < len(answerBedPos); i++ {
 			chromStartAlnPos = answerBedPos[i]
 			chromStartRefPos = fasta.AlnPosToRefPosCounter(aln[0], chromStartAlnPos, lastRefPosConverted, lastAlnPosConverted)
