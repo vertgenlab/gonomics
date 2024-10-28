@@ -16,22 +16,23 @@ import (
 )
 
 type Settings struct {
-	InFile          string
-	OutFile         string
-	LineLength      int
-	NamesFile       string
-	TrimName        bool
-	ToUpper         bool
-	ToLower         string
-	RevComp         bool
-	NoGaps          bool
-	NoGapBed        string
-	Index           bool
-	MaskInvalid     bool
-	MultiFaNoGapBed string
-	QuerySeqName    string
-	ChromName       string
-	Rename          string
+	InFile             string
+	OutFile            string
+	LineLength         int
+	NamesFile          string
+	TrimName           bool
+	ToUpper            bool
+	ToLower            string
+	RevComp            bool
+	NoGaps             bool
+	NoGapBed           string
+	Index              bool
+	MaskInvalid        bool
+	MultiFaNoGapBed    string
+	QuerySeqName       string
+	ChromName          string
+	Rename             string
+	IgnoreExtraRegions bool
 }
 
 func faFormat(s Settings) {
@@ -82,7 +83,7 @@ func faFormat(s Settings) {
 
 	if s.ToLower != "" {
 		regionsToMask := bed.Read(s.ToLower)
-		bed.ToLower(records, regionsToMask) // the ToLower function lives in the bed package, importing fasta and dna packages, to avoid circular dependencies
+		bed.ToLower(records, regionsToMask, s.IgnoreExtraRegions) // the ToLower function lives in the bed package, importing fasta and dna packages, to avoid circular dependencies
 	}
 
 	for i := range records {
@@ -150,6 +151,7 @@ func main() {
 	var createIndex *bool = flag.Bool("index", false, "Create index file (outputs to output.fa.fai).")
 	var maskInvalid *bool = flag.Bool("maskInvalid", false, "N-mask extended IUPAC nucleotides (includes UWSMKRYBDHV).")
 	var rename *string = flag.String("rename", "", "Rename a name field using comma delimited argument (ex. 'old,new'). Only one name field can be changed at a time.")
+	var ignoreExtraRegions *bool = flag.Bool("ignoreExtraRegions", false, "When set to true and using -toLower, ignore extra regions in the bed file whose chrom name is not found as a fasta record name")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -164,22 +166,23 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		InFile:          inFile,
-		OutFile:         outFile,
-		LineLength:      *lineLength,
-		NamesFile:       *fastaNamesFile,
-		TrimName:        *trimName,
-		RevComp:         *revComp,
-		ToUpper:         *toUpper,
-		ToLower:         *toLower,
-		NoGaps:          *noGaps,
-		NoGapBed:        *noGapBed,
-		Index:           *createIndex,
-		MaskInvalid:     *maskInvalid,
-		MultiFaNoGapBed: *multiFaNoGapBed,
-		QuerySeqName:    *querySeqName,
-		ChromName:       *chromName,
-		Rename:          *rename,
+		InFile:             inFile,
+		OutFile:            outFile,
+		LineLength:         *lineLength,
+		NamesFile:          *fastaNamesFile,
+		TrimName:           *trimName,
+		RevComp:            *revComp,
+		ToUpper:            *toUpper,
+		ToLower:            *toLower,
+		NoGaps:             *noGaps,
+		NoGapBed:           *noGapBed,
+		Index:              *createIndex,
+		MaskInvalid:        *maskInvalid,
+		MultiFaNoGapBed:    *multiFaNoGapBed,
+		QuerySeqName:       *querySeqName,
+		ChromName:          *chromName,
+		Rename:             *rename,
+		IgnoreExtraRegions: *ignoreExtraRegions,
 	}
 
 	faFormat(s)

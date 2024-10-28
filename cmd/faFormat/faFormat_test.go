@@ -28,6 +28,7 @@ var FaFormatTests = []struct {
 	ChromName               string
 	ExpectedMultiFaNoGapBed string
 	Rename                  string
+	IgnoreExtraRegions      bool
 }{
 	{InputFile: "testdata/faFormatTest.fa",
 		OutputFile:       "testdata/faFormatOutput.fa",
@@ -128,19 +129,20 @@ var FaFormatTests = []struct {
 		Rename:           "NoGapTest,RenamedField",
 	},
 	{InputFile: "testdata/toLower.fa",
-		OutputFile:       "testdata/out.toLower.fa",
-		ExpectedFile:     "testdata/expected.toLower.fa",
-		LineLength:       50,
-		NameFile:         "",
-		TrimName:         false,
-		ToUpper:          false,
-		ToLower:          "testdata/toLower.bed",
-		RevComp:          false,
-		NoGaps:           false,
-		NoGapBed:         "",
-		NoGapBedExpected: "",
-		MaskInvalid:      false,
-		Rename:           "",
+		OutputFile:         "testdata/out.toLower.fa",
+		ExpectedFile:       "testdata/expected.toLower.fa",
+		LineLength:         50,
+		NameFile:           "",
+		TrimName:           false,
+		ToUpper:            false,
+		ToLower:            "testdata/toLower.bed",
+		RevComp:            false,
+		NoGaps:             false,
+		NoGapBed:           "",
+		NoGapBedExpected:   "",
+		MaskInvalid:        false,
+		Rename:             "",
+		IgnoreExtraRegions: true,
 	},
 }
 
@@ -148,21 +150,22 @@ func TestFaFormat(t *testing.T) {
 	var err error
 	for _, v := range FaFormatTests {
 		s := Settings{
-			InFile:          v.InputFile,
-			OutFile:         v.OutputFile,
-			LineLength:      v.LineLength,
-			NamesFile:       v.NameFile,
-			TrimName:        v.TrimName,
-			ToUpper:         v.ToUpper,
-			ToLower:         v.ToLower,
-			RevComp:         v.RevComp,
-			NoGaps:          v.NoGaps,
-			NoGapBed:        v.NoGapBed,
-			MaskInvalid:     v.MaskInvalid,
-			MultiFaNoGapBed: v.MultiFaNoGapBed,
-			QuerySeqName:    v.QuerySeqName,
-			ChromName:       v.ChromName,
-			Rename:          v.Rename,
+			InFile:             v.InputFile,
+			OutFile:            v.OutputFile,
+			LineLength:         v.LineLength,
+			NamesFile:          v.NameFile,
+			TrimName:           v.TrimName,
+			ToUpper:            v.ToUpper,
+			ToLower:            v.ToLower,
+			RevComp:            v.RevComp,
+			NoGaps:             v.NoGaps,
+			NoGapBed:           v.NoGapBed,
+			MaskInvalid:        v.MaskInvalid,
+			MultiFaNoGapBed:    v.MultiFaNoGapBed,
+			QuerySeqName:       v.QuerySeqName,
+			ChromName:          v.ChromName,
+			Rename:             v.Rename,
+			IgnoreExtraRegions: v.IgnoreExtraRegions,
 		}
 		faFormat(s)
 		records := fasta.Read(v.OutputFile)
