@@ -67,7 +67,8 @@ func ReconstructSeq(s Settings) {
 	var pDnaRecordsMulti []pFasta.PFasta
 	if len(s.PDnaNodeMulti) > 0 {
 		// have reference sequence at the top of output pfasta
-		refPfa := pFasta.FaToPfa(*leaves[0].Fasta) // convert records[0] aka leaves[0].Fasta from Fasta to Pfasta
+		refFa := *leaves[0].Fasta
+		refPfa := pFasta.FaToPfa(refFa, 0, len(refFa.Seq)) // convert records[0] aka leaves[0].Fasta from Fasta to Pfasta
 		pDnaRecordsMulti = append(pDnaRecordsMulti, refPfa)
 		// start pDnaNodeMulti entries in pDnaRecordsMulti, add names now, append sequences in reconstruct.LoopNodes
 		for _, v := range s.PDnaNodeMulti {

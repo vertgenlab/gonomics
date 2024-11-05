@@ -98,9 +98,11 @@ func FaToPfa(input fasta.Fasta, start int, end int) PFasta {
 		} else if base == dna.T {
 			answer.Seq[idx] = pDna.Float32Base{A: 0, C: 0, G: 0, T: 1}
 		} else if base == dna.N {
-			answer.Seq[idx] = pDna.Float32Base{A: 0, C: 0, G: 0, T: 0}
+			//answer.Seq[idx] = pDna.Float32Base{A: 0, C: 0, G: 0, T: 0} // Raven's change: I think N should be all 0.25, not all 0
+			answer.Seq[idx] = pDna.Float32Base{A: 0.25, C: 0.25, G: 0.25, T: 0.25}
 		} else if base == dna.Gap {
-			log.Fatalf("Must specify a sequence without gaps.")
+			//log.Fatalf("Must specify a sequence without gaps.") // Raven's change: I think gap should be all 0, not illegal
+			answer.Seq[idx] = pDna.Float32Base{A: 0, C: 0, G: 0, T: 0}
 		}
 	}
 
