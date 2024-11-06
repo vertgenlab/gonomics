@@ -10,6 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/interval/lift"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"strings"
 )
@@ -40,20 +41,20 @@ func updateBedTree(intervalSlice []interval.Interval, new interval.Interval) (ma
 func main() {
 	flag.Parse()
 
-	if len(flag.Args()) != 4 {
-		log.Fatalf("regEleFam selfChain.axt ocr.bed chrom.sizes out.txt\n")
+	if len(flag.Args()) != 5 {
+		log.Fatalf("regEleFam proportion selfChain.axt ocr.bed chrom.sizes out.txt\n")
 	}
 
 	var sb strings.Builder
-	var chromSizes map[string]chromInfo.ChromInfo = chromInfo.ReadToMap(flag.Arg(2))
-	var outfile *fileio.EasyWriter = fileio.EasyCreate(flag.Arg(3))
+	var chromSizes map[string]chromInfo.ChromInfo = chromInfo.ReadToMap(flag.Arg(3))
+	var outfile *fileio.EasyWriter = fileio.EasyCreate(flag.Arg(4))
 	var chainOverlap, bedOverlap, pass []interval.Interval
 	var lifted bed.Bed = bed.Bed{FieldsInitialized: 3}
 	var c int
-	axTree := buildAxTree(flag.Arg(0))
-	bedTree, bedIntervals := buildBedTree(flag.Arg(1))
+	axTree := buildAxTree(flag.Arg(1))
+	bedTree, bedIntervals := buildBedTree(flag.Arg(2))
 	fmt.Println("done building trees")
-	regEleChan := bed.GoReadToChan(flag.Arg(1))
+	regEleChan := bed.GoReadToChan(flag.Arg(2))
 	fmt.Println("bed chan read")
 	for i := range regEleChan {
 		sb.Reset()
@@ -66,7 +67,7 @@ func main() {
 			bedOverlap = interval.Query(bedTree, lifted, "any")
 			pass = []interval.Interval{}
 			for k := range bedOverlap {
-				if interval.OverlapProportionRecursive(lifted, bedOverlap[k], 0.6) {
+				if interval.OverlapProportionRecursive(lifted, bedOverlap[k], parse.StringToFloat64(flag.Arg(0))) {
 					pass = append(pass, bedOverlap[k])
 				}
 			}
