@@ -33,28 +33,35 @@ func ToLower(records []fasta.Fasta, regions []Bed, ignoreExtraRegions bool) {
 }
 
 // SegregatingSites takes in a multiFa alignment and returns a new alignment containing only the columns with segregating sites, along with a bed file of the positions of segregating sites in the reference species
-func SegregatingSites(aln []fasta.Fasta) ([]fasta.Fasta, []int, []string) {
+func SegregatingSites(aln []fasta.Fasta, chrom string, refStart int) ([]fasta.Fasta, []Bed) {
 	// define variables
-	var answer []fasta.Fasta = fasta.EmptyCopy(aln)
-	var i, k int
-	var bedPos []int
-	speciesSeq := make([]string, len(aln))
+	var answerFa []fasta.Fasta = fasta.EmptyCopy(aln)
 	var bedName string
-	var bedNames []string
+	var currentBed Bed
+	var answerBed []Bed
+
+	speciesSeq := make([]string, len(aln))
+	var chromStartAlnPos, chromStartRefPos int
+	lastAlnPosConverted := 0
+	lastRefPosConverted := 0
 
 	// loop through multiFa
-	for i = 0; i < len(aln[0].Seq); i++ {
+	for i := 0; i < len(aln[0].Seq); i++ {
 		if fasta.IsSegregating(aln, i) {
 			// report multiFa, collect base sequence in each species in preparation for reporting bed
-			for k = 0; k < len(aln); k++ {
-				answer[k].Seq = append(answer[k].Seq, aln[k].Seq[i])
+			for k := 0; k < len(aln); k++ {
+				answerFa[k].Seq = append(answerFa[k].Seq, aln[k].Seq[i])
 				speciesSeq[k] = dna.BaseToString(aln[k].Seq[i])
 				bedName = strings.Join(speciesSeq, "_")
 			}
 			// report bed entry for that 1 base position
-			bedPos = append(bedPos, i)
-			bedNames = append(bedNames, bedName)
+			chromStartAlnPos = i
+			chromStartRefPos = fasta.AlnPosToRefPosCounter(aln[0], chromStartAlnPos, lastRefPosConverted, lastAlnPosConverted)
+			lastAlnPosConverted = chromStartAlnPos
+			lastRefPosConverted = chromStartRefPos
+			currentBed = Bed{Chrom: chrom, ChromStart: refStart + chromStartRefPos, ChromEnd: refStart + chromStartRefPos + 1, Name: bedName, Score: refStart + chromStartAlnPos, FieldsInitialized: 5} // Name field is referenceSpeciesBase_querySpeciesBase, Score field is AlnPos
+			answerBed = append(answerBed, currentBed)
 		}
 	}
-	return answer, bedPos, bedNames
+	return answerFa, answerBed
 }
