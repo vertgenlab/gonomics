@@ -42,3 +42,51 @@ func TestToLower(t *testing.T) {
 		}
 	}
 }
+
+var SegregatingSitesTests = []struct {
+	InMfaFile       string
+	chrom           string
+	refStart        int
+	OutMfaFile      string
+	OutBedFile      string
+	ExpectedMfaFile string
+	ExpectedBedFile string
+}{
+	{InMfaFile: "testdata/test.mfa",
+		chrom:           "chrTest",
+		refStart:        0,
+		OutMfaFile:      "testdata/output.fa",
+		OutBedFile:      "testdata/output.bed",
+		ExpectedMfaFile: "testdata/expected.mfa",
+		ExpectedBedFile: "testdata/expected.bed"},
+}
+
+func TestSegregatingSites(t *testing.T) {
+	var records, answerFa, expectedFa []fasta.Fasta
+	var answerBed, expectedBed []Bed
+	var mfaFile *fileio.EasyWriter
+	var err error
+	for _, v := range SegregatingSitesTests {
+		records = fasta.Read(v.InMfaFile)
+		answerFa, answerBed = SegregatingSites(records, v.chrom, v.refStart)
+		mfaFile = fileio.EasyCreate(v.OutMfaFile)
+		fasta.WriteToFileHandle(mfaFile, answerFa, 50)
+		err = mfaFile.Close()
+		exception.PanicOnErr(err)
+		Write(v.OutBedFile, answerBed)
+		expectedFa = fasta.Read(v.ExpectedMfaFile)
+		expectedBed = Read(v.ExpectedBedFile)
+		if !fasta.AllAreEqual(answerFa, expectedFa) {
+			t.Errorf("Error in mfa part of SegregatingSites.")
+		} else {
+			err = os.Remove(v.OutMfaFile)
+			exception.PanicOnErr(err)
+		}
+		if !AllAreEqual(answerBed, expectedBed) {
+			t.Errorf("Error in bed part of SegregatingSites.")
+		} else {
+			err = os.Remove(v.OutBedFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
