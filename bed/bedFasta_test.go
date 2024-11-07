@@ -9,15 +9,17 @@ import (
 )
 
 var ToLowerTests = []struct {
-	InFastaFile  string
-	InBedFile    string
-	OutFile      string
-	ExpectedFile string
+	InFastaFile        string
+	InBedFile          string
+	IgnoreExtraRegions bool
+	OutFile            string
+	ExpectedFile       string
 }{
 	{InFastaFile: "testdata/toLower.fa",
-		InBedFile:    "testdata/toLower.bed",
-		OutFile:      "testdata/toLower.out.fa",
-		ExpectedFile: "testdata/expected.toLower.fa"},
+		InBedFile:          "testdata/toLower.bed",
+		OutFile:            "testdata/toLower.out.fa",
+		IgnoreExtraRegions: true,
+		ExpectedFile:       "testdata/expected.toLower.fa"},
 }
 
 func TestToLower(t *testing.T) {
@@ -27,7 +29,7 @@ func TestToLower(t *testing.T) {
 	for _, v := range ToLowerTests {
 		records = fasta.Read(v.InFastaFile)
 		regions = Read(v.InBedFile)
-		ToLower(records, regions)
+		ToLower(records, regions, v.IgnoreExtraRegions)
 		file = fileio.EasyCreate(v.OutFile)
 		fasta.WriteToFileHandle(file, records, 50)
 		err := file.Close()
