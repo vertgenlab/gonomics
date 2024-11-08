@@ -36,12 +36,8 @@ func main() {
 	in := bed.GoReadToChan(flag.Arg(1))
 	fmt.Println("reading bed")
 	for rec := range in {
+		outBed = append(outBed, rec)
 		axtOverlap = interval.Query(axtTree, rec, "di")
-		if len(axtOverlap) == 0 {
-			continue
-		} else {
-			outBed = append(outBed, rec)
-		}
 		for i := range axtOverlap {
 			lifted.Chrom, lifted.ChromStart, lifted.ChromEnd = lift.LiftCoordinatesWithAxt(axtOverlap[i].(axt.Axt), rec, chromSizes[axtOverlap[i].(axt.Axt).QName].Size)
 			lifted.Name = rec.Name + fmt.Sprintf("_lift%d", i)
