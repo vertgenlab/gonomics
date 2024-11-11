@@ -35,7 +35,7 @@ func bedMergeLowMem(infile string, outfile string, mergeThreshold int) {
 			currentMax = i
 		} else {
 			minDist, err = bed.MinimumDistance(currentMax, i)
-			if bed.Overlap(currentMax, i) || minDist <= mergeThreshold && err == nil {
+			if bed.Overlap(currentMax, i) || (minDist <= mergeThreshold && err == nil) {
 				if i.Score > currentMax.Score {
 					currentMax.Score = i.Score
 				}

@@ -94,7 +94,7 @@ func MergeHighMem(records []Bed, mergeAdjacent int, keepAllNames bool) []Bed {
 
 	for i := 1; i < len(records); i++ {
 		minDist, err = MinimumDistance(currentMax, records[i])
-		if Overlap(currentMax, records[i]) || minDist <= mergeAdjacent && err == nil {
+		if Overlap(currentMax, records[i]) || (minDist <= mergeAdjacent && err == nil) {
 			if records[i].Score > currentMax.Score {
 				currentMax.Score = records[i].Score
 			}
