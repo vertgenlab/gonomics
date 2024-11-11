@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/sam"
+	"log"
 )
 
 func filterScBam(inbam, barcodes, outbam string) {
@@ -47,7 +49,9 @@ func createBxMap(infile string) map[string]int {
 }
 
 func usage() {
-
+	fmt.Print("filterScBam -- filter a cellranger output alignment file based on a list of cell barcodes\n" +
+		"Usage:\n" +
+		"filterScBam in.bam barcodes.txt out.bam\n")
 }
 
 func main() {
@@ -57,6 +61,7 @@ func main() {
 	if len(flag.Args()) != expectedNumArgs {
 		flag.PrintDefaults()
 		usage()
+		log.Fatalf("Expecting 3 arguments, got %d", len(flag.Args()))
 	}
 
 	inbam := flag.Arg(0)
