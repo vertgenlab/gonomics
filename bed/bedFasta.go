@@ -32,7 +32,8 @@ func ToLower(records []fasta.Fasta, regions []Bed, ignoreExtraRegions bool) {
 	}
 }
 
-// SegregatingSites takes in a multiFa alignment and returns a new alignment containing only the columns with segregating sites, along with a bed file of the positions of segregating sites in the reference species
+// SegregatingSites takes in a multiFa alignment and returns a new alignment containing only the columns with segregating sites, along with a bed file of the positions of segregating sites in the reference species.
+// The inputs are the multiFa alignment (e.g. fasta records for human and hca), the chromosome the multiFa alignment is on (e.g. chr1 of human and hca), and a refStart offset integer value if necessary (e.g. the multiFa alignment is for a HAQER on chr1:100-200, so refStart is 100, and calculated SNP coordinates need to be offset by 100)
 func SegregatingSites(aln []fasta.Fasta, chrom string, refStart int) ([]fasta.Fasta, []Bed) {
 	// define variables
 	var answerFa []fasta.Fasta = fasta.EmptyCopy(aln)
