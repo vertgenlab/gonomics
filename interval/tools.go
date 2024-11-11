@@ -150,9 +150,6 @@ func OverlapProportionRecursive(a Interval, b Interval, proportion float64) bool
 	if proportion <= 0 || proportion > 1 {
 		log.Fatalf("The input percentage is outside of the bounds (0, 1]")
 	}
-	if !Overlap(a, b) {
-		return false
-	}
 	sizeA := a.GetChromEnd() - a.GetChromStart()
 	sizeB := b.GetChromEnd() - b.GetChromStart()
 	sizeO := OverlapSize(a, b)
