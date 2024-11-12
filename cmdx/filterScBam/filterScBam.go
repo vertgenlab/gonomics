@@ -23,8 +23,12 @@ func filterScBam(inbam, barcodes, outbam string) {
 
 	for i := range aln {
 
-		bx, _, err = sam.QueryTag(i, "CB")
+		bx, found, err = sam.QueryTag(i, "CB")
 		exception.PanicOnErr(err)
+
+		if !found {
+			continue
+		}
 
 		_, found = mp[bx.(string)]
 
