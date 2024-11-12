@@ -1,10 +1,10 @@
 package main
 
 import (
-	"testing"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"os"
-	"github.com/vertgenlab/gonomics/exception"
+	"testing"
 )
 
 var SimulateVcfTests = []struct {
@@ -20,9 +20,45 @@ var SimulateVcfTests = []struct {
 	RefFile         string
 	HasRef          bool
 }{
-	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000, "", false},
-	{"testdata/expected_2.vcf", "testdata/out_2.vcf", 4, 100, 10, 11, 0.001, 0.001, 10000, "testdata/refFa_short.fasta", true},
-	{"testdata/expected_3.vcf", "testdata/out_3.vcf", 4, 100, 20, 29, 0.001, 0.001, 10000, "testdata/refFa_short.fasta", true},
+	{
+		ExpectedFile:    "testdata/expected.vcf",
+		OutFile:         "testdata/out.vcf",
+		Alpha:           4,
+		NumAlleles:      100,
+		NumSites:        100,
+		SetSeed:         11,
+		BoundAlpha:      0.001,
+		BoundBeta:       0.001,
+		BoundMultiplier: 10000,
+		RefFile:         "",
+		HasRef:          false,
+	},
+	{
+		ExpectedFile:    "testdata/expected_2.vcf",
+		OutFile:         "testdata/out_2.vcf",
+		Alpha:           4,
+		NumAlleles:      100,
+		NumSites:        10,
+		SetSeed:         11,
+		BoundAlpha:      0.001,
+		BoundBeta:       0.001,
+		BoundMultiplier: 10000,
+		RefFile:         "testdata/refFa_short.fasta",
+		HasRef:          true,
+	},
+	{
+		ExpectedFile:    "testdata/expected_3.vcf",
+		OutFile:         "testdata/out_3.vcf",
+		Alpha:           4,
+		NumAlleles:      100,
+		NumSites:        20,
+		SetSeed:         29,
+		BoundAlpha:      0.001,
+		BoundBeta:       0.001,
+		BoundMultiplier: 10000,
+		RefFile:         "testdata/refFa_short.fasta",
+		HasRef:          true,
+	},
 }
 
 func TestSimulateVcf(t *testing.T) {
@@ -45,8 +81,8 @@ func TestSimulateVcf(t *testing.T) {
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in simulateVcf.")
 		} else {
-		err = os.Remove(v.OutFile)
-		exception.PanicOnErr(err)
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
 		}
 	}
 }

@@ -4,13 +4,13 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/fasta"
-	"github.com/vertgenlab/gonomics/popgen"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/popgen"
 	"github.com/vertgenlab/gonomics/vcf"
 	"strings"
-)	
+)
 
 // VcfToFile generates simulated VCF data.  The inputs are alpha (the selection parameter), the number of sites,
 // the output filename, along with parameters for the bounding function for sampling.  Reasonable parameters
@@ -31,8 +31,8 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 		bedRefFile := bed.UngappedRegionsAllFromFa(refFa)
 
 		// changes bed region names to reference where they start/end at Ns
-		regionOffset := mapSearchspaceToOffset(bedRefFile)
-		faIndices := regionNameToFaIdx( refFa)
+		regionOffset := mapSearchSpaceToOffset(bedRefFile)
+		faIndices := regionNameToFaIdx(refFa)
 
 		var refBase dna.Base
 		var regionNameSplit []string
@@ -41,11 +41,11 @@ func VcfToFile(alpha float64, numAlleles int, numSites int, outFile string, boun
 		var windowNumber int
 		for numGeneratedSites < numSites {
 			// generate a random position in the ungapped bed
-			windowNumber = numbers.RandIntInRange(0, totalWindows) 
+			windowNumber = numbers.RandIntInRange(0, totalWindows)
 			region, _ = GenerateBedRegion(bedRefFile, windowNumber, 1)
 			regionNameSplit = strings.Split(region.Name, "_") // split bed name to get fasta sequence original name
 			regionNameStripped = regionNameSplit[0]
-			
+
 			currKey = regionOffset[regionNameStripped] + region.ChromStart
 			// check if currKey not overlapping with previously generated positions
 			if _, foundInMap = generatedPos[currKey]; !foundInMap {
@@ -78,8 +78,8 @@ func regionNameToFaIdx(refFa []fasta.Fasta) map[string]int {
 	return faIndices
 }
 
-// mapSearchspaceToOffset maps the start of each region in a bed to the overall position relative to the first region appearing in the bed
-func mapSearchspaceToOffset(searchSpace []bed.Bed) map[string]int {
+// mapSearchSpaceToOffset maps the start of each region in a bed to the overall position relative to the first region appearing in the bed
+func mapSearchSpaceToOffset(searchSpace []bed.Bed) map[string]int {
 	regionOffset := make(map[string]int)
 	prevRegionEnd := 0
 	for _, region := range searchSpace {
@@ -100,7 +100,7 @@ func SingleVcfRandom(alpha float64, numAlleles int, boundAlpha float64, boundBet
 
 	// ref := ChooseRandomBase(float64(0.42))
 	// answer = vcf.Vcf{Chr: "chr1", Pos: pos, Id: ".", Ref: dna.BaseToString(ref), Alt: []string{dna.BaseToString(changeBase(ref))}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
-	
+
 	// keeping hardcoded for old tests
 	answer = vcf.Vcf{Chr: "chr1", Pos: pos, Id: ".", Ref: "A", Alt: []string{"T"}, Qual: 100, Filter: ".", Info: ".", Format: []string{"GT"}, Samples: genotype}
 
