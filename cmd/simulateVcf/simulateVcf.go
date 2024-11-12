@@ -22,7 +22,7 @@ func usage() {
 	fmt.Print(
 		"simulateVcf - Simulate VCF format variant data.\n" +
 			"Sample genotype allele frequencies are drawn from a derived allele frequency spectrum\n" +
-			"specified by a selection parameter alpha (alpha = 2N_{e}s.\n" +
+			"specified by a selection parameter alpha (alpha = 2N_{e}s).\n" +
 			"By default, all variants are (A -> T) at sequential positions.\n" +
 			"Alternatively, the user can simulate variants from a real reference genome using the 'RefFile' option.\n" +
 			"Usage:\n" +
