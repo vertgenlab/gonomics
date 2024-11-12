@@ -1,8 +1,8 @@
 package pDna
 
 import (
-	"testing"
 	"math/rand"
+	"testing"
 	// "fmt"
 )
 
@@ -181,8 +181,8 @@ var SumTests = []struct {
 
 func TestSum(t *testing.T) {
 	var observed Float32Base
-	for _, v := range ScaleTests {
-		observed = Scale(v.Base, v.Multiplier)
+	for _, v := range SumTests {
+		observed = Sum(v.Base1, v.Base2)
 		if observed != v.Expected {
 			t.Errorf("Error: scaled pDna base is not as expected. Observed: %v. Expected: %v.\n", observed, v.Expected)
 		}
@@ -221,28 +221,28 @@ func TestSumsToOne(t *testing.T) {
 }
 
 var RandBaseTests = []struct {
-	SeedSet bool
-	SetSeed int64
+	SeedSet    bool
+	SetSeed    int64
 	RandSource *rand.Rand
-	Expected Float32Base
-	Precision float32
-} {
+	Expected   Float32Base
+	Precision  float32
+}{
 	{SeedSet: true,
-		SetSeed: 5,
+		SetSeed:    5,
 		RandSource: rand.New(rand.NewSource(10)),
-		Expected: Float32Base{A: 0.24291174, C: 0.17921568, G: 0.39697546, T: 0.18089716,},
-		Precision: 1e-3,
+		Expected:   Float32Base{A: 0.24291174, C: 0.17921568, G: 0.39697546, T: 0.18089716},
+		Precision:  1e-3,
 	}, {SeedSet: false,
-		SetSeed: 3,
+		SetSeed:    3,
 		RandSource: nil,
-		Expected: Float32Base{A: 0.23355502, C: 0.21170676, G: 0.30556238, T: 0.24917582,},
-		Precision: 1e-3,
+		Expected:   Float32Base{A: 0.23355502, C: 0.21170676, G: 0.30556238, T: 0.24917582},
+		Precision:  1e-3,
 	},
 }
 
 func TestRandBase(t *testing.T) {
 	var observed Float32Base
-	for _, v:= range RandBaseTests {
+	for _, v := range RandBaseTests {
 		observed = RandBase(v.SeedSet, v.SetSeed, v.RandSource)
 		if !EqualBase(observed, v.Expected, v.Precision) {
 			t.Errorf("Error: pDna randBase not as expected.\n")

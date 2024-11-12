@@ -78,67 +78,33 @@ func Sum(base1 Float32Base, base2 Float32Base) Float32Base {
 
 // SumsToOne checks if the total probabilities of a pDNA base sum to 1
 func SumsToOne(base Float32Base, precision float32) bool {
-	if !equalFloatPrecision(base.A+base.C+base.G+base.T, 1, precision) {
-		return false
-	}
-	return true
+	return equalFloatPrecision(base.A+base.C+base.G+base.T, 1, precision)
 }
 
-// Random randomly generates a pDNA base that sums to 1
+// RandBase randomly generates a pDNA base that sums to 1
 func RandBase(seedSet bool, setSeed int64, randSource *rand.Rand) Float32Base {
 	var answer Float32Base
 	var source *rand.Rand
-	if !seedSet {
-		source = rand.New(rand.NewSource(setSeed))
-	} else {
+	if seedSet {
 		source = randSource
+	} else {
+		source = rand.New(rand.NewSource(setSeed))
 	}
-	sumsToOne := false
-	for !sumsToOne {
-		aFloat := source.Float32()
-		cFloat := source.Float32()
-		gFloat := source.Float32()
-		tFloat := source.Float32()
-		sum := aFloat + cFloat + gFloat + tFloat
-		answer.A = aFloat / sum
-		answer.C = cFloat / sum
-		answer.G = gFloat / sum
-		answer.T = tFloat / sum
-		if SumsToOne(answer, 1e-3) {
-			sumsToOne = true
-			break
-		}
+	aFloat := source.Float32()
+	cFloat := source.Float32()
+	gFloat := source.Float32()
+	tFloat := source.Float32()
+	sum := aFloat + cFloat + gFloat + tFloat
+
+	// check for numerical stability
+	if sum < 1e-6 {
+		return RandBase(seedSet, setSeed, randSource)
 	}
+
+	answer.A = aFloat / sum
+	answer.C = cFloat / sum
+	answer.G = gFloat / sum
+	answer.T = tFloat / sum
 
 	return answer
 }
-
-// // Random randomly generates a pDNA base that sums to 1
-// func RandBaseV2(seedSet bool, setSeed int64, randSource rand.Source) Float32Base {
-// 	var answer Float32Base
-// 	var source *rand.Rand
-// 	if !seedSet {
-// 		source = rand.New(rand.NewSource(setSeed))
-// 	} else {
-// 		source = rand.New(randSource)
-// 	}
-// 	sumsToOne := false
-// 	for !sumsToOne {
-// 		aFloat := source.Float32()
-// 		cFloat := source.Float32()
-// 		gFloat := source.Float32()
-// 		tFloat := source.Float32()
-// 		sum := aFloat + cFloat + gFloat + tFloat
-// 		answer.A = aFloat / sum
-// 		answer.C = cFloat / sum
-// 		answer.G = gFloat / sum
-// 		answer.T = tFloat / sum
-// 		if SumsToOne(answer, 1e-3) {
-// 			sumsToOne = true
-// 			break
-// 		}
-// 	}
-
-// 	return answer
-// }
-

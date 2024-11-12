@@ -1,10 +1,9 @@
 package pFasta
 
 import (
-	"testing"
-	"fmt"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fileio"
+	"testing"
 )
 
 var WriteTests = []struct {
@@ -72,8 +71,6 @@ var WriteTests = []struct {
 		Precision: 1e-2,
 	},
 }
-
-// testcases originally 9
 
 func TestWriteAndRead(t *testing.T) {
 	var records []PFasta
