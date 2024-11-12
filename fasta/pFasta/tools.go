@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 	"log"
 	"math/rand"
+	"strings"
 )
 
 // checks if input pFasta has a sequence with chrom as name and returns its index
@@ -113,12 +114,16 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 	return answer
 }
 
-// vcfToPfa returns a pFasta representation of the given VCF sequence, only accepts single sequence Fasta
+// VcfToPfa returns a pFasta representation of the given VCF sequence, only accepts single sequence Fasta
 func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) PFasta {
-	// TODO: relax to not-biallelic
+	// TODO: relax to not bi-allelic
+	// TODO: multi chromosome compatibility
 	var vcfRecords <-chan vcf.Vcf
 
 	inputFa := fasta.Read(inputFaFilename)
+	if len(inputFa) > 1 {
+		log.Fatalf("Error: expecting only one chromsome in the input fasta file.\n")
+	}
 	answer := faToPfa(inputFa[0], start, end)
 
 	vcfRecords, _ = vcf.GoReadToChan(inVcfFilename)
@@ -128,8 +133,12 @@ func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) 
 			break
 		}
 
+		if strings.Compare(v.Chr, answer.Name) != 0 {
+			log.Fatalf("Error: variant chrom: (%s) is not equal to reference chrom: (%s).\n", v.Chr, answer.Name)
+		}
+
 		if !(vcf.IsBiallelic(v) && vcf.IsSubstitution(v)) {
-			log.Fatal("Error: currently we only handle biallelic substitutions\n")
+			log.Fatal("Error: currently we only handle bi-allelic substitutions\n")
 		}
 
 		// check that fa matches vcf before editing
