@@ -2,7 +2,6 @@ package pFasta
 
 import (
 	"github.com/vertgenlab/gonomics/fileio"
-	"math/rand"
 	"testing"
 )
 
@@ -11,7 +10,6 @@ var vcfToPfaTests = []struct {
 	RefFa     string
 	Start     int
 	End       int
-	SetSeed   int64
 	Expected  string
 	Output    string
 	Precision float32
@@ -20,7 +18,6 @@ var vcfToPfaTests = []struct {
 		RefFa:     "testdata/test_vcfToPfa_input_1.fa",
 		Start:     1,
 		End:       36,
-		SetSeed:   7,
 		Expected:  "testdata/test_vcfToPfa_expected_1.pfa",
 		Output:    "testdata/test_vcfToPfa_observed_1.pfa",
 		Precision: 1e-3,
@@ -29,7 +26,6 @@ var vcfToPfaTests = []struct {
 		RefFa:     "testdata/test_vcfToPfa_input_1.fa",
 		Start:     1,
 		End:       44,
-		SetSeed:   7,
 		Expected:  "testdata/test_vcfToPfa_expected_2.pfa",
 		Output:    "testdata/test_vcfToPfa_observed_2.pfa",
 		Precision: 1e-3,
@@ -38,7 +34,6 @@ var vcfToPfaTests = []struct {
 
 func TestVcfToPfa(t *testing.T) {
 	for _, tc := range vcfToPfaTests {
-		rand.Seed(tc.SetSeed)
 		observed := []PFasta{VcfToPfa(tc.InputVcf, tc.RefFa, tc.Start, tc.End)}
 		Write(tc.Output, observed)
 		expected := Read(tc.Expected)
@@ -49,3 +44,6 @@ func TestVcfToPfa(t *testing.T) {
 		}
 	}
 }
+
+
+
