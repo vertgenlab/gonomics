@@ -4,7 +4,6 @@ import (
 	"log"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/numbers"
-	"log"
 )
 
 // CountWindows counts the total viable windows of length regionLength in the sequence searchSpace
