@@ -34,9 +34,18 @@ var vcfToPfaTests = []struct {
 }
 
 func TestVcfToPfa(t *testing.T) {
+	var s VcfToPfaSettings
 	for _, tc := range vcfToPfaTests {
-		observed := []pFasta.PFasta{pFasta.VcfToPfa(tc.InFile, tc.RefFile, tc.Start, tc.End)}
-		pFasta.Write(tc.OutDir, observed)
+		s = VcfToPfaSettings{
+			InFile: tc.InFile,
+			RefFile: tc.RefFile,
+			OutDir: tc.OutDir,
+			Start: tc.Start,
+			End: tc.End,
+		}
+
+		vcfToPfa(s)
+		observed := pFasta.Read(tc.OutDir)
 		expected := pFasta.Read(tc.Expected)
 		if !pFasta.AllAreEqual(observed, expected, tc.Precision) {
 			t.Errorf("Error: in pFasta. Sample valid input test not as expected.\n")
