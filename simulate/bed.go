@@ -1,6 +1,7 @@
 package simulate
 
 import (
+	"log"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/numbers"
 	"log"
@@ -20,7 +21,7 @@ func CountWindows(searchSpace []bed.Bed, regionLength int) int {
 	return totalWindows
 }
 
-// GenerateBedRegion searches the regions of searchSpace (a noGap.bed input file, as a parsed struct) and randomly selects a continuous region of length regionLength. RandPos can be an int in [0, totalWindows] where totalWindows is the total viable windows of size regionLength in searchSpace.
+// GenerateBedRegion searches the regions of searchSpace (a noGap.bed input file, as a parsed struct) and randomly selects a continuous region of length regionLength. RandPos can be an int in [0, totalWindows-1] inclusive where totalWindows is the total viable windows of size regionLength in searchSpace.
 func GenerateBedRegion(searchSpace []bed.Bed, randPos int, regionLength int) (bed.Bed, bool) {
 	var chromWindows int
 	var length int

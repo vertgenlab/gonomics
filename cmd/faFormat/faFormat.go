@@ -16,21 +16,23 @@ import (
 )
 
 type Settings struct {
-	InFile          string
-	OutFile         string
-	LineLength      int
-	NamesFile       string
-	TrimName        bool
-	ToUpper         bool
-	RevComp         bool
-	NoGaps          bool
-	NoGapBed        string
-	Index           bool
-	MaskInvalid     bool
-	MultiFaNoGapBed string
-	QuerySeqName    string
-	ChromName       string
-	Rename          string
+	InFile             string
+	OutFile            string
+	LineLength         int
+	NamesFile          string
+	TrimName           bool
+	ToUpper            bool
+	ToLower            string
+	RevComp            bool
+	NoGaps             bool
+	NoGapBed           string
+	Index              bool
+	MaskInvalid        bool
+	MultiFaNoGapBed    string
+	QuerySeqName       string
+	ChromName          string
+	Rename             string
+	IgnoreExtraRegions bool
 }
 
 func faFormat(s Settings) {
@@ -77,6 +79,11 @@ func faFormat(s Settings) {
 		if len(words) != 2 {
 			log.Fatalf("Error: expected two fields, comma delimited, in -rename. Found: %v.\n", s.Rename)
 		}
+	}
+
+	if s.ToLower != "" {
+		regionsToMask := bed.Read(s.ToLower)
+		bed.ToLower(records, regionsToMask, s.IgnoreExtraRegions) // the ToLower function lives in the bed package, importing fasta and dna packages, to avoid circular dependencies
 	}
 
 	for i := range records {
@@ -132,6 +139,7 @@ func main() {
 	var fastaNamesFile *string = flag.String("fastaNamesFile", "", "Text file, each line of the file are the fasta records to be manipulated (trimName, toUpper, revComp). Default is all fasta entries.")
 	var trimName *bool = flag.Bool("trimName", false, "if a fasta name contains spaces, retains only the first space delimited field")
 	var toUpper *bool = flag.Bool("toUpper", false, "Convert all DNA bases to upper case.")
+	var toLower *string = flag.String("toLower", "", "Specify a bed file to mask, i.e. convert all DNA bases in these bed regions to lower case, where the bed chrom name matches the fasta record name")
 	var revComp *bool = flag.Bool("revComp", false, "Return the reverse complement for each sequence.")
 	var noGaps *bool = flag.Bool("noGaps", false, "Remove gaps from all input sequences.")
 	var noGapBed *string = flag.String("noGapBed", "", "Find genomic coordinates containing regions outside gaps and write to a user-specified bed filename.")
@@ -143,6 +151,7 @@ func main() {
 	var createIndex *bool = flag.Bool("index", false, "Create index file (outputs to output.fa.fai).")
 	var maskInvalid *bool = flag.Bool("maskInvalid", false, "N-mask extended IUPAC nucleotides (includes UWSMKRYBDHV).")
 	var rename *string = flag.String("rename", "", "Rename a name field using comma delimited argument (ex. 'old,new'). Only one name field can be changed at a time.")
+	var ignoreExtraRegions *bool = flag.Bool("ignoreExtraRegions", false, "When set to true and using -toLower, ignore extra regions in the bed file whose chrom name is not found as a fasta record name")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -157,21 +166,23 @@ func main() {
 	outFile := flag.Arg(1)
 
 	s := Settings{
-		InFile:          inFile,
-		OutFile:         outFile,
-		LineLength:      *lineLength,
-		NamesFile:       *fastaNamesFile,
-		TrimName:        *trimName,
-		RevComp:         *revComp,
-		ToUpper:         *toUpper,
-		NoGaps:          *noGaps,
-		NoGapBed:        *noGapBed,
-		Index:           *createIndex,
-		MaskInvalid:     *maskInvalid,
-		MultiFaNoGapBed: *multiFaNoGapBed,
-		QuerySeqName:    *querySeqName,
-		ChromName:       *chromName,
-		Rename:          *rename,
+		InFile:             inFile,
+		OutFile:            outFile,
+		LineLength:         *lineLength,
+		NamesFile:          *fastaNamesFile,
+		TrimName:           *trimName,
+		RevComp:            *revComp,
+		ToUpper:            *toUpper,
+		ToLower:            *toLower,
+		NoGaps:             *noGaps,
+		NoGapBed:           *noGapBed,
+		Index:              *createIndex,
+		MaskInvalid:        *maskInvalid,
+		MultiFaNoGapBed:    *multiFaNoGapBed,
+		QuerySeqName:       *querySeqName,
+		ChromName:          *chromName,
+		Rename:             *rename,
+		IgnoreExtraRegions: *ignoreExtraRegions,
 	}
 
 	faFormat(s)

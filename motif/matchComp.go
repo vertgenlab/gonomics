@@ -103,7 +103,7 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 	var currRefKey uint64
 	var couldGetNewKey, inKmerHash, couldScoreSequence bool
 	var currRefScore, currAltScore, currResidual, minResidual, minResidualAltScore float64
-	var refPos, lastRefPos, lastAlnPos, currAltStart, currAltEnd int = refStart, refStart, 0, 0, 0
+	var refPos, lastRefPos, lastAlnPos, currAltStart, currAltEnd int = 0, 0, 0, 0, 0
 	var bitMask uint64 = uint64(math.Pow(2, float64(2*len(pm.Mat[0]))) - 1) // bitmask formula: B_n = 2^{2n} - 1
 	var currBed bed.Bed
 	revCompPm := ReverseComplement(pm)
@@ -150,13 +150,17 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 
 		// now we check if the current key is a significant motif hit
 		if currRefScore, inKmerHash = kmerHash[currRefKey]; inKmerHash {
+			//fmt.Printf("scanRefSequenceComp\n")
 			//fmt.Printf("CurrRefKey: %v. CurrRefScore: %v.\n", currRefKey, currRefScore)
 			minResidual = math.Inf(1)
-			minResidualAltScore = 0
+			minResidualAltScore = math.Inf(-1) // old version: minResidualAltScore = 0. -Inf should still work because minResidualAltScore will be overwritten later in for loop if there is a more appropriate value
+			//fmt.Printf("Just set minResidual to +inf, minResidualAltScore to -inf\n")
 			for currAltStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currAltStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currAltStart++ {
+				//fmt.Printf("entered for loop\n")
 				currAltScore, currAltEnd, couldScoreSequence = ScoreWindow(pm, records[1].Seq, currAltStart)
 				//fmt.Printf("AlnPos: %v. currAltStart: %v. CurrAltEnd: %v. CurrAltScore: %v.\n", alnPos, currAltStart, currAltEnd, currAltScore)
 				if !couldScoreSequence {
+					//fmt.Printf("!couldScoreSequence\n")
 					break
 				}
 				currResidual = math.Abs(currRefScore - currAltScore)
@@ -178,16 +182,20 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 				}
 				altEndsConsidered[currAltEnd] = true
 			}
+			// Option 1: when !couldScoreSequence, minResidualAltScore and minResidual remain as initialized values, -Inf and +Inf, indicating "N/A", can be filtered out / ignored by user in output
+			// Option 2: when !couldScoreSequence, treat score as 0, calculate residual using line of code below
+			//minResidual = math.Abs(currRefScore - minResidualAltScore)
 			if outputAsProportion {
 				currRefScore = currRefScore / consensusScore
 				minResidualAltScore = minResidualAltScore / consensusScore
 				minResidual = math.Abs(currRefScore - minResidualAltScore)
 			}
 			if minResidual >= residualFilter {
+				//fmt.Printf("scanRefSequenceComp. About to write bed. ChromStart: %v, pm.Name: %v, currRefScore: %v, minResidualAltScore: %v, minResidual: %v\n", refPos-len(pm.Mat[0])+1, pm.Name, currRefScore, minResidualAltScore, minResidual)
 				currBed = bed.Bed{
 					Chrom:             chromName,
-					ChromStart:        refPos - len(pm.Mat[0]) + 1,
-					ChromEnd:          refPos + 1,
+					ChromStart:        refStart + refPos - len(pm.Mat[0]) + 1, // add refStart (externally-provided constant) to the ChromStart calculated from the input multiFa (refPos - len(pm.Mat[0]) + 1)
+					ChromEnd:          refStart + refPos + 1,                  // add refStart (externally-provided constant) to the ChromEnd calculated from the input multiFa (refPos + 1)
 					Name:              pm.Name,
 					Score:             0,
 					Strand:            strand,
@@ -203,9 +211,8 @@ func scanRefSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm PositionMatrix, chromName string, out *fileio.EasyWriter, residualWindowSize int, consensusScore float64, strand bed.Strand, refStart int, enforceStrandMatch bool, outputAsProportion bool, altEndsConsidered map[int]bool, residualFilter float64) {
 	var needNewKey = true
 	var currAltKey uint64
-	var refPos = refStart
+	var refPos, lastRefPos int = 0, 0
 	var lastAlnPos, currRefStart int
-	var lastRefPos = refStart
 	var currAltScore, minResidual, minResidualRefScore, currRefScore, currResidual float64
 	var couldGetNewKey, inKmerHash, foundInMap, couldScoreSequence bool
 	var bitMask uint64 = uint64(math.Pow(2, float64(2*len(pm.Mat[0]))) - 1) // bitmask formula: B_n = 2^{2n} - 1
@@ -254,12 +261,16 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 		if currAltScore, inKmerHash = kmerHash[currAltKey]; inKmerHash {
 			// now we have to check if we've already considered this hit when looking at the Ref sequence.
 			if _, foundInMap = altEndsConsidered[alnPos]; !foundInMap {
+				//fmt.Printf("scanAltSequenceComp\n")
 				//fmt.Printf("AlnPos: %v. RefPos: %v. currAltScore: %v.\n", alnPos, refPos, currAltScore/consensusScore)
 				minResidual = math.Inf(1)
-				minResidualRefScore = 0
-				for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, refStart); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
+				minResidualRefScore = math.Inf(-1) // old version: minResidualRefScore = 0. -Inf should still work because minResidualRefScore will be overwritten later in for loop if there is a more appropriate value
+				//fmt.Printf("Just set minResidual to +inf, and minResidualRefScore to -inf.\n")
+				for currRefStart = numbers.Max(alnPos-len(pm.Mat[0])-residualWindowSize+1, 0); currRefStart <= numbers.Min(alnPos+residualWindowSize-len(pm.Mat[0])+1, len(records[0].Seq)); currRefStart++ {
+					//fmt.Printf("entered for loop\n")
 					currRefScore, _, couldScoreSequence = ScoreWindow(pm, records[0].Seq, currRefStart)
 					if !couldScoreSequence {
+						//fmt.Printf("!couldScoreSequence\n")
 						break
 					}
 					currResidual = math.Abs(currRefScore - currAltScore)
@@ -280,16 +291,20 @@ func scanAltSequenceComp(records []fasta.Fasta, kmerHash map[uint64]float64, pm 
 						}
 					}
 				}
+				// Option 1: when !couldScoreSequence, minResidualRefScore and minResidual remain as initialized values, -Inf and +Inf, indicating "N/A", can be filtered out / ignored by user in output
+				// Option 2: when !couldScoreSequence, treat score as 0, calculate residual
+				//minResidual = math.Abs(currAltScore - minResidualRefScore)
 				if outputAsProportion {
 					currAltScore = currAltScore / consensusScore
 					minResidualRefScore = minResidualRefScore / consensusScore
 					minResidual = math.Abs(currAltScore - minResidualRefScore)
 				}
 				if minResidual >= residualFilter {
+					//fmt.Printf("scanAltSequenceComp. About to write bed. ChromStart: %v, pm.Name: %v, minResidualRefScore: %v, currAltScore: %v, minResidual: %v\n", refPos-len(pm.Mat[0])+1, pm.Name, minResidualRefScore, currAltScore, minResidual)
 					currBed = bed.Bed{
 						Chrom:             chromName,
-						ChromStart:        refPos - len(pm.Mat[0]) + 1,
-						ChromEnd:          refPos + 1,
+						ChromStart:        refStart + refPos - len(pm.Mat[0]) + 1, // add refStart (externally-provided constant) to the ChromStart calculated from the input multiFa (refPos - len(pm.Mat[0]) + 1)
+						ChromEnd:          refStart + refPos + 1,                  // add refStart (externally-provided constant) to the ChromEnd calculated from the input multiFa (refPos + 1)
 						Name:              pm.Name,
 						Score:             0,
 						Strand:            strand,
