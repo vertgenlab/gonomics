@@ -10,7 +10,7 @@ import (
 )
 
 func filterScBam(inbam, barcodes, outbam string) {
-	var found bool
+	var found, bxpresent bool
 	var err error
 	var bx interface{}
 
@@ -23,10 +23,10 @@ func filterScBam(inbam, barcodes, outbam string) {
 
 	for i := range aln {
 
-		bx, found, err = sam.QueryTag(i, "CB")
+		bx, bxpresent, err = sam.QueryTag(i, "CB")
 		exception.PanicOnErr(err)
 
-		if !found {
+		if !bxpresent {
 			continue
 		}
 
