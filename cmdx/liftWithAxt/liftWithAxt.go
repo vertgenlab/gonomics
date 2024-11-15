@@ -26,8 +26,8 @@ func main() {
 	var lifted bed.Bed = bed.Bed{FieldsInitialized: 4}
 
 	flag.Parse()
-	if len(flag.Args()) != 4 {
-		log.Fatalf("~/go/bin/liftWithAxt in.axt ocr.bed chrom.Sizes out.merged.bed")
+	if len(flag.Args()) != 5 {
+		log.Fatalf("~/go/bin/liftWithAxt in.axt ocr.bed chrom.Sizes out.lift.bed out.liftANDmerge.bed")
 	}
 	chromSizes := chromInfo.ReadToMap(flag.Arg(2))
 	fmt.Println("built chrom sizes tree")
@@ -44,6 +44,7 @@ func main() {
 			outBed = append(outBed, lifted)
 		}
 	}
+	bed.Write(flag.Arg(3), outBed)
 	mergedBed := bed.MergeBedsKeepNames(outBed)
-	bed.Write(flag.Arg(3), mergedBed)
+	bed.Write(flag.Arg(4), mergedBed)
 }
