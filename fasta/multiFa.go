@@ -1,9 +1,8 @@
 package fasta
 
 import (
-	"log"
-
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
 )
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
@@ -123,9 +122,9 @@ func DistColumn(records []Fasta) []Fasta {
 	return subFa
 }
 
-// emptyCopy returns a new alignment where the sequences have the same names as the input
+// EmptyCopy returns a new alignment where the sequences have the same names as the input
 // alignment, but empty sequences.
-func emptyCopy(aln []Fasta) []Fasta {
+func EmptyCopy(aln []Fasta) []Fasta {
 	var answer []Fasta = make([]Fasta, len(aln))
 	for i := range aln {
 		answer[i].Name = aln[i].Name
@@ -133,9 +132,9 @@ func emptyCopy(aln []Fasta) []Fasta {
 	return answer
 }
 
-// isSegregating returns false if the value of all bases in the column (colIdx) are of
+// IsSegregating returns false if the value of all bases in the column (colIdx) are of
 // equal value, and true otherwise.
-func isSegregating(aln []Fasta, colIdx int) bool {
+func IsSegregating(aln []Fasta, colIdx int) bool {
 	var i int
 	var firstBase dna.Base
 
@@ -150,10 +149,10 @@ func isSegregating(aln []Fasta, colIdx int) bool {
 
 // SegregatingSites takes in a multiFa alignment and returns a new alignment containing only the columns with segregating sites.
 func SegregatingSites(aln []Fasta) []Fasta {
-	var answer []Fasta = emptyCopy(aln)
+	var answer []Fasta = EmptyCopy(aln)
 	var i, k int
 	for i = 0; i < len(aln[0].Seq); i++ {
-		if isSegregating(aln, i) {
+		if IsSegregating(aln, i) {
 			for k = 0; k < len(aln); k++ {
 				answer[k].Seq = append(answer[k].Seq, aln[k].Seq[i])
 			}
