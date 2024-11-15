@@ -106,6 +106,10 @@ func parseSingleAln(s string) (name string, b bed.Bed, ocr bool) {
 func buildGraph(mp map[string]*Node, startNode string, outDot string) {
 	var workSlice, currSlice []string
 
+	if startNode == "all" {
+		buildGraphAllNodes(mp, outDot)
+	}
+
 	out := fileio.EasyCreate(outDot)
 	fileio.WriteToFileHandle(out, "strict graph {")
 
@@ -129,10 +133,6 @@ func buildGraph(mp map[string]*Node, startNode string, outDot string) {
 
 	fileio.WriteToFileHandle(out, "}")
 	exception.PanicOnErr(out.Close())
-
-}
-
-func NodeWork() {
 
 }
 
@@ -162,4 +162,19 @@ func addToWorkSlice(workSlice, currSlice []string, mp map[string]*Node) []string
 		}
 	}
 	return workSlice
+}
+
+func buildGraphAllNodes(mp map[string]*Node, outDot string) {
+
+	out := fileio.EasyCreate(outDot)
+	fileio.WriteToFileHandle(out, "strict graph {")
+
+	for i := range mp {
+		if !strings.Contains(i, "lift") {
+			fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=red, style=filled]", i))
+		}
+		fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- %s", i, formatAlnString(nodesToNameSlice(mp[i].connections))))
+	}
+	fileio.WriteToFileHandle(out, "}")
+	exception.PanicOnErr(out.Close())
 }
