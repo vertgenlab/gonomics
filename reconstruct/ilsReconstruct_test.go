@@ -3,11 +3,11 @@ package reconstruct
 import (
 	"bufio"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
 	"os"
 	"testing"
-	"github.com/vertgenlab/gonomics/fileio"
 )
 
 var IlsReconstructTests = []struct {
