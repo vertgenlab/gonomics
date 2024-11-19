@@ -2,15 +2,16 @@ package genomeGraph
 
 import (
 	"fmt"
+	"math"
+	"strings"
+	"sync"
+
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/giraf"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
-	"math"
-	"strings"
-	"sync"
 )
 
 func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash map[uint64][]uint64, seedLen int, stepSize int, matrix *MatrixAln, scoreMatrix [][]int64, seedPool *sync.Pool, dnaPool *sync.Pool, sk scoreKeeper, dynamicScore dynamicScoreKeeper, seedBuildHelper *seedHelper) *giraf.Giraf {
@@ -58,7 +59,7 @@ func GraphSmithWatermanToGiraf(gg *GenomeGraph, read fastq.FastqBig, seedHash ma
 			currBest.QEnd = int(sk.currSeed.QueryStart) + sk.queryStart + sk.queryEnd + int(sk.currSeed.TotalLength) - 1
 			currBest.PosStrand = sk.currSeed.PosStrand
 			currBest.Path = setPath(currBest.Path, sk.targetStart, CatPaths(CatPaths(sk.leftPath, getSeedPath(&sk.currSeed)), sk.rightPath), sk.targetEnd)
-			currBest.Cigar = SoftClipBases(sk.queryStart, len(sk.currSeq), cigar.CatByteCigar(cigar.AddCigarByte(sk.leftAlignment, cigar.ByteCigar{RunLen: uint16(sk.currSeed.TotalLength), Op: 'M'}), sk.rightAlignment))
+			currBest.Cigar = cigar.AppendSoftClips(sk.queryStart, len(sk.currSeq), cigar.Concat(cigar.Append(sk.leftAlignment, cigar.Cigar{RunLength: int(sk.currSeed.TotalLength), Op: cigar.Match}), sk.rightAlignment))
 			currBest.AlnScore = int(sk.currScore)
 			currBest.Seq = sk.currSeq
 		}

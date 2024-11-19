@@ -1,0 +1,291 @@
+net chr1 248956422
+ fill 11034 29698 chr12 + 29231 32544 id 4904 score 2554570 ali 29606 qDup 32544 type top tN 0 qN 0 tR 10225 qR 10895 tTrf 493 qTrf 1401
+  gap 11074 5 chr12 + 29271 0 tN 0 qN 0 tR 5 qR 0 tTrf 0 qTrf 0
+  gap 12369 1 chr12 + 30561 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 16102 3 chr12 + 34666 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 17842 1 chr12 + 36423 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 19167 2 chr12 + 37752 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 20818 45 chr12 + 39751 2072 tN 0 qN 0 tR 0 qR 538 tTrf 35 qTrf 42
+  gap 26403 2 chr12 + 47367 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 26506 3 chr12 + 47468 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 27399 1 chr12 + 48358 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 27990 4 chr12 + 48948 0 tN 0 qN 0 tR 4 qR 0 tTrf 0 qTrf 0
+  gap 28326 1 chr12 + 49280 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 28443 2 chr12 + 49396 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 28588 5 chr12 + 49539 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 29319 1 chr12 + 50265 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 30931 2 chr12 + 51892 0 tN 0 qN 0 tR 2 qR 0 tTrf 2 qTrf 0
+  gap 31719 2 chr12 + 52678 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 33449 1 chr12 + 54498 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 33669 1 chr12 + 54722 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 34442 1 chr12 + 55494 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 36136 1 chr12 + 57187 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 36180 1 chr12 + 57230 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 36890 1 chr12 + 57939 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 37240 3 chr12 + 58288 0 tN 0 qN 0 tR 3 qR 0 tTrf 0 qTrf 0
+  gap 37985 1 chr12 + 59030 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 38576 1 chr12 + 59620 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 40637 1 chr12 + 61681 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+ fill 40732 46380 chr4 - 188602557 50273 id 2452 score 3993543 ali 46111 qDup 46073 type top tN 0 qN 0 tR 24610 qR 28088 tTrf 1160 qTrf 2375
+  gap 42756 2 chr4 - 188650801 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 44740 9 chr4 - 188648809 8 tN 0 qN 0 tR 9 qR 8 tTrf 0 qTrf 0
+net chr2 242193529
+ fill 10845 16132517 chr2A + 2965 16095509 id 52 score 1383025867 ali 15694423 qDup 621764 type top tN 0 qN 65572 tR 7288277 qR 7243873 tTrf 565884 qTrf 588052
+  gap 11116 1 chr2A + 3236 0 tN 0 qN 0 tR 1 qR 0 tTrf 1 qTrf 0
+  gap 11206 2 chr2A + 3333 0 tN 0 qN 0 tR 2 qR 0 tTrf 2 qTrf 0
+  gap 11232 1 chr2A + 3357 0 tN 0 qN 0 tR 1 qR 0 tTrf 1 qTrf 0
+  gap 11349 8 chr2A + 3483 0 tN 0 qN 0 tR 8 qR 0 tTrf 0 qTrf 0
+  gap 12702 1 chr2A + 4841 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 14158 1 chr2A + 6301 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 15486 1 chr2A + 7630 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 15933 4 chr2A + 8076 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 17142 2 chr2A + 9281 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 17652 1323 chr2A + 9789 0 tN 0 qN 0 tR 43 qR 0 tTrf 0 qTrf 0
+   fill 18889 86 chr2A - 10947 86 id 503516 score 5664 ali 86 qOver 0 qFar 1158 qDup 86 type inv tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 19573 2 chr2A + 10389 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 20218 3 chr2A + 11033 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 22525 2 chr2A + 13338 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 23794 5 chr2A + 14605 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 32013 10 chr2A + 22848 0 tN 0 qN 0 tR 10 qR 0 tTrf 0 qTrf 0
+  gap 35068 1 chr2A + 25907 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 36867 1 chr2A + 27706 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 38737 1 chr2A + 29576 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 46887 1 chr2A + 37734 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 53836 3 chr2A + 44683 0 tN 0 qN 0 tR 3 qR 0 tTrf 0 qTrf 0
+  gap 55007 2 chr2A + 45851 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 59668 1 chr2A + 50511 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 62328 8 chr2A + 59719 0 tN 0 qN 0 tR 8 qR 0 tTrf 8 qTrf 0
+  gap 62524 1 chr2A + 59907 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 62717 1 chr2A + 60102 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 63094 1 chr2A + 60479 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 63100 3 chr2A + 60484 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 64517 1 chr2A + 61898 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+net chr3 198295559
+ fill 11775 8764 chr3 + 75455448 10780 id 21454 score 677943 ali 8711 qDup 10770 type top tN 0 qN 0 tR 2411 qR 3997 tTrf 61 qTrf 27
+  gap 11928 4 chr3 + 75455601 0 tN 0 qN 0 tR 4 qR 0 tTrf 0 qTrf 0
+  gap 12315 1 chr3 + 75455984 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 12624 1 chr3 + 75456294 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 13221 2 chr3 + 75456894 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 14327 7 chr3 + 75458002 0 tN 0 qN 0 tR 7 qR 0 tTrf 0 qTrf 0
+  gap 15865 27 chr3 + 75459533 0 tN 0 qN 0 tR 0 qR 0 tTrf 27 qTrf 0
+  gap 16008 2 chr3 + 75459649 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 16213 1 chr3 + 75459852 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 16645 4 chr3 + 75460287 0 tN 0 qN 0 tR 4 qR 0 tTrf 0 qTrf 0
+  gap 16962 1 chr3 + 75460600 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 19779 1 chr3 + 75465461 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 20274 1 chr3 + 75465955 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 20528 1 chr3 + 75466218 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+ fill 51866 4871 chrUn_NW_019936691v1 + 0 4869 id 30158 score 423682 ali 4848 qDup 4859 type top tN 0 qN 0 tR 1230 qR 1162 tTrf 34 qTrf 68
+  gap 52405 1 chrUn_NW_019936691v1 + 540 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 52956 4 chrUn_NW_019936691v1 + 1090 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 53230 3 chrUn_NW_019936691v1 + 1362 0 tN 0 qN 0 tR 3 qR 0 tTrf 0 qTrf 0
+  gap 53268 1 chrUn_NW_019936691v1 + 1397 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 53354 2 chrUn_NW_019936691v1 + 1482 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 53471 3 chrUn_NW_019936691v1 + 1597 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 54043 2 chrUn_NW_019936691v1 + 2167 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 54783 3 chrUn_NW_019936691v1 + 2910 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 54856 1 chrUn_NW_019936691v1 + 2980 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 55353 1 chrUn_NW_019936691v1 + 3476 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 55506 1 chrUn_NW_019936691v1 + 3628 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 55742 1 chrUn_NW_019936691v1 + 3863 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+ fill 56740 90218370 chr3 + 304418 90601154 id 7 score 7871781645 ali 88744214 qDup 877316 type top tN 0 qN 142652 tR 44715524 qR 45150873 tTrf 1568770 qTrf 1787147
+  gap 57226 1 chr3 + 304907 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 58427 1 chr3 + 306107 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+net chr4 190214555
+ fill 19026 3945050 chr4 - 1366 3973443 id 81 score 334675237 ali 3783971 qDup 82012 type top tN 10606 qN 0 tR 1772639 qR 1734722 tTrf 262676 qTrf 336051
+  gap 19945 1 chr4 - 3973886 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 20566 1 chr4 - 3973266 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 21095 1 chr4 - 3972733 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 22552 1 chr4 - 3968731 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 22976 1 chr4 - 3968308 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 23616 1 chr4 - 3967669 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 25269 2 chr4 - 3966013 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 25377 3 chr4 - 3965157 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 27009 3 chr4 - 3963528 0 tN 0 qN 0 tR 3 qR 0 tTrf 0 qTrf 0
+  gap 27526 1 chr4 - 3963014 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 27536 4 chr4 - 3963005 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 28443 2 chr4 - 3962092 0 tN 0 qN 0 tR 2 qR 0 tTrf 2 qTrf 0
+  gap 28608 1 chr4 - 3961929 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 29246 1 chr4 - 3961291 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 31437 2 chr4 - 3959097 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 31790 5 chr4 - 3958745 0 tN 0 qN 0 tR 5 qR 0 tTrf 0 qTrf 0
+  gap 32263 1 chr4 - 3958276 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 33104 4 chr4 - 3957432 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 33216 1 chr4 - 3957324 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 34204 1 chr4 - 3956333 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 34396 1 chr4 - 3956142 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 34571 1 chr4 - 3955968 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 35817 4 chr4 - 3954717 0 tN 0 qN 0 tR 4 qR 0 tTrf 0 qTrf 0
+  gap 36234 5 chr4 - 3954304 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 36540 3 chr4 - 3954003 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 36623 5 chr4 - 3953923 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 37718 1 chr4 - 3952832 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 43795 1 chr4 - 3946754 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 44166 12 chr4 - 3946068 0 tN 0 qN 0 tR 12 qR 0 tTrf 12 qTrf 0
+net chr5 181538259
+ fill 19928 18533276 chr5 + 465 18306382 id 48 score 1568613876 ali 17837212 qDup 807486 type top tN 50000 qN 300 tR 8030872 qR 7909021 tTrf 593039 qTrf 638692
+  gap 20118 1 chr5 + 658 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 21548 27214 chr5 + 2091 0 tN 0 qN 0 tR 11678 qR 0 tTrf 1955 qTrf 0
+   fill 21870 26892 chr2A + 9952 157310 id 13924 score 1037101 ali 20327 qDup 24843 type nonSyn tN 0 qN 0 tR 11678 qR 83479 tTrf 1955 qTrf 3427
+    gap 22128 1 chr2A + 10213 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 22182 3 chr2A + 10266 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 22510 1982 chr2A + 10591 0 tN 0 qN 0 tR 1974 qR 0 tTrf 0 qTrf 0
+    gap 24833 1 chr2A + 10932 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 24935 3 chr2A + 11033 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 26175 19 chr2A + 12280 88 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 26909 2 chr2A + 13085 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+    gap 27163 2 chr2A + 13337 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+    gap 27281 2 chr2A + 13453 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+    gap 27319 1577 chr2A + 13489 207 tN 0 qN 0 tR 1577 qR 207 tTrf 0 qTrf 0
+    gap 28960 4 chr2A + 13760 0 tN 0 qN 0 tR 4 qR 0 tTrf 0 qTrf 0
+    gap 29148 9 chr2A + 13944 0 tN 0 qN 0 tR 9 qR 0 tTrf 0 qTrf 0
+    gap 29164 1 chr2A + 13951 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+    gap 29432 1 chr2A + 14237 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 29553 3 chr2A + 14357 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 29804 5 chr2A + 14605 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 30161 5 chr2A + 14959 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 30459 1 chr2A + 15252 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 30494 1 chr2A + 15286 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+    gap 30898 3 chr2A + 15694 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 31267 17 chr2A + 16061 0 tN 0 qN 0 tR 17 qR 0 tTrf 0 qTrf 0
+    gap 31506 1 chr2A + 16283 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+    gap 31832 4 chr2A + 16620 0 tN 0 qN 0 tR 4 qR 0 tTrf 0 qTrf 0
+    gap 32239 10 chr2A + 17024 0 tN 0 qN 0 tR 10 qR 0 tTrf 0 qTrf 0
+    gap 32761 1 chr2A + 17545 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+    gap 33069 135 chr2A + 17854 0 tN 0 qN 0 tR 54 qR 0 tTrf 135 qTrf 0
+net chr6 170805979
+ fill 60000 22865 chr4 - 188596757 25648 id 7455 score 1907259 ali 22724 qDup 22798 type top tN 0 qN 0 tR 18835 qR 21159 tTrf 475 qTrf 459
+  gap 60341 1 chr4 - 188622064 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 61168 1 chr4 - 188621238 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 61839 2 chr4 - 188620568 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 63705 1 chr4 - 188618694 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 65937 4 chr4 - 188616459 0 tN 0 qN 0 tR 4 qR 0 tTrf 0 qTrf 0
+  gap 67175 2 chr4 - 188615222 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 67368 2 chr4 - 188615031 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 67851 2 chr4 - 188614550 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 70627 2 chr4 - 188608919 2850 tN 0 qN 0 tR 2 qR 2515 tTrf 0 qTrf 129
+  gap 71876 1 chr4 - 188607672 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 71939 1 chr4 - 188607610 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 71969 1 chr4 - 188607581 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 72713 3 chr4 - 188606834 0 tN 0 qN 0 tR 3 qR 0 tTrf 0 qTrf 0
+  gap 72835 1 chr4 - 188606715 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 73797 25 chr4 - 188605752 0 tN 0 qN 0 tR 24 qR 0 tTrf 25 qTrf 0
+  gap 73831 10 chr4 - 188605743 0 tN 0 qN 0 tR 10 qR 0 tTrf 10 qTrf 0
+  gap 73854 2 chr4 - 188605730 0 tN 0 qN 0 tR 2 qR 0 tTrf 2 qTrf 0
+  gap 73871 5 chr4 - 188605715 0 tN 0 qN 0 tR 5 qR 0 tTrf 5 qTrf 0
+  gap 73886 12 chr4 - 188605705 0 tN 0 qN 0 tR 12 qR 0 tTrf 12 qTrf 0
+  gap 73927 9 chr4 - 188605676 0 tN 0 qN 0 tR 9 qR 0 tTrf 9 qTrf 0
+  gap 73947 13 chr4 - 188605656 9 tN 0 qN 0 tR 13 qR 9 tTrf 13 qTrf 9
+  gap 73975 8 chr4 - 188605641 0 tN 0 qN 0 tR 8 qR 0 tTrf 8 qTrf 0
+  gap 73999 5 chr4 - 188605625 0 tN 0 qN 0 tR 5 qR 0 tTrf 3 qTrf 0
+  gap 74066 2 chr4 - 188605563 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 75687 1 chr4 - 188603941 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 76625 5 chr4 - 188603002 0 tN 0 qN 0 tR 5 qR 0 tTrf 0 qTrf 0
+  gap 78327 1 chr4 - 188601296 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 79429 1 chr4 - 188600191 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 79634 2 chr4 - 188599983 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+net chr7 159345973
+ fill 10238 6579 chr11 + 41192 6832 id 9307 score 569556 ali 6554 qDup 6832 type top tN 0 qN 0 tR 3042 qR 3134 tTrf 755 qTrf 1247
+  gap 11448 6 chr11 + 42473 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 12523 5 chr11 + 43560 0 tN 0 qN 0 tR 5 qR 0 tTrf 5 qTrf 0
+  gap 13532 1 chr11 + 44564 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 14826 4 chr11 + 45861 0 tN 0 qN 0 tR 4 qR 0 tTrf 0 qTrf 0
+  gap 15123 2 chr11 + 46154 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 16311 1 chr11 + 47340 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 16797 6 chr11 + 48010 0 tN 0 qN 0 tR 6 qR 0 tTrf 6 qTrf 0
+ fill 16817 23960 chrUn_NW_019933157v1 + 91212 29851 id 6926 score 2003405 ali 23250 qDup 12966 type top tN 0 qN 0 tR 13092 qR 12551 tTrf 1415 qTrf 7209
+  gap 17090 31 chrUn_NW_019933157v1 + 91492 0 tN 0 qN 0 tR 31 qR 0 tTrf 0 qTrf 0
+  gap 17642 1 chrUn_NW_019933157v1 + 92013 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 19694 2 chrUn_NW_019933157v1 + 94090 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 20735 1 chrUn_NW_019933157v1 + 101610 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 23753 9 chrUn_NW_019933157v1 + 104641 0 tN 0 qN 0 tR 9 qR 0 tTrf 0 qTrf 0
+  gap 23928 456 chrUn_NW_019933157v1 + 104811 0 tN 0 qN 0 tR 456 qR 0 tTrf 456 qTrf 0
+  gap 25020 1 chrUn_NW_019933157v1 + 105451 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 25572 2 chrUn_NW_019933157v1 + 106002 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 26422 6 chrUn_NW_019933157v1 + 106850 0 tN 0 qN 0 tR 6 qR 0 tTrf 0 qTrf 0
+  gap 27306 147 chrUn_NW_019933157v1 + 107729 0 tN 0 qN 0 tR 100 qR 0 tTrf 147 qTrf 0
+  gap 27561 1 chrUn_NW_019933157v1 + 107837 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 27583 1 chrUn_NW_019933157v1 + 107858 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 28145 1 chrUn_NW_019933157v1 + 108419 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 31624 2 chrUn_NW_019933157v1 + 111932 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 34563 2 chrUn_NW_019933157v1 + 114874 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 35464 21 chrUn_NW_019933157v1 + 115773 0 tN 0 qN 0 tR 11 qR 0 tTrf 11 qTrf 0
+  gap 36173 7 chrUn_NW_019933157v1 + 116461 0 tN 0 qN 0 tR 7 qR 0 tTrf 0 qTrf 0
+  gap 38858 3 chrUn_NW_019933157v1 + 119141 0 tN 0 qN 0 tR 3 qR 0 tTrf 0 qTrf 0
+  gap 39599 15 chrUn_NW_019933157v1 + 119879 0 tN 0 qN 0 tR 0 qR 0 tTrf 15 qTrf 0
+  gap 40010 1 chrUn_NW_019933157v1 + 120276 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+ fill 62453 43514 chr14 - 87691337 25191 id 1712 score 2204962 ali 24974 qDup 25092 type top tN 0 qN 0 tR 16266 qR 10923 tTrf 2575 qTrf 1244
+net chrX 156040895
+ fill 10128 16986 chrUn_NW_019934889v1 + 2377 18593 id 13949 score 1128955 ali 14930 qDup 16853 type top tN 0 qN 0 tR 7861 qR 9011 tTrf 3963 qTrf 3518
+  gap 12266 425 chrUn_NW_019934889v1 + 4561 1578 tN 0 qN 0 tR 407 qR 1273 tTrf 0 qTrf 0
+  gap 12972 9 chrUn_NW_019934889v1 + 6434 0 tN 0 qN 0 tR 9 qR 0 tTrf 9 qTrf 0
+  gap 12993 3 chrUn_NW_019934889v1 + 6446 0 tN 0 qN 0 tR 3 qR 0 tTrf 3 qTrf 0
+  gap 13487 196 chrUn_NW_019934889v1 + 7291 393 tN 0 qN 0 tR 0 qR 0 tTrf 196 qTrf 393
+   fill 13487 196 chrUn_NW_019934889v1 + 7743 4407 id 150145 score 11152 ali 194 qOver 0 qFar 59 qDup 4407 type syn tN 0 qN 0 tR 0 qR 1545 tTrf 196 qTrf 1068
+    gap 13601 1 chrUn_NW_019934889v1 + 12068 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+    gap 13635 1 chrUn_NW_019934889v1 + 12101 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+  gap 13821 278 chrUn_NW_019934889v1 + 7822 601 tN 0 qN 0 tR 0 qR 0 tTrf 256 qTrf 396
+   fill 13821 278 chrUn_NW_019934889v1 + 12644 351 id 150145 score 14486 ali 252 qOver 0 qFar 4221 qDup 351 type syn tN 0 qN 0 tR 0 qR 0 tTrf 256 qTrf 351
+    gap 13831 1 chrUn_NW_019934889v1 + 12654 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+    gap 13863 1 chrUn_NW_019934889v1 + 12685 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+    gap 13869 1 chrUn_NW_019934889v1 + 12690 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+    gap 13877 1 chrUn_NW_019934889v1 + 12697 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+    gap 13889 1 chrUn_NW_019934889v1 + 12708 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+    gap 13900 1 chrUn_NW_019934889v1 + 12718 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+    gap 13910 1 chrUn_NW_019934889v1 + 12727 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+    gap 13916 2 chrUn_NW_019934889v1 + 12732 0 tN 0 qN 0 tR 0 qR 0 tTrf 2 qTrf 0
+    gap 13934 4 chrUn_NW_019934889v1 + 12748 0 tN 0 qN 0 tR 0 qR 0 tTrf 4 qTrf 0
+    gap 13948 3 chrUn_NW_019934889v1 + 12758 0 tN 0 qN 0 tR 0 qR 0 tTrf 3 qTrf 0
+    gap 13966 6 chrUn_NW_019934889v1 + 12773 0 tN 0 qN 0 tR 0 qR 0 tTrf 6 qTrf 0
+    gap 13989 1 chrUn_NW_019934889v1 + 12790 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+    gap 14000 1 chrUn_NW_019934889v1 + 12800 0 tN 0 qN 0 tR 0 qR 0 tTrf 1 qTrf 0
+    gap 14077 2 chrUn_NW_019934889v1 + 12878 97 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 97
+  gap 15174 131 chrUn_NW_019934889v1 + 9498 10 tN 0 qN 0 tR 131 qR 10 tTrf 0 qTrf 0
+  gap 15364 9 chrUn_NW_019934889v1 + 9567 0 tN 0 qN 0 tR 9 qR 0 tTrf 0 qTrf 0
+  gap 15624 4 chrUn_NW_019934889v1 + 9818 0 tN 0 qN 0 tR 4 qR 0 tTrf 0 qTrf 0
+  gap 15776 8 chrUn_NW_019934889v1 + 9966 0 tN 0 qN 0 tR 8 qR 0 tTrf 0 qTrf 0
+  gap 16508 6 chrUn_NW_019934889v1 + 10690 0 tN 0 qN 0 tR 6 qR 0 tTrf 0 qTrf 0
+  gap 17280 1 chrUn_NW_019934889v1 + 11458 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+net chr8 145138636
+ fill 60004 8379 chr9 + 6980 8389 id 7059 score 657260 ali 8287 qDup 8389 type top tN 0 qN 0 tR 3268 qR 3366 tTrf 265 qTrf 345
+  gap 61742 70 chr9 + 8721 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 62412 2 chr9 + 9321 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 62462 2 chr9 + 9369 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 62524 2 chr9 + 9429 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 64090 9 chr9 + 10993 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 64859 1 chr9 + 11753 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 65106 4 chr9 + 11999 0 tN 0 qN 0 tR 4 qR 0 tTrf 4 qTrf 0
+  gap 65978 1 chr9 + 12867 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 66853 1 chr9 + 13749 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+ fill 68383 3691 chr19 - 56710425 3961 id 5690 score 300215 ali 3681 qDup 3961 type top tN 0 qN 0 tR 2136 qR 1875 tTrf 667 qTrf 912
+  gap 68752 1 chr19 - 56714013 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 68843 1 chr19 - 56713923 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 70079 8 chr19 - 56712434 0 tN 0 qN 0 tR 0 qR 0 tTrf 8 qTrf 0
+ fill 96395 104617 chr1 + 217979364 58612 id 2209 score 4320974 ali 51005 qDup 58612 type top tN 0 qN 0 tR 63247 qR 27709 tTrf 4607 qTrf 859
+  gap 97266 1 chr1 + 217980238 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 98104 16 chr1 + 217981076 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 102179 1 chr1 + 217985138 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 106328 2 chr1 + 217989299 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 108332 1 chr1 + 217991307 0 tN 0 qN 0 tR 1 qR 0 tTrf 1 qTrf 0
+  gap 108345 1 chr1 + 217991319 0 tN 0 qN 0 tR 1 qR 0 tTrf 1 qTrf 0
+  gap 110426 5 chr1 + 217993399 1353 tN 0 qN 0 tR 0 qR 613 tTrf 0 qTrf 0
+  gap 111396 9 chr1 + 217995747 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 114442 2 chr1 + 217998784 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 114594 1 chr1 + 217998934 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 116020 1 chr1 + 218000363 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 116940 1 chr1 + 218001284 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 118821 1 chr1 + 218003167 0 tN 0 qN 0 tR 1 qR 0 tTrf 0 qTrf 0
+  gap 118865 8 chr1 + 218003210 0 tN 0 qN 0 tR 8 qR 0 tTrf 0 qTrf 0
+  gap 118913 5 chr1 + 218003250 0 tN 0 qN 0 tR 5 qR 0 tTrf 0 qTrf 0
+net chr9 138394717
+ fill 10447 20492 chr12 + 28528 23588 id 3388 score 1739195 ali 20316 qDup 23472 type top tN 0 qN 0 tR 5363 qR 5995 tTrf 536 qTrf 1244
+  gap 10915 3 chr12 + 28998 0 tN 0 qN 0 tR 3 qR 0 tTrf 0 qTrf 0
+  gap 11021 4 chr12 + 29103 0 tN 0 qN 0 tR 4 qR 0 tTrf 4 qTrf 0
+  gap 11043 82 chr12 + 29121 99 tN 0 qN 0 tR 82 qR 99 tTrf 9 qTrf 0
+  gap 11178 16 chr12 + 29273 0 tN 0 qN 0 tR 16 qR 0 tTrf 0 qTrf 0
+  gap 12482 1 chr12 + 30561 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 17955 1 chr12 + 36423 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 19280 2 chr12 + 37752 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0
+  gap 20931 45 chr12 + 39751 2072 tN 0 qN 0 tR 0 qR 538 tTrf 35 qTrf 42
+  gap 26516 2 chr12 + 47367 0 tN 0 qN 0 tR 2 qR 0 tTrf 0 qTrf 0
+  gap 26619 3 chr12 + 47468 0 tN 0 qN 0 tR 0 qR 0 tTrf 0 qTrf 0

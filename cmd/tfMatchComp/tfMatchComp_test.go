@@ -39,7 +39,7 @@ var TfMatchCompTests = []struct {
 	{InFile: "testdata/STR012.fa",
 		MatrixFile:         "testdata/jaspar.vertebrate.unfiltered.txt",
 		ChromName:          "chr9",
-		OutFile:            "testdata/tmp.tfMatchComp.bed",
+		OutFile:            "testdata/tmp.testMatrixFilter.tfMatchComp.bed",
 		PropMatch:          0.8,
 		MatrixFileType:     "Frequency",
 		Pseudocounts:       0.1,

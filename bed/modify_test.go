@@ -39,11 +39,11 @@ var expectedMergeTrue []Bed = []Bed{{Chrom: "chr1", ChromStart: 10, ChromEnd: 45
 var MergeHighMemTests = []struct {
 	InBed         []Bed
 	ExpectedBed   []Bed
-	MergeAdjacent bool
+	MergeAdjacent int
 	KeepAllNames  bool
 }{
-	{InBed: inB, ExpectedBed: expectedMergeFalse, MergeAdjacent: false, KeepAllNames: false},
-	{InBed: inB, ExpectedBed: expectedMergeTrue, MergeAdjacent: true, KeepAllNames: false},
+	{InBed: inB, ExpectedBed: expectedMergeFalse, MergeAdjacent: -1, KeepAllNames: false},
+	{InBed: inB, ExpectedBed: expectedMergeTrue, MergeAdjacent: 1, KeepAllNames: false},
 }
 
 func TestMergeHighMem(t *testing.T) {
@@ -64,11 +64,11 @@ func TestMergeHighMem(t *testing.T) {
 var MergeKeepNamesTest = []struct {
 	InFile        string
 	ExpectedFile  string
-	MergeAdjacent bool
+	MergeAdjacent int
 	KeepAllNames  bool
 }{
-	{"testdata/test.names.bed", "testdata/test.names.merged.bed", false, true},
-	{"testdata/test.names.bed", "testdata/test.names.adjacent.merged.bed", true, true},
+	{"testdata/test.names.bed", "testdata/test.names.merged.bed", -1, true},
+	{"testdata/test.names.bed", "testdata/test.names.adjacent.merged.bed", 1, true},
 }
 
 func TestMergeKeepNames(t *testing.T) {
