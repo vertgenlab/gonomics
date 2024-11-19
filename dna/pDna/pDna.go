@@ -4,6 +4,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
 	"math"
+	"math/rand"
 )
 
 // Float32Base encodes a DNA base as a probability vector using float32 precision.
@@ -170,4 +171,76 @@ func DnaToPdna(base dna.Base) Float32Base {
 		log.Fatalf("pDna.DnaToPdna encountered an inconvertible base.\n")
 	}
 	return pbase
+}
+
+// Scale multiplies the four values in a pDNA base (A, C, T, G) by the multiplier
+
+func Scale(pdnaBase Float32Base, multiplier float32) Float32Base {
+
+	return Float32Base{A: pdnaBase.A * multiplier, C: pdnaBase.C * multiplier, G: pdnaBase.G * multiplier, T: pdnaBase.T * multiplier}
+
+}
+
+// Sum adds the respective four values in two pDNA bases (A, C, T, G). Permits bases with values greater than 1.
+
+func Sum(base1 Float32Base, base2 Float32Base) Float32Base {
+
+	return Float32Base{A: base1.A + base2.A, C: base1.C + base2.C, G: base1.G + base2.G, T: base1.T + base2.T}
+
+}
+
+// SumsToOne checks if the total probabilities of a pDNA base sum to 1
+
+func SumsToOne(base Float32Base, precision float32) bool {
+
+	return equalFloatPrecision(base.A+base.C+base.G+base.T, 1, precision)
+
+}
+
+// RandBase randomly generates a pDNA base that sums to 1
+
+func RandBase(seedSet bool, setSeed int64, randSource *rand.Rand) Float32Base {
+
+	var answer Float32Base
+
+	var source *rand.Rand
+
+	if seedSet {
+
+		source = randSource
+
+	} else {
+
+		source = rand.New(rand.NewSource(setSeed))
+
+	}
+
+	aFloat := source.Float32()
+
+	cFloat := source.Float32()
+
+	gFloat := source.Float32()
+
+	tFloat := source.Float32()
+
+	sum := aFloat + cFloat + gFloat + tFloat
+
+	// check for numerical stability
+
+	if sum < 1e-6 {
+
+		return RandBase(seedSet, setSeed, randSource)
+
+	}
+
+	answer.A = aFloat / sum
+
+	answer.C = cFloat / sum
+
+	answer.G = gFloat / sum
+
+	answer.T = tFloat / sum
+
+	return answer
+
 }
