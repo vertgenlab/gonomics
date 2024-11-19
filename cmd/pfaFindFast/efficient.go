@@ -64,7 +64,7 @@ func incrementWindowEdge(firstQuery []pDna.Float32Base, secondQuery []pDna.Float
 	var baseDot float64
 	if !pDna.IsGap(firstQuery[alnIdx]) && !pDna.IsGap(secondQuery[alnIdx]) { // do not calculate over gaps
 		baseDot = pDna.DotSubstProb(firstQuery[alnIdx], secondQuery[alnIdx]) // for non-gap position, calculate substitution probability from dot product method
-		if baseDot > baseDotToSubstThreshold {                               // if the substitution probability > threshold
+		if baseDot >= baseDotToSubstThreshold {                              // if the substitution probability >= threshold
 			numSubst++ // then this position is a substitution
 		}
 	}
