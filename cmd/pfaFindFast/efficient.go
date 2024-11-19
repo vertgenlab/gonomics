@@ -25,7 +25,8 @@ import (
 //  5. numFirstQueryNs: the number of Ns in the firstQuery after this increment (0 or 1)
 //  6. numSecondQueryNsGap: the number of Ns in the secondQuery sequence after this increment from gaps in the firstQuery
 //  7. numSecondQueryNsMatch: the number of Ns in the secondQuery sequence after this increment from matches with the firstQuery
-func incrementWindowEdge(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, alnIdxOrig int) (alnIdx, gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch int) {
+//  8. numSubst: the number of substitutions/mismatches (0 or 1) between firstQuery and secondQuery
+func incrementWindowEdge(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, alnIdxOrig int, baseDotToSubstThreshold float64) (alnIdx, gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int) {
 	alnIdx = alnIdxOrig
 	// at initialization, lastAlnIdxOfWindow == -1, which is assigned to alnIdxOrig when incrementWindowEdge is called, so alnIdx = alnIdxOrig == -1. For loop will start at alnIdx++ which is 0, the 1st position in the alignment
 
@@ -58,6 +59,14 @@ func incrementWindowEdge(firstQuery []pDna.Float32Base, secondQuery []pDna.Float
 	// 7. numSecondQueryNsMatch: did we add another N to the secondQuery count of Ns after moving the window edge by one firstQuery base
 	if pDna.IsN(secondQuery[alnIdx]) {
 		numSecondQueryNsMatch++ // Rationale: these secondQueryNs align with non-gap firstQuery positions
+	}
+	// 8. numSubst: is this a substitution?
+	var baseDot float64
+	if !pDna.IsGap(firstQuery[alnIdx]) && !pDna.IsGap(secondQuery[alnIdx]) { // do not calculate over gaps
+		baseDot = pDna.DotSubstProb(firstQuery[alnIdx], secondQuery[alnIdx]) // for non-gap position, calculate substitution probability from dot product method
+		if baseDot > baseDotToSubstThreshold {                               // if the substitution probability > threshold
+			numSubst++ // then this position is a substitution
+		}
 	}
 	// 3. gapOpenedSecondQuery: did we open a gap in the secondQuery sequence when moving the window edge?
 	if ((alnIdxOrig != -1 && !pDna.IsGap(secondQuery[alnIdxOrig])) || alnIdxOrig == -1) && pDna.IsGap(secondQuery[alnIdx]) {
@@ -101,21 +110,15 @@ func updateAlnIdxBeforeWindow(firstQuery []pDna.Float32Base, alnIdxOrig int) (al
 // optional arguments longOutput and divergenceRate allow the user to report a -log10pValue corresponding to the p value of observing a level of divergence for a given
 // window under a null binomial model of neutral evolution.
 func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, s Settings) {
-	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                                                 // these are the two edges of the sliding window in "alignment positions"
-	var alnIdxBeforeWindowForRef int = -1                                                                                                   // this is to generate the alnIdx intermediate for translating firstQueryIdxBeforeWindow+1 to refIdxWindowStart
-	var firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow int = -1, -1                                                                   // these are the two edges of the sliding window in "firstQuery (no gaps) positions"
-	var refIdxWindowStart, lastRefIdxOfWindowPlusOne int                                                                                    // these are the two edges of the sliding window in "reference (no gaps) positions" PLUS ONE. refIdxWindowStart = refIdxBeforeWindow+1. lastRefIdxOfWindowPlusOne = lastRefIdxOfWindow+1.
-	var totalGaps, totalNs int                                                                                                              // this is the data we need to keep track of that describes the current window
-	var gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch int // ints we will get back when moving the window one ref base.
+	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                                                           // these are the two edges of the sliding window in "alignment positions"
+	var alnIdxBeforeWindowForRef int = -1                                                                                                             // this is to generate the alnIdx intermediate for translating firstQueryIdxBeforeWindow+1 to refIdxWindowStart
+	var firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow int = -1, -1                                                                             // these are the two edges of the sliding window in "firstQuery (no gaps) positions"
+	var refIdxWindowStart, lastRefIdxOfWindowPlusOne int                                                                                              // these are the two edges of the sliding window in "reference (no gaps) positions" PLUS ONE. refIdxWindowStart = refIdxBeforeWindow+1. lastRefIdxOfWindowPlusOne = lastRefIdxOfWindow+1.
+	var totalGaps, totalNs, totalSubst int                                                                                                            // this is the data we need to keep track of that describes the current window
+	var gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base.
 	var err error
 	var percentDiverged, rawPValue float64
 	var prevRefIdxWindowStart, prevAlnIdxBeforeWindowForRefPlusOne, prevLastRefIdxOfWindowPlusOne, prevLastAlnIdxOfWindowPlusOne int = 0, 0, 0, 0
-	var windowDist []float64
-	var windowDistMean float64
-	var windowDistDiv int
-	var windowDotSubst int // replaces totalSubst
-	var windowDot []float64
-	var windowDotMean float64
 
 	// this caches map[k] to -log10(BinomialDist(n, k, p, true)), which is the -log10 p Value.
 	var scorePValueCache map[int]float64
@@ -132,24 +135,25 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 	for lastAlnIdxOfWindow < len(firstQuery) { // this check could also be "!done", I am not sure what is more clear
 		// we always move the lastBaseOfTheWindow (right side) and add on what we find to the counters because
 		// all this stuff is now inside the current window
-		lastAlnIdxOfWindow, gapOpenCloseFirstQuery, gapOpenedSecondQuery, _, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch = incrementWindowEdge(firstQuery, secondQuery, lastAlnIdxOfWindow)
+		lastAlnIdxOfWindow, gapOpenCloseFirstQuery, gapOpenedSecondQuery, _, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst = incrementWindowEdge(firstQuery, secondQuery, lastAlnIdxOfWindow, s.BaseDotToSubstThreshold)
 		lastFirstQueryIdxOfWindow++
 		totalGaps += gapOpenCloseFirstQuery + gapOpenedSecondQuery
 		totalNs += numFirstQueryNs + numSecondQueryNsGap + numSecondQueryNsMatch
-		// Note: removed numSubst variable. Calculate totalSubst a different way
+		totalSubst += numSubst
 
 		// usually increment the baseBeforeWindow,
 		// but not at the beginning when we have not yet incremented the end enough to have a full "windowSize" of bases in the window
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow > s.WindowSize {
-			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow)
+			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch, numSubst = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow, s.BaseDotToSubstThreshold)
 			alnIdxBeforeWindowForRef = updateAlnIdxBeforeWindow(firstQuery, alnIdxBeforeWindow)
 			firstQueryIdxBeforeWindow++
 			totalNs -= numFirstQueryNs + numSecondQueryNsMatch
+			totalSubst -= numSubst
 		}
 
 		// the trailing window needs to "look ahead" to see what happens before the next firstQuery base
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow == s.WindowSize {
-			_, gapOpenCloseFirstQuery, _, gapClosedSecondQuery, _, numSecondQueryNsGap, _ = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow)
+			_, gapOpenCloseFirstQuery, _, gapClosedSecondQuery, _, numSecondQueryNsGap, _, _ = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow, s.BaseDotToSubstThreshold)
 			totalGaps -= gapOpenCloseFirstQuery + gapClosedSecondQuery
 			totalNs -= numSecondQueryNsGap
 		}
@@ -182,43 +186,37 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 				// window edges in AlnPos [closed, open) for bed: alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow+1
 				// window edges in RefPos [closed, open) for bed: refIdxWindowStart, lastRefIdxOfWindowPlusOne
 				// window edges in AlnPos [closed, closed] for distance scores: alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow
-				windowDotSubst = windowDotToSubst(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, s.BaseDotToSubstThreshold)
-				windowDistDiv = windowDistToDiv(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow, s.BaseDistToDivThreshold)
-				// Consider suppressing outputs of whole-window calculations and window means
-				windowDot, windowDotMean = dotWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
-				windowDist, windowDistMean = distWindow(firstQuery, secondQuery, alnIdxBeforeWindowForRef+1, lastAlnIdxOfWindow)
-
 				// print output
 				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
 				if !s.RemoveN || totalNs == 0 {
 					if s.LongOutput && !s.OutputAlnPos {
-						percentDiverged = 100 * (float64(windowDotSubst+totalGaps) / float64(s.WindowSize))
+						percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
 						//percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
 						//if totalSubst+totalGaps > s.WindowSize {
-						if windowDotSubst+totalGaps > s.WindowSize {
+						if totalSubst+totalGaps > s.WindowSize {
 							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
 						}
-						rawPValue = scorePValueCache[windowDotSubst+totalGaps]
+						rawPValue = scorePValueCache[totalSubst+totalGaps]
 						//rawPValue = scorePValueCache[totalSubst+totalGaps]
 						// in the below output, windowDotSubst+totalGaps replaces totalSubst+totalGaps
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\t%e\t%e\t%d\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, windowDotSubst+totalGaps, "+", percentDiverged, rawPValue, windowDotSubst, windowDotMean, windowDot, windowDistDiv, windowDistMean, windowDist)
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
 						exception.PanicOnErr(err)
 					} else if !s.LongOutput && s.OutputAlnPos {
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\t%d\t%e\t%e\t%d\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, windowDotSubst+totalGaps, alnIdxBeforeWindow+1, windowDotSubst, windowDotMean, windowDot, windowDistDiv, windowDistMean, windowDist)
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, alnIdxBeforeWindow+1)
 						exception.PanicOnErr(err)
 					} else if s.LongOutput && s.OutputAlnPos {
-						percentDiverged = 100 * (float64(windowDotSubst+totalGaps) / float64(s.WindowSize))
+						percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
 						//percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
 						//if totalSubst+totalGaps > s.WindowSize {
-						if windowDotSubst+totalGaps > s.WindowSize {
+						if totalSubst+totalGaps > s.WindowSize {
 							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
 						}
 						//rawPValue = scorePValueCache[totalSubst+totalGaps]
-						rawPValue = scorePValueCache[windowDotSubst+totalGaps]
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\t%d\t%e\t%e\t%d\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, windowDotSubst+totalGaps, "+", percentDiverged, rawPValue, alnIdxBeforeWindow+1, windowDotSubst, windowDotMean, windowDot, windowDistDiv, windowDistMean, windowDist)
+						rawPValue = scorePValueCache[totalSubst+totalGaps]
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, "+", percentDiverged, rawPValue, alnIdxBeforeWindow+1)
 						exception.PanicOnErr(err)
 					} else {
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\t%e\t%e\t%d\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, windowDotSubst+totalGaps, windowDotSubst, windowDotMean, windowDot, windowDistDiv, windowDistMean, windowDist)
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps)
 						exception.PanicOnErr(err)
 					}
 				}
@@ -231,24 +229,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 	exception.PanicOnErr(err)
 }
 
-// distWindow takes 2 pDna sequences (aligned in a multi-pFa format), and window start and end positions as inputs.
-// The function calculates the Euclidean distance between the 2 pDna base vectors at the same position in the 2 pDna sequences for each position in the window.
-// The function returns both the slice containing all the distance calculations within the window, and the mean.
-func distWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, windowStart int, windowEnd int) (windowDist []float64, windowDistMean float64) {
-	var baseDist float64
-	var windowDistTotal = 0.0
-
-	for i := windowStart; i <= windowEnd; i++ {
-		baseDist = pDna.Dist(firstQuery[i], secondQuery[i])
-		windowDist = append(windowDist, baseDist) // appending each baseDist instead of defining windowDist size first
-		windowDistTotal += baseDist
-	}
-
-	windowDistMean = windowDistTotal / float64(windowEnd-windowStart+1) // divide by actual windowSize in reference, not input windowSize in query sequences
-
-	return windowDist, windowDistMean
-}
-
+/*
 // windowDistToDiv takes 2 pDna sequences (aligned in a multi-pFa format), window start and end positions, and a user-specified float64 threshold as inputs.
 // The function counts the number of divergences between the 2 pDna sequences within the window.
 // The rules for counting divergences are as follows:
@@ -270,24 +251,6 @@ func windowDistToDiv(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Ba
 	}
 
 	return windowDistDiv
-}
-
-// dotWindow takes 2 pDna sequences (aligned in a multi-pFa format), and window start and end positions as inputs.
-// The function calculates the dot product distance (1 - dot product) between the 2 pDna base vectors at the same position in the 2 pDna sequences for each position in the window.
-// The function returns both the slice containing all the distance calculations within the window, and the mean.
-func dotWindow(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, windowStart int, windowEnd int) (windowDot []float64, windowDotMean float64) {
-	var baseDot float64
-	var windowDotTotal = 0.0
-
-	for i := windowStart; i <= windowEnd; i++ {
-		baseDot = pDna.DotSubstProb(firstQuery[i], secondQuery[i])
-		windowDot = append(windowDot, baseDot) // appending each baseDist instead of defining windowDist size first
-		windowDotTotal += baseDot
-	}
-
-	windowDotMean = windowDotTotal / float64(windowEnd-windowStart+1) // divide by actual windowSize in reference, not input windowSize in query sequences
-
-	return windowDot, windowDotMean
 }
 
 // windowDotToSubst takes 2 pDna sequences (aligned in a multi-pFa format), window start and end positions, and a user-specified float64 threshold as inputs.
@@ -313,6 +276,7 @@ func windowDotToSubst(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32B
 
 	return windowDotSubst
 }
+*/
 
 // binomialDistCacheLog10 generates a map of form map[int]float64 for a binomial distribution specified by parameters n and k.
 // map[k] returns a float64 representing -log10(BinomialDist(n, k, p, true)), or the -log10pValue.

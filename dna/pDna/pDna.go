@@ -15,7 +15,7 @@ type Float32Base struct {
 	T float32
 }
 
-// Float32Diff encodes a probability vector using float64 precision that describes the difference between 2 pDNA probability vectors
+// Float64Diff encodes a probability vector using float64 precision that describes the difference between 2 pDNA probability vectors
 // The probability of A, C, G, and T should add up to 0
 type Float64Diff struct {
 	A float64
@@ -27,15 +27,6 @@ type Float64Diff struct {
 // IsGap returns true if the DNA base's probability vector is 0 at all 4 bases, indicating that the base is a gap
 func IsGap(p Float32Base) bool {
 	if p.A == 0 && p.C == 0 && p.G == 0 && p.T == 0 {
-		return true
-	} else {
-		return false
-	}
-}
-
-// IsNonGap returns true if the DNA base's probability vector adds up to 1, indicating that the base is a valid non-gap
-func IsNonGap(p Float32Base) bool {
-	if p.A+p.C+p.G+p.T == 1 {
 		return true
 	} else {
 		return false
