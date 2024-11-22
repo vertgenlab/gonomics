@@ -92,7 +92,7 @@ func bamTagToReadGroup(infile, outfile, tagId, tagValuesFile string) {
 
 func safeclose(f io.Closer) {
 	exception.PanicOnErr(f.Close())
-	exception.PanicOnErr(err)
+
 }
 
 // addTagsToHeader adds each element in tagValues as a read group in the header
@@ -113,29 +113,24 @@ func addTagsToHeader(header *sam.Header, tagValues []string) {
 func updateRecord(rec *sam.Sam, tagId string, tagValueMap map[string]bool) {
 	var err error
 
-	// parse the extra field where tags are since we are coming from bam
-	err = sam.ParseExtra(rec)
+	// remove existing read group tag if present
+	err = sam.RemoveTag(rec, "RG")
 	exception.PanicOnErr(err)
 
 	splitExtra := strings.Split(rec.Extra, "\t")
-	var newExtra []string = make([]string, 0, len(splitExtra)+1)
-
 	var tagValue string
 
-	// first remove any exiting read group and pull the tag value at the same time
+	// pull the tag value at the same time
 	for i := range splitExtra {
-		if !strings.HasPrefix(splitExtra[i], "RG:Z:") {
-			newExtra = append(newExtra, splitExtra[i])
-		}
-
 		if strings.HasPrefix(splitExtra[i], tagId+":") {
 			tagValue = splitExtra[i][5:] // skips characters defining tag (e.g. CB:Z:TagValue)
+			break
 		}
 	}
 
 	// add read group if tag value is present in input values file
 	if tagValueMap[tagValue] {
-		newExtra = append(newExtra, fmt.Sprintf("RG:Z:%s", tagValue))
+		err = sam.AddTag(rec, "RG", "Z", tagValue)
+		exception.PanicOnErr(err)
 	}
-	rec.Extra = strings.Join(newExtra, "\t")
 }

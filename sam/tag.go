@@ -48,8 +48,8 @@ func ParseExtra(s *Sam) error {
 		s.parsedExtraIdx = tmp.parsedExtraIdx
 		s.parsedExtraTags = tmp.parsedExtraTags
 		s.parsedExtraTypes = tmp.parsedExtraTypes
+		s.Extra = parsedExtraToString(s)
 	}
-	s.Extra = parsedExtraToString(s)
 	s.unparsedExtra = nil
 	return err
 }
@@ -116,7 +116,10 @@ func AddTag(s *Sam, id, typ, val string) error {
 		return errors.New("input type must be one of A,i,f,Z,H,B")
 	}
 
-	exception.PanicOnErr(ParseExtra(s))
+	if s.Extra == "" {
+		exception.PanicOnErr(ParseExtra(s))
+	}
+
 	if s.Extra == "" {
 		s.Extra = fmt.Sprintf("%s:%s:%s", id, typ, val)
 		return nil

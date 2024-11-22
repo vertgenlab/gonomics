@@ -44,7 +44,8 @@ func TestTagToReadGroup(t *testing.T) {
 		exception.PanicOnErr(err)
 
 		if testOutput[i].Extra != truthOutput[i].Extra {
-			t.Error("problem writing extra")
+			t.Errorf("problem writing extra\nreceived:\t%s\ncorrect:\t%s\n", testOutput[i].Extra, truthOutput[i].Extra)
+			return
 		}
 	}
 }
