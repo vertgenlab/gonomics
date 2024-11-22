@@ -47,7 +47,7 @@ func main() {
 
 	if *tagValuesFile == "" {
 		usage()
-		log.Fatalln("ERROR: must provide a tag values file with -tagValues")
+		log.Fatalln("Error: must provide a tag values file with -tagValues")
 	}
 
 	bamTagToReadGroup(*infile, *outfile, *tagId, *tagValuesFile)
