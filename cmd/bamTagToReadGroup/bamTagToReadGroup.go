@@ -42,7 +42,7 @@ func main() {
 
 	if *tagId == "" || len(*tagId) != 2 {
 		usage()
-		log.Fatalln("ERROR: -tagId must be 2 characters")
+		log.Fatalln("Error: -tagId must be 2 characters")
 	}
 
 	if *tagValuesFile == "" {
