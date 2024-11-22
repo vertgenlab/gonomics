@@ -91,7 +91,7 @@ func bamTagToReadGroup(infile, outfile, tagId, tagValuesFile string) {
 }
 
 func safeclose(f io.Closer) {
-	err := f.Close()
+	exception.PanicOnErr(f.Close())
 	exception.PanicOnErr(err)
 }
 
