@@ -91,6 +91,9 @@ func annoToStringSlice(a bedAnnotation, lvl int) []string {
 	return []string{fileio.IntToString(a.thickStart), fileio.IntToString(a.thickEnd), a.itemRGB, fileio.IntToString(a.blockCount), fileio.IntSliceToString(a.blockSizes), fileio.IntSliceToString(a.blockStarts)}
 }
 
+// formatAll is a helper function for ToBed that adds the annotation field of the bed struct. Before this happens, this function appends
+// the last block size to the block sizes field of the annotation struct. This last block size cannot always be determined ahead of time, until the
+// whole net struct has been seen. It is calculated by subtracting the ChromEnd of the net struct from the last block start
 func formatAll(beds []bed.Bed, anno []bedAnnotation) []bed.Bed {
 	for i := range beds {
 		if anno[i].blockCount != len(anno[i].blockSizes) {
