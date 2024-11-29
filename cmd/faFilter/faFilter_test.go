@@ -34,12 +34,28 @@ var FaFilterTests = []struct {
 
 func TestFaFilter(t *testing.T) {
 	var err error
+	var s settings
 	for _, v := range FaFilterTests {
-		faFilter(v.inputFile, v.outputFile, v.name, v.notName, v.nameContains, v.refPositions, v.start, v.end, v.minSize, v.maxGC, v.minGC, v.finalBases, v.cutFinalNbases)
+		s = settings{
+			InFile:         v.inputFile,
+			OutFile:        v.outputFile,
+			Name:           v.name,
+			NotName:        v.notName,
+			NameContains:   v.nameContains,
+			MaxGC:          v.maxGC,
+			MinGC:          v.minGC,
+			CutFinalNBases: v.cutFinalNbases,
+			FinalNBases:    v.finalBases,
+			Start:          v.start,
+			End:            v.end,
+			RefPositions:   v.refPositions,
+			MinSize:        v.minSize,
+		}
+		faFilter(s)
 		records := fasta.Read(v.outputFile)
 		expected := fasta.Read(v.expectedFile)
 		if !fasta.AllAreEqual(records, expected) {
-			t.Errorf("Error in faFilter.")
+			t.Errorf("Error in faFilter. Expected: %s, Out: %s", v.expectedFile, v.outputFile)
 		}
 		err = os.Remove(v.outputFile)
 		exception.PanicOnErr(err)
