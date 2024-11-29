@@ -1,0 +1,4 @@
+>shouldpass
+ACTGCATCATCATA
+>shouldfail
+ACTGGGCC
