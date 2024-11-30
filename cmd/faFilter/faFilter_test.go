@@ -23,15 +23,16 @@ var FaFilterTests = []struct {
 	minGC          float64
 	finalBases     int
 	cutFinalNbases int
-	append         string
+	appendBefore   string
+	appendAfter    string
 }{
-	{"testdata/minSizeTest.fa", "testdata/minSizeOutput.fa", "testdata/minSizeExpected.fa", "", "", "", false, 0, -1, 10, 100, 0, -1, -1, ""},
-	{"testdata/nameContainsTest.fa", "testdata/nameContainsOutput.fa", "testdata/nameContainsExpected.fa", "", "", "_maternal", false, 0, -1, 0, 100, 0, -1, -1, ""},
-	{"testdata/maxGCTest.fa", "testdata/maxGCOutput.fa", "testdata/maxGCExpected.fa", "", "", "", false, 0, -1, 0, 65, 0, -1, -1, ""},
-	{"testdata/minGCTest.fa", "testdata/minGCOutput.fa", "testdata/minGCExpected.fa", "", "", "", false, 0, -1, 0, 100, 30, -1, -1, ""},
-	{"testdata/nameContainsTest.fa", "testdata/finalNbasesOut.fa", "testdata/finalNbasesExpected.fa", "", "", "", false, 0, -1, 0, 100, 0, 5, -1, ""},
-	{"testdata/nameContainsTest.fa", "testdata/cutFinalNbasesOut.fa", "testdata/cutFinalNbasesExpected.fa", "", "", "", false, 0, -1, 0, 100, 0, -1, 5, ""},
-	{"testdata/minSizeTest.fa", "testdata/appendOutput.fa", "testdata/appendExpected.fa", "", "", "", false, 0, -1, 0, 100, 0, -1, -1, "testdata/appendSeq.fa"},
+	{"testdata/minSizeTest.fa", "testdata/minSizeOutput.fa", "testdata/minSizeExpected.fa", "", "", "", false, 0, -1, 10, 100, 0, -1, -1, "", ""},
+	{"testdata/nameContainsTest.fa", "testdata/nameContainsOutput.fa", "testdata/nameContainsExpected.fa", "", "", "_maternal", false, 0, -1, 0, 100, 0, -1, -1, "", ""},
+	{"testdata/maxGCTest.fa", "testdata/maxGCOutput.fa", "testdata/maxGCExpected.fa", "", "", "", false, 0, -1, 0, 65, 0, -1, -1, "", ""},
+	{"testdata/minGCTest.fa", "testdata/minGCOutput.fa", "testdata/minGCExpected.fa", "", "", "", false, 0, -1, 0, 100, 30, -1, -1, "", ""},
+	{"testdata/nameContainsTest.fa", "testdata/finalNbasesOut.fa", "testdata/finalNbasesExpected.fa", "", "", "", false, 0, -1, 0, 100, 0, 5, -1, "", ""},
+	{"testdata/nameContainsTest.fa", "testdata/cutFinalNbasesOut.fa", "testdata/cutFinalNbasesExpected.fa", "", "", "", false, 0, -1, 0, 100, 0, -1, 5, "", ""},
+	{"testdata/minSizeTest.fa", "testdata/appendOutput.fa", "testdata/appendExpected.fa", "", "", "", false, 0, -1, 0, 100, 0, -1, -1, "testdata/appendSeq.fa", "ACTG"},
 }
 
 func TestFaFilter(t *testing.T) {
@@ -52,7 +53,8 @@ func TestFaFilter(t *testing.T) {
 			End:            v.end,
 			RefPositions:   v.refPositions,
 			MinSize:        v.minSize,
-			Append:         v.append,
+			AppendBefore:   v.appendBefore,
+			AppendAfter:    v.appendAfter,
 		}
 		faFilter(s)
 		records := fasta.Read(v.outputFile)

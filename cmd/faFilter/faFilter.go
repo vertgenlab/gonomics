@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"path"
 	"strings"
 
 	"github.com/vertgenlab/gonomics/dna"
@@ -27,16 +28,30 @@ type settings struct {
 	MinGC          float64
 	FinalNBases    int
 	CutFinalNBases int
-	Append         string
+	AppendBefore   string
+	AppendAfter    string
 }
 
 func appendSeq(s settings, outlist []fasta.Fasta) []fasta.Fasta {
-	toAppend := fasta.Read(s.Append)
-	if len(toAppend) != 1 {
+	var toAppendBefore, toAppendAfter []fasta.Fasta
+	if path.Ext(s.AppendBefore) == ".fa" {
+		toAppendBefore = fasta.Read(s.AppendBefore)
+	} else {
+		toAppendBefore = []fasta.Fasta{{Seq: dna.StringToBases(s.AppendBefore)}}
+	}
+	if path.Ext(s.AppendAfter) == ".fa" {
+		toAppendAfter = fasta.Read(s.AppendAfter)
+	} else {
+		toAppendAfter = []fasta.Fasta{{Seq: dna.StringToBases(s.AppendAfter)}}
+	}
+
+	if len(toAppendBefore) != 1 || len(toAppendAfter) != 1 {
 		log.Fatalf("ERROR: Fasta file for appending must only have 1 fasta record")
 	}
+
 	for i := range outlist {
-		outlist[i].Seq = append(toAppend[0].Seq, outlist[i].Seq...)
+		outlist[i].Seq = append(toAppendBefore[0].Seq, outlist[i].Seq...)
+		outlist[i].Seq = append(outlist[i].Seq, toAppendAfter[0].Seq...)
 	}
 	return outlist
 }
@@ -99,7 +114,7 @@ func faFilter(s settings) {
 			outlist = append(outlist, records[i]) //write any records to the outlist
 		}
 	}
-	if s.Append != "" {
+	if s.AppendBefore != "" || s.AppendAfter != "" {
 		outlist = appendSeq(s, outlist)
 	}
 	fasta.Write(s.OutFile, outlist) //write the outlist to a file
@@ -129,7 +144,8 @@ func main() {
 	var minGC *float64 = flag.Float64("minGC", 0, "Retains all fasta records with GC content greater than or equal to this percentage")
 	var finalNBases *int = flag.Int("finalNBases", -1, "Retains the final N bases in the fasta record. Not compatible with -start or -end")
 	var cutFinalNBases *int = flag.Int("cutFinalNbases", -1, "cuts the final N bases from each fasta record. Not compatible with -finalNbases, -start or -end")
-	var appendSeq *string = flag.String("append", "", "Provide a fasta file with 1 sequence which will be appended to all fasta records in the input file. The append step will happen after any filtering steps")
+	var appendBefore *string = flag.String("appendBefore", "", "Provide a fasta file with 1 sequence which will be appended in front of all fasta records in the input file. The append step will happen after any filtering steps")
+	var appendAfter *string = flag.String("appendAfter", "", "Provide a fasta file with 1 sequence which will be appended atfer all fasta records in the input file. The append step will happen after any filtering steps")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -166,7 +182,8 @@ func main() {
 		FinalNBases:    *finalNBases,
 		CutFinalNBases: *cutFinalNBases,
 		RefPositions:   *refPositions,
-		Append:         *appendSeq,
+		AppendAfter:    *appendAfter,
+		AppendBefore:   *appendBefore,
 	}
 
 	faFilter(s)
