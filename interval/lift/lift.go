@@ -2,6 +2,8 @@
 package lift
 
 import (
+	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/dna"
 	"io"
 	"log"
 	"path"
@@ -131,4 +133,73 @@ func StrictBorderCheck(c chain.Chain, i interval.Interval) bool {
 	}
 	_, border = chain.TPosToQPos(c, i.GetChromEnd()-1) //interval ranges are open right so we want ChromEnd - 1
 	return border
+}
+
+//everything below is for lifting with AXT
+
+// refCoordToRefIdx is a helper function for LiftCoordinatesWithAxt which identifies the start and end indices in the Axt reference multifa record that corresponds to the interval to be lifted
+func refCoordToRefIdx(a axt.Axt, region interval.Interval) (start, end int) {
+	var stopLoop int
+	var startFound, endFound bool = false, false
+	for i := range a.RSeq {
+		if stopLoop >= (region.GetChromStart() - (a.RStart - 1)) {
+			startFound = true
+			break
+		}
+		if a.RSeq[i] != dna.Gap {
+			stopLoop++
+		}
+		start++
+	}
+	end = start
+	stopLoop = 0
+	for i := start; i < len(a.RSeq); i++ {
+		if a.RSeq[i] != dna.Gap {
+			stopLoop++
+		}
+		end++
+		if stopLoop >= (region.GetChromEnd() - region.GetChromStart()) {
+			endFound = true
+			break
+		}
+	}
+	if !startFound || !endFound {
+		log.Fatalf("Error in refCoordToRefIdx -- the region to lift could not be found within the axt record.\n")
+	}
+	return start, end
+}
+
+// translateCoord is a helper function for LiftCoordinatesWithAxt which takes the indices of the multifa for the region to be lifted and put them in query coordinates
+func translateCoord(a axt.Axt, start, end int) (newStart, newEnd int) {
+	newStart = (a.QStart - 1) + dna.CountBasesNoGaps(a.QSeq[0:start])
+	newEnd = newStart + dna.CountBasesNoGaps(a.QSeq[start:end])
+	return newStart, newEnd
+}
+
+// LiftCoordinatesWithAxt takes an Axt record, a lift-compatible interval and chromosome size for the query (in case of a minus strand alignment), and lifts the interval from the reference
+// coordinates to the query coordinates. The interval must be completely contained within the reference Axt region. The output is chromosome name, start (0-based) and end coordinates
+// of the lifted interval
+func LiftCoordinatesWithAxt(a axt.Axt, region Lift, Qsize int) (chrom string, start, end int) {
+	if !checkCompatability(a, region) {
+		log.Fatalf("The interval you are trying to lift is not entirely within the axt refernce coordinates.")
+	}
+	chrom = a.QName
+	refStart, refEnd := refCoordToRefIdx(a, region)
+	newStart, newEnd := translateCoord(a, refStart, refEnd)
+	start, end = newStart, newEnd
+	if !a.QStrandPos {
+		tmpStart := Qsize - end
+		tmpEnd := Qsize - start + 1
+		start, end = tmpStart, tmpEnd
+	}
+	return chrom, start, end
+}
+
+// checkCompatability is a helper function for LiftCoordinatesWithAxt which determines if the interval is safe to lift over given the Axt alignment
+func checkCompatability(a axt.Axt, region interval.Interval) bool {
+	if a.RName == region.GetChrom() && a.RStart <= (region.GetChromStart()+1) && a.REnd >= region.GetChromEnd() {
+		//The region falls completely within the axt region. We can safely lift.
+		return true
+	}
+	return false
 }
