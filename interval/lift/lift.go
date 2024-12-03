@@ -140,11 +140,13 @@ func StrictBorderCheck(c chain.Chain, i interval.Interval) bool {
 // refCoordToRefIdx is a helper function for LiftCoordinatesWithAxt which identifies the start and end indices in the Axt reference multifa record that corresponds to the interval to be lifted
 func refCoordToRefIdx(a axt.Axt, region interval.Interval) (start, end int) {
 	var stopLoop int
+	var startFound, endFound bool = false, false
 	for i := range a.RSeq {
 		if stopLoop >= (region.GetChromStart() - (a.RStart - 1)) {
+			startFound = true
 			break
 		}
-		if a.RSeq[i] != 10 {
+		if a.RSeq[i] != dna.Gap {
 			stopLoop++
 		}
 		start++
@@ -152,13 +154,17 @@ func refCoordToRefIdx(a axt.Axt, region interval.Interval) (start, end int) {
 	end = start
 	stopLoop = 0
 	for i := start; i < len(a.RSeq); i++ {
-		if stopLoop >= (region.GetChromEnd() - region.GetChromStart()) {
-			break
-		}
-		if a.RSeq[i] != 10 {
+		if a.RSeq[i] != dna.Gap {
 			stopLoop++
 		}
 		end++
+		if stopLoop >= (region.GetChromEnd() - region.GetChromStart()) {
+			endFound = true
+			break
+		}
+	}
+	if !startFound || !endFound {
+		log.Fatalf("Error in refCoordToRefIdx -- the region to lift could not be found within the axt record.\n")
 	}
 	return start, end
 }
