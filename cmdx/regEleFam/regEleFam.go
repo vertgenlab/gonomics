@@ -34,6 +34,7 @@ func buildBedTree(file string) (map[string]*interval.IntervalNode, []interval.In
 }
 
 func updateBedTree(intervalSlice []interval.Interval, new interval.Interval) (map[string]*interval.IntervalNode, []interval.Interval) {
+	fmt.Println("in updateBedTree")
 	newSlice := append(intervalSlice, new)
 	return interval.BuildTree(newSlice), newSlice
 }
@@ -73,6 +74,7 @@ func main() {
 			}
 			switch len(pass) {
 			case 0:
+				fmt.Println("didn't overlap anything...shouldn't happen")
 				lifted.Name = i.Name + fmt.Sprintf("_lift%d", c)
 				c++
 				bedTree, bedIntervals = updateBedTree(bedIntervals, lifted)
