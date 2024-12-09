@@ -108,31 +108,32 @@ func buildGraph(mp map[string]*Node, startNode string, outDot string) {
 
 	if startNode == "all" {
 		buildGraphAllNodes(mp, outDot)
-	}
+	} else {
+		out := fileio.EasyCreate(outDot)
+		fileio.WriteToFileHandle(out, "strict graph {")
 
-	out := fileio.EasyCreate(outDot)
-	fileio.WriteToFileHandle(out, "strict graph {")
-
-	currSlice = nodesToNameSlice(mp[startNode].connections)
-	fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=green, style=filled]", startNode))
-	fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- %s", startNode, formatAlnString(currSlice)))
-	workSlice = addToWorkSlice(workSlice, currSlice, mp)
-	mp[startNode].seen = true
-
-	for i := 0; i < len(workSlice); i++ {
-		//fmt.Println(mp[workSlice[i]])
-		currSlice = nodesToNameSlice(mp[workSlice[i]].connections)
-		//fmt.Println(currSlice)
+		currSlice = nodesToNameSlice(mp[startNode].connections)
+		fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=green, style=filled]", startNode))
+		fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- %s", startNode, formatAlnString(currSlice)))
 		workSlice = addToWorkSlice(workSlice, currSlice, mp)
-		if !strings.Contains(workSlice[i], "lift") {
-			fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=red, style=filled]", workSlice[i]))
-		}
-		fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- %s", workSlice[i], formatAlnString(currSlice)))
-		mp[workSlice[i]].seen = true
-	}
+		mp[startNode].seen = true
 
-	fileio.WriteToFileHandle(out, "}")
-	exception.PanicOnErr(out.Close())
+		for i := 0; i < len(workSlice); i++ {
+			//fmt.Println(mp[workSlice[i]])
+			currSlice = nodesToNameSlice(mp[workSlice[i]].connections)
+			//fmt.Println(currSlice)
+			workSlice = addToWorkSlice(workSlice, currSlice, mp)
+			if !strings.Contains(workSlice[i], "lift") {
+				fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=red, style=filled]", workSlice[i]))
+			}
+			fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- %s", workSlice[i], formatAlnString(currSlice)))
+			mp[workSlice[i]].seen = true
+		}
+
+		fileio.WriteToFileHandle(out, "}")
+		exception.PanicOnErr(out.Close())
+
+	}
 
 }
 
