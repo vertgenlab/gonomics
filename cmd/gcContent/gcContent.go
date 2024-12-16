@@ -19,6 +19,7 @@ func gcContent(bedFile string, faFile string, outFile string) {
 	var currRecordSeq []dna.Base
 	var found bool
 	var gc float64
+	var annotated bed.Bed
 
 	regionsChan := bed.GoReadToChan(bedFile)
 	records := fasta.Read(faFile)
@@ -30,9 +31,10 @@ func gcContent(bedFile string, faFile string, outFile string) {
 		currRecordSeq, found = recordsMap[curr.Chrom]
 
 		if found {
+			annotated = bed.Bed{Chrom: curr.Chrom, ChromStart: curr.ChromStart, ChromEnd: curr.ChromEnd, FieldsInitialized: 4}
 			gc = dna.GCContent(currRecordSeq[curr.ChromStart:curr.ChromEnd])
-			curr.Annotation = append(curr.Annotation, fmt.Sprintf("%e", gc))
-			bed.WriteBed(out, curr)
+			annotated.Name = fmt.Sprintf("%e", gc)
+			bed.WriteBed(out, annotated)
 		} else {
 			log.Fatalf("Error: bed region chrom (%s) was not found as a fasta record name in the input fasta file\n", curr.Chrom)
 		}
@@ -46,6 +48,7 @@ func gcContent(bedFile string, faFile string, outFile string) {
 func usage() {
 	fmt.Print(
 		"gcContent - Calculates the gc content of fasta sequences for all regions specified in a bed file.\n" +
+			"Outputs a new bed file with 4 columns: Chrom, ChromStart, ChromEnd, gcContent.\n" +
 			"Usage:\n" +
 			"gcContent in.bed in.fa mult.fa out.bed\n" +
 			"options:\n")
