@@ -40,7 +40,6 @@ func gcContent(bedFile string, faFile string, outFile string, multiFaMode bool, 
 				gc = dna.GCContent(currRecordSeq[speciesStart:speciesEnd])
 				annotated.Name = fmt.Sprintf("%e", gc)
 				bed.WriteBed(out, annotated)
-				fmt.Printf("curr.ChromStart: %v, curr.ChromEnd: %v, speciesStart: %v, speciesEnd; %v, hca sequence: %v, human sequence: %v\n", curr.ChromStart, curr.ChromEnd, speciesStart, speciesEnd, currRecordSeq[speciesStart:speciesEnd], records[0].Seq[speciesStart:speciesEnd]) //TODO: remove after debugging
 			} else {
 				log.Fatalf("Error: multiFaMode. Requested species (%s) was not found as a fasta record name in the input multi-fasta file\n", species)
 			}
