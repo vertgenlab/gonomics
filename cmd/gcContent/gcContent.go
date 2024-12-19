@@ -14,12 +14,13 @@ import (
 	"log"
 )
 
-func gcContent(bedFile string, faFile string, outFile string) {
+func gcContent(bedFile string, faFile string, outFile string, multiFaMode bool, species string) {
 
 	var currRecordSeq []dna.Base
 	var found bool
 	var gc float64
 	var annotated bed.Bed
+	var speciesStart, speciesEnd int
 
 	regionsChan := bed.GoReadToChan(bedFile)
 	records := fasta.Read(faFile)
@@ -28,15 +29,33 @@ func gcContent(bedFile string, faFile string, outFile string) {
 
 	for curr := range regionsChan {
 
-		currRecordSeq, found = recordsMap[curr.Chrom]
+		if multiFaMode {
+			// when multiFa, each fasta sequence is a species, e.g. >human, >hca, assuming that the user specified the correct chromosome, e.g. this multi-fasta is chr1.fa
+			currRecordSeq, found = recordsMap[species]
+			if found {
+				annotated = bed.Bed{Chrom: curr.Chrom, ChromStart: curr.ChromStart, ChromEnd: curr.ChromEnd, FieldsInitialized: 4}
+				// need to convert bed region (reference sequence e.g. human RefPos), to AlnPos, then use AlnPos to index requested sequence (e.g. hca)
+				speciesStart = fasta.RefPosToAlnPos(records[0], curr.ChromStart)
+				speciesEnd = fasta.RefPosToAlnPos(records[0], curr.ChromEnd)
+				gc = dna.GCContent(currRecordSeq[speciesStart:speciesEnd])
+				annotated.Name = fmt.Sprintf("%e", gc)
+				bed.WriteBed(out, annotated)
+				fmt.Printf("curr.ChromStart: %v, curr.ChromEnd: %v, speciesStart: %v, speciesEnd; %v, hca sequence: %v, human sequence: %v\n", curr.ChromStart, curr.ChromEnd, speciesStart, speciesEnd, currRecordSeq[speciesStart:speciesEnd], records[0].Seq[speciesStart:speciesEnd]) //TODO: remove after debugging
+			} else {
+				log.Fatalf("Error: multiFaMode. Requested species (%s) was not found as a fasta record name in the input multi-fasta file\n", species)
+			}
 
-		if found {
-			annotated = bed.Bed{Chrom: curr.Chrom, ChromStart: curr.ChromStart, ChromEnd: curr.ChromEnd, FieldsInitialized: 4}
-			gc = dna.GCContent(currRecordSeq[curr.ChromStart:curr.ChromEnd])
-			annotated.Name = fmt.Sprintf("%e", gc)
-			bed.WriteBed(out, annotated)
 		} else {
-			log.Fatalf("Error: bed region chrom (%s) was not found as a fasta record name in the input fasta file\n", curr.Chrom)
+			// when not a multiFa, assuming genome.fa, where each fasta sequence is a chromosome, e.g. >chr1
+			currRecordSeq, found = recordsMap[curr.Chrom]
+			if found {
+				annotated = bed.Bed{Chrom: curr.Chrom, ChromStart: curr.ChromStart, ChromEnd: curr.ChromEnd, FieldsInitialized: 4}
+				gc = dna.GCContent(currRecordSeq[curr.ChromStart:curr.ChromEnd])
+				annotated.Name = fmt.Sprintf("%e", gc)
+				bed.WriteBed(out, annotated)
+			} else {
+				log.Fatalf("Error: bed region chrom (%s) was not found as a fasta record name in the input fasta file\n", curr.Chrom)
+			}
 		}
 
 	}
@@ -57,6 +76,9 @@ func usage() {
 
 func main() {
 	var expectedNumArgs int = 3
+	var multiFaMode *bool = flag.Bool("multiFaMode", false, "When in multiFa mode, each fasta sequence is a species, e.g. >human, >hca, assuming that the user specified the correct chromosome, e.g. this multi-fasta is chr1.fa. When not in multiFa mode, assuming genome.fa, where each fasta sequence is a chromosome, e.g. >chr1.")
+	var species *string = flag.String("multiFaSpecies", "", "When in multiFa mode, must specify the species to calculate gc content for.")
+
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -71,5 +93,5 @@ func main() {
 	faFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	gcContent(bedFile, faFile, outFile)
+	gcContent(bedFile, faFile, outFile, *multiFaMode, *species)
 }
