@@ -10,36 +10,36 @@ import (
 )
 
 var faToPfaTests = []struct {
-	InFile string
-	OutDir string
-	Start  int
-	End    int
-	Chrom  string
+	InFile  string
+	OutFile string
+	Start   int
+	End     int
+	Chrom   string
 }{
 	{
-		InFile: "testdata/test_faToPfa_input_0.fa",
-		OutDir: "testdata/test_faToPfa_output_0.pfa",
-		Start:  0,
-		End:    10,
-		Chrom:  "chr1",
+		InFile:  "testdata/test_faToPfa_input_0.fa",
+		OutFile: "testdata/test_faToPfa_output_0.pfa",
+		Start:   0,
+		End:     10,
+		Chrom:   "chr1",
 	}, {
-		InFile: "testdata/test_faToPfa_input_0.fa",
-		OutDir: "testdata/test_faToPfa_output_0_no_chr.pfa",
-		Start:  0,
-		End:    10,
-		Chrom:  "",
+		InFile:  "testdata/test_faToPfa_input_0.fa",
+		OutFile: "testdata/test_faToPfa_output_0_no_chr.pfa",
+		Start:   0,
+		End:     10,
+		Chrom:   "",
 	}, {
-		InFile: "testdata/test_faToPfa_input_1.fa",
-		OutDir: "testdata/test_faToPfa_output_1.pfa",
-		Start:  0,
-		End:    -1,
-		Chrom:  "chr1",
+		InFile:  "testdata/test_faToPfa_input_1.fa",
+		OutFile: "testdata/test_faToPfa_output_1.pfa",
+		Start:   0,
+		End:     -1,
+		Chrom:   "chr1",
 	}, {
-		InFile: "testdata/test_faToPfa_input_1.fa",
-		OutDir: "testdata/test_faToPfa_output_1.pfa",
-		Start:  0,
-		End:    -1,
-		Chrom:  "chr1",
+		InFile:  "testdata/test_faToPfa_input_1.fa",
+		OutFile: "testdata/test_faToPfa_output_1.pfa",
+		Start:   0,
+		End:     -1,
+		Chrom:   "chr1",
 	},
 }
 
@@ -48,11 +48,11 @@ func TestFaToPfa(t *testing.T) {
 	var s FaToPfaSettings
 	for idx, v := range faToPfaTests {
 		s = FaToPfaSettings{
-			InFile: v.InFile,
-			OutDir: v.OutDir,
-			Start:  v.Start,
-			End:    v.End,
-			Chrom:  v.Chrom,
+			InFile:  v.InFile,
+			OutFile: v.OutFile,
+			Start:   v.Start,
+			End:     v.End,
+			Chrom:   v.Chrom,
 		}
 
 		faToPfa(s)
@@ -64,7 +64,7 @@ func TestFaToPfa(t *testing.T) {
 			sampleChrom = testInput[0].Name
 		}
 
-		testSample := pFasta.Sample(pFasta.Read(v.OutDir), sampleChrom)
+		testSample := pFasta.Sample(pFasta.Read(v.OutFile), sampleChrom)
 		sampleOutputFilename := fmt.Sprintf("testdata/output_fa_%v.fa", idx)
 		fasta.Write(sampleOutputFilename, []fasta.Fasta{testSample})
 
@@ -77,7 +77,7 @@ func TestFaToPfa(t *testing.T) {
 			extractedSeq := fasta.Extract(seq, v.Start, end, seq.Name)
 			if fasta.IsEqual(testSample, extractedSeq) {
 				testTrue = true
-				err = os.Remove(v.OutDir)
+				err = os.Remove(v.OutFile)
 				exception.PanicOnErr(err)
 				err = os.Remove(sampleOutputFilename)
 				exception.PanicOnErr(err)
