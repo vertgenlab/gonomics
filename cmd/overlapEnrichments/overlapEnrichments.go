@@ -23,6 +23,7 @@ type Settings struct {
 	Verbose         int
 	TrimToRefGenome bool
 	SecondFileList  string
+	Relationship    string
 }
 
 func overlapEnrichments(s Settings) {
@@ -38,7 +39,7 @@ func overlapEnrichments(s Settings) {
 	elementsOne := lift.GoRead(s.InFile)
 	noGapRegions := lift.GoRead(s.NoGapFile)
 	if s.TrimToRefGenome {
-		elementsOne = refGenomeTrim(elementsOne, noGapRegions)
+		elementsOne = refGenomeTrim(elementsOne, noGapRegions, s.Relationship)
 	}
 	lift.SortByCoord(elementsOne)
 	lift.SortByCoord(noGapRegions)
@@ -71,7 +72,7 @@ func overlapEnrichments(s Settings) {
 	for currSecondFile := range secondFileList {
 		elementsTwo := lift.GoRead(secondFileList[currSecondFile])
 		if s.TrimToRefGenome {
-			elementsTwo = refGenomeTrim(elementsTwo, noGapRegions)
+			elementsTwo = refGenomeTrim(elementsTwo, noGapRegions, s.Relationship)
 		}
 		lift.SortByCoord(elementsTwo)
 
@@ -120,7 +121,7 @@ func overlapEnrichments(s Settings) {
 	exception.PanicOnErr(err)
 }
 
-func refGenomeTrim(unTrimmed []lift.Lift, noGapRegions []lift.Lift) []lift.Lift {
+func refGenomeTrim(unTrimmed []lift.Lift, noGapRegions []lift.Lift, relationship string) []lift.Lift {
 	var overlap []lift.Lift
 	var trimmed []lift.Lift = make([]lift.Lift, 0)
 
@@ -131,7 +132,7 @@ func refGenomeTrim(unTrimmed []lift.Lift, noGapRegions []lift.Lift) []lift.Lift 
 	tree1 := interval.BuildTree(e1Intervals)
 
 	for i := range noGapRegions {
-		overlap = lift.IntervalSliceToLift(interval.Query(tree1, noGapRegions[i], "within"))
+		overlap = lift.IntervalSliceToLift(interval.Query(tree1, noGapRegions[i], relationship))
 		trimmed = append(trimmed, overlap...)
 	}
 	return trimmed
@@ -160,6 +161,7 @@ func main() {
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints.")
 	var trimToRefGenome *bool = flag.Bool("trimToRefGenome", false, "Ignores elements that do not lie within the reference genome, as defined by the noGap.bed file.")
 	var secondFileList *string = flag.String("secondFileList", "", "Specify a list of query files to calculate enrichments against the first file. Note that while using this option the command will ignore the elements2.lift argument.")
+	var relationship *string = flag.String("relationship", "within", "Specify an overlap relationship for the trimToRefGenome option. 'all' is more permissive than the default 'within'.")
 
 	flag.Usage = usage
 	log.SetFlags(0)
@@ -185,6 +187,7 @@ func main() {
 		Verbose:         *verbose,
 		TrimToRefGenome: *trimToRefGenome,
 		SecondFileList:  *secondFileList,
+		Relationship:    *relationship,
 	}
 
 	overlapEnrichments(s)

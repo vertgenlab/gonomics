@@ -18,6 +18,7 @@ var OverlapEnrichmentsTests = []struct {
 	TrimToRefGenome bool
 	Verbose         int
 	SecondFileList  string
+	Relationship    string
 }{
 	{Method: "exact",
 		Elements1File:   "testdata/elements1.bed",
@@ -28,6 +29,7 @@ var OverlapEnrichmentsTests = []struct {
 		TrimToRefGenome: false,
 		Verbose:         0,
 		SecondFileList:  "",
+		Relationship:    "within",
 	},
 	{Method: "exact",
 		Elements1File:   "testdata/elements1.bed",
@@ -38,6 +40,7 @@ var OverlapEnrichmentsTests = []struct {
 		TrimToRefGenome: false,
 		Verbose:         0,
 		SecondFileList:  "",
+		Relationship:    "within",
 	},
 	{Method: "exact",
 		Elements1File:   "testdata/elements1.bed",
@@ -48,6 +51,7 @@ var OverlapEnrichmentsTests = []struct {
 		TrimToRefGenome: true,
 		Verbose:         0,
 		SecondFileList:  "",
+		Relationship:    "within",
 	}, //should have no effect to trim to ref Genome if all elements are in the genome.
 	{Method: "exact",
 		Elements1File:   "testdata/elements1.bed",
@@ -57,6 +61,7 @@ var OverlapEnrichmentsTests = []struct {
 		ExpectedFile:    "testdata/elements1.elements3.enrichment.txt",
 		Verbose:         0,
 		SecondFileList:  "",
+		Relationship:    "within",
 		TrimToRefGenome: true}, //elements3 is elements2 with extra elements outside the genome, should be the same answer as the previous check.
 	{Method: "exact",
 		Elements1File:   "testdata/elements1.bed",
@@ -67,7 +72,18 @@ var OverlapEnrichmentsTests = []struct {
 		Verbose:         0,
 		SecondFileList:  "testdata/listOfFiles.txt",
 		TrimToRefGenome: true,
+		Relationship:    "within",
 	},
+	{Method: "exact",
+		Elements1File:   "testdata/elements1.bed",
+		Elements2File:   "testdata/elements3.bed",
+		NoGapFile:       "testdata/tinyNoGap.bed",
+		OutFile:         "testdata/trim.outside.any.txt",
+		ExpectedFile:    "testdata/elements1.elements3.enrichment.any.txt",
+		Verbose:         0,
+		SecondFileList:  "",
+		Relationship:    "any",
+		TrimToRefGenome: true},
 }
 
 func TestOverlapEnrichments(t *testing.T) {
@@ -83,6 +99,7 @@ func TestOverlapEnrichments(t *testing.T) {
 			Verbose:         v.Verbose,
 			TrimToRefGenome: v.TrimToRefGenome,
 			SecondFileList:  v.SecondFileList,
+			Relationship:    v.Relationship,
 		}
 		overlapEnrichments(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
