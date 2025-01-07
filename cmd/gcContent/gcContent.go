@@ -68,7 +68,7 @@ func usage() {
 		"gcContent - Calculates the gc content of fasta sequences for all regions specified in a bed file.\n" +
 			"Outputs a new bed file with 4 columns: Chrom, ChromStart, ChromEnd, gcContent.\n" +
 			"Usage:\n" +
-			"gcContent in.bed in.fa mult.fa out.bed\n" +
+			"gcContent in.bed in.fa out.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
