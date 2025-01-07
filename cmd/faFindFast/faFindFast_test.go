@@ -21,6 +21,7 @@ var FaFindFastTests = []struct {
 	DivergenceRate  float64
 	LongOutput      bool
 	OutputAlnPos    bool
+	GcContent       bool
 }{
 	{InFile: "testdata/test_indel.fa", //also test for extra species here
 		OutFile:         "testdata/tmp.out.bed",
@@ -32,7 +33,8 @@ var FaFindFastTests = []struct {
 		RemoveN:         false,
 		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
-		OutputAlnPos:    false},
+		OutputAlnPos:    false,
+		GcContent:       false},
 	{InFile: "testdata/test_indel.fa",
 		OutFile:         "testdata/tmp.noN.bed",
 		ExpectedFile:    "testdata/expected.noN.bed",
@@ -43,7 +45,8 @@ var FaFindFastTests = []struct {
 		RemoveN:         true,
 		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
-		OutputAlnPos:    false},
+		OutputAlnPos:    false,
+		GcContent:       false},
 	{InFile: "testdata/test.endDoubleGaps.fa",
 		OutFile:         "testdata/tmp.doubleGaps.bed",
 		ExpectedFile:    "testdata/expected.bed",
@@ -54,7 +57,8 @@ var FaFindFastTests = []struct {
 		RemoveN:         false,
 		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
-		OutputAlnPos:    false},
+		OutputAlnPos:    false,
+		GcContent:       false},
 	{InFile: "testdata/test.endGapsQuery.fa",
 		OutFile:         "testdata/tmp.queryGaps.bed",
 		ExpectedFile:    "testdata/expected.endGapsQuery.bed",
@@ -65,7 +69,8 @@ var FaFindFastTests = []struct {
 		RemoveN:         false,
 		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
-		OutputAlnPos:    false},
+		OutputAlnPos:    false,
+		GcContent:       false},
 	{InFile: "testdata/test.endGapsRef.fa",
 		OutFile:         "testdata/tmp.refGaps.bed",
 		ExpectedFile:    "testdata/expected.endGapsRef.bed",
@@ -76,7 +81,8 @@ var FaFindFastTests = []struct {
 		RemoveN:         false,
 		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
-		OutputAlnPos:    false},
+		OutputAlnPos:    false,
+		GcContent:       false},
 	{InFile: "testdata/test.endGapsRef.fa",
 		OutFile:         "testdata/tmp.longOutput.bed",
 		ExpectedFile:    "testdata/expected.longOutput.bed",
@@ -87,7 +93,8 @@ var FaFindFastTests = []struct {
 		RemoveN:         false,
 		DivergenceRate:  0.01,
 		LongOutput:      true,
-		OutputAlnPos:    false},
+		OutputAlnPos:    false,
+		GcContent:       false},
 	{InFile: "testdata/test_indel_3seq.fa",
 		OutFile:         "testdata/tmp.out.3seq.bed",
 		ExpectedFile:    "testdata/expected_3seq.bed",
@@ -98,7 +105,8 @@ var FaFindFastTests = []struct {
 		RemoveN:         false,
 		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
-		OutputAlnPos:    false},
+		OutputAlnPos:    false,
+		GcContent:       false},
 	{InFile: "testdata/test_indel_3seq.fa",
 		OutFile:         "testdata/tmp.AlnPos.bed",
 		ExpectedFile:    "testdata/expected_alnPos.bed",
@@ -109,7 +117,8 @@ var FaFindFastTests = []struct {
 		RemoveN:         false,
 		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      false,
-		OutputAlnPos:    true}, //test for outputAlnPos
+		OutputAlnPos:    true, //test for outputAlnPos
+		GcContent:       false},
 	{InFile: "testdata/test_indel_3seq.fa",
 		OutFile:         "testdata/tmp.out.longAndAlnPos.bed",
 		ExpectedFile:    "testdata/expected_longAndAlnPos.bed",
@@ -120,7 +129,8 @@ var FaFindFastTests = []struct {
 		RemoveN:         false,
 		DivergenceRate:  math.MaxFloat64,
 		LongOutput:      true, //test for longOutput AND outputAlnPos
-		OutputAlnPos:    true},
+		OutputAlnPos:    true,
+		GcContent:       false},
 }
 
 func TestFaFindFast(t *testing.T) {
@@ -137,6 +147,7 @@ func TestFaFindFast(t *testing.T) {
 			LongOutput:      v.LongOutput,
 			DivergenceRate:  v.DivergenceRate,
 			OutputAlnPos:    v.OutputAlnPos,
+			GcContent:       v.GcContent,
 		}
 		faFindFast(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
