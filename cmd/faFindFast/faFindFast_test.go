@@ -131,6 +131,18 @@ var FaFindFastTests = []struct {
 		LongOutput:      true, //test for longOutput AND outputAlnPos
 		OutputAlnPos:    true,
 		GcContent:       false},
+	{InFile: "testdata/test_gc.fa",
+		OutFile:         "testdata/tmp.out.gc.bed",
+		ExpectedFile:    "testdata/expected_gc.bed",
+		FirstQueryName:  "Human",
+		SecondQueryName: "Chimp",
+		WindowSize:      5,
+		RefChromName:    "chr1",
+		RemoveN:         false,
+		DivergenceRate:  math.MaxFloat64,
+		LongOutput:      false,
+		OutputAlnPos:    false,
+		GcContent:       true},
 }
 
 func TestFaFindFast(t *testing.T) {

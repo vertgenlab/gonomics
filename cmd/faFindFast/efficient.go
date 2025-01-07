@@ -31,7 +31,7 @@ import (
 //  10. numGcSecondQuery
 //  11. numAtFirstQuery
 //  12. numAtSecondQuery
-func incrementWindowEdge(firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOrig int) (alnIdx, gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int, gcContent bool, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs int) {
+func incrementWindowEdge(firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOrig int, gcContent bool) (alnIdx, gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs int) {
 	alnIdx = alnIdxOrig
 	// at initialization, lastAlnIdxOfWindow == -1, which is assigned to alnIdxOrig when incrementWindowEdge is called, so alnIdx = alnIdxOrig == -1. For loop will start at alnIdx++ which is 0, the 1st position in the alignment
 
@@ -155,7 +155,7 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 	for lastAlnIdxOfWindow < len(firstQuery) { // this check could also be "!done", I am not sure what is more clear
 		// we always move the lastBaseOfTheWindow (right side) and add on what we find to the counters because
 		// all this stuff is now inside the current window
-		lastAlnIdxOfWindow, gapOpenCloseFirstQuery, gapOpenedSecondQuery, _, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst, s.GcContent, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs = incrementWindowEdge(firstQuery, secondQuery, lastAlnIdxOfWindow)
+		lastAlnIdxOfWindow, gapOpenCloseFirstQuery, gapOpenedSecondQuery, _, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs = incrementWindowEdge(firstQuery, secondQuery, lastAlnIdxOfWindow, s.GcContent)
 		lastFirstQueryIdxOfWindow++
 		totalGaps += gapOpenCloseFirstQuery + gapOpenedSecondQuery
 		totalNs += numFirstQueryNs + numSecondQueryNsGap + numSecondQueryNsMatch
@@ -170,7 +170,7 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 		// usually increment the baseBeforeWindow,
 		// but not at the beginning when we have not yet incremented the end enough to have a full "windowSize" of bases in the window
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow > s.WindowSize {
-			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch, numSubst, s.GcContent, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow)
+			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch, numSubst, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow, s.GcContent)
 			alnIdxBeforeWindowForRef = updateAlnIdxBeforeWindow(firstQuery, alnIdxBeforeWindow)
 			firstQueryIdxBeforeWindow++
 			//totalGaps -= gapOpenCloseRef + gapClosedQuery
@@ -186,7 +186,7 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 
 		// the trailing window needs to "look ahead" to see what happens before the next firstQuery base
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow == s.WindowSize {
-			_, gapOpenCloseFirstQuery, _, gapClosedSecondQuery, _, numSecondQueryNsGap, _, _, s.GcContent, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow)
+			_, gapOpenCloseFirstQuery, _, gapClosedSecondQuery, _, numSecondQueryNsGap, _, _, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow, s.GcContent)
 			totalGaps -= gapOpenCloseFirstQuery + gapClosedSecondQuery
 			totalNs -= numSecondQueryNsGap
 			// no numSubst or GC or AT updates here
