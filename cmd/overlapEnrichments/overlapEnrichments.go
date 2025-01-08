@@ -6,6 +6,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 
 	"github.com/vertgenlab/gonomics/exception"
@@ -121,9 +123,12 @@ func overlapEnrichments(s Settings) {
 	exception.PanicOnErr(err)
 }
 
+// refGenomeTrim trims elements in the input slice `unTrimmed` to only the portions that overlap with
+// the regions specified in `noGapRegions`.
 func refGenomeTrim(unTrimmed []lift.Lift, noGapRegions []lift.Lift, relationship string) []lift.Lift {
-	var overlap []lift.Lift
 	var trimmed []lift.Lift = make([]lift.Lift, 0)
+	var overlappingIntervals []interval.Interval
+	var trimmedIntervals []interval.Interval
 
 	var e1Intervals []interval.Interval
 	for i := range unTrimmed {
@@ -132,8 +137,28 @@ func refGenomeTrim(unTrimmed []lift.Lift, noGapRegions []lift.Lift, relationship
 	tree1 := interval.BuildTree(e1Intervals)
 
 	for i := range noGapRegions {
-		overlap = lift.IntervalSliceToLift(interval.Query(tree1, noGapRegions[i], relationship))
-		trimmed = append(trimmed, overlap...)
+		overlappingIntervals = interval.Query(tree1, noGapRegions[i], relationship)
+		trimmedIntervals = trimIntervals(overlappingIntervals, noGapRegions[i])
+		for _, t := range trimmedIntervals {
+			trimmed = append(trimmed, t.(lift.Lift))
+		}
+	}
+	return trimmed
+}
+
+// trimIntervals takes a set of intervals and trims each one to only the portion that overlaps with a given region.
+func trimIntervals(overlappingIntervals []interval.Interval, region interval.Interval) []interval.Interval {
+	var trimmed []interval.Interval
+	for _, currInterval := range overlappingIntervals {
+		trimmedStart := numbers.Max(currInterval.GetChromStart(), region.GetChromStart())
+		trimmedEnd := numbers.Min(currInterval.GetChromEnd(), region.GetChromEnd())
+		trimmedInterval := &bed.Bed{
+			Chrom:             currInterval.GetChrom(),
+			ChromStart:        trimmedStart,
+			ChromEnd:          trimmedEnd,
+			FieldsInitialized: 3,
+		}
+		trimmed = append(trimmed, trimmedInterval)
 	}
 	return trimmed
 }
