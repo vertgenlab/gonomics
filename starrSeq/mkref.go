@@ -36,7 +36,7 @@ func Mkref(s MakeRefSettings) {
 		ref.Seq = append(ref.Seq, umi...)
 		//ref.Seq = append(ref.Seq, cs...)
 		ref.Seq = append(ref.Seq, d[0].Seq...)
-		idx += len(c[i].Seq) + len(d[0].Seq)
+		idx += len(c[i].Seq) + len(umi) + len(d[0].Seq)
 	}
 	fasta.WriteFasta(o, ref, 50)
 	err := o.Close()
