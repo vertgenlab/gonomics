@@ -76,3 +76,26 @@ func BenchmarkGenericMin(b *testing.B) {
 		genericMin(one, two)
 	}
 }
+
+var StringToIntTests = []struct {
+	InString string
+	OutInt   int
+}{
+	{InString: "100",
+		OutInt: 100,
+	},
+	{InString: "789203974",
+		OutInt: 789203974,
+	},
+	{InString: "4.9e+07",
+		OutInt: 49000000,
+	},
+}
+
+func TestStringToInt(t *testing.T) {
+	for _, v := range StringToIntTests {
+		if StringToInt(v.InString) != v.OutInt {
+			t.Errorf("Error in parsing StringToInt.")
+		}
+	}
+}
