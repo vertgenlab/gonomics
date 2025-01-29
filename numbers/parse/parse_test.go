@@ -87,9 +87,9 @@ var StringToIntTests = []struct {
 	{InString: "789203974",
 		OutInt: 789203974,
 	},
-	//{InString: "4.9e+07",
-	//	OutInt: 49000000,
-	//},
+	{InString: "4.9e+07",
+		OutInt: 49000000,
+	},
 }
 
 func TestStringToInt(t *testing.T) {

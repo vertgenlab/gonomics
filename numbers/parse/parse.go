@@ -16,7 +16,12 @@ func StringToBool(s string) bool {
 
 // StringToInt parses a string into an int and will exit on error.
 func StringToInt(s string) int {
-	n, err := strconv.Atoi(s)
+	// because strings for ints can be written in scientific notation,
+	// instead of converting from string directly to int (cannot handle scientific notation),
+	// convert string to float64, then to int
+	nFloatIntermediate, err := strconv.ParseFloat(s, 64)
+	n := int(nFloatIntermediate)
+	//n, err := strconv.Atoi(s)
 	if err != nil {
 		log.Panicf("Error: trouble converting \"%s\" to a int", s)
 	}
