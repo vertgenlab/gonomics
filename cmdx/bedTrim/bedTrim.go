@@ -7,7 +7,6 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
-	"github.com/vertgenlab/gonomics/numbers/parse"
 	"log"
 	"math"
 )
@@ -61,7 +60,7 @@ func main() {
 		log.Fatalf("Expected %d arguments, got %d", expectedNumArgs, len(flag.Args()))
 	}
 
-	if parse.StringToInt(flag.Arg(0)) < 0 || parse.StringToInt(flag.Arg(0)) > 100 {
+	if *trimPercent < 0 || *trimPercent > 100 {
 		flag.Usage()
 		log.Fatalf("Error: trimPercent must be an integer between 0 and 100")
 	}
