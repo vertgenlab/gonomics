@@ -65,8 +65,8 @@ func main() {
 		log.Fatalf("Error: trimPercent must be an integer between 0 and 100")
 	}
 
-	inBed := flag.Arg(1)
-	outBed := flag.Arg(2)
+	inBed := flag.Arg(0)
+	outBed := flag.Arg(1)
 
 	bedTrim(*trimPercent, inBed, outBed)
 
