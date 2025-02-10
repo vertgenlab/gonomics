@@ -30,7 +30,6 @@ func bedTrim(trimPercent int, inBed string, outBed string) {
 			b.ChromStart += toRemoveInt/2 + 1
 			b.ChromEnd -= toRemoveInt / 2
 		}
-
 		if interval.IntervalSize(b) > 0 {
 			bed.WriteToFileHandle(out, b)
 		}
@@ -39,8 +38,9 @@ func bedTrim(trimPercent int, inBed string, outBed string) {
 }
 
 func usage() {
-	fmt.Print("bedTrim -- Trim bed records in a file by N percent. An equal amount of bases " +
+	fmt.Print("bedTrim -- Trim bed records in a file by a total of N percent. An equal amount of bases " +
 		"will be removed from each side.\n" +
+		"For example, a -trimPercent of 50 will remove 25% from each side of the bed region" +
 		"Usage:\n" +
 		"bedTrim -trimPercent [int] in.bed out.bed\n ")
 	flag.PrintDefaults()
