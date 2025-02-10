@@ -125,7 +125,7 @@ func EnrichmentPValueExact(elementOverlapProbs []float64, overlapCount int) []fl
 	return answer
 }
 
-// EnrichmentPValueUpperBound, together with EnrichmentPValueLowerBound, provide a range of possible values for the pValue of overlap.
+// EnrichmentPValueUpperBound together with EnrichmentPValueLowerBound, provide a range of possible values for the pValue of overlap.
 // Returns a slice of four values. The first is the debug check, the second is the expected number of overlaps, and the third and fourth represent the pValues for enrichment and depletion, respectively.
 func EnrichmentPValueUpperBound(elements1 []Lift, elements2 []Lift, noGapRegions []Lift, overlapCount int, verbose int) []float64 {
 	var numTrials int = len(elements2)
