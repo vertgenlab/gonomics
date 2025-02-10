@@ -18,10 +18,18 @@ func StringToBool(s string) bool {
 func StringToInt(s string) int {
 	// because strings for ints can be written in scientific notation,
 	// instead of converting from string directly to int (cannot handle scientific notation),
-	// convert string to float64, then to int
+	// convert string to float64 (nFloatIntermediate), then to int
 	nFloatIntermediate, err := strconv.ParseFloat(s, 64)
 	n := int(nFloatIntermediate)
-	//n, err := strconv.Atoi(s)
+	// to check that the string (e.g. "3" or "3.5") was indeed an int (e.g. 3) and not a non-int number (e.g. 3.5),
+	// after the string (e.g. "3.5") to float64 (e.g. nFloatIntermediate == 3.5) to int (e.g. 3) conversion,
+	// convert int to float64 (e.g. nFloatIntermediate2 == 3) again
+	// if nFloatIntermediate2 (3) != nFloatIntermediate (3.5), then the string was a non-int number, error
+	nFloatIntermediate2 := float64(n)
+	if nFloatIntermediate2 != nFloatIntermediate {
+		log.Panicf("Error: StringToInt was used, but the String \"%s\" was not Int", s)
+	}
+	//n, err := strconv.Atoi(s) // previous code for converting string directly to int
 	if err != nil {
 		log.Panicf("Error: trouble converting \"%s\" to a int", s)
 	}

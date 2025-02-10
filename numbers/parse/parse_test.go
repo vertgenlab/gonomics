@@ -90,6 +90,9 @@ var StringToIntTests = []struct {
 	{InString: "4.9e+07",
 		OutInt: 49000000,
 	},
+	/*{InString: "3.5", // this test would produce panic and failure
+		OutInt: 3,
+	},*/
 }
 
 func TestStringToInt(t *testing.T) {
