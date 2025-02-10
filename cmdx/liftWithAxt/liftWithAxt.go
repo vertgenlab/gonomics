@@ -23,7 +23,7 @@ func buildAxTree(file string) map[string]*interval.IntervalNode {
 func main() {
 	var outBed []bed.Bed
 	var axtOverlap []interval.Interval
-	var lifted bed.Bed = bed.Bed{FieldsInitialized: 4}
+	var lifted bed.Bed = bed.Bed{Score: 0, FieldsInitialized: 5}
 
 	flag.Parse()
 	if len(flag.Args()) != 5 {

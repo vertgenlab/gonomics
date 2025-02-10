@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/vertgenlab/gonomics/numbers/parse"
 	"io"
 	"log"
 	"os"
@@ -160,6 +161,31 @@ func IntSliceToString(nums []int) string {
 		ans.WriteByte(',')
 	}
 	return ans.String()
+}
+
+// FloatSliceToString converts int slices to comma-separated strings.
+func FloatSliceToString(nums []float64) string {
+	ans := strings.Builder{}
+	ans.Grow(2 * len(nums))
+	for i := 0; i < len(nums); i++ {
+		ans.WriteString(fmt.Sprintf("%f", nums[i]))
+		ans.WriteByte(',')
+	}
+	return ans.String()
+}
+
+// StringToFloatSlice converts comma-separated strings to float64 slices.
+func StringToFloatSlice(line string) []float64 {
+	work := strings.Split(line, ",")
+	var sliceSize int = len(work)
+	if line[len(line)-1] == ',' {
+		sliceSize--
+	}
+	var answer []float64 = make([]float64, sliceSize)
+	for i := 0; i < sliceSize; i++ {
+		answer[i] = parse.StringToFloat64(work[i])
+	}
+	return answer
 }
 
 // IntToString converts an int to a string.
