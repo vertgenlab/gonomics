@@ -91,7 +91,7 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
-	if *multiFaMode || *species == "" {
+	if *multiFaMode && *species == "" {
 		flag.Usage()
 		log.Fatalf("Error: -multiFaMode was specified without -multiFaSpecies\n")
 	}
