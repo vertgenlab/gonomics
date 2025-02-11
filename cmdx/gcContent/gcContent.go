@@ -1,0 +1,104 @@
+// Command Group: "FASTA and Multi-FASTA Tools"
+
+// Calculates the gc content of fasta sequences for all regions specified in a bed file
+package main
+
+import (
+	"flag"
+	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"log"
+)
+
+func bedGcContent(bedFile string, faFile string, outFile string, multiFaMode bool, species string) {
+
+	var currRecordSeq []dna.Base
+	var found bool
+	var gc float64
+	var annotated bed.Bed
+	var speciesStart, speciesEnd int
+
+	regionsChan := bed.GoReadToChan(bedFile)
+	records := fasta.Read(faFile)
+	recordsMap := fasta.ToMap(records)
+	out := fileio.EasyCreate(outFile)
+
+	for curr := range regionsChan {
+
+		if multiFaMode {
+			// when multiFa, each fasta sequence is a species, e.g. >human, >hca, assuming that the user specified the correct chromosome, e.g. this multi-fasta is chr1.fa
+			currRecordSeq, found = recordsMap[species]
+			if !found {
+				log.Fatalf("Error: multiFaMode. Requested species (%s) was not found as a fasta record name in the input multi-fasta file\n", species)
+			}
+			annotated = bed.Bed{Chrom: curr.Chrom, ChromStart: curr.ChromStart, ChromEnd: curr.ChromEnd, FieldsInitialized: 4}
+			// need to convert bed region (reference sequence e.g. human RefPos), to AlnPos, then use AlnPos to index requested sequence (e.g. hca)
+			speciesStart = fasta.RefPosToAlnPos(records[0], curr.ChromStart)
+			speciesEnd = fasta.RefPosToAlnPos(records[0], curr.ChromEnd)
+			gc = dna.GCContent(currRecordSeq[speciesStart:speciesEnd])
+			annotated.Name = fmt.Sprintf("%e", gc)
+			bed.WriteBed(out, annotated)
+
+		} else {
+			// when not a multiFa, assuming genome.fa, where each fasta sequence is a chromosome, e.g. >chr1
+			currRecordSeq, found = recordsMap[curr.Chrom]
+			if found {
+				annotated = bed.Bed{Chrom: curr.Chrom, ChromStart: curr.ChromStart, ChromEnd: curr.ChromEnd, FieldsInitialized: 4}
+				gc = dna.GCContent(currRecordSeq[curr.ChromStart:curr.ChromEnd])
+				annotated.Name = fmt.Sprintf("%e", gc)
+				bed.WriteBed(out, annotated)
+			} else {
+				log.Fatalf("Error: bed region chrom (%s) was not found as a fasta record name in the input fasta file\n", curr.Chrom)
+			}
+		}
+
+	}
+
+	err := out.Close()
+	exception.PanicOnErr(err)
+}
+
+func usage() {
+	fmt.Print(
+		"bedGcContent - Calculates the gc content of fasta sequences for all regions specified in a bed file.\n" +
+			"Outputs a new bed file with 4 columns: Chrom, ChromStart, ChromEnd, gcContent.\n" +
+			"The input fasta file may have >1 fasta sequences. In this case, there are 2 possibilities.\n" +
+			"The 1st possibility is genome.fa, where each fasta sequence is a chromosome, e.g. >chr1.\n" +
+			"The 2nd possibility is a multiFa. Each fasta sequence is a species, e.g. >human, >hca, assuming that the user specified the correct chromosome, e.g. this multi-fasta is chr1.fa.\n" +
+			"The 1st possibility is the default. The 2nd possibility needs to be specified with -multiFaMode and -multiFaSpecies.\n" +
+			"Usage:\n" +
+			"bedGcContent in.bed in.fa out.bed\n" +
+			"options:\n")
+	flag.PrintDefaults()
+}
+
+func main() {
+	var expectedNumArgs int = 3
+	var multiFaMode *bool = flag.Bool("multiFaMode", false, "When in multiFa mode, each fasta sequence is a species, e.g. >human, >hca, assuming that the user specified the correct chromosome, e.g. this multi-fasta is chr1.fa. When not in multiFa mode, assuming genome.fa, where each fasta sequence is a chromosome, e.g. >chr1. Must specify the species to calculate gc content for with -multiFaSpecies.")
+	var species *string = flag.String("multiFaSpecies", "", "When in multiFa mode, must specify the species to calculate gc content for.")
+
+	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	flag.Parse()
+
+	if len(flag.Args()) != expectedNumArgs {
+		flag.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n",
+			expectedNumArgs, len(flag.Args()))
+	}
+
+	if *multiFaMode && *species == "" {
+		flag.Usage()
+		log.Fatalf("Error: -multiFaMode was specified without -multiFaSpecies\n")
+	}
+
+	bedFile := flag.Arg(0)
+	faFile := flag.Arg(1)
+	outFile := flag.Arg(2)
+
+	bedGcContent(bedFile, faFile, outFile, *multiFaMode, *species)
+}
