@@ -186,8 +186,9 @@ func usage() {
 	fmt.Print(
 		"overlapEnrichments - Returns the p-value of enrichment and depletion for overlaps between the elements in two input files.\n" +
 			"search.lift represents a lift compatible file (current support for bed/vcf) of all regions in the search space of the genome. This is often a noGap.bed for whole genome backgrounds.\n" +
-			"Genomic elements are expected to lie within the search space, and an error will occur if elements outside the search space are detected. Alternatively, the user can specify 'trimToSearchSpace'\n" +
-			"to ignore elements outside of the search space.\n" +
+			"\tGenomic elements are expected to lie within the search space, and an error will occur if elements outside the search space are detected. Alternatively, the user can specify 'trimToSearchSpace'\n" +
+			"\tto ignore elements outside of the search space. Furthermore, the user may set 'relationship' to 'any' to retain elements that partially overlap search space elements.\n" +
+			"\tPlease note that in this case, elements will be trimmed to remove bases that fall outside of the search space.\n" +
 			"out.txt is in the form of a tab-separated value file with a header line starting with '#'.\n" +
 			"Calculates enrichment of the number of elements in set 2 that have any overlap in set 1.\n" +
 			"Number of overlaps reported is the number of elements in set 2 that have any overlap with set 1. This will be asymmetric if sets one and two are swapped as arguments.\n" +
@@ -206,6 +207,7 @@ func main() {
 	var expectedNumArgs int = 5
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints.")
 	var trimToSearchSpace *bool = flag.Bool("trimToSearchSpace", false, "Ignores elements that do not lie within the search space, as defined by the searchSpace.lift file.")
+	var trimToRefGenome *bool = flag.Bool("trimToRefGenome", false, "Depricated. This option is now called trimToSearchSpace. The program will fatal if this option is called. Use 'trimToSearchSpace' instead.")
 	var secondFileList *string = flag.String("secondFileList", "", "Specify a list of query files to calculate enrichments against the first file. Note that while using this option the command will ignore the elements2.lift argument.")
 	var relationship *string = flag.String("relationship", "within", "Specify an overlap relationship for the trimToSearchSpace option. 'all' is more permissive than the default 'within'.")
 
@@ -217,6 +219,10 @@ func main() {
 		flag.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(flag.Args()))
+	}
+
+	if *trimToRefGenome {
+		log.Fatal("The option 'trimToRefGenome' is deprecated. Please use 'trimToSearchSpace' instead, as this replaces the 'trimToRefGenome' functionality.")
 	}
 	method := flag.Arg(0)
 	inFile := flag.Arg(1)
