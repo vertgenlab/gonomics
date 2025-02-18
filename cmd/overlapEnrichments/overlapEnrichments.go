@@ -52,7 +52,7 @@ func overlapEnrichments(s Settings) {
 		searchSpaceTree = interval.BuildTree(searchSpaceIntervals)
 		for _, element := range elementsOne {
 			if len(interval.Query(searchSpaceTree, element, "any")) == 0 {
-				log.Fatalf("Error: foreground element from file 1 not found in search space. Please use 'trimToSearchSpace' to exclude this element. Offending element: %s.\n", element)
+				log.Fatalf("Error: foreground element from file 1 does not overlap search space. Please use 'trimToSearchSpace' to exclude this element. Offending element: %s.\n", element)
 			}
 		}
 	}
@@ -91,7 +91,7 @@ func overlapEnrichments(s Settings) {
 		} else {
 			for _, element := range elementsTwo {
 				if len(interval.Query(searchSpaceTree, element, "any")) == 0 {
-					log.Fatalf("Error: foreground element from file 2 not found in search space. Please use 'trimToSearchSpace' to exclude this elment. Offending element: %s.\n", element)
+					log.Fatalf("Error: foreground element from file 2 does not overlap search space. Please use 'trimToSearchSpace' to exclude this element. Offending element: %s.\n", element)
 				}
 			}
 		}
