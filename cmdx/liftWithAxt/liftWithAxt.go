@@ -50,7 +50,90 @@ func main() {
 	fmt.Println("merging and writing")
 	bed.Write(flag.Arg(3), outBed)
 	mergedBed := bed.MergeBedsKeepNames(outBed)
+	fmt.Println("Re-lifting homologous")
+	mergedBed = reLiftHomologous(mergedBed, axtTree, chromSizes)
 	bed.Write(flag.Arg(4), mergedBed)
+}
+
+func reLiftHomologous(mergedBed []bed.Bed, axtTree map[string]*interval.IntervalNode, chromSizes map[string]chromInfo.ChromInfo) []bed.Bed {
+	var j, c, k, d int
+	var names []string
+	var homologous []bed.Bed
+	var lifted, bd bed.Bed
+	var ocr, pass, found bool
+	var name string
+
+	bedMap := make(map[string]bed.Bed)
+
+	for i := range mergedBed {
+		ocr = false
+		names = strings.Split(mergedBed[i].Name, ",")
+		for j = range names {
+			if !strings.Contains(names[j], "lift") {
+				bedMap[names[j]] = mergedBed[i]
+				ocr = true
+			}
+		}
+		if ocr {
+			continue
+		}
+		names = append([]string{fmt.Sprintf("homologousElement_%d", c)}, names...)
+		c++
+		mergedBed[i].Name = strings.Join(names, ",")
+		homologous = append(homologous, mergedBed[i])
+		bedMap[names[0]] = mergedBed[i]
+	}
+
+	fmt.Println("adding names to bed map")
+	bedTree := buildBedTree(mergedBed)
+	var axtForLift, existingNodes []interval.Interval
+	for i := range homologous {
+		names = strings.Split(homologous[i].Name, ",")
+		c = 0
+		axtForLift = interval.Query(axtTree, homologous[i], "di")
+		for j = range axtForLift {
+			lifted.Chrom, lifted.ChromStart, lifted.ChromEnd = lift.LiftCoordinatesWithAxt(axtForLift[j].(axt.Axt), homologous[i], chromSizes[homologous[j].Chrom].Size)
+			existingNodes = interval.Query(bedTree, lifted, "any")
+			if len(existingNodes) == 0 {
+				d++
+				continue
+			}
+			for k = range existingNodes {
+				pass, name = overlapType(existingNodes[k].(bed.Bed))
+				if !pass {
+					continue
+				}
+				bd, found = bedMap[name]
+				if !found {
+					log.Fatalf("we should have found this node: %s", name)
+				}
+				bd.Name = fmt.Sprintf("%s,%s_lift%d", bd.Name, names[0], c)
+				bedMap[name] = bd
+				c++
+			}
+		}
+	}
+	fmt.Println("This many new nodes would be added: ", d)
+	return bedMapToSlice(bedMap)
+}
+
+func bedMapToSlice(bedMap map[string]bed.Bed) []bed.Bed {
+	var bedSlice []bed.Bed
+	for i := range bedMap {
+		bedSlice = append(bedSlice, bedMap[i])
+	}
+	bed.SortByCoord(bedSlice)
+	return bedSlice
+}
+
+func overlapType(overlap bed.Bed) (bool, string) {
+	names := strings.Split(overlap.Name, ",")
+	for i := range names {
+		if strings.Contains(names[i], "homologous") {
+			return true, names[i]
+		}
+	}
+	return false, ""
 }
 
 func removeSelfOverlaps(inBed, liftBed []bed.Bed) []bed.Bed {
@@ -66,7 +149,6 @@ func removeSelfOverlaps(inBed, liftBed []bed.Bed) []bed.Bed {
 			continue
 		}
 		for j = range ans {
-			fmt.Println(ans[j].(bed.Bed).Name+"_", liftBed[i].Name)
 			if strings.Contains(liftBed[i].Name, ans[j].(bed.Bed).Name+"_") {
 				pass = false
 				continue
