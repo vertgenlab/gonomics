@@ -50,8 +50,10 @@ func main() {
 	fmt.Println("merging and writing")
 	bed.Write(flag.Arg(3), outBed)
 	mergedBed := bed.MergeBedsKeepNames(outBed)
+	fmt.Println("length of mergedBed: ", len(mergedBed))
 	fmt.Println("Re-lifting homologous")
 	mergedBed = reLiftHomologous(mergedBed, axtTree, chromSizes)
+	fmt.Println("length of mergedBed: ", len(mergedBed))
 	bed.Write(flag.Arg(4), mergedBed)
 }
 
@@ -86,8 +88,11 @@ func reLiftHomologous(mergedBed []bed.Bed, axtTree map[string]*interval.Interval
 
 	fmt.Println("adding names to bed map")
 	bedTree := buildBedTree(mergedBed)
+	fmt.Println("build bed tree")
 	var axtForLift, existingNodes []interval.Interval
+	fmt.Println(len(homologous))
 	for i := range homologous {
+		fmt.Println(i)
 		names = strings.Split(homologous[i].Name, ",")
 		c = 0
 		axtForLift = interval.Query(axtTree, homologous[i], "di")
