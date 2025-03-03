@@ -27,7 +27,11 @@ import (
 //  6. numSecondQueryNsGap: the number of Ns in the secondQuery sequence after this increment from gaps in the firstQuery
 //  7. numSecondQueryNsMatch: the number of Ns in the secondQuery sequence after this increment from matches with the firstQuery
 //  8. numSubst: the number of substitutions/mismatches (0 or 1) between firstQuery and secondQuery
-func incrementWindowEdge(firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOrig int) (alnIdx, gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int) {
+//  9. numGcFirstQuery
+//  10. numGcSecondQuery
+//  11. numAtFirstQuery
+//  12. numAtSecondQuery
+func incrementWindowEdge(firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOrig int, gcContent bool) (alnIdx, gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs int) {
 	alnIdx = alnIdxOrig
 	// at initialization, lastAlnIdxOfWindow == -1, which is assigned to alnIdxOrig when incrementWindowEdge is called, so alnIdx = alnIdxOrig == -1. For loop will start at alnIdx++ which is 0, the 1st position in the alignment
 
@@ -75,6 +79,25 @@ func incrementWindowEdge(firstQuery []dna.Base, secondQuery []dna.Base, alnIdxOr
 		gapClosedSecondQuery++
 	}
 
+	if gcContent {
+		// 9. numGcFirstQuery
+		if firstQuery[alnIdx] == dna.C || firstQuery[alnIdx] == dna.G || firstQuery[alnIdx] == dna.LowerC || firstQuery[alnIdx] == dna.LowerG {
+			numFirstQueryGCs++
+		}
+		// 10. numGcSecondQuery
+		if secondQuery[alnIdx] == dna.C || secondQuery[alnIdx] == dna.G || secondQuery[alnIdx] == dna.LowerC || secondQuery[alnIdx] == dna.LowerG {
+			numSecondQueryGCs++
+		}
+		//  11. numAtFirstQuery
+		if firstQuery[alnIdx] == dna.A || firstQuery[alnIdx] == dna.T || firstQuery[alnIdx] == dna.LowerA || firstQuery[alnIdx] == dna.LowerT {
+			numFirstQueryATs++
+		}
+		//  12. numAtSecondQuery
+		if secondQuery[alnIdx] == dna.A || secondQuery[alnIdx] == dna.T || secondQuery[alnIdx] == dna.LowerA || secondQuery[alnIdx] == dna.LowerT {
+			numSecondQueryATs++
+		}
+	}
+
 	return
 }
 
@@ -107,14 +130,14 @@ func updateAlnIdxBeforeWindow(firstQuery []dna.Base, alnIdxOrig int) (alnIdx int
 // optional arguments longOutput and divergenceRate allow the user to report a -log10pValue corresponding to the p value of observing a level of divergence for a given
 // window under a null binomial model of neutral evolution.
 func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQuery []dna.Base, s Settings) {
-	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                                                           // these are the two edges of the sliding window in "alignment positions"
-	var alnIdxBeforeWindowForRef int = -1                                                                                                             // this is to generate the alnIdx intermediate for translating firstQueryIdxBeforeWindow+1 to refIdxWindowStart
-	var firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow int = -1, -1                                                                             // these are the two edges of the sliding window in "firstQuery (no gaps) positions"
-	var refIdxWindowStart, lastRefIdxOfWindowPlusOne int                                                                                              // these are the two edges of the sliding window in "reference (no gaps) positions" PLUS ONE. refIdxWindowStart = refIdxBeforeWindow+1. lastRefIdxOfWindowPlusOne = lastRefIdxOfWindow+1.
-	var totalGaps, totalNs, totalSubst int                                                                                                            // this is the data we need to keep track of that describes the current window
-	var gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst int // ints we will get back when moving the window one ref base.
+	var alnIdxBeforeWindow, lastAlnIdxOfWindow int = -1, -1                                                                                                                                                                     // these are the two edges of the sliding window in "alignment positions"
+	var alnIdxBeforeWindowForRef int = -1                                                                                                                                                                                       // this is to generate the alnIdx intermediate for translating firstQueryIdxBeforeWindow+1 to refIdxWindowStart
+	var firstQueryIdxBeforeWindow, lastFirstQueryIdxOfWindow int = -1, -1                                                                                                                                                       // these are the two edges of the sliding window in "firstQuery (no gaps) positions"
+	var refIdxWindowStart, lastRefIdxOfWindowPlusOne int                                                                                                                                                                        // these are the two edges of the sliding window in "reference (no gaps) positions" PLUS ONE. refIdxWindowStart = refIdxBeforeWindow+1. lastRefIdxOfWindowPlusOne = lastRefIdxOfWindow+1.
+	var totalGaps, totalNs, totalSubst, totalFirstQueryGCs, totalSecondQueryGCs, totalFirstQueryATs, totalSecondQueryATs int                                                                                                    // this is the data we need to keep track of that describes the current window
+	var gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs int // ints we will get back when moving the window one ref base.
 	var err error
-	var percentDiverged, rawPValue float64
+	var percentDiverged, rawPValue, firstQueryGcContent, secondQueryGcContent float64
 	var prevRefIdxWindowStart, prevAlnIdxBeforeWindowForRefPlusOne, prevLastRefIdxOfWindowPlusOne, prevLastAlnIdxOfWindowPlusOne int = 0, 0, 0, 0
 
 	// this caches map[k] to -log10(BinomialDist(n, k, p, true)), which is the -log10 p Value.
@@ -132,28 +155,41 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 	for lastAlnIdxOfWindow < len(firstQuery) { // this check could also be "!done", I am not sure what is more clear
 		// we always move the lastBaseOfTheWindow (right side) and add on what we find to the counters because
 		// all this stuff is now inside the current window
-		lastAlnIdxOfWindow, gapOpenCloseFirstQuery, gapOpenedSecondQuery, _, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst = incrementWindowEdge(firstQuery, secondQuery, lastAlnIdxOfWindow)
+		lastAlnIdxOfWindow, gapOpenCloseFirstQuery, gapOpenedSecondQuery, _, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs = incrementWindowEdge(firstQuery, secondQuery, lastAlnIdxOfWindow, s.GcContent)
 		lastFirstQueryIdxOfWindow++
 		totalGaps += gapOpenCloseFirstQuery + gapOpenedSecondQuery
 		totalNs += numFirstQueryNs + numSecondQueryNsGap + numSecondQueryNsMatch
 		totalSubst += numSubst
+		if s.GcContent {
+			totalFirstQueryGCs += numFirstQueryGCs
+			totalSecondQueryGCs += numSecondQueryGCs
+			totalFirstQueryATs += numFirstQueryATs
+			totalSecondQueryATs += numSecondQueryATs
+		}
 
 		// usually increment the baseBeforeWindow,
 		// but not at the beginning when we have not yet incremented the end enough to have a full "windowSize" of bases in the window
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow > s.WindowSize {
-			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch, numSubst = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow)
+			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch, numSubst, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow, s.GcContent)
 			alnIdxBeforeWindowForRef = updateAlnIdxBeforeWindow(firstQuery, alnIdxBeforeWindow)
 			firstQueryIdxBeforeWindow++
 			//totalGaps -= gapOpenCloseRef + gapClosedQuery
 			totalNs -= numFirstQueryNs + numSecondQueryNsMatch
 			totalSubst -= numSubst
+			if s.GcContent {
+				totalFirstQueryGCs -= numFirstQueryGCs
+				totalSecondQueryGCs -= numSecondQueryGCs
+				totalFirstQueryATs -= numFirstQueryATs
+				totalSecondQueryATs -= numSecondQueryATs
+			}
 		}
 
 		// the trailing window needs to "look ahead" to see what happens before the next firstQuery base
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow == s.WindowSize {
-			_, gapOpenCloseFirstQuery, _, gapClosedSecondQuery, _, numSecondQueryNsGap, _, _ = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow)
+			_, gapOpenCloseFirstQuery, _, gapClosedSecondQuery, _, numSecondQueryNsGap, _, _, numFirstQueryGCs, numSecondQueryGCs, numFirstQueryATs, numSecondQueryATs = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow, s.GcContent)
 			totalGaps -= gapOpenCloseFirstQuery + gapClosedSecondQuery
 			totalNs -= numSecondQueryNsGap
+			// no numSubst or GC or AT updates here
 		}
 
 		// we check to make sure we are not at the very beginning or end, where we would have partial or illegal windows
@@ -181,6 +217,16 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 				prevLastAlnIdxOfWindowPlusOne = lastAlnIdxOfWindow + 1
 
 				// print output
+
+				if s.GcContent {
+					// GC content calculations
+					if totalFirstQueryGCs+totalFirstQueryATs != s.WindowSize {
+						log.Fatalf("Error: totalFirstQueryGCs + totalFirstQueryATs != s.WindowSize\n")
+					}
+					firstQueryGcContent = float64(totalFirstQueryGCs) / float64(totalFirstQueryGCs+totalFirstQueryATs)
+					secondQueryGcContent = float64(totalSecondQueryGCs) / float64(totalSecondQueryGCs+totalSecondQueryATs)
+				}
+
 				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
 				if !s.RemoveN || totalNs == 0 {
 					if s.LongOutput && !s.OutputAlnPos {
@@ -202,6 +248,8 @@ func speedyWindowDifference(reference []dna.Base, firstQuery []dna.Base, secondQ
 						rawPValue = scorePValueCache[totalSubst+totalGaps]
 						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, "+", percentDiverged, rawPValue, alnIdxBeforeWindow+1)
 						exception.PanicOnErr(err)
+					} else if s.GcContent {
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\t%d\t%d\t%d\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, totalFirstQueryGCs, totalSecondQueryGCs, totalFirstQueryATs, totalSecondQueryATs, firstQueryGcContent, secondQueryGcContent)
 					} else {
 						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps)
 						exception.PanicOnErr(err)
