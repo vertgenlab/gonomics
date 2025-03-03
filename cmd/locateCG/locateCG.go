@@ -39,7 +39,6 @@ func usage() {
 func main() {
 	//expect 2 args: input fasta file and chromosome name
 	var expectedNumArgs int = 2
-	var err error
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -61,26 +60,12 @@ func main() {
 	}
 
 	//run locate() function on provided args; will output a slice of structs
-	out := locateCG(s)
-
-	//create output file name and initialize file, write header line
-	outfileName := s.ChromName + "CGs.txt"
-	outfile := fileio.EasyCreate(outfileName)
-	fileio.WriteToFileHandle(outfile, "Chrom\tRefStart\tRefEnd\tType\tAlnStart\tAlnEnd\tRef\tAlt")
-
-	//write each struct to a line of the output file
-	for _, p := range out {
-		line := fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%s", p.Chrom, p.StartPos, p.EndPos, p.Type, p.AlnStart, p.AlnEnd, p.Ref, p.Alt)
-		fileio.WriteToFileHandle(outfile, line)
-	}
-
-	err = outfile.Close()
-	exception.PanicOnErr(err)
-
-	fmt.Println("CG gains & losses found and written to", outfileName)
+	locateCG(s)
 }
 
-func locateCG(s Settings) (output []CGsite) {
+func locateCG(s Settings) {
+	var err error
+	var output []CGsite
 	//set chromosome name from args
 	chrom := s.ChromName
 
@@ -156,7 +141,22 @@ func locateCG(s Settings) (output []CGsite) {
 		}
 	}
 	fmt.Printf("Finished loop\n")
-	return output
+
+	//create output file name and initialize file, write header line
+	outfileName := s.ChromName + "CGs.txt"
+	outfile := fileio.EasyCreate(outfileName)
+	fileio.WriteToFileHandle(outfile, "Chrom\tRefStart\tRefEnd\tType\tAlnStart\tAlnEnd\tRef\tAlt")
+
+	//write each struct to a line of the output file
+	for _, p := range output {
+		line := fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%s", p.Chrom, p.StartPos, p.EndPos, p.Type, p.AlnStart, p.AlnEnd, p.Ref, p.Alt)
+		fileio.WriteToFileHandle(outfile, line)
+	}
+
+	err = outfile.Close()
+	exception.PanicOnErr(err)
+
+	fmt.Println("CG gains & losses found and written to", outfileName)
 }
 
 /*func SkipGaps(seq []dna.Base, ind int) (dna.Base, int) {
