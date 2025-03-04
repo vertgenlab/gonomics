@@ -81,7 +81,9 @@ func locateCG(s Settings) {
 		log.Fatalf("Missing or empty sequences for seq1 or seq2.")
 	}
 	//add check for equal lengths
-
+	if len(firstSeq) != len(secondSeq) {
+		log.Fatalf("Seq1 and seq2 not equal in length.")
+	}
 	//pre-allocate size of output
 	//output = make([]CGsite, 0, 10000)
 
