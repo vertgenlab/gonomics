@@ -1,0 +1,4 @@
+Chrom	RefStart	RefEnd	Type	AlnStart	AlnEnd	Ref	Alt
+chr8	4	5	loss	4	5	A	C
+chr8	22	23	gain	22	23	C	A
+chr8	82	83	gain	83	84	C	G
