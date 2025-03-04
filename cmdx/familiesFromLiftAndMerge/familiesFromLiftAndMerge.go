@@ -28,7 +28,7 @@ type bed struct {
 func main() {
 	var cols, names, ocr, cp []string
 	var tmpName string
-	var j, k, homologous int
+	var j, k int
 	var found bool
 	var n *Node
 
@@ -60,10 +60,6 @@ func main() {
 				ocr = append(ocr, names[j])
 			}
 		}
-		if len(ocr) == 0 {
-			ocr = append(ocr, fmt.Sprintf("homologous_%d", homologous))
-			homologous++
-		}
 
 		for j = range ocr {
 			cp = make([]string, len(ocr))
@@ -74,9 +70,12 @@ func main() {
 				createNode(mp, ocr[j])
 			}
 			for k = range names {
-				if !strings.Contains(names[k], "lift") {
+				if !strings.Contains(names[k], "lift") || strings.Contains(names[k], ocr[j]) {
 					continue
 				}
+				//if strings.Contains(names[k], ocr[j]) {
+				//	fmt.Println(ocr[j], names[k])
+				//}
 				tmpName = stripLiftName(names[k])
 				n, found = mp[tmpName]
 				if !found {
@@ -87,6 +86,14 @@ func main() {
 			}
 		}
 	}
+
+	/*node := mp["homologousElement_18907"]
+	fmt.Println(node)
+	for i := range node.connections {
+		fmt.Println(node.connections[i])
+	}
+
+	*/
 
 	//writeFamilies(mp, bedMap, outBed, flag.Arg(2))
 	writeFamiliesRecursive(mp, bedMap, outFamilies, outBed)
@@ -103,7 +110,7 @@ func createNode(mp map[string]*Node, enh string) *Node {
 	var n *Node
 	var openChrom bool = true
 
-	if strings.Contains(enh, "homologous_") {
+	if strings.Contains(enh, "homologous") {
 		openChrom = false
 	}
 	if strings.Contains(enh, "lift") {
@@ -305,7 +312,8 @@ func addToWorkSlice(workSlice, currSlice []string, mp map[string]*Node) []string
 */
 
 func stripLiftName(name string) string {
-	return strings.Join(strings.Split(name, "_")[:5], "_")
+	tmp := strings.Split(name, "_")
+	return strings.Join(tmp[:len(tmp)-1], "_")
 }
 
 func buildGraphRecursive(mp map[string]*Node, startNode string, outDot string) {
@@ -391,7 +399,7 @@ func formatAlnString(nodeSlice []*Node) (string, []string) {
 	sb.WriteString("{")
 	for i := range nodeSlice {
 		sb.WriteString("\"" + nodeSlice[i].name + "\"" + " ")
-		if strings.Contains(nodeSlice[i].name, "homologous_") {
+		if strings.Contains(nodeSlice[i].name, "homologous") {
 			homologous = append(homologous, nodeSlice[i].name)
 		}
 	}
