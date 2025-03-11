@@ -22,40 +22,34 @@ func buildAxTree(file string) map[string]*interval.IntervalNode {
 }
 
 func main() {
-	//var inBed, liftBed []bed.Bed
-	//var axtOverlap []interval.Interval
-	//var lifted bed.Bed = bed.Bed{Score: 0, FieldsInitialized: 5}
+	var inBed, liftBed []bed.Bed
+	var axtOverlap []interval.Interval
+	var lifted bed.Bed = bed.Bed{Score: 0, FieldsInitialized: 5}
 
 	flag.Parse()
-	/*if len(flag.Args()) != 5 {
+	if len(flag.Args()) != 5 {
 		log.Fatalf("~/go/bin/liftWithAxt in.axt ocr.bed chrom.Sizes out.lift.bed out.liftANDmerge.bed")
 	}
-	*/
 
 	chromSizes := chromInfo.ReadToMap(flag.Arg(2))
 	fmt.Println("built chrom sizes tree")
 	axtTree := buildAxTree(flag.Arg(0))
 	fmt.Println("build axt tree")
 
-	/*
-		in := bed.GoReadToChan(flag.Arg(1))
-		fmt.Println("reading bed")
-		for rec := range in {
-			inBed = append(inBed, rec)
-			axtOverlap = interval.Query(axtTree, rec, "di")
-			for i := range axtOverlap {
-				lifted.Chrom, lifted.ChromStart, lifted.ChromEnd = lift.LiftCoordinatesWithAxt(axtOverlap[i].(axt.Axt), rec, chromSizes[axtOverlap[i].(axt.Axt).QName].Size)
-				lifted.Name = rec.Name + fmt.Sprintf("_lift%d", i)
-				liftBed = append(liftBed, lifted)
-			}
+	in := bed.GoReadToChan(flag.Arg(1))
+	fmt.Println("reading bed")
+	for rec := range in {
+		inBed = append(inBed, rec)
+		axtOverlap = interval.Query(axtTree, rec, "di")
+		for i := range axtOverlap {
+			lifted.Chrom, lifted.ChromStart, lifted.ChromEnd = lift.LiftCoordinatesWithAxt(axtOverlap[i].(axt.Axt), rec, chromSizes[axtOverlap[i].(axt.Axt).QName].Size)
+			lifted.Name = rec.Name + fmt.Sprintf("_lift%d", i)
+			liftBed = append(liftBed, lifted)
 		}
-
-	*/
-
-	outBed := bed.Read("reLiftHomologousTest/preMergeBed.bed")
+	}
 
 	fmt.Println("removing self overlaps")
-	//outBed := removeSelfOverlaps(inBed, liftBed)
+	outBed := removeSelfOverlaps(inBed, liftBed)
 	fmt.Println("merging and writing")
 	bed.Write(flag.Arg(3), outBed)
 	mergedBed := bed.MergeBedsKeepNames(outBed)
@@ -106,7 +100,6 @@ func reLiftHomologous(mergedBed []bed.Bed, axtTree map[string]*interval.Interval
 		c = 0
 		axtForLift = interval.Query(axtTree, homologous[i], "di")
 		for j = range axtForLift {
-			fmt.Println("in here")
 			lifted.Chrom, lifted.ChromStart, lifted.ChromEnd = lift.LiftCoordinatesWithAxt(axtForLift[j].(axt.Axt), homologous[i], chromSizes[homologous[j].Chrom].Size)
 			existingNodes = interval.Query(bedTree, lifted, "any")
 			if len(existingNodes) == 0 {
