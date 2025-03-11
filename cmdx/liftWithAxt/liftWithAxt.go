@@ -95,7 +95,6 @@ func reLiftHomologous(mergedBed []bed.Bed, axtTree map[string]*interval.Interval
 	var axtForLift, existingNodes []interval.Interval
 	fmt.Println(len(homologous))
 	for i := range homologous {
-		fmt.Println(i)
 		names = strings.Split(homologous[i].Name, ",")
 		c = 0
 		axtForLift = interval.Query(axtTree, homologous[i], "di")

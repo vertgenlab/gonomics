@@ -291,6 +291,7 @@ func addFamNameToBed(famSlice []string, bedMap map[string]bed, c int) {
 }
 
 // part of old family partition code
+/*
 func addToWorkSlice(workSlice, currSlice []string, mp map[string]*Node) []string {
 	for i := range currSlice {
 		if !mp[currSlice[i]].seen {
@@ -301,7 +302,7 @@ func addToWorkSlice(workSlice, currSlice []string, mp map[string]*Node) []string
 }
 
 //part of old family partition code
-/*func writeFamMap(famMap map[string]int, c int, out *fileio.EasyWriter) {
+func writeFamMap(famMap map[string]int, c int, out *fileio.EasyWriter) {
 	var names []string
 	for i := range famMap {
 		names = append(names, i)
