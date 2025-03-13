@@ -78,6 +78,7 @@ func reLiftHomologous(mergedBed []bed.Bed, axtTree map[string]*interval.Interval
 			if !strings.Contains(names[j], "lift") {
 				bedMap[names[j]] = mergedBed[i]
 				ocr = true
+				break
 			}
 		}
 		if ocr {
