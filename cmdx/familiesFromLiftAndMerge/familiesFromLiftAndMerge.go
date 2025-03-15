@@ -18,17 +18,18 @@ type Node struct {
 }
 
 type bed struct {
-	chrom   string
-	start   string
-	end     string
-	names   []string
-	famName []string
+	chrom     string
+	start     string
+	end       string
+	names     []string
+	famName   []string
+	writeCopy bool
 }
 
 func main() {
 	var cols, names, ocr, cp []string
 	var tmpName string
-	var j, k int
+	var j, k, d int
 	var found bool
 	var n *Node
 
@@ -51,20 +52,28 @@ func main() {
 		cols = strings.Split(in[i], "\t")
 		names = strings.Split(cols[3], ",")
 		if len(names) == 1 && !strings.Contains(names[0], "lift") {
-			bedMap[names[0]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: []string{names[0]}}
+			bedMap[names[0]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: []string{names[0]}, writeCopy: true}
 			continue
 		}
 		ocr = ocr[:0]
+		d = 0
+
 		for j = range names {
 			if !strings.Contains(names[j], "lift") {
 				ocr = append(ocr, names[j])
+				d++
 			}
 		}
 
 		for j = range ocr {
 			cp = make([]string, len(ocr))
 			copy(cp, ocr)
-			bedMap[ocr[j]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: cp}
+			if j == 0 {
+				bedMap[ocr[j]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: cp, writeCopy: true}
+			} else {
+				bedMap[ocr[j]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: cp, writeCopy: false}
+			}
+
 			_, found = mp[ocr[j]]
 			if !found {
 				createNode(mp, ocr[j])
@@ -73,9 +82,7 @@ func main() {
 				if !strings.Contains(names[k], "lift") || strings.Contains(names[k], ocr[j]) {
 					continue
 				}
-				//if strings.Contains(names[k], ocr[j]) {
-				//	fmt.Println(ocr[j], names[k])
-				//}
+
 				tmpName = stripLiftName(names[k])
 				n, found = mp[tmpName]
 				if !found {
@@ -86,14 +93,6 @@ func main() {
 			}
 		}
 	}
-
-	/*node := mp["homologousElement_18907"]
-	fmt.Println(node)
-	for i := range node.connections {
-		fmt.Println(node.connections[i])
-	}
-
-	*/
 
 	//writeFamilies(mp, bedMap, outBed, flag.Arg(2))
 	writeFamiliesRecursive(mp, bedMap, outFamilies, outBed)
@@ -268,6 +267,9 @@ func writeBedMap(bedMap map[string]bed, outBed *fileio.EasyWriter) {
 	var b bed
 	for i := range bedMap {
 		b, _ = bedMap[i]
+		if !b.writeCopy {
+			continue
+		}
 		if len(b.famName) == 0 {
 			b.famName = []string{"lonely"}
 		}
