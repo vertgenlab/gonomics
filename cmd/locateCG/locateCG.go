@@ -50,13 +50,9 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
-	//args
-	inFa := flag.Arg(0)
-	chrom := flag.Arg(1)
-
 	s := Settings{
-		InFa:      inFa,
-		ChromName: chrom,
+		InFa:      flag.Arg(0),
+		ChromName: flag.Arg(1),
 	}
 
 	//run locate() function on provided args; will output a slice of structs
@@ -66,8 +62,8 @@ func main() {
 func locateCG(s Settings) {
 	var err error
 	var output []CGsite
-	//set chromosome name from args
-	chrom := s.ChromName
+	var f1, f2, s1, s2 dna.Base
+	var refBases, altBases string
 
 	//read in fasta file
 	f := fasta.Read(s.InFa)
@@ -94,17 +90,14 @@ func locateCG(s Settings) {
 	fmt.Printf("Beginning loop\n")
 	//for length of first sequence
 	for i := 0; i < len(firstSeq)-1; i++ {
-
 		//store dna.Bases
-		f1, f2 := firstSeq[i], firstSeq[i+1]
-		s1, s2 := secondSeq[i], secondSeq[i+1]
-
+		f1, f2 = firstSeq[i], firstSeq[i+1]
+		s1, s2 = secondSeq[i], secondSeq[i+1]
 		if !(dna.DefineBase(f1)) || !(dna.DefineBase(f2)) || !(dna.DefineBase(s1)) || !(dna.DefineBase(s2)) {
 			continue
 		}
-
-		var refBases, altBases string
-
+		refBases = ""
+		altBases = ""
 		if f1 != s1 {
 			refBases += dna.BaseToString(f1)
 			altBases += dna.BaseToString(s1)
@@ -122,7 +115,7 @@ func locateCG(s Settings) {
 				startPos := fasta.AlnPosToRefPosCounter(f[0], i, refStart, alnStart)
 				endPos := startPos + 1
 				//add to "gained CpGs"
-				output = append(output, CGsite{chrom, startPos, endPos, "gain", i, (i + 1), refBases, altBases})
+				output = append(output, CGsite{s.ChromName, startPos, endPos, "gain", i, (i + 1), refBases, altBases})
 			}
 			//if there is no CG in sequence 1 but there is a CG in sequence 2
 		} else if s1 == dna.C && s2 == dna.G {
@@ -130,7 +123,7 @@ func locateCG(s Settings) {
 			startPos := fasta.AlnPosToRefPosCounter(f[0], i, refStart, alnStart)
 			endPos := startPos + 1
 			//add to "lost CpGs"
-			output = append(output, CGsite{chrom, startPos, endPos, "loss", i, (i + 1), refBases, altBases})
+			output = append(output, CGsite{s.ChromName, startPos, endPos, "loss", i, (i + 1), refBases, altBases})
 		}
 
 		//if a CG gain or loss has already been recorded in "output"
