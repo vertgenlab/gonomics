@@ -99,6 +99,9 @@ func Read(filename string) []Bed {
 
 	for line, doneReading = fileio.EasyNextRealLine(file); !doneReading; line, doneReading = fileio.EasyNextRealLine(file) {
 		current := processBedLine(line)
+		/*if current.ChromEnd >= current.ChromStart {
+			log.Fatalf("Error: Found region with length=0: %s", line)
+		}*/
 		answer = append(answer, current)
 	}
 	err = file.Close()
@@ -111,6 +114,10 @@ func processBedLine(line string) Bed {
 	words := strings.Split(line, "\t")
 	startNum := parse.StringToInt(words[1])
 	endNum := parse.StringToInt(words[2])
+
+	if endNum >= startNum {
+		log.Fatalf("Error: Found region with length <= 0 : %s\n Filter out regions with length <= 0 before proceeding.\n", line)
+	}
 
 	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Strand: None, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
