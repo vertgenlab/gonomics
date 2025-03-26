@@ -219,5 +219,5 @@ func percentIdentity(a axt.Axt, idxStart, idxEnd int) float64 {
 			c++
 		}
 	}
-	return float64(c) / float64(idxEnd-idxStart)
+	return (float64(c) / float64(idxEnd-idxStart)) * 100
 }

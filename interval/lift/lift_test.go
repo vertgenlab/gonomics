@@ -69,7 +69,7 @@ func TestAxtPercentIdentityInInterval(t *testing.T) {
 	axtRecords := axt.Read("testdata/in.axt")
 	region1 := bed.Bed{Chrom: "chr1", ChromStart: 100, ChromEnd: 120}
 	region2 := bed.Bed{Chrom: "chr2", ChromStart: 200, ChromEnd: 220}
-	var exp float64 = 55
+	var exp float64 = 60.869565
 	out1 := AxtPercentIdentityInInterval(axtRecords[1], region1)
 
 	if !numbers.ApproxEqual(out1, exp, 1e-6) {

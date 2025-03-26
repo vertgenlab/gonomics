@@ -24,7 +24,7 @@ func buildAxTree(file string) map[string]*interval.IntervalNode {
 func main() {
 	var inBed, liftBed []bed.Bed
 	var axtOverlap []interval.Interval
-	var lifted bed.Bed = bed.Bed{Score: 0, FieldsInitialized: 7}
+	var lifted bed.Bed = bed.Bed{Score: 0, Strand: '.', FieldsInitialized: 7}
 
 	flag.Parse()
 	if len(flag.Args()) != 5 {
@@ -39,6 +39,9 @@ func main() {
 	in := bed.GoReadToChan(flag.Arg(1))
 	fmt.Println("reading bed")
 	for rec := range in {
+		rec.Annotation = []string{}
+		rec.FieldsInitialized = 7
+		rec.Strand = '.'
 		inBed = append(inBed, rec)
 		axtOverlap = interval.Query(axtTree, rec, "di")
 		for i := range axtOverlap {
