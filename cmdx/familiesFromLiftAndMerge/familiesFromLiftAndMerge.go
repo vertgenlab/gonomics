@@ -15,6 +15,7 @@ type Node struct {
 	score       int
 	seen        bool
 	connections []*Node
+	percID      []float64
 }
 
 type bed struct {
@@ -332,6 +333,7 @@ func buildGraphRecursive(mp map[string]*Node, startNode string, outDot string) {
 		return
 	}
 
+	fileio.WriteToFileHandle(out, fmt.Sprintf("outputorder=\"edgesfirst\""))
 	fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=green, style=filled, label=\"\"]", startNode))
 	n := mp[startNode]
 
@@ -351,7 +353,10 @@ func dfsDotFile(node *Node, startNode string, out *fileio.EasyWriter) {
 	}
 	connections, homologous := formatAlnString(node.connections)
 	for i := range homologous {
-		fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [label=\"\"]", homologous[i]))
+		if homologous[i] == startNode {
+			continue
+		}
+		fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=white, style=filled, label=\"\"]", homologous[i]))
 	}
 	fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- %s", node.name, connections))
 

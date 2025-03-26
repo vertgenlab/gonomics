@@ -24,7 +24,7 @@ func buildAxTree(file string) map[string]*interval.IntervalNode {
 func main() {
 	var inBed, liftBed []bed.Bed
 	var axtOverlap []interval.Interval
-	var lifted bed.Bed = bed.Bed{Score: 0, FieldsInitialized: 5}
+	var lifted bed.Bed = bed.Bed{Score: 0, FieldsInitialized: 6}
 
 	flag.Parse()
 	if len(flag.Args()) != 5 {
@@ -44,6 +44,7 @@ func main() {
 		for i := range axtOverlap {
 			lifted.Chrom, lifted.ChromStart, lifted.ChromEnd = lift.LiftCoordinatesWithAxt(axtOverlap[i].(axt.Axt), rec, chromSizes[axtOverlap[i].(axt.Axt).QName].Size)
 			lifted.Name = rec.Name + fmt.Sprintf("_lift%d", i)
+			lifted.Annotation = []string{fmt.Sprintf("%.2f", lift.AxtPercentIdentityInInterval(axtOverlap[i].(axt.Axt), rec))}
 			liftBed = append(liftBed, lifted)
 		}
 	}
@@ -52,7 +53,7 @@ func main() {
 	outBed := removeSelfOverlaps(inBed, liftBed)
 	fmt.Println("merging and writing")
 	bed.Write(flag.Arg(3), outBed)
-	mergedBed := bed.MergeBedsKeepNames(outBed)
+	mergedBed := bed.MergeBedsKeepNamesAndAnnotations(outBed)
 	fmt.Println("length of mergedBed: ", len(mergedBed))
 	//bed.Write("families/mergedBedPreReLift.bed", mergedBed)
 	fmt.Println("Re-lifting homologous")
@@ -85,6 +86,7 @@ func reLiftHomologous(mergedBed []bed.Bed, axtTree map[string]*interval.Interval
 			continue
 		}
 		names = append([]string{fmt.Sprintf("homologousElement_%d", c)}, names...)
+		mergedBed[i].Annotation = append([]string{"NA"}, mergedBed[i].Annotation...)
 		c++
 		mergedBed[i].Name = strings.Join(names, ",")
 		homologous = append(homologous, mergedBed[i])
@@ -116,6 +118,7 @@ func reLiftHomologous(mergedBed []bed.Bed, axtTree map[string]*interval.Interval
 					log.Fatalf("we should have found this node: %s", name)
 				}
 				bd.Name = fmt.Sprintf("%s,%s_lift%d", bd.Name, names[0], c)
+				bd.Annotation = append(bd.Annotation, fmt.Sprintf("%.2f", lift.AxtPercentIdentityInInterval(axtForLift[j].(axt.Axt), homologous[i])))
 				bedMap[name] = bd
 				c++
 			}
