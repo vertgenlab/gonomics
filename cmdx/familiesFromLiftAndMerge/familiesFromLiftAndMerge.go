@@ -24,11 +24,12 @@ type bed struct {
 	end       string
 	names     []string
 	famName   []string
+	PercID    []string
 	writeCopy bool
 }
 
 func main() {
-	var cols, names, ocr, cp []string
+	var cols, names, ocr, cp, percID []string
 	var tmpName string
 	var j, k, d int
 	var found bool
@@ -52,8 +53,9 @@ func main() {
 	for i := range in {
 		cols = strings.Split(in[i], "\t")
 		names = strings.Split(cols[3], ",")
+		percID = strings.Split(cols[4], ",")
 		if len(names) == 1 && !strings.Contains(names[0], "lift") {
-			bedMap[names[0]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: []string{names[0]}, writeCopy: true}
+			bedMap[names[0]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: []string{names[0]}, PercID: percID, writeCopy: true}
 			continue
 		}
 		ocr = ocr[:0]
