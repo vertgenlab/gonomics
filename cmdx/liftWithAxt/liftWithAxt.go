@@ -39,7 +39,7 @@ func main() {
 	in := bed.GoReadToChan(flag.Arg(1))
 	fmt.Println("reading bed")
 	for rec := range in {
-		rec.Annotation = []string{}
+		rec.Annotation = []string{"NA"}
 		rec.FieldsInitialized = 7
 		rec.Strand = '.'
 		inBed = append(inBed, rec)
