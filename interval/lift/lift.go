@@ -215,7 +215,7 @@ func AxtPercentIdentityInInterval(a axt.Axt, refInterval interval.Interval) floa
 func percentIdentity(a axt.Axt, idxStart, idxEnd int) float64 {
 	var c int
 	for i := idxStart; i < idxEnd; i++ {
-		if a.RSeq[i] == a.QSeq[i] {
+		if dna.ToUpper(a.RSeq[i]) == dna.ToUpper(a.QSeq[i]) {
 			c++
 		}
 	}

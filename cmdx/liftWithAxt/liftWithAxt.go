@@ -54,8 +54,9 @@ func main() {
 
 	fmt.Println("removing self overlaps")
 	outBed := removeSelfOverlaps(inBed, liftBed)
-	fmt.Println("merging and writing")
+	fmt.Println("writing lifted bed")
 	bed.Write(flag.Arg(3), outBed)
+	fmt.Println("merging bed")
 	mergedBed := bed.MergeBedsKeepNamesAndAnnotations(outBed)
 	fmt.Println("length of mergedBed: ", len(mergedBed))
 	//bed.Write("families/mergedBedPreReLift.bed", mergedBed)
