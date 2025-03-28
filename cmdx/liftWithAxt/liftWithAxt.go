@@ -49,6 +49,9 @@ func main() {
 			lifted.Name = rec.Name + fmt.Sprintf("_lift%d", i)
 			lifted.Annotation = []string{fmt.Sprintf("%.2f", lift.AxtPercentIdentityInInterval(axtOverlap[i].(axt.Axt), rec))}
 			liftBed = append(liftBed, lifted)
+			if rec.Name == "h9_atac_rep1_1.hs1_peak_96571" && interval.IntervalSize(lifted) < 10 {
+				fmt.Println(axtOverlap[i].(axt.Axt))
+			}
 		}
 	}
 
