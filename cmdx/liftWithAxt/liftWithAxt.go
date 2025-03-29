@@ -9,6 +9,7 @@ import (
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/interval/lift"
 	"log"
+	"math"
 	"strings"
 )
 
@@ -45,12 +46,15 @@ func main() {
 		inBed = append(inBed, rec)
 		axtOverlap = interval.Query(axtTree, rec, "di")
 		for i := range axtOverlap {
+			if lift.AxtPercentIdentityInInterval(axtOverlap[i].(axt.Axt), rec) < 70 {
+				continue
+			}
 			lifted.Chrom, lifted.ChromStart, lifted.ChromEnd = lift.LiftCoordinatesWithAxt(axtOverlap[i].(axt.Axt), rec, chromSizes[axtOverlap[i].(axt.Axt).QName].Size)
 			lifted.Name = rec.Name + fmt.Sprintf("_lift%d", i)
 			lifted.Annotation = []string{fmt.Sprintf("%.2f", lift.AxtPercentIdentityInInterval(axtOverlap[i].(axt.Axt), rec))}
 			liftBed = append(liftBed, lifted)
-			if rec.Name == "h9_atac_rep1_1.hs1_peak_96571" && interval.IntervalSize(lifted) < 10 {
-				fmt.Println(axtOverlap[i].(axt.Axt))
+			if math.Abs(float64(interval.IntervalSize(lifted)-interval.IntervalSize(rec))) > 25 {
+				fmt.Println(fmt.Println(rec, lifted))
 			}
 		}
 	}
