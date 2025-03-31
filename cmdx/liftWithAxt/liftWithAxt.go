@@ -54,7 +54,7 @@ func main() {
 			lifted.Annotation = []string{fmt.Sprintf("%.2f", lift.AxtPercentIdentityInInterval(axtOverlap[i].(axt.Axt), rec))}
 			liftBed = append(liftBed, lifted)
 			if math.Abs(float64(interval.IntervalSize(lifted)-interval.IntervalSize(rec))) > 25 {
-				fmt.Println(fmt.Println(rec, lifted))
+				fmt.Println(rec, lifted)
 			}
 		}
 	}
