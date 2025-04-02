@@ -24,6 +24,7 @@ func parseInputSeqArgs() {
 	inputSeqFlags := flag.NewFlagSet("inputSeq", flag.ExitOnError)
 	var plasmidUMI *string = inputSeqFlags.String("plasmidUMI", "", "Provide a file name where plasmid UMI statistics will be written. "+
 		"Currently, the program searches for the UMI after this sequence: GCATGCGGAT")
+	var dualBx *bool = inputSeqFlags.Bool("dualBx", false, "the bed file provided for counts in a bed file of barcodes, with barcodes on each side of the construct.")
 
 	err := inputSeqFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
@@ -43,6 +44,7 @@ func parseInputSeqArgs() {
 		InSam:   inputSeqFlags.Arg(0),
 		InBed:   inputSeqFlags.Arg(1),
 		Outfile: inputSeqFlags.Arg(2),
+		DualBx:  *dualBx,
 	}
 	starrSeq.ParseInputSequencingSam(s)
 }

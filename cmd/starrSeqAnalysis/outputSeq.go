@@ -2,14 +2,19 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/starrSeq"
 	"log"
 	"os"
 )
 
-func outputSeqUsage() {
-
+func outputSeqUsage(outputSeqFlags *flag.FlagSet) {
+	fmt.Print("Get reporter count data from a bam file that has been generated from a 'cellranger count' command. Use 'samtools view' to subset the bam file " +
+		"for reporter reads only\n" +
+		"Usage:\n" +
+		"starrSeqAnalysis outputSeq [options] in.cellranger.bam out.counts.txt\n")
+	outputSeqFlags.PrintDefaults()
 }
 
 func parseOutputSeqArgs() {
@@ -49,7 +54,7 @@ func parseOutputSeqArgs() {
 
 	err := outputSeqFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
-	outputSeqFlags.Usage = func() { makeRefUsage(outputSeqFlags) }
+	outputSeqFlags.Usage = func() { outputSeqUsage(outputSeqFlags) }
 
 	if *noOut {
 		expectedNumArgs = 1
@@ -74,8 +79,8 @@ func parseOutputSeqArgs() {
 	}
 
 	s := starrSeq.OutputSeqSettings{
-		InFile:           flag.Arg(0),
-		OutFile:          flag.Arg(1),
+		InFile:           outputSeqFlags.Arg(0),
+		OutFile:          outputSeqFlags.Arg(1),
 		InputNormalize:   *inputNorm,
 		ValidUmis:        *validUmis,
 		ScAnalysis:       *cellTypeAnalysis,

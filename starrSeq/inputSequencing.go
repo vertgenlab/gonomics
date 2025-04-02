@@ -14,6 +14,7 @@ type InputSeqSettings struct {
 	InSam   string
 	InBed   string
 	Outfile string
+	DualBx  bool
 }
 
 // ParseInputSequencingSam reads and parses an alignment file for an input library sequencing run. It creates a read-count map for all constructs in the provided bed file.
