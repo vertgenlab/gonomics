@@ -24,12 +24,13 @@ type bed struct {
 	end       string
 	names     []string
 	famName   []string
-	PercID    []string
+	PercID    []float64
 	writeCopy bool
 }
 
 func main() {
-	var cols, names, ocr, cp, percID []string
+	var cols, names, ocr, cp []string
+	var percID []float64
 	var tmpName string
 	var j, k, d int
 	var found bool
@@ -53,7 +54,7 @@ func main() {
 	for i := range in {
 		cols = strings.Split(in[i], "\t")
 		names = strings.Split(cols[3], ",")
-		percID = cols[4:]
+		percID = fileio.StringToFloatSlice(cols[4])
 		if len(names) == 1 && !strings.Contains(names[0], "lift") {
 			bedMap[names[0]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: []string{names[0]}, PercID: percID, writeCopy: true}
 			continue
@@ -72,9 +73,9 @@ func main() {
 			cp = make([]string, len(ocr))
 			copy(cp, ocr)
 			if j == 0 {
-				bedMap[ocr[j]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: cp, writeCopy: true}
+				bedMap[ocr[j]] = bed{chrom: cols[0], start: cols[1], end: cols[2], PercID: percID, names: cp, writeCopy: true}
 			} else {
-				bedMap[ocr[j]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: cp, writeCopy: false}
+				bedMap[ocr[j]] = bed{chrom: cols[0], start: cols[1], end: cols[2], PercID: percID, names: cp, writeCopy: false}
 			}
 
 			_, found = mp[ocr[j]]
@@ -91,13 +92,19 @@ func main() {
 				if !found {
 					n = createNode(mp, names[k])
 				}
-				mp[ocr[j]].connections = checkConnectionSlice(mp[ocr[j]].connections, n)
-				mp[n.name].connections = checkConnectionSlice(mp[n.name].connections, mp[ocr[j]])
+				if addConnectionSlice(mp[ocr[j]].connections, n) {
+					mp[ocr[j]].connections = append(mp[ocr[j]].connections, n)
+					mp[n.name].percID = append(mp[n.name].percID, percID[k])
+				} else {
+					mp[n.name].percID = append(mp[n.name].percID, percID[k])
+				}
+				if addConnectionSlice(mp[n.name].connections, mp[ocr[j]]) {
+					mp[n.name].connections = append(mp[n.name].connections, mp[ocr[j]])
+				}
 			}
 		}
 	}
 
-	//writeFamilies(mp, bedMap, outBed, flag.Arg(2))
 	writeFamiliesRecursive(mp, bedMap, outFamilies, outBed)
 	writeWholeMap(mp, outMap)
 	if *startNode != "" {
@@ -125,6 +132,7 @@ func createNode(mp map[string]*Node, enh string) *Node {
 		score:       0,
 		seen:        false,
 		connections: []*Node{},
+		percID:      []float64{},
 	}
 	mp[enh] = n
 	return n
@@ -133,16 +141,19 @@ func createNode(mp map[string]*Node, enh string) *Node {
 func writeFamiliesRecursive(mp map[string]*Node, bedMap map[string]bed, outFile string, outBedFile string) {
 	var c int
 	var fam []string
+	var min, max float64
 	out := fileio.EasyCreate(outFile)
 	outBed := fileio.EasyCreate(outBedFile)
 	for i := range mp {
 		fam = fam[:0]
 		if !mp[i].seen {
+			min = mp[i].percID[0]
+			max = mp[i].percID[0]
 			c++
-			fam = dfs(mp[i], fam)
+			fam, min, max = dfs(mp[i], fam, min, max)
 		}
 		if len(fam) > 0 {
-			fileio.WriteToFileHandle(out, fmt.Sprintf("%d\tfamily_%d\t%s", len(fam), c, strings.Join(fam, ",")))
+			fileio.WriteToFileHandle(out, fmt.Sprintf("%d\tfamily_%d\t%s\t%.2f\t%.2f", len(fam), c, strings.Join(fam, ","), min, max))
 			addFamNameToBed(fam, bedMap, c)
 		}
 	}
@@ -150,27 +161,33 @@ func writeFamiliesRecursive(mp map[string]*Node, bedMap map[string]bed, outFile 
 	exception.PanicOnErr(out.Close())
 }
 
-func dfs(node *Node, fam []string) []string {
+func dfs(node *Node, fam []string, min, max float64) ([]string, float64, float64) {
 	if node.seen {
-		return fam
+		return fam, min, max
 	}
 
 	node.seen = true
 	fam = append(fam, node.name)
 
 	for i := range node.connections {
-		fam = dfs(node.connections[i], fam)
+		if node.percID[i] < min {
+			min = node.percID[i]
+		}
+		if node.percID[i] > max {
+			max = node.percID[i]
+		}
+		fam, min, max = dfs(node.connections[i], fam, min, max)
 	}
-	return fam
+	return fam, min, max
 }
 
-func checkConnectionSlice(conns []*Node, n *Node) []*Node {
+func addConnectionSlice(conns []*Node, n *Node) bool {
 	for i := range conns {
 		if n.name == conns[i].name {
-			return conns
+			return false
 		}
 	}
-	return append(conns, n)
+	return true
 }
 
 func writeWholeMap(mp map[string]*Node, outfile string) {
@@ -180,7 +197,7 @@ func writeWholeMap(mp map[string]*Node, outfile string) {
 
 	for i := range mp {
 		names = nodesToNameSlice(mp[i].connections)
-		fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s", i, strings.Join(names, ",")))
+		fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%s", i, strings.Join(names, ","), fileio.FloatSliceToString(mp[i].percID)))
 	}
 	exception.PanicOnErr(out.Close())
 }
@@ -325,7 +342,7 @@ func stripLiftName(name string) string {
 func buildGraphRecursive(mp map[string]*Node, startNode string, outDot string) {
 	out := fileio.EasyCreate(outDot)
 	fileio.WriteToFileHandle(out, "strict graph {")
-
+	fileio.WriteToFileHandle(out, fmt.Sprintf("outputorder=\"edgesfirst\""))
 	if startNode == "all" {
 		for i := range mp {
 			dfsDotFile(mp[i], "", out)
@@ -335,7 +352,6 @@ func buildGraphRecursive(mp map[string]*Node, startNode string, outDot string) {
 		return
 	}
 
-	fileio.WriteToFileHandle(out, fmt.Sprintf("outputorder=\"edgesfirst\""))
 	fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=green, style=filled, label=\"\"]", startNode))
 	n := mp[startNode]
 
@@ -353,14 +369,13 @@ func dfsDotFile(node *Node, startNode string, out *fileio.EasyWriter) {
 	if node.ocr && node.name != startNode {
 		fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=red, style=filled, label=\"\"]", node.name))
 	}
-	connections, homologous := formatAlnString(node.connections)
-	for i := range homologous {
-		if homologous[i] == startNode {
-			continue
+
+	for i := range node.connections {
+		if strings.Contains(node.connections[i].name, "homologous") && node.connections[i].name != startNode {
+			fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=white, style=filled, label=\"\"]", node.connections[i].name))
 		}
-		fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=white, style=filled, label=\"\"]", homologous[i]))
+		fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- \"%s\" [minlen = %.2f];", node.name, node.connections[i].name, 100-node.percID[i]))
 	}
-	fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- %s", node.name, connections))
 
 	for i := range node.connections {
 		dfsDotFile(node.connections[i], startNode, out)

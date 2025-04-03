@@ -39,7 +39,7 @@ func main() {
 	in := bed.GoReadToChan(flag.Arg(1))
 	fmt.Println("reading bed")
 	for rec := range in {
-		rec.Annotation = []string{"NA"}
+		rec.Annotation = []string{"0.00"}
 		rec.FieldsInitialized = 7
 		rec.Strand = '.'
 		inBed = append(inBed, rec)
@@ -100,7 +100,7 @@ func reLiftHomologous(mergedBed []bed.Bed, axtTree map[string]*interval.Interval
 			continue
 		}
 		names = append([]string{fmt.Sprintf("homologousElement_%d", c)}, names...)
-		mergedBed[i].Annotation = append([]string{"NA"}, mergedBed[i].Annotation...)
+		mergedBed[i].Annotation = append([]string{"0.00"}, mergedBed[i].Annotation...)
 		c++
 		mergedBed[i].Name = strings.Join(names, ",")
 		homologous = append(homologous, mergedBed[i])
