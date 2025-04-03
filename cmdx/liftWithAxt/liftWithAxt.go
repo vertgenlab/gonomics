@@ -9,7 +9,6 @@ import (
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/interval/lift"
 	"log"
-	"math"
 	"strings"
 )
 
@@ -53,9 +52,6 @@ func main() {
 			lifted.Name = rec.Name + fmt.Sprintf("_lift%d", i)
 			lifted.Annotation = []string{fmt.Sprintf("%.2f", lift.AxtPercentIdentityInInterval(axtOverlap[i].(axt.Axt), rec))}
 			liftBed = append(liftBed, lifted)
-			if math.Abs(float64(interval.IntervalSize(lifted)-interval.IntervalSize(rec))) > 25 {
-				fmt.Println(rec, lifted)
-			}
 		}
 	}
 
@@ -70,7 +66,14 @@ func main() {
 	fmt.Println("Re-lifting homologous")
 	mergedBed = reLiftHomologous(mergedBed, axtTree, chromSizes)
 	fmt.Println("length of mergedBed: ", len(mergedBed))
+	changeDelim(mergedBed)
 	bed.Write(flag.Arg(4), mergedBed)
+}
+
+func changeDelim(mergedBed []bed.Bed) {
+	for i := range mergedBed {
+		mergedBed[i].Annotation = []string{strings.Join(mergedBed[i].Annotation, ",")}
+	}
 }
 
 func reLiftHomologous(mergedBed []bed.Bed, axtTree map[string]*interval.IntervalNode, chromSizes map[string]chromInfo.ChromInfo) []bed.Bed {
