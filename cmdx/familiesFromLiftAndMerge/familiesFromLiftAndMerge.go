@@ -146,6 +146,7 @@ func writeFamiliesRecursive(mp map[string]*Node, bedMap map[string]bed, outFile 
 	outBed := fileio.EasyCreate(outBedFile)
 	for i := range mp {
 		fam = fam[:0]
+		pidSlice = pidSlice[:0]
 		if !mp[i].seen {
 			pidSlice = append(pidSlice, mp[i].percID[0])
 			c++
