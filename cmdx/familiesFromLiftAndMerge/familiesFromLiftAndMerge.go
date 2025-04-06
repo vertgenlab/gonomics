@@ -52,7 +52,6 @@ func main() {
 	outMap := flag.Arg(3)
 
 	for i := range in {
-		fmt.Println(in[i])
 		cols = strings.Split(in[i], "\t")
 		names = strings.Split(cols[3], ",")
 		percID = fileio.StringToFloatSlice(cols[6])
@@ -103,10 +102,6 @@ func main() {
 				}
 			}
 		}
-	}
-
-	for i := range mp {
-		fmt.Println(mp[i])
 	}
 
 	writeFamiliesRecursive(mp, bedMap, outFamilies, outBed)
@@ -175,7 +170,6 @@ func dfs(node *Node, fam []string, pidSlice []float64) []string {
 	fam = append(fam, node.name)
 
 	for i := range node.connections {
-		fmt.Println(node.name)
 		pidSlice = append(pidSlice, node.percID[i])
 		fam = dfs(node.connections[i], fam, pidSlice)
 	}
