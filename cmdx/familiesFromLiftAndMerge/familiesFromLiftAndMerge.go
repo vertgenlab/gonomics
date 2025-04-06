@@ -52,9 +52,10 @@ func main() {
 	outMap := flag.Arg(3)
 
 	for i := range in {
+		fmt.Println(in[i])
 		cols = strings.Split(in[i], "\t")
 		names = strings.Split(cols[3], ",")
-		percID = fileio.StringToFloatSlice(cols[4])
+		percID = fileio.StringToFloatSlice(cols[6])
 		if len(names) == 1 && !strings.Contains(names[0], "lift") {
 			bedMap[names[0]] = bed{chrom: cols[0], start: cols[1], end: cols[2], names: []string{names[0]}, PercID: percID, writeCopy: true}
 			continue
@@ -68,7 +69,6 @@ func main() {
 				d++
 			}
 		}
-
 		for j = range ocr {
 			cp = make([]string, len(ocr))
 			copy(cp, ocr)
@@ -103,6 +103,10 @@ func main() {
 				}
 			}
 		}
+	}
+
+	for i := range mp {
+		fmt.Println(mp[i])
 	}
 
 	writeFamiliesRecursive(mp, bedMap, outFamilies, outBed)
@@ -141,19 +145,20 @@ func createNode(mp map[string]*Node, enh string) *Node {
 func writeFamiliesRecursive(mp map[string]*Node, bedMap map[string]bed, outFile string, outBedFile string) {
 	var c int
 	var fam []string
-	var min, max float64
+	var pidSlice []float64
+	var min, max, avg float64
 	out := fileio.EasyCreate(outFile)
 	outBed := fileio.EasyCreate(outBedFile)
 	for i := range mp {
 		fam = fam[:0]
 		if !mp[i].seen {
-			min = mp[i].percID[0]
-			max = mp[i].percID[0]
+			pidSlice = append(pidSlice, mp[i].percID[0])
 			c++
-			fam, min, max = dfs(mp[i], fam, min, max)
+			fam = dfs(mp[i], fam, pidSlice)
 		}
 		if len(fam) > 0 {
-			fileio.WriteToFileHandle(out, fmt.Sprintf("%d\tfamily_%d\t%s\t%.2f\t%.2f", len(fam), c, strings.Join(fam, ","), min, max))
+			min, max, avg = percIdCalcs(pidSlice)
+			fileio.WriteToFileHandle(out, fmt.Sprintf("%d\tfamily_%d\t%s\t%.2f\t%.2f\t%.2f", len(fam), c, strings.Join(fam, ","), avg, min, max))
 			addFamNameToBed(fam, bedMap, c)
 		}
 	}
@@ -161,24 +166,35 @@ func writeFamiliesRecursive(mp map[string]*Node, bedMap map[string]bed, outFile 
 	exception.PanicOnErr(out.Close())
 }
 
-func dfs(node *Node, fam []string, min, max float64) ([]string, float64, float64) {
+func dfs(node *Node, fam []string, pidSlice []float64) []string {
 	if node.seen {
-		return fam, min, max
+		return fam
 	}
 
 	node.seen = true
 	fam = append(fam, node.name)
 
 	for i := range node.connections {
-		if node.percID[i] < min {
-			min = node.percID[i]
-		}
-		if node.percID[i] > max {
-			max = node.percID[i]
-		}
-		fam, min, max = dfs(node.connections[i], fam, min, max)
+		fmt.Println(node.name)
+		pidSlice = append(pidSlice, node.percID[i])
+		fam = dfs(node.connections[i], fam, pidSlice)
 	}
-	return fam, min, max
+	return fam
+}
+
+func percIdCalcs(pidSlice []float64) (min, max, avg float64) {
+	var tot float64
+	min, max = pidSlice[0], pidSlice[0]
+	for i := range pidSlice {
+		if pidSlice[i] > max {
+			max = pidSlice[i]
+		}
+		if pidSlice[i] < min {
+			min = pidSlice[i]
+		}
+		tot += pidSlice[i]
+	}
+	return min, max, tot / float64(len(pidSlice))
 }
 
 func addConnectionSlice(conns []*Node, n *Node) bool {
