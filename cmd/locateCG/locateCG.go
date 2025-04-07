@@ -27,38 +27,6 @@ type CGsite struct {
 	Alt      string //sequence 2 base(s)
 }
 
-func usage() {
-	fmt.Print("locateCG chr*.fa.gz chromName \n" +
-		"\tRecords positional information of CpG site changes in sequence 1 relative\n" +
-		"\tto sequence 2 in alignment fasta. Only records changes resulting from substitutions, not indels.\n" +
-		"\tARGS:\n" +
-		"\tchr*fa.gz - input fasta file  with 2 aligned sequences to compare\n" +
-		"\tchromName - name of chromosome e.g. chr1\n")
-}
-
-func main() {
-	//expect 2 args: input fasta file and chromosome name
-	var expectedNumArgs int = 2
-
-	flag.Usage = usage
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	flag.Parse()
-
-	//if number of provided args is not 2
-	if len(flag.Args()) != expectedNumArgs {
-		flag.Usage()
-		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
-	}
-
-	s := Settings{
-		InFa:      flag.Arg(0),
-		ChromName: flag.Arg(1),
-	}
-
-	//run locate() function on provided args; will output a slice of structs
-	locateCG(s)
-}
-
 func locateCG(s Settings) {
 	var err error
 	var output []CGsite
@@ -67,6 +35,10 @@ func locateCG(s Settings) {
 
 	//read in fasta file
 	f := fasta.Read(s.InFa)
+
+	if len(f) > 2 {
+		log.Fatalf("Error: expecting exactly two records in multiFa, but got %d\n", len(f))
+	}
 
 	//specify sequence 1 and 2
 	firstSeq := f[0].Seq
@@ -87,7 +59,7 @@ func locateCG(s Settings) {
 	refStart := 0
 	alnStart := 0
 
-	fmt.Printf("Beginning loop\n")
+	//fmt.Printf("Beginning loop\n")
 	//for length of first sequence
 	for i := 0; i < len(firstSeq)-1; i++ {
 		//store dna.Bases
@@ -135,7 +107,7 @@ func locateCG(s Settings) {
 			//this will now be the new ref/aln position pair for conversion
 		}
 	}
-	fmt.Printf("Finished loop\n")
+	//fmt.Printf("Finished loop\n")
 
 	//create output file name and initialize file, write header line
 	outfileName := s.ChromName + "CGs.txt"
@@ -154,33 +126,34 @@ func locateCG(s Settings) {
 	fmt.Println("CG gains & losses found and written to", outfileName)
 }
 
-/*func SkipGaps(seq []dna.Base, ind int) (dna.Base, int) {
-	for ind < len(seq) && seq[ind] == dna.Gap {
-		ind++
+func usage() {
+	fmt.Print("locateCG chr*.fa.gz chromName \n" +
+		"\tRecords positional information of CpG site changes in sequence 1 relative\n" +
+		"\tto sequence 2 in alignment fasta. Only records changes resulting from substitutions, not indels.\n" +
+		"\tARGS:\n" +
+		"\tchr*fa.gz - input fasta file  with 2 aligned sequences to compare\n" +
+		"\tchromName - name of chromosome e.g. chr1\n")
+}
+
+func main() {
+	//expect 2 args: input fasta file and chromosome name
+	var expectedNumArgs int = 2
+
+	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	flag.Parse()
+
+	//if number of provided args is not 2
+	if len(flag.Args()) != expectedNumArgs {
+		flag.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n", expectedNumArgs, len(flag.Args()))
 	}
 
-	//if no nucleotide is found
-	if ind >= len(seq) {
-		return 0, ind // return 0
+	s := Settings{
+		InFa:      flag.Arg(0),
+		ChromName: flag.Arg(1),
 	}
 
-	//return first non-gap base & its index
-	return seq[ind], ind
-}*/
-
-/*func nonGapidx(seq1, seq2 []dna.Base) []int {
-	idxs := make([]int, len(seq1))
-	seq2idx := 0 // Tracks non-gap positions in ancestor
-
-	for i := 0; i < len(seq1); i++ {
-		// Assign current ancestor position
-		idxs[i] = seq2idx
-
-		// Only increment ancestor index when it's a non-gap character
-		if seq2[seq2idx] != dna.Gap {
-			seq2idx++
-		}
-	}
-
-	return idxs
-}*/
+	//run locate() function on provided args; will output a slice of structs
+	locateCG(s)
+}
