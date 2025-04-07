@@ -171,6 +171,9 @@ func dfs(node *Node, fam []string, pidSlice []float64) []string {
 	fam = append(fam, node.name)
 
 	for i := range node.connections {
+		if i > len(node.percID)-1 {
+			fmt.Println(node)
+		}
 		pidSlice = append(pidSlice, node.percID[i])
 		fam = dfs(node.connections[i], fam, pidSlice)
 	}
