@@ -142,3 +142,15 @@ func BedSliceToIntervals(inBed []bed.Bed) []Interval {
 	}
 	return intervalSlice
 }
+
+// Within takes two intervals and returns true if the "a" interval is equal or completely within the "b" interval. It returns
+// false in all other cases
+func Within(a Interval, b Interval) bool {
+	if a.GetChrom() != b.GetChrom() {
+		return false
+	}
+	if a.GetChromStart() >= b.GetChromStart() && a.GetChromEnd() <= b.GetChromEnd() {
+		return true
+	}
+	return false
+}

@@ -11,10 +11,11 @@ import (
 )
 
 type InputSeqSettings struct {
-	InSam   string
-	InBed   string
-	Outfile string
-	DualBx  bool
+	InSam         string
+	InBed         string
+	Outfile       string
+	DualBx        bool
+	Plasmidsaurus bool
 }
 
 // ParseInputSequencingSam reads and parses an alignment file for an input library sequencing run. It creates a read-count map for all constructs in the provided bed file.
@@ -37,6 +38,11 @@ func ParseInputSequencingSam(s InputSeqSettings) {
 		countsMap[i.Name] = 0
 	}
 	selectTree = interval.BuildTree(tree)
+
+	if s.Plasmidsaurus {
+		plasmidsaurus(s, inChan, selectTree, countsMap)
+		return
+	}
 
 	currEntry = <-inChan
 	for i := range inChan {
@@ -105,4 +111,111 @@ func calculateNormFactor(countsMap map[string]float64, outFile string) {
 	}
 	err := out.Close()
 	exception.PanicOnErr(err)
+}
+
+/*
+func plamsidsaurus(s InputSeqSettings, samChan <-chan sam.Sam, bedTree map[string]*interval.IntervalNode, countsMap map[string]float64) {
+	var ans []interval.Interval
+	var none, multiple int
+	var found bool
+	bxMap := make(map[string][]bed.Bed)
+	bx := bed.Read("/Users/sethweaver/Downloads/cdkn1aMUTATIONstarr/inputSeq/ref/cdkn1a_mut.bx.bed")
+
+	for i := range bx {
+		if !strings.Contains(bx[i].Name, "CDKN1A") {
+			continue
+		}
+		_, found = bxMap[bx[i].Name[:len(bx[i].Name)-2]]
+		if !found {
+			bxMap[bx[i].Name[:len(bx[i].Name)-2]] = []bed.Bed{bx[i]}
+		} else {
+			bxMap[bx[i].Name[:len(bx[i].Name)-2]] = append(bxMap[bx[i].Name[:len(bx[i].Name)-2]], bx[i])
+		}
+	}
+
+	var a, b, c, d, oor int
+
+	for i := range samChan {
+		ans = interval.Query(bedTree, i, "any")
+		switch len(ans) {
+		case 0:
+			none++
+		case 1:
+			_, found = bxMap[ans[0].(bed.Bed).Name]
+			if found {
+				a, b, c, d, oor = doWork(i, bxMap[ans[0].(bed.Bed).Name], a, b, c, d, oor)
+			}
+		default:
+			multiple++
+
+		}
+	}
+	fmt.Println(a, b, c, d, oor)
+	fmt.Printf("None: %d\nMulitple: %d\n", none, multiple)
+}
+
+func doWork(s sam.Sam, bx []bed.Bed, a, b, c, d, oor int) (int, int, int, int, int) {
+	var bases []dna.Base
+	var start, end int
+	if interval.Within(bx[0], s) {
+		bases = dna.StringToBases(strings.Split(bx[0].Name, "_")[len(strings.Split(bx[0].Name, "_"))-2])
+		start, end = bedToSamIdx(s, bx[0])
+		if end > len(s.Seq) {
+			oor++
+		} else {
+			if dna.CompareSeqsIgnoreCase(bases, s.Seq[start:end]) == 0 {
+				a++
+			} else {
+				fmt.Println(dna.BasesToString(bases), dna.BasesToString(s.Seq[start:end]))
+				b++
+			}
+		}
+	}
+	if interval.Within(bx[1], s) {
+		bases = dna.StringToBases(strings.Split(bx[1].Name, "_")[len(strings.Split(bx[0].Name, "_"))-2])
+		start, end = bedToSamIdx(s, bx[1])
+		if dna.CompareSeqsIgnoreCase(bases, s.Seq[start:end]) == 0 {
+			c++
+		} else {
+			d++
+		}
+	}
+	return a, b, c, d, oor
+}
+
+func bedToSamIdx(s sam.Sam, b bed.Bed) (int, int) {
+	var start, end int
+	start = b.ChromStart - s.GetChromStart()
+	end = start + bed.Size(b)
+	return start, end
+}
+
+*/
+
+func plasmidsaurus(s InputSeqSettings, samChan <-chan sam.Sam, bedTree map[string]*interval.IntervalNode, countsMap map[string]float64) {
+	var ans []interval.Interval
+	var none, multiple, supp, good int
+
+	out := fileio.EasyCreate(s.Outfile)
+
+	for i := range samChan {
+		ans = interval.Query(bedTree, i, "any")
+		switch len(ans) {
+		case 0:
+			none++
+		case 1:
+			if i.Flag&2048 == 2048 || i.MapQ == 0 {
+				supp++
+			} else {
+				countsMap[ans[0].(bed.Bed).Name]++
+				good++
+			}
+		default:
+			multiple++
+		}
+	}
+	for i := range countsMap {
+		fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%f", i, countsMap[i]))
+	}
+	exception.PanicOnErr(out.Close())
 }

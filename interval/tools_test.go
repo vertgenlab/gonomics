@@ -75,3 +75,19 @@ func TestUnique(t *testing.T) {
 		exception.PanicOnErr(err)
 	}
 }
+
+func TestWithin(t *testing.T) {
+	var exp []bool = []bool{false, true, false, false}
+	b := bed.Bed{
+		Chrom:      "chr1",
+		ChromStart: 0,
+		ChromEnd:   150,
+	}
+
+	in := BedSliceToIntervals(bed.Read("testdata/in.bed"))
+	for i := range in {
+		if Within(in[i], b) != exp[i] {
+			t.Errorf("error in Within")
+		}
+	}
+}
