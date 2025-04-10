@@ -62,7 +62,7 @@ func main() {
 	//var baseOverlap *int = flag.Int("baseOverlap", 0, "WIP")               //TODO
 	var aggregate *bool = flag.Bool("aggregate", false, "Determine overlap based on the sum of overlapping target records rather than individual target records.")
 	var relationship *string = flag.String("relationship", "any", "Choose a specific relationships that target and query records must fulfill to be reported. Use --printRelationships for more information.")
-	var mergedOutput *bool = flag.Bool("mergedOutput", false, "Print the input line followed by the corresponding select lines in the outfile.")
+	var mergedOutput *bool = flag.Bool("mergedOutput", false, "Print the select line followed by the corresponding input lines in the outfile.")
 	//var swapTargetQuery *bool = flag.Bool("swapTargetQuery", false, "WIP") //TODO
 	var helpRelationships *bool = flag.Bool("printRelationships", false, "Show a diagram of the valid interval relationships that can be tested for.")
 	cpuprof := flag.String("cpuProf", "", "DEBUG: cpu profile output for use with go tool pprof")
