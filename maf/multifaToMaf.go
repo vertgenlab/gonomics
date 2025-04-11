@@ -38,7 +38,7 @@ func MultifaToMaf(aln []fasta.Fasta, speciesGiven bool, speciesChr []string) []*
 			Start:   0, // hardcoded
 			Size:    unmaskedCount + maskedCount,
 			Strand:  true,
-			SrcSize: len(record.Seq), // TODO: do we want an argument to input the actual src size?
+			SrcSize: 1000, // TODO: do we want an argument to input the actual src size? len(record.Seq) or some default number 1000
 			Seq:     record.Seq,
 		}
 		block.Species[i] = &MafSpecies{Src: record.Name, SLine: sLine}

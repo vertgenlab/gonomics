@@ -1,7 +1,7 @@
 ##maf version=1
 a score=0.0
-s one.chr1   0 10 + 10 ACGTAACCGA
-s two.chr2   0 10 + 10 ACGTTAAAGT
-s three.chr3 0 10 + 10 ACGTCAAAGC
-s four.chr4  0 10 + 10 ACGTGCAAGG
+s one.chr1   0 10 + 1000 ACGTAACCGA
+s two.chr2   0 10 + 1000 ACGTTAAAGT
+s three.chr3 0 10 + 1000 ACGTCAAAGC
+s four.chr4  0 10 + 1000 ACGTGCAAGG
 
