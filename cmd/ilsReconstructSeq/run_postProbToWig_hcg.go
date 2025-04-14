@@ -3,13 +3,15 @@ package main
 import (
 	"github.com/vertgenlab/gonomics/reconstruct"
 	"github.com/vertgenlab/gonomics/wig"
+	"fmt"
 )
 
 func main() {
     fmt.Println("Hello")
 	postProbFile := "testdata/hcg_post_prob.csv"
-	inMaf := "/net/bmc-lab4/data/kellis/users/rimangan/primateT2T/alignment/work/yl726/PrimateT2T_15way/outputb/chr1.maf"
-	out = reconstruct.PostProbToWig(postProbFile, inMaf)
+	inMafFile := "/net/bmc-lab4/data/kellis/users/rimangan/primateT2T/alignment/work/yl726/PrimateT2T_15way/outputb/chr1.maf"
+	inMaf := maf.Read(v.mafFile)
+	out := reconstruct.PostProbToWig(postProbFile, inMaf)
 	wig.Write("/net/bmc-lab4/data/kellis/users/sarahaz/data/pdna/hcg_trails_reconstruct/hcg_postProb.wig", out)
 	
 	fmt.Println("")
