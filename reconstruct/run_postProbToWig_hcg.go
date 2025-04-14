@@ -1,7 +1,6 @@
-package main
+package reconstruct
 
 import (
-	"github.com/vertgenlab/gonomics/reconstruct"
 	"github.com/vertgenlab/gonomics/wig"
 )
 
