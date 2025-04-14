@@ -6,7 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
 	"encoding/csv"
-	"fmt"
+	// "fmt"
 	"log"
 	"strconv"
 	"os"
@@ -55,21 +55,16 @@ func PostProbToWig(postProbsFile string, mafInput []*maf.Maf) map[string]wig.Wig
 	}
 
 	// make a chrom.sizes ChromInfo struct for the entire maf file
-	var chromSizes map[string]chromInfo.ChromInfo
 	var chromSizeInfo []chromInfo.ChromInfo
 	for idx, block := range mafInput {
-		chromSizeInfo = append(chromSizeInfo, ChromInfo{Name: block.Src, Size: block.Size, order: idx})
+		chromSizeInfo = append(chromSizeInfo, chromInfo.ChromInfo{Name: block.Species[0].Src, Size: block.Species[0].Size, order: idx})
 
 	}
 	chromSizes := SliceToMap(chromSizeInfo)
 	outputWigMap := wig.MakeSkeleton(chromSizes, 0)
 
-	
-	prevLength := 0
-	curLength := 0
-
 	// iterate through each maf block
-	for idx, block := range mafInput {
+	for _, block := range mafInput {
 		//// iterate through the species in the 1st maf block and check that each species has the same sequence length
 		// for idx, species := range block.Species {
 		// 	curLength = species.SLine.Size
