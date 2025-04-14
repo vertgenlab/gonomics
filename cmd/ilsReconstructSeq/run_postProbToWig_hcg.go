@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/vertgenlab/gonomics/reconstruct"
 	"github.com/vertgenlab/gonomics/wig"
+	"github.com/vertgenlab/gonomics/maf"
 	"fmt"
 )
 
