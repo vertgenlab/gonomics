@@ -47,42 +47,60 @@ func readPostProbs(postProbsFilename string) map[string][]float64 {
 	return mapPostProbs
 }
 
-func PostProbToWig(postProbsFile string, mafInput []*maf.Maf) map[string]wig.Wig {
+func PostProbToWig(postProbsFile string, mafInput []*maf.Maf. chromSizes map[string]chromInfo.ChromInfo) map[string]wig.Wig {
 	
 	if len(mafInput) != 1 {
-		log.Fatal("Assumes only 1 maf block")
+		log.Fatal("PostProbtoWig expects only 1 maf block.")
 	}
 
+	outputWigMap := wig.MakeSkeleton(chromSizes, 0)
+
+	
 	prevLength := 0
 	curLength := 0
-	for idx, species := range mafInput[0].Species {
-		curLength = species.SLine.Size
-		if idx == 0 {
-			prevLength = curLength
-		} else if prevLength != curLength {
-			log.Fatal("Species must have same sequence length.")
+
+	// iterate through each maf block
+	for idx, block := range mafInput {
+		// iterate through the species in the 1st maf block and check that each species has the same sequence length
+		for idx, species := range block.Species {
+			curLength = species.SLine.Size
+			if idx == 0 {
+				prevLength = curLength
+			} else if prevLength != curLength {
+				log.Fatal("Species must have same sequence length.")
+			}
+		}
+		
+		//// TODO: ignore this block of code, want to take an input chrom sizes file
+		//// make the chrom size file based on the maf input (all species should have the same chrom size)
+		// chroms := make([]chromInfo.ChromInfo, 0)
+		// var trackName string
+		// for idx := 0; idx <= 3; idx++ {
+		// 	trackName = fmt.Sprintf("%s%d", "V", idx)
+		// 	chroms = append(chroms, chromInfo.ChromInfo{Name: trackName, Size: curLength, Order: idx})
+		// }
+		
+		
+		// read the posterior probability file and load the alignent at position -> probabilities for each topology mapping
+		// refChromSizes := chromInfo.SliceToMap(chroms)
+		var curPosAlign string
+		mapPostProbs := readPostProbs(postProbsFile) // read the posterior probabilities for each of the 4 species 
+													// (aligns each state with the 4 topologies)
+
+		// iterate through the maf file and check the alignment for each of the four species
+		// match it to the posterior state
+		// and assign it to the correct idx in the wig, based on the reference species in the block 
+		// (1st species, which should stay the same) for all the blocks
+		for idx := block.Species.SLine.Start; idx < block.Species.SLine.Start+block.Species.SLine.Size; idx++ {
+			curPosAlign = dna.BaseToString(block.Species[0].SLine.Seq[idx]) + dna.BaseToString(block.Species[1].SLine.Seq[idx]) + dna.BaseToString(block.Species[2].SLine.Seq[idx]) + dna.BaseToString(block.Species[3].SLine.Seq[idx])
+			
+			// hardcoded for 4 topologies
+			outputWigMap["V0"].Values[idx] = mapPostProbs[curPosAlign][0]
+			outputWigMap["V1"].Values[idx] = mapPostProbs[curPosAlign][1]
+			outputWigMap["V2"].Values[idx] = mapPostProbs[curPosAlign][2]
+			outputWigMap["V3"].Values[idx] = mapPostProbs[curPosAlign][3]
 		}
 	}
 	
-	chroms := make([]chromInfo.ChromInfo, 0)
-	var trackName string
-	for idx := 0; idx <= 3; idx++ {
-		trackName = fmt.Sprintf("%s%d", "V", idx)
-		chroms = append(chroms, chromInfo.ChromInfo{Name: trackName, Size: curLength, Order: idx})
-	}
-	refChromSizes := chromInfo.SliceToMap(chroms)
-	outputWigMap := wig.MakeSkeleton(refChromSizes, 0)
-	var curPosAlign string
-	mapPostProbs := readPostProbs(postProbsFile)
-	
-	for idx := 0; idx < curLength; idx++ {
-		curPosAlign = dna.BaseToString(mafInput[0].Species[0].SLine.Seq[idx]) + dna.BaseToString(mafInput[0].Species[1].SLine.Seq[idx]) + dna.BaseToString(mafInput[0].Species[2].SLine.Seq[idx]) + dna.BaseToString(mafInput[0].Species[3].SLine.Seq[idx])
-		
-		// hardcoded for 4 topologies
-		outputWigMap["V0"].Values[idx] = mapPostProbs[curPosAlign][0]
-		outputWigMap["V1"].Values[idx] = mapPostProbs[curPosAlign][1]
-		outputWigMap["V2"].Values[idx] = mapPostProbs[curPosAlign][2]
-		outputWigMap["V3"].Values[idx] = mapPostProbs[curPosAlign][3]
-	}
 	return outputWigMap
 }
