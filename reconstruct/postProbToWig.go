@@ -10,6 +10,7 @@ import (
 	"log"
 	"strconv"
 	"os"
+	"strings"
 
 )
 
@@ -47,12 +48,20 @@ func readPostProbs(postProbsFilename string) map[string][]float64 {
 	return mapPostProbs
 }
 
-func PostProbToWig(postProbsFile string, mafInput []*maf.Maf. chromSizes map[string]chromInfo.ChromInfo) map[string]wig.Wig {
+func PostProbToWig(postProbsFile string, mafInput []*maf.Maf) map[string]wig.Wig {
 	
 	if len(mafInput) != 1 {
 		log.Fatal("PostProbtoWig expects only 1 maf block.")
 	}
 
+	// make a chrom.sizes ChromInfo struct for the entire maf file
+	var chromSizes map[string]chromInfo.ChromInfo
+	var chromSizeInfo []chromInfo.ChromInfo
+	for idx, block := range mafInput {
+		chromSizeInfo = append(chromSizeInfo, ChromInfo{Name: block.Src, Size: block.Size, order: idx})
+
+	}
+	chromSizes := SliceToMap(chromSizeInfo)
 	outputWigMap := wig.MakeSkeleton(chromSizes, 0)
 
 	
@@ -61,15 +70,15 @@ func PostProbToWig(postProbsFile string, mafInput []*maf.Maf. chromSizes map[str
 
 	// iterate through each maf block
 	for idx, block := range mafInput {
-		// iterate through the species in the 1st maf block and check that each species has the same sequence length
-		for idx, species := range block.Species {
-			curLength = species.SLine.Size
-			if idx == 0 {
-				prevLength = curLength
-			} else if prevLength != curLength {
-				log.Fatal("Species must have same sequence length.")
-			}
-		}
+		//// iterate through the species in the 1st maf block and check that each species has the same sequence length
+		// for idx, species := range block.Species {
+		// 	curLength = species.SLine.Size
+		// 	if idx == 0 {
+		// 		prevLength = curLength
+		// 	} else if prevLength != curLength {
+		// 		log.Fatal("Species must have same sequence length.")
+		// 	}
+		// }
 		
 		//// TODO: ignore this block of code, want to take an input chrom sizes file
 		//// make the chrom size file based on the maf input (all species should have the same chrom size)
@@ -91,9 +100,15 @@ func PostProbToWig(postProbsFile string, mafInput []*maf.Maf. chromSizes map[str
 		// match it to the posterior state
 		// and assign it to the correct idx in the wig, based on the reference species in the block 
 		// (1st species, which should stay the same) for all the blocks
+		// instead of doing the sequence length check, for each position, need to check that all four bases exist, 
+		// otherwise leave as the default wig value (i.e. 0 across all tracks)
 		for idx := block.Species.SLine.Start; idx < block.Species.SLine.Start+block.Species.SLine.Size; idx++ {
 			curPosAlign = dna.BaseToString(block.Species[0].SLine.Seq[idx]) + dna.BaseToString(block.Species[1].SLine.Seq[idx]) + dna.BaseToString(block.Species[2].SLine.Seq[idx]) + dna.BaseToString(block.Species[3].SLine.Seq[idx])
 			
+			if strings.Contains(curPosAlign, "-") {
+				continue
+			}
+
 			// hardcoded for 4 topologies
 			outputWigMap["V0"].Values[idx] = mapPostProbs[curPosAlign][0]
 			outputWigMap["V1"].Values[idx] = mapPostProbs[curPosAlign][1]
