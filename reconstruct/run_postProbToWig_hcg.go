@@ -10,7 +10,7 @@ func main() {
 	postProbFile := "testdata/hcg_post_prob.csv"
 	inMaf := "/net/bmc-lab4/data/kellis/users/rimangan/primateT2T/alignment/work/yl726/PrimateT2T_15way/outputb/chr1.maf"
 	out = PostProbToWig(postProbFile, inMaf)
-	wig.Write(v.outDir, out)
+	wig.Write("/net/bmc-lab4/data/kellis/users/sarahaz/data/pdna/hcg_trails_reconstruct/hcg_postProb.wig", out)
 	
 	fmt.Println("")
 	fmt.Println("DONE")
