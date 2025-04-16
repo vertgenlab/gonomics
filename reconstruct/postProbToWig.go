@@ -57,7 +57,7 @@ func PostProbToWig(postProbsFile string, mafInput []*maf.Maf) map[string]wig.Wig
 	// make a chrom.sizes ChromInfo struct for the entire maf file
 	var chromSizeInfo []chromInfo.ChromInfo
 	for idx, block := range mafInput {
-		chromSizeInfo = append(chromSizeInfo, chromInfo.ChromInfo{Name: block.Species[0].Src, Size: *block.Species[0].SLine.Size, order: idx})
+		chromSizeInfo = append(chromSizeInfo, chromInfo.ChromInfo{Name: block.Species[0].Src, Size: block.Species[0].SLine.Size, order: idx})
 
 	}
 	chromSizes := SliceToMap(chromSizeInfo)
@@ -97,8 +97,8 @@ func PostProbToWig(postProbsFile string, mafInput []*maf.Maf) map[string]wig.Wig
 		// (1st species, which should stay the same) for all the blocks
 		// instead of doing the sequence length check, for each position, need to check that all four bases exist, 
 		// otherwise leave as the default wig value (i.e. 0 across all tracks)
-		for idx := *block.Species.SLine.Start; idx < *block.Species.SLine.Start + *block.Species.SLine.Size; idx++ {
-			curPosAlign = dna.BaseToString(*block.Species[0].SLine.Seq[idx]) + dna.BaseToString(*block.Species[1].SLine.Seq[idx]) + dna.BaseToString(*block.Species[2].SLine.Seq[idx]) + dna.BaseToString(*block.Species[3].SLine.Seq[idx])
+		for idx := block.Species.SLine.Start; idx < block.Species.SLine.Start + block.Species.SLine.Size; idx++ {
+			curPosAlign = dna.BaseToString(block.Species[0].SLine.Seq[idx]) + dna.BaseToString(block.Species[1].SLine.Seq[idx]) + dna.BaseToString(block.Species[2].SLine.Seq[idx]) + dna.BaseToString(block.Species[3].SLine.Seq[idx])
 			
 			if strings.Contains(curPosAlign, "-") {
 				continue
