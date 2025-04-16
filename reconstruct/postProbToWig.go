@@ -100,7 +100,7 @@ func PostProbToWig(postProbsFile string, mafInput []*maf.Maf) map[string]wig.Wig
 		
 
 		// TODO current error:  block.Species.SLine undefined (type []*maf.MafSpecies has no field or method SLine)
-		for idx := block.Species.SLine.Start; idx < block.Species.SLine.Start + block.Species.SLine.Size; idx++ {
+		for idx := block.Species.*SLine.Start; idx < block.Species.SLine.Start + block.Species.SLine.Size; idx++ {
 			curPosAlign = dna.BaseToString(block.Species[0].SLine.Seq[idx]) + dna.BaseToString(block.Species[1].SLine.Seq[idx]) + dna.BaseToString(block.Species[2].SLine.Seq[idx]) + dna.BaseToString(block.Species[3].SLine.Seq[idx])
 			
 			if strings.Contains(curPosAlign, "-") {
