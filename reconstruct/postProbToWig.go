@@ -50,9 +50,9 @@ func readPostProbs(postProbsFilename string) map[string][]float64 {
 
 func PostProbToWig(postProbsFile string, mafInput []*maf.Maf) map[string]wig.Wig {
 	
-	if len(mafInput) != 1 {
-		log.Fatal("PostProbtoWig expects only 1 maf block.")
-	}
+	// if len(mafInput) != 1 {
+	// 	log.Fatal("PostProbtoWig expects only 1 maf block.")
+	// }
 
 	// make a chrom.sizes ChromInfo struct for the entire maf file
 	var chromSizeInfo []chromInfo.ChromInfo
