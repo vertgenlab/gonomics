@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"log"
+	"math"
 	"strings"
 )
 
@@ -81,6 +82,7 @@ func main() {
 			if !found {
 				createNode(mp, ocr[j])
 			}
+
 			for k = range names {
 				if !strings.Contains(names[k], "lift") || strings.Contains(names[k], ocr[j]) {
 					continue
@@ -91,19 +93,11 @@ func main() {
 				if !found {
 					n = createNode(mp, names[k])
 				}
-				if addConnectionSlice(mp[ocr[j]].connections, n) {
-					mp[ocr[j]].connections = append(mp[ocr[j]].connections, n)
-					mp[n.name].percID = append(mp[n.name].percID, percID[k])
-				} else {
-					mp[n.name].percID = append(mp[n.name].percID, percID[k])
-				}
-				if addConnectionSlice(mp[n.name].connections, mp[ocr[j]]) {
-					mp[n.name].connections = append(mp[n.name].connections, mp[ocr[j]])
-				}
+				addConnectionSlice(mp[ocr[j]], n, percID[k])
+				addConnectionSlice(mp[n.name], mp[ocr[j]], percID[k])
 			}
 		}
 	}
-
 	writeFamiliesRecursive(mp, bedMap, outFamilies, outBed)
 	writeWholeMap(mp, outMap)
 	if *startNode != "" {
@@ -148,9 +142,8 @@ func writeFamiliesRecursive(mp map[string]*Node, bedMap map[string]bed, outFile 
 		fam = fam[:0]
 		pidSlice = pidSlice[:0]
 		if !mp[i].seen {
-			pidSlice = append(pidSlice, mp[i].percID[0])
 			c++
-			fam = dfs(mp[i], fam, pidSlice)
+			fam, pidSlice = dfs(mp[i], fam, pidSlice)
 		}
 		if len(fam) > 0 {
 			min, max, avg = percIdCalcs(pidSlice)
@@ -162,22 +155,20 @@ func writeFamiliesRecursive(mp map[string]*Node, bedMap map[string]bed, outFile 
 	exception.PanicOnErr(out.Close())
 }
 
-func dfs(node *Node, fam []string, pidSlice []float64) []string {
+func dfs(node *Node, fam []string, pidSlice []float64) ([]string, []float64) {
 	if node.seen {
-		return fam
+		return fam, pidSlice
 	}
-
 	node.seen = true
 	fam = append(fam, node.name)
 
 	for i := range node.connections {
-		if i > len(node.percID)-1 {
-			fmt.Println(node)
+		if !node.connections[i].seen {
+			pidSlice = append(pidSlice, node.percID[i])
 		}
-		pidSlice = append(pidSlice, node.percID[i])
-		fam = dfs(node.connections[i], fam, pidSlice)
+		fam, pidSlice = dfs(node.connections[i], fam, pidSlice)
 	}
-	return fam
+	return fam, pidSlice
 }
 
 func percIdCalcs(pidSlice []float64) (min, max, avg float64) {
@@ -195,13 +186,15 @@ func percIdCalcs(pidSlice []float64) (min, max, avg float64) {
 	return min, max, tot / float64(len(pidSlice))
 }
 
-func addConnectionSlice(conns []*Node, n *Node) bool {
-	for i := range conns {
-		if n.name == conns[i].name {
-			return false
+func addConnectionSlice(conns *Node, n *Node, percID float64) {
+	for i := range conns.connections {
+		if n.name == conns.connections[i].name {
+			conns.percID[i] = math.Max(conns.percID[i], percID)
+			return
 		}
 	}
-	return true
+	conns.connections = append(conns.connections, n)
+	conns.percID = append(conns.percID, percID)
 }
 
 func writeWholeMap(mp map[string]*Node, outfile string) {
