@@ -41,17 +41,6 @@ func longReadLibStats(inFq string, readLengths string) {
 	}
 }
 
-func calcN50(half int, lens []int) {
-	var tot int
-	for i := range lens {
-		tot += lens[i]
-		if tot >= half {
-			fmt.Println("N50: ", lens[i])
-			return
-		}
-	}
-}
-
 func main() {
 	var readLengths *string = flag.String("readLengths", "", "provide a filename for all the read lengths to be written out to")
 	flag.Parse()
