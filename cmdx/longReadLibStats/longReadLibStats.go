@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 	"sort"
@@ -32,7 +33,8 @@ func longReadLibStats(inFq string, readLengths string) {
 		return lens[j] < lens[i]
 	})
 
-	calcN50(tot/2, lens)
+	n50, _ := fasta.CalculateN50L50(lens, tot/2)
+	fmt.Printf("N50: %d", n50)
 
 	if readLengths != "" {
 		exception.PanicOnErr(out.Close())
