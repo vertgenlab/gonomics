@@ -11,16 +11,18 @@ import (
 	"sort"
 )
 
-func longReadLibStats(inFq string, readLengths string) {
+func longReadLibStats(inFq string, outfile string, readLengths string) {
 	var lens []int
 	var tot int
 	var out *fileio.EasyWriter
+	var err error
 
 	if readLengths != "" {
 		out = fileio.EasyCreate(readLengths)
 	}
 
 	reads := fastq.GoReadToChan(inFq)
+	outStats := fileio.EasyCreate(outfile)
 
 	for read := range reads {
 		tot += len(read.Seq)
@@ -35,18 +37,23 @@ func longReadLibStats(inFq string, readLengths string) {
 	})
 
 	n50, _ := fasta.CalculateN50L50(lens, tot/2)
-	fmt.Printf("Total number of reads: %d\n", len(lens))
-	fmt.Printf("N50: %d\n", n50)
+
+	fileio.WriteToFileHandle(outStats, fmt.Sprintf("Total number of reads: %d", len(lens)))
+	fileio.WriteToFileHandle(outStats, fmt.Sprintf("N50: %d", n50))
 
 	if readLengths != "" {
-		exception.PanicOnErr(out.Close())
+		err = out.Close()
+		exception.PanicOnErr(err)
 	}
+
+	err = outStats.Close()
+	exception.PanicOnErr(err)
 }
 
 func usage() {
-	fmt.Print("longReadLibStats -- Print statistics for a long read fastq dataset including N50 and number of reads\n" +
+	fmt.Print("longReadLibStats -- Provide statistics for a long read fastq dataset including N50 and number of reads\n" +
 		"N50 is length of the read at which half the bases in the library exist at read lengths larger than the N50 read\n" +
-		"longReadLibStats [options] in.fq\n" +
+		"longReadLibStats [options] in.fq out.stats.txt\n" +
 		"Options:\n")
 	flag.PrintDefaults()
 }
@@ -57,10 +64,10 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-	if len(flag.Args()) != 1 {
+	if len(flag.Args()) != 2 {
 		flag.Usage()
-		log.Fatalf("Expecting 1 agument but got %d", len(flag.Args()))
+		log.Fatalf("Expecting 2 agument but got %d", len(flag.Args()))
 	}
 
-	longReadLibStats(flag.Arg(0), *readLengths)
+	longReadLibStats(flag.Arg(0), flag.Arg(1), *readLengths)
 }
