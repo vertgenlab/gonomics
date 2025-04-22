@@ -35,8 +35,8 @@ func longReadLibStats(inFq string, readLengths string) {
 	})
 
 	n50, _ := fasta.CalculateN50L50(lens, tot/2)
-	fmt.Printf("Total number of reads: %d", len(lens))
-	fmt.Printf("N50: %d", n50)
+	fmt.Printf("Total number of reads: %d\n", len(lens))
+	fmt.Printf("N50: %d\n", n50)
 
 	if readLengths != "" {
 		exception.PanicOnErr(out.Close())
