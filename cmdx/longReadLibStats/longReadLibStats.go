@@ -7,6 +7,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
+	"log"
 	"sort"
 )
 
@@ -41,8 +42,24 @@ func longReadLibStats(inFq string, readLengths string) {
 	}
 }
 
+func usage() {
+	fmt.Print("longReadLibStats -- Print the N50 statistic for a longread fastq dataset\n" +
+		"N50 is length of the read at which half the bases in the library exist at read lengths larger than the N50 read\n" +
+		"longReadLibStats [options] in.fq\n" +
+		"Options:\n")
+	flag.PrintDefaults()
+}
+
 func main() {
 	var readLengths *string = flag.String("readLengths", "", "provide a filename for all the read lengths to be written out to")
+	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
+
+	if len(flag.Args()) != 1 {
+		flag.Usage()
+		log.Fatalf("Expecting 1 agument but got %d", len(flag.Args()))
+	}
+
 	longReadLibStats(flag.Arg(0), *readLengths)
 }
