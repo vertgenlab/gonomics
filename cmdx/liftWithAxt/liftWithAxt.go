@@ -45,9 +45,6 @@ func main() {
 		inBed = append(inBed, rec)
 		axtOverlap = interval.Query(axtTree, rec, "di")
 		for i := range axtOverlap {
-			if rec.Name == "h9_atac_rep1_1.hs1_peak_53862" {
-				fmt.Println(lift.AxtPercentIdentityInInterval(axtOverlap[i].(axt.Axt), rec))
-			}
 			if lift.AxtPercentIdentityInInterval(axtOverlap[i].(axt.Axt), rec) < 70 {
 				continue
 			}
@@ -65,7 +62,7 @@ func main() {
 	fmt.Println("merging bed")
 	mergedBed := bed.MergeBedsKeepNamesAndAnnotations(outBed)
 	fmt.Println("length of mergedBed: ", len(mergedBed))
-	bed.Write("families/mergedBedPreReLift.bed", mergedBed)
+	//bed.Write("families/mergedBedPreReLift.bed", mergedBed)
 	fmt.Println("Re-lifting homologous")
 	mergedBed = reLiftHomologous(mergedBed, axtTree, chromSizes)
 	fmt.Println("length of mergedBed: ", len(mergedBed))

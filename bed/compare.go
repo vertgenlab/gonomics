@@ -57,7 +57,7 @@ func MergeBedsKeepNamesAndAnnotations(bedFile []Bed) []Bed {
 			bedFile[i].ChromEnd = numbers.Max(bedFile[i].ChromEnd, bedFile[i+1].ChromEnd)
 			bedFile[i].Score = bedFile[i].Score + bedFile[i+1].Score
 			bedFile[i].Name = bedFile[i].Name + "," + bedFile[i+1].Name
-			bedFile[i].Annotation = append(bedFile[i].Annotation, bedFile[i].Annotation[0])
+			bedFile[i].Annotation = append(bedFile[i].Annotation, bedFile[i+1].Annotation[0])
 			for j = i + 1; j < len(bedFile)-1; j++ {
 				bedFile[j] = bedFile[j+1]
 			}
