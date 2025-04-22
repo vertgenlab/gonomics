@@ -65,7 +65,7 @@ func main() {
 	fmt.Println("merging bed")
 	mergedBed := bed.MergeBedsKeepNamesAndAnnotations(outBed)
 	fmt.Println("length of mergedBed: ", len(mergedBed))
-	//bed.Write("families/mergedBedPreReLift.bed", mergedBed)
+	bed.Write("families/mergedBedPreReLift.bed", mergedBed)
 	fmt.Println("Re-lifting homologous")
 	mergedBed = reLiftHomologous(mergedBed, axtTree, chromSizes)
 	fmt.Println("length of mergedBed: ", len(mergedBed))
