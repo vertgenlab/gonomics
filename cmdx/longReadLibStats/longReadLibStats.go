@@ -35,6 +35,7 @@ func longReadLibStats(inFq string, readLengths string) {
 	})
 
 	n50, _ := fasta.CalculateN50L50(lens, tot/2)
+	fmt.Printf("Total number of reads: %d", len(lens))
 	fmt.Printf("N50: %d", n50)
 
 	if readLengths != "" {
@@ -43,7 +44,7 @@ func longReadLibStats(inFq string, readLengths string) {
 }
 
 func usage() {
-	fmt.Print("longReadLibStats -- Print the N50 statistic for a longread fastq dataset\n" +
+	fmt.Print("longReadLibStats -- Print statistics for a long read fastq dataset including N50 and number of reads\n" +
 		"N50 is length of the read at which half the bases in the library exist at read lengths larger than the N50 read\n" +
 		"longReadLibStats [options] in.fq\n" +
 		"Options:\n")
