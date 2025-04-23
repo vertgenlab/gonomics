@@ -42,9 +42,9 @@ func calculateGenomeLength(contigList []int) int {
 }
 
 // CalculateN50L50 takes a sorted slice of contig lengths and the size of half the genome. It returns the N50 size and L50 size.
-func CalculateN50L50(contigList []int, halfGenome int) (int, int) {
+func CalculateN50L50(contigList []int, halfGenome int) (N50 int, L50 int) {
 	var sum int = 0
-	var L50 int = 0
+	L50 = 0
 	for i := len(contigList) - 1; i > -1; i-- {
 		L50++
 		sum += contigList[i]
