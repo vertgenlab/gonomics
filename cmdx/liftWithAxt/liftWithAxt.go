@@ -45,6 +45,7 @@ func main() {
 		inBed = append(inBed, rec)
 		axtOverlap = interval.Query(axtTree, rec, "di")
 		for i := range axtOverlap {
+			if rec.Name ==
 			if lift.AxtPercentIdentityInInterval(axtOverlap[i].(axt.Axt), rec) < 70 {
 				continue
 			}
@@ -130,6 +131,9 @@ func reLiftHomologous(mergedBed []bed.Bed, axtTree map[string]*interval.Interval
 				bd, found = bedMap[name]
 				if !found {
 					log.Fatalf("we should have found this node: %s", name)
+				}
+				if lift.AxtPercentIdentityInInterval(axtForLift[j].(axt.Axt), homologous[i]) < 70 {
+					continue
 				}
 				bd.Name = fmt.Sprintf("%s,%s_lift%d", bd.Name, names[0], c)
 				bd.Annotation = append(bd.Annotation, fmt.Sprintf("%.2f", lift.AxtPercentIdentityInInterval(axtForLift[j].(axt.Axt), homologous[i])))
