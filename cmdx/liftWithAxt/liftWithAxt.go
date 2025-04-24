@@ -45,7 +45,6 @@ func main() {
 		inBed = append(inBed, rec)
 		axtOverlap = interval.Query(axtTree, rec, "di")
 		for i := range axtOverlap {
-			if rec.Name ==
 			if lift.AxtPercentIdentityInInterval(axtOverlap[i].(axt.Axt), rec) < 70 {
 				continue
 			}
