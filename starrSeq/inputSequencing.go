@@ -8,6 +8,7 @@ import (
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/sam"
 	"sort"
+	"strings"
 )
 
 type InputSeqSettings struct {
@@ -75,12 +76,30 @@ func ParseInputSequencingSam(s InputSeqSettings) {
 		counts, _ = countsMap[constructName]
 		countsMap[constructName] = counts + 1
 	}
+
+	if s.DualBx {
+		countsMap = collapseDualBx(countsMap)
+	}
+
 	//normalize reads to 500bp
 	for i := range countsMap {
 		counts, _ = countsMap[i]
 		countsMap[i] = counts / (float64(bedSizeMap[i]) / 500.0)
 	}
 	calculateNormFactor(countsMap, s.Outfile)
+}
+
+func collapseDualBx(countsMap map[string]float64) map[string]float64 {
+	var name string
+	var slc []string
+	collapseMap := make(map[string]float64)
+
+	for i := range countsMap {
+		slc = strings.Split(i, "_")
+		name = strings.Join(slc[:len(slc)-1], "_")
+		collapseMap[name] += countsMap[i]
+	}
+	return collapseMap
 }
 
 // calculateNormFactor takes a countsMap created in ReadInputSequencingSam and writes out a data frame with the name of the construct, counts per 500bp, percent abundance, and normalization factor
