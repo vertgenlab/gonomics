@@ -392,8 +392,8 @@ func dfsDotFile(node *Node, startNode string, out *fileio.EasyWriter) {
 }
 
 func removeUnderscore(s string) string {
-	slc := strings.Split(s, "_")
-	return strings.Join(slc, ".")
+	slc := strings.Split(s, ".")
+	return strings.Join(slc, "_")
 }
 
 /*func buildGraph(mp map[string]*Node, startNode string, outDot string) {
