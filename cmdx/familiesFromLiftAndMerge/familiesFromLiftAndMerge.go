@@ -359,7 +359,7 @@ func buildGraphRecursive(mp map[string]*Node, startNode string, outDot string) {
 		return
 	}
 
-	fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=green, style=filled, label=\"\"]", startNode))
+	fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=green, style=filled, label=\"\"]", removeUnderscore(startNode)))
 	n := mp[startNode]
 
 	dfsDotFile(n, startNode, out)
@@ -374,19 +374,26 @@ func dfsDotFile(node *Node, startNode string, out *fileio.EasyWriter) {
 	}
 	node.seen = true
 	if node.ocr && node.name != startNode {
-		fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=red, style=filled, label=\"\"]", node.name))
+		fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=red, style=filled, label=\"\"]", removeUnderscore(node.name)))
 	}
 
 	for i := range node.connections {
 		if strings.Contains(node.connections[i].name, "homologous") && node.connections[i].name != startNode {
-			fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=white, style=filled, label=\"\"]", node.connections[i].name))
+			fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=white, style=filled, label=\"\"]", removeUnderscore(node.connections[i].name)))
 		}
-		fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- \"%s\" [minlen = %.2f];", node.name, node.connections[i].name, 100-node.percID[i]))
+		if !node.connections[i].seen {
+			fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- \"%s\" [minlen = %.2f];", removeUnderscore(node.name), removeUnderscore(node.connections[i].name), 100-node.percID[i]))
+		}
 	}
 
 	for i := range node.connections {
 		dfsDotFile(node.connections[i], startNode, out)
 	}
+}
+
+func removeUnderscore(s string) string {
+	slc := strings.Split(s, "_")
+	return strings.Join(slc, ".")
 }
 
 /*func buildGraph(mp map[string]*Node, startNode string, outDot string) {
