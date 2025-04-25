@@ -382,7 +382,7 @@ func dfsDotFile(node *Node, startNode string, out *fileio.EasyWriter) {
 			fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=white, style=filled, label=\"\"]", removeUnderscore(node.connections[i].name)))
 		}
 		if !node.connections[i].seen {
-			fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- \"%s\" [minlen = %.2f];", removeUnderscore(node.name), removeUnderscore(node.connections[i].name), 100-node.percID[i]))
+			fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- \"%s\" [len = %.2f];", removeUnderscore(node.name), removeUnderscore(node.connections[i].name), 100-node.percID[i]))
 		}
 	}
 
