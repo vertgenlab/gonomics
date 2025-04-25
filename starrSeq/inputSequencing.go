@@ -81,10 +81,12 @@ func ParseInputSequencingSam(s InputSeqSettings) {
 		countsMap = collapseDualBx(countsMap)
 	}
 
-	//normalize reads to 500bp
-	for i := range countsMap {
-		counts, _ = countsMap[i]
-		countsMap[i] = counts / (float64(bedSizeMap[i]) / 500.0)
+	if !s.DualBx {
+		//normalize reads to 500bp
+		for i := range countsMap {
+			counts, _ = countsMap[i]
+			countsMap[i] = counts / (float64(bedSizeMap[i]) / 500.0)
+		}
 	}
 	calculateNormFactor(countsMap, s.Outfile)
 }
@@ -121,7 +123,7 @@ func calculateNormFactor(countsMap map[string]float64, outFile string) {
 
 	for i := range countsMap {
 		percentLib = (countsMap[i] / totalReads) * 100
-		entry = fmt.Sprintf("%s\t%f\t%f\t%f", i, countsMap[i], percentLib, idealPerc/percentLib)
+		entry = fmt.Sprintf("%s\t%.0f\t%f\t%f", i, countsMap[i], percentLib, idealPerc/percentLib)
 		matrix = append(matrix, entry)
 	}
 	sort.Strings(matrix)
