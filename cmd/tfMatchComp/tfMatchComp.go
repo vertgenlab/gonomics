@@ -33,7 +33,8 @@ func usage() {
 	fmt.Print(
 		"tfMatchComp - Compare the motif profiles between two input aligned genomic sequences." +
 			"Output lines are as follows:\n" +
-			"CHR\tCHROMSTART\tCHROMEND\tMOTIF_NAME\t0\tMOTIF_STRAND\tREF_SCORE\tALT_SCORE\tRESIDUAL" +
+			"CHR\tCHROMSTART\tCHROMEND\tMOTIF_NAME\t0\tMOTIF_STRAND\tREF_SCORE\tALT_SCORE\tRESIDUAL\n" +
+			"Unscorable sequences have score -Inf and residual +Inf to denote 'N/A'\n" +
 			"Usage:\n" +
 			"tfMatchComp input.fa matrices.pfm/ppm/pwm chromName output.bed\n" +
 			"options:\n")
@@ -52,6 +53,7 @@ func main() {
 		"This option enforces strand matching.")
 	var residualFilter *float64 = flag.Float64("residualFilter", 0, "The difference in motif scores between the two sequences must be at least this value to be retained in the output.")
 	var gcContent *float64 = flag.Float64("gcContent", 0.5, "Set the expected GC content of the target sequence.")
+	var matrixFilter *bool = flag.Bool("matrixFilter", false, "Automatically filter the input position matrix file to remove motifs with length greater than 32.")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -80,6 +82,7 @@ func main() {
 		EnforceStrandMatch: *enforceStrandMatch,
 		ResidualFilter:     *residualFilter,
 		GcContent:          *gcContent,
+		MatrixFilter:       *matrixFilter,
 	}
 
 	tfMatchComp(s, inFile)

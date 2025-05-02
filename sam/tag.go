@@ -5,8 +5,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/vertgenlab/gonomics/exception"
 	"log"
 	"math"
+	"strconv"
 	"strings"
 )
 
@@ -46,10 +48,85 @@ func ParseExtra(s *Sam) error {
 		s.parsedExtraIdx = tmp.parsedExtraIdx
 		s.parsedExtraTags = tmp.parsedExtraTags
 		s.parsedExtraTypes = tmp.parsedExtraTypes
+		s.Extra = parsedExtraToString(s)
 	}
-	s.Extra = parsedExtraToString(s)
 	s.unparsedExtra = nil
 	return err
+}
+
+// RemoveAllTags removes all tags from the input record.
+func RemoveAllTags(s *Sam) {
+	exception.PanicOnErr(ParseExtra(s))
+	s.Extra = ""
+}
+
+// RemoveTag removes the tag with the input tagId from the record.
+// The input tagId must be 2 characters
+func RemoveTag(s *Sam, tagId string) error {
+	if len(tagId) != 2 {
+		return errors.New("input tagId must be 2 characters")
+	}
+
+	if s.Extra == "" {
+		exception.PanicOnErr(ParseExtra(s))
+	}
+
+	var tagStartIdx, tagEndIdx int
+
+	// first check if it is the first tag
+	if strings.HasPrefix(s.Extra, tagId) {
+		tagEndIdx = strings.IndexByte(s.Extra, '\t')
+		if tagEndIdx == -1 { // true if this is the only tag
+			s.Extra = ""
+			return nil
+		}
+		s.Extra = s.Extra[tagEndIdx+1:] // +1 to remove trailing tab
+		return nil
+	}
+
+	// get start index of tag to remove
+	tagStartIdx = strings.Index(s.Extra, "\t"+tagId+":")
+	if tagStartIdx == -1 {
+		// tag not present
+		return nil
+	}
+
+	tagEndIdx = strings.IndexByte(s.Extra[tagStartIdx+1:], '\t')
+	if tagEndIdx == -1 {
+		// tag must go to end if there is no trailing tab
+		tagEndIdx = len(s.Extra)
+	} else {
+		tagEndIdx += tagStartIdx + 1 // since we searched from start of tag not start of slice, then +1 to remove initial tab
+	}
+	s.Extra = s.Extra[:tagStartIdx] + s.Extra[tagEndIdx:]
+	return nil
+}
+
+// AddTag adds a tag with the specified id, type character, and value to the record.
+// Note that duplicate tag ids within the same record are illegal. Checking for an existing tag
+// and removing it (if necessary) is the responsibility of the calling function.
+func AddTag(s *Sam, id, typ, val string) error {
+	if len(id) != 2 {
+		return errors.New("input tagId must be 2 characters")
+	}
+	switch typ {
+	case "A", "i", "f", "Z", "H", "B":
+		// type ok
+	default:
+		return errors.New("input type must be one of A,i,f,Z,H,B")
+	}
+
+	if s.Extra == "" {
+		exception.PanicOnErr(ParseExtra(s))
+	}
+
+	if s.Extra == "" {
+		s.Extra = fmt.Sprintf("%s:%s:%s", id, typ, val)
+		return nil
+	}
+
+	s.Extra = fmt.Sprintf("%s\t%s:%s:%s", s.Extra, id, typ, val)
+	return nil
 }
 
 func parseExtra(s Sam) (Sam, error) {
@@ -224,7 +301,7 @@ func parsedExtraToString(r *Sam) string {
 		if r.parsedExtraTypes[i][0] == 'B' {
 			switch r.parsedExtraTypes[i][1] {
 			case 'c':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:c,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]int8) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -232,7 +309,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'C':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:C,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]uint8) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -240,7 +317,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 's':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:s,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]int16) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -248,7 +325,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'S':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:S,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]uint16) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -256,7 +333,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'i':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:i,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]int32) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -264,7 +341,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'I':
-				s.WriteString(fmt.Sprintf("%s:B:i:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:I,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]uint32) {
 					vals = append(vals, fmt.Sprintf("%d", val))
@@ -272,18 +349,18 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'f':
-				s.WriteString(fmt.Sprintf("%s:B:f:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:f,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([]float32) {
-					vals = append(vals, fmt.Sprintf("%f", val))
+					vals = append(vals, strconv.FormatFloat(float64(val), 'f', -1, 32)) // FormatFloat call is to match samtools formatting
 				}
 				s.WriteString(strings.Join(vals, ",") + "\t")
 
 			case 'Z':
-				s.WriteString(fmt.Sprintf("%s:B:Z:%s\t", r.parsedExtraTags[i], strings.Join(r.parsedExtra[i].([]string), ",")))
+				s.WriteString(fmt.Sprintf("%s:B:Z,%s\t", r.parsedExtraTags[i], strings.Join(r.parsedExtra[i].([]string), ",")))
 
 			case 'H':
-				s.WriteString(fmt.Sprintf("%s:B:H:", r.parsedExtraTags[i]))
+				s.WriteString(fmt.Sprintf("%s:B:H,", r.parsedExtraTags[i]))
 				vals = vals[:0]
 				for _, val := range r.parsedExtra[i].([][]byte) {
 					vals = append(vals, hex.EncodeToString(val))
@@ -311,7 +388,7 @@ func parsedExtraToString(r *Sam) string {
 				s.WriteString(fmt.Sprintf("%s:i:%d\t", r.parsedExtraTags[i], r.parsedExtra[i].(uint32)))
 
 			case 'f':
-				s.WriteString(fmt.Sprintf("%s:f:%f\t", r.parsedExtraTags[i], r.parsedExtra[i].(float32)))
+				s.WriteString(fmt.Sprintf("%s:f:%s\t", r.parsedExtraTags[i], strconv.FormatFloat(float64(r.parsedExtra[i].(float32)), 'f', -1, 32))) // FormatFloat call is to match samtools formatting
 
 			case 'Z':
 				s.WriteString(fmt.Sprintf("%s:Z:%s\t", r.parsedExtraTags[i], r.parsedExtra[i].(string)))

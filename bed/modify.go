@@ -25,7 +25,14 @@ func Trim(b Bed, trimLeft int, trimRight int) Bed {
 	return b
 }
 
-// ToMidpoint edits an input bed struct so that its coordinates correspond to its midpoint.
+// AllToMidpoint edits all input Bed structs in an input slice so that its coordinates correspond to its midpoint.
+func AllToMidpoint(b []Bed) {
+	for i := range b {
+		b[i] = ToMidpoint(b[i])
+	}
+}
+
+// ToMidpoint edits an input Bed struct so that its coordinates correspond to its midpoint.
 func ToMidpoint(b Bed) Bed {
 	midpoint := (b.ChromStart + b.ChromEnd) / 2
 	b.ChromStart = midpoint
@@ -33,7 +40,7 @@ func ToMidpoint(b Bed) Bed {
 	return b
 }
 
-// ToTss edits an input bed struct so that its coordinates corresponds to the start position, strand-sensitive.
+// ToTss edits an input Bed struct so that its coordinates corresponds to the start position, strand-sensitive.
 func ToTss(b Bed) Bed {
 	switch b.Strand {
 	case Positive:
@@ -75,8 +82,10 @@ func MergeLowMem(b <- chan Bed, mergeAdjacent bool) <- chan Bed {
 
 // MergeHighMem retains input Bed entries that are non-overlapping with other input bed entries and merges together overlapping bed entries.
 // Merged bed entries will retain the maximum score in the output.
-func MergeHighMem(records []Bed, mergeAdjacent bool, keepAllNames bool) []Bed {
+func MergeHighMem(records []Bed, mergeAdjacent int, keepAllNames bool) []Bed {
 	var outList []Bed
+	var minDist int
+	var err error
 	if len(records) == 0 {
 		return records //empty and nil slices are returned as is.
 	}
@@ -84,7 +93,8 @@ func MergeHighMem(records []Bed, mergeAdjacent bool, keepAllNames bool) []Bed {
 	var currentMax = records[0]
 
 	for i := 1; i < len(records); i++ {
-		if Overlap(currentMax, records[i]) || mergeAdjacent && Adjacent(currentMax, records[i]) {
+		minDist, err = MinimumDistance(currentMax, records[i])
+		if Overlap(currentMax, records[i]) || (minDist <= mergeAdjacent && err == nil) {
 			if records[i].Score > currentMax.Score {
 				currentMax.Score = records[i].Score
 			}

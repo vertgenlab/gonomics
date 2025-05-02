@@ -17,6 +17,7 @@ type InputSeqSettings struct {
 	Outfile       string
 	DualBx        bool
 	Plasmidsaurus bool
+	PairedEnd     bool
 }
 
 // ParseInputSequencingSam reads and parses an alignment file for an input library sequencing run. It creates a read-count map for all constructs in the provided bed file.
@@ -30,7 +31,6 @@ func ParseInputSequencingSam(s InputSeqSettings) {
 	var counts float64
 	var currEntry sam.Sam
 
-	inChan, _ := sam.GoReadToChan(s.InSam)
 	bedEntries := bed.Read(s.InBed)
 
 	for _, i := range bedEntries {
@@ -39,6 +39,12 @@ func ParseInputSequencingSam(s InputSeqSettings) {
 		countsMap[i.Name] = 0
 	}
 	selectTree = interval.BuildTree(tree)
+
+	if s.PairedEnd {
+		pairedEndMode(s, selectTree, countsMap, bedSizeMap)
+	}
+
+	inChan, _ := sam.GoReadToChan(s.InSam)
 
 	if s.Plasmidsaurus {
 		plasmidsaurus(s, inChan, selectTree, countsMap)
@@ -88,7 +94,96 @@ func ParseInputSequencingSam(s InputSeqSettings) {
 			countsMap[i] = counts / (float64(bedSizeMap[i]) / 500.0)
 		}
 	}
-	calculateNormFactor(countsMap, s.Outfile)
+	calculateNormFactor(s, countsMap)
+}
+
+func pairedEndMode(s InputSeqSettings, bedTree map[string]*interval.IntervalNode, countsMap map[string]float64, bedSizeMap map[string]int) {
+	var ansR1, ansR2 []interval.Interval
+	var none, ideal, oneOverlapEachDiff, tot, passFilter, onlyOne, onlyOneBcFilter, other int
+	var counts float64
+
+	if s.DualBx {
+		countsMap = collapseDualBx(countsMap)
+	}
+
+	readsChan, _ := sam.GoReadSamPeToChan(s.InSam)
+
+	for pair := range readsChan {
+		tot++
+		if pair.R1.MapQ == 0 {
+			pair.R1 = sam.Sam{}
+		}
+		if pair.R2.MapQ == 0 {
+			pair.R2 = sam.Sam{}
+		}
+		if pair.R1.QName == "" && pair.R2.QName == "" {
+			continue
+		}
+		passFilter++
+		if s.DualBx {
+			ansR1 = interval.Query(bedTree, pair.R1, "d")
+			ansR2 = interval.Query(bedTree, pair.R2, "d")
+		} else {
+			ansR1 = interval.Query(bedTree, pair.R1, "any")
+			ansR2 = interval.Query(bedTree, pair.R2, "any")
+		}
+
+		switch {
+		case len(ansR1)+len(ansR2) == 0:
+			none++
+			continue
+		case len(ansR1) == 1 && len(ansR2) == 1:
+			if sameConstruct(ansR1[0].(bed.Bed).Name, ansR2[0].(bed.Bed).Name, s.DualBx) {
+				ideal++
+				if s.DualBx {
+					countsMap[stripDualBx(ansR1[0].(bed.Bed).Name)]++
+				} else {
+					countsMap[ansR1[0].(bed.Bed).Name]++
+				}
+			} else {
+				oneOverlapEachDiff++
+			}
+		case len(ansR1)+len(ansR2) == 1:
+			onlyOne++
+			if pair.R1.QName == "" || pair.R2.QName == "" {
+				onlyOneBcFilter++
+			}
+			if len(ansR1) == 1 {
+				if s.DualBx {
+					countsMap[stripDualBx(ansR1[0].(bed.Bed).Name)]++
+				} else {
+					countsMap[ansR1[0].(bed.Bed).Name]++
+				}
+			} else {
+				if s.DualBx {
+					countsMap[stripDualBx(ansR2[0].(bed.Bed).Name)]++
+				} else {
+					countsMap[ansR2[0].(bed.Bed).Name]++
+				}
+			}
+		default:
+			other++
+		}
+
+	}
+	fmt.Println("Total pairs analysed: ", tot)
+	fmt.Println("Pairs passing filters: ", passFilter)
+	fmt.Println("No overlaps at all: ", none)
+	fmt.Println("Ideal case: ", ideal)
+	fmt.Println("Each one overlap, but diff constructs: ", oneOverlapEachDiff)
+	fmt.Println("one total overlap: ", onlyOne)
+	fmt.Println("Only one total overlap because the other read in the pair was filtered: ", onlyOneBcFilter)
+	fmt.Println("other cases: ", other)
+
+	if !s.DualBx {
+		//normalize reads to 500bp
+		for i := range countsMap {
+			counts, _ = countsMap[i]
+			countsMap[i] = counts / (float64(bedSizeMap[i]) / 500.0)
+		}
+	}
+	calculateNormFactor(s, countsMap)
+
 }
 
 func collapseDualBx(countsMap map[string]float64) map[string]float64 {
@@ -101,18 +196,25 @@ func collapseDualBx(countsMap map[string]float64) map[string]float64 {
 		name = strings.Join(slc[:len(slc)-1], "_")
 		collapseMap[name] += countsMap[i]
 	}
+	if len(collapseMap)*2 != len(countsMap) {
+		fmt.Printf("WARNING: Dual barcode collapsed map does not have twice as fewer constructs as the original map, some constructs may not have collapsed.")
+	}
 	return collapseMap
 }
 
 // calculateNormFactor takes a countsMap created in ReadInputSequencingSam and writes out a data frame with the name of the construct, counts per 500bp, percent abundance, and normalization factor
-func calculateNormFactor(countsMap map[string]float64, outFile string) {
+func calculateNormFactor(s InputSeqSettings, countsMap map[string]float64) {
 	var totalReads float64 = 0
 	var entry string
 	var percentLib float64
 	var matrix []string
 
-	out := fileio.EasyCreate(outFile)
-	fileio.WriteToFileHandle(out, "construct\treadsPer500bp\tpercentLibrary\tnormFactor")
+	out := fileio.EasyCreate(s.Outfile)
+	if s.DualBx {
+		fileio.WriteToFileHandle(out, "construct\treadCounts\tpercentLibrary\tnormFactor")
+	} else {
+		fileio.WriteToFileHandle(out, "construct\treadsPer500bp\tpercentLibrary\tnormFactor")
+	}
 
 	numConstructs := len(countsMap)
 	idealPerc := 100.0 / float64(numConstructs)

@@ -1,0 +1,2 @@
+#querySequenceName	presentBaseCount
+orangutan	8

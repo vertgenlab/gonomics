@@ -2,10 +2,13 @@
 package reconstruct
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 )
 
 // WriteTreeToFasta writes assigned sequences at all nodes to a fasta file.
@@ -46,14 +49,14 @@ func mutationProbability(a int, b int, t float64) float64 {
 func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, biasBase dna.Base, biasN bool, highestProbThreshold float64) dna.Base {
 	var highestProb, nonBiasBaseProb, total float64 = 0, 0, 0
 	var answer dna.Base = biasBase
-	for p, v := range likelihoods {
-		total += v
-		if dna.Base(p) != biasBase {
-			nonBiasBaseProb += v
+	for baseIdx, baseProb := range likelihoods {
+		total += baseProb
+		if dna.Base(baseIdx) != biasBase {
+			nonBiasBaseProb += baseProb
 		}
-		if v > highestProb {
-			highestProb = v
-			answer = dna.Base(p)
+		if baseProb > highestProb {
+			highestProb = baseProb
+			answer = dna.Base(baseIdx)
 		}
 	}
 	if highestProb/total < highestProbThreshold {
@@ -65,6 +68,28 @@ func LikelihoodsToBase(likelihoods []float64, nonBiasBaseThreshold float64, bias
 		} else {
 			return biasBase
 		}
+	}
+	return answer
+}
+
+// LikelihoodsToPbase converts and normalises a slice of probabilities for one position of a sequence. That position refers to a specific base.
+func LikelihoodsToPBase(likelihoods []float64) pDna.Float32Base {
+	if len(likelihoods) < 4 {
+		log.Fatalf("Error: Expected four bases, received less.")
+	}
+
+	var answer pDna.Float32Base = pDna.Float32Base{A: 0, C: 0, G: 0, T: 0}
+
+	var total float64 = 0
+	for _, v := range likelihoods {
+		total += v
+	}
+
+	if total > 0 {
+		answer.A = float32(likelihoods[0] / total)
+		answer.C = float32(likelihoods[1] / total)
+		answer.G = float32(likelihoods[2] / total)
+		answer.T = float32(likelihoods[3] / total)
 	}
 	return answer
 }
@@ -286,16 +311,16 @@ func descendentBaseExists(node *expandedTree.ETree, pos int) {
 
 // LoopNodes performs ancestral sequence reconstruction for all nodes of an input tree, specified by an input root node,
 // at a user-specified alignment position.
-// Options: the user may specify a 'biasLeafName'. When specified, the reconstruction of this sequence's immediate ancestor
+// Options: the user may specify a 'biasLeafName'. When specified, the reconstruction of this sequence's immediate ancestor, or 'biasNodeName'
 // will be biased towards that descendent. The degree of this bias is controlled by the option 'nonBiasBaseThreshold'.
 // The user may also specify a 'highestProbThreshold'. If the program is uncertain about ancestral reconstruction for a particular
 // node, this option will allow LoopNodes to return an 'N' for that node instead.
 // if subMatrix is true, mutation probabilities will be calculated from the tree's substitution matrix instead of from the branch length
-func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonBiasBaseThreshold float64, biasN bool, highestProbThreshold float64, subMatrix bool) {
+func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, biasNodeName string, nonBiasBaseThreshold float64, biasN bool, highestProbThreshold float64, subMatrix bool, pDnaNode string, pDnaNodeMulti []string, pDnaRecords []pFasta.PFasta, pDnaRecordsMulti []pFasta.PFasta) {
 	var fix []float64
 	var biasBase, answerBase dna.Base
-	var biasParentName string
 	var biasLeafNode *expandedTree.ETree
+	var answerBasePdna pDna.Float32Base
 
 	if biasLeafName != "" {
 		biasLeafNode = expandedTree.FindNodeName(root, biasLeafName)
@@ -305,7 +330,9 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 		if biasLeafNode.Up == nil {
 			log.Fatalf("Error: Bias reconstruction node was specified as the root node.")
 		}
-		biasParentName = biasLeafNode.Up.Name
+		if biasNodeName == "" { // if no otherwise specified biasNodeName, set biasNodeName to be immediate ancestor
+			biasNodeName = biasLeafNode.Up.Name
+		}
 	}
 
 	internalNodes := expandedTree.GetBranch(root)
@@ -313,18 +340,61 @@ func LoopNodes(root *expandedTree.ETree, position int, biasLeafName string, nonB
 	BaseExistsAtNodes(root, position)
 	for k := range internalNodes {
 		fix = FixFc(root, internalNodes[k], subMatrix)
-
 		if internalNodes[k].BasePresent {
-			if biasParentName != "" && internalNodes[k].Name == biasParentName {
+			if biasLeafName != "" && internalNodes[k].Name == biasNodeName {
 				biasBase = biasLeafNode.Fasta.Seq[position]
 				answerBase = LikelihoodsToBase(fix, nonBiasBaseThreshold, biasBase, biasN, highestProbThreshold) //biased estimate
+				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
+					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix))
+				}
+				if len(pDnaNodeMulti) > 0 {
+					for _, v := range pDnaNodeMulti {
+						if internalNodes[k].Fasta.Name == v {
+							answerBasePdna = LikelihoodsToPBase(fix)
+						}
+					}
+				}
 			} else {
 				answerBase = LikelihoodsToBase(fix, 0, dna.N, biasN, highestProbThreshold) //unbiased estimate
+				if internalNodes[k].Name == pDnaNode && pDnaNode != "" {
+					pDnaRecords[0].Seq = append(pDnaRecords[0].Seq, LikelihoodsToPBase(fix))
+				}
+				if len(pDnaNodeMulti) > 0 {
+					for _, v := range pDnaNodeMulti {
+						if internalNodes[k].Fasta.Name == v {
+							answerBasePdna = LikelihoodsToPBase(fix)
+						}
+					}
+				}
+
 			}
 		} else {
 			answerBase = dna.Gap
+			// don't add anything to pDnaOutfile
+			// if pDnaNodeMulti, need to add Gap to pDnaOutfile to retain multiFa alignment
+			if len(pDnaNodeMulti) > 0 {
+				for _, v := range pDnaNodeMulti {
+					if internalNodes[k].Fasta.Name == v {
+						answerBasePdna = pDna.Float32Base{
+							A: 0,
+							C: 0,
+							G: 0,
+							T: 0,
+						}
+					}
+				}
+			}
 		}
 
 		internalNodes[k].Fasta.Seq = append(internalNodes[k].Fasta.Seq, answerBase)
+
+		// if pDnaNodeMulti, append pdna to the correct pFasta in []pFasta
+		if len(pDnaNodeMulti) > 0 {
+			for i, v := range pDnaNodeMulti {
+				if internalNodes[k].Fasta.Name == v {
+					pDnaRecordsMulti[i+1].Seq = append(pDnaRecordsMulti[i+1].Seq, answerBasePdna) // because pDnaRecordsMulti[0] is reference, append to pDnaRecordsMulti[i+1] sequence
+				}
+			}
+		}
 	}
 }

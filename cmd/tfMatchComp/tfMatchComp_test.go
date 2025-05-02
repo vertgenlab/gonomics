@@ -20,6 +20,7 @@ var TfMatchCompTests = []struct {
 	OutputAsProportion bool
 	ResidualFilter     float64
 	GcContent          float64
+	MatrixFilter       bool
 }{
 	{InFile: "testdata/STR012.fa",
 		MatrixFile:         "testdata/jaspar.vertebrate.txt",
@@ -33,6 +34,21 @@ var TfMatchCompTests = []struct {
 		OutputAsProportion: true,
 		ResidualFilter:     0.1,
 		GcContent:          0.5,
+		MatrixFilter:       false,
+	},
+	{InFile: "testdata/STR012.fa",
+		MatrixFile:         "testdata/jaspar.vertebrate.unfiltered.txt",
+		ChromName:          "chr9",
+		OutFile:            "testdata/tmp.testMatrixFilter.tfMatchComp.bed",
+		PropMatch:          0.8,
+		MatrixFileType:     "Frequency",
+		Pseudocounts:       0.1,
+		RefStart:           113944,
+		ExpectedFile:       "testdata/expected.tfMatchComp.bed",
+		OutputAsProportion: true,
+		ResidualFilter:     0.1,
+		GcContent:          0.5,
+		MatrixFilter:       true,
 	},
 }
 
@@ -52,6 +68,7 @@ func TestTfMatchComp(t *testing.T) {
 			OutputAsProportion: v.OutputAsProportion,
 			ResidualFilter:     v.ResidualFilter,
 			GcContent:          v.GcContent,
+			MatrixFilter:       v.MatrixFilter,
 		}
 		tfMatchComp(s, v.InFile)
 		if !motif.ApproxEquals(v.ExpectedFile, v.OutFile, epsilon) {

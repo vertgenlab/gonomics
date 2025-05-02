@@ -15,7 +15,7 @@ import (
 // SampleSettings defines the usage settings for the pFa sample subcommand.
 type SampleSettings struct {
 	InFile     string
-	Chrom	   string
+	Chrom      string
 	OutDir     string
 	NumSamples int
 	SetSeed    int64
@@ -28,7 +28,7 @@ func sampleUsage(sampleFlags *flag.FlagSet) {
 		"\tpFa (probabilistic FASTA) encodes position-wise probabilities in matrix entries. Columns should therefore sum to 1.\n" +
 		"\tFa (FASTA) encodes integer counts in matrix entries, typically corresponding to read counts from sequencing.\n" +
 		"Usage:\n" +
-		"pFaTools sample in.pFa out.fasta\n" +
+		"pFaTools sample in.pFa chrom out.fasta\n" +
 		"options:\n")
 	sampleFlags.PrintDefaults()
 }
@@ -56,7 +56,7 @@ func parseSampleArgs() {
 
 	s := SampleSettings{
 		InFile:     inFile,
-		Chrom: 		chrom,
+		Chrom:      chrom,
 		OutDir:     outDir,
 		NumSamples: *numSamples,
 		SetSeed:    *setSeed,

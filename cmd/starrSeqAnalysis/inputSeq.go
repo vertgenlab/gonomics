@@ -26,6 +26,7 @@ func parseInputSeqArgs() {
 		"Currently, the program searches for the UMI after this sequence: GCATGCGGAT")
 	var dualBx *bool = inputSeqFlags.Bool("dualBx", false, "the bed file provided for counts in a bed file of barcodes, with barcodes on each side of the construct.")
 	var plasmidsaurus *bool = inputSeqFlags.Bool("plasmidsaurus", false, "The input sequencing was done through plasmidsaurus and is long-read sequencing.")
+	var pe *bool = inputSeqFlags.Bool("pe", false, "The input sequencing data is paired end. For this setting, the input alignment file must be name-sorted with samtools sort -n")
 
 	err := inputSeqFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
@@ -40,6 +41,10 @@ func parseInputSeqArgs() {
 	if *plasmidUMI != "" {
 		starrSeq.PlasmidUMI(inputSeqFlags.Arg(0), inputSeqFlags.Arg(1), *plasmidUMI)
 	}
+	if *pe && *plasmidsaurus {
+		log.Fatalf("-pe (paired-end) and -plasmidsaurus are incompatable with each other")
+
+	}
 
 	s := starrSeq.InputSeqSettings{
 		InSam:         inputSeqFlags.Arg(0),
@@ -47,6 +52,7 @@ func parseInputSeqArgs() {
 		Outfile:       inputSeqFlags.Arg(2),
 		DualBx:        *dualBx,
 		Plasmidsaurus: *plasmidsaurus,
+		PairedEnd:     *pe,
 	}
 	starrSeq.ParseInputSequencingSam(s)
 }

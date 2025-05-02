@@ -19,8 +19,10 @@ func makeRefUsage(makeRefFlags *flag.FlagSet) {
 
 func parseMakeRefArgs() {
 	var expectedNumArgs int = 4
-
 	makeRefFlags := flag.NewFlagSet("makeRef", flag.ExitOnError)
+	var sepByChrom *bool = makeRefFlags.Bool("sepByChrom", false, "Put each construct on a separate chromosome. The chromomome name will correspond to the construct")
+	var dualBx *int = makeRefFlags.Int("dualBx", 0, "Create a second bed file corresponding to dual barcode locations. Assumes standard Lowe lab cloning primers are used. (20bp Fprimer, 18bp RPrimer). The input value is the length of the barcode")
+
 	err := makeRefFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	makeRefFlags.Usage = func() { makeRefUsage(makeRefFlags) }
@@ -35,6 +37,8 @@ func parseMakeRefArgs() {
 		Constructs:    makeRefFlags.Arg(1),
 		Downstream:    makeRefFlags.Arg(2),
 		OutFilePrefix: makeRefFlags.Arg(3),
+		SepByChrom:    *sepByChrom,
+		DualBx:        *dualBx,
 	}
 
 	starrSeq.Mkref(s)

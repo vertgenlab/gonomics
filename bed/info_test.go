@@ -41,3 +41,23 @@ func TestIsSelfOverlapping(t *testing.T) {
 		}
 	}
 }
+
+var AverageSizeTests = []struct {
+	filename string
+	expected int
+}{
+	{"testdata/elements1.bed", 153},
+	{"testdata/elements2.bed", 3},
+}
+
+func TestAverageSize(t *testing.T) {
+	var b []Bed
+	var actual int
+	for _, v := range AverageSizeTests {
+		b = Read(v.filename)
+		actual = AverageSize(b)
+		if actual != v.expected {
+			t.Errorf("Error in AverageSize. Expected: %d. Actual: %d.", v.expected, actual)
+		}
+	}
+}

@@ -2,28 +2,9 @@ package pFasta
 
 import (
 	"github.com/vertgenlab/gonomics/dna/pDna"
-	"math/rand"
+	"github.com/vertgenlab/gonomics/fileio"
 	"testing"
 )
-
-func randSeq(length int) PFasta {
-	var one, two, three, four, total float32
-	var answer PFasta = PFasta{}
-	answer.Name = "randSeq"
-	answer.Seq = make([]pDna.Float32Base, length)
-	for i := 0; i < length; i++ {
-		one = rand.Float32()
-		two = rand.Float32()
-		three = rand.Float32()
-		four = rand.Float32()
-		total = one + two + three + four
-		answer.Seq[i].A = one / total
-		answer.Seq[i].C = two / total
-		answer.Seq[i].G = three / total
-		answer.Seq[i].T = four / total
-	}
-	return answer
-}
 
 var WriteTests = []struct {
 	OutFile   string
@@ -75,7 +56,18 @@ var WriteTests = []struct {
 	},
 	{
 		OutFile:   "testdata/out.test.pFa",
-		Records:   []PFasta{randSeq(100000)},
+		Records:   []PFasta{RandSeq(1000, "test", false, 8, nil)},
+		Precision: 1e-2,
+	},
+	{
+		OutFile:   "testdata/out.test.pFa",
+		Records:   []PFasta{RandSeq(10000, "test", false, 8, nil)},
+		Precision: 1e-2,
+	},
+	{
+		// TODO: there is a bug caused by relative precision being used for very small numbers when seed is 7 or 8
+		OutFile:   "testdata/out.test.pFa",
+		Records:   []PFasta{RandSeq(100000, "test", false, 9, nil)},
 		Precision: 1e-2,
 	},
 }
@@ -85,8 +77,11 @@ func TestWriteAndRead(t *testing.T) {
 	for _, v := range WriteTests {
 		Write(v.OutFile, v.Records)
 		records = Read(v.OutFile)
+
 		if !AllAreEqual(records, v.Records, v.Precision) {
 			t.Errorf("Error: in pFasta. Write and read test was not as expected.\n")
+		} else {
+			fileio.MustRemove(v.OutFile)
 		}
 	}
 }

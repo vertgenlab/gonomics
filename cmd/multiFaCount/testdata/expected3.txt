@@ -1,0 +1,2 @@
+#firstQuerySequenceName	secondQuerySequenceName	bothPresentBaseCount
+gibbon	orangutan	3

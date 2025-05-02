@@ -11,7 +11,7 @@ func usage() {
 		"\tstarrSeqAnalysis makeRef up.fa constructs.fa down.fa outfilePrefix\n" +
 		"\tstarrSeqAnalysis inputSeq [options] in.sam in.bed out.txt\n" +
 		"\tstarrSeqAnalysis outputSeq [options] in.sam out.txt\n" +
-		"\tstarrSeqAnalysis bulkOutput [options] in.sam out.txt\n" +
+		"\tstarrSeqAnalysis bulkOutput [options] in.sam in.bed out.txt\n" +
 		"enter a subcommand to view options and help message:\n")
 	flag.PrintDefaults()
 }

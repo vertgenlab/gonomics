@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"io"
 	"log"
+	"math"
 	"strconv"
 	"strings"
 
@@ -109,7 +110,7 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 	bw.recordBuf.Write(bw.u32[:2])
 
 	// num cigar op
-	if len(s.Cigar) > 0 && s.Cigar[0].Op == '*' {
+	if cigar.IsUnmapped(s.Cigar) {
 		le.PutUint16(bw.u32[:2], 0)
 	} else {
 		le.PutUint16(bw.u32[:2], uint16(len(s.Cigar)))
@@ -155,15 +156,13 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 	bw.recordBuf.WriteString(s.QName)
 	bw.recordBuf.WriteByte(nul)
 
-	// cigar
-	for i := range s.Cigar {
-		if i == 0 && s.Cigar[0].Op == '*' {
-			break
+	// cigar is mapped (i.e. length is greater than 0).
+	if !cigar.IsUnmapped(s.Cigar) {
+		for i := range s.Cigar {
+			le.PutUint32(bw.u32[:4], cigar.ToUint32(s.Cigar[i]))
+			bw.recordBuf.Write(bw.u32[:4])
 		}
-		le.PutUint32(bw.u32[:4], getCigUint32(s.Cigar[i]))
-		bw.recordBuf.Write(bw.u32[:4])
 	}
-
 	// seq
 	var seqInt uint8
 	for i := range s.Seq {
@@ -215,41 +214,6 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 // lowercase converted to uppercase and all non-spec bases converted to 'N'.
 var baseEncoder = []uint8{1, 2, 4, 8, 15, 1, 2, 4, 8, 15, 15, 15, 15, 15, 15, 15}
 
-// getCigUint32 encodes cigar op and runlen as a uint32 defined by op_len<<4|op.
-func getCigUint32(c cigar.Cigar) uint32 {
-	var cigint uint32
-	cigint = uint32(c.RunLength) << 4  // move 4 bits to the left
-	cigint = cigint | opToUint32(c.Op) // bitwise OR with op
-	return cigint
-}
-
-// opToUint32 returns the uint32 corresponding to the rune per the Sam specifications.
-func opToUint32(r rune) uint32 {
-	switch r {
-	case 'M':
-		return 0
-	case 'I':
-		return 1
-	case 'D':
-		return 2
-	case 'N':
-		return 3
-	case 'S':
-		return 4
-	case 'H':
-		return 5
-	case 'P':
-		return 6
-	case '=':
-		return 7
-	case 'X':
-		return 8
-	default:
-		log.Fatalf("ERROR (opToUint32): Unrecognized cigar op '%v'", r)
-		return 0 // unreachable
-	}
-}
-
 // writeExtra writes the Extra field of a sam to a BamWriter.
 func writeExtra(bw *BamWriter, s Sam) {
 	// write from unparsed Extra if present
@@ -275,17 +239,14 @@ func writeExtra(bw *BamWriter, s Sam) {
 // retrieveTriplet splits a tag string into type, number, and value.
 func retrieveTriplet(tag string) []string {
 	comp := strings.Split(tag, ":")
-	if len(comp) == 3 {
-		return comp
-	}
-	if len(comp) < 3 {
+	if len(comp) < 3 || len(comp[0]) != 2 || len(comp[1]) != 1 { // checks to make sure tag is formatted properly
 		log.Panicf("malformed auxiliary data '%s'", tag)
 	}
-	// len is >3 so tag value likely has ":"
-	if len(comp[0]) != 2 || len(comp[1]) != 1 { // checks to make sure tag is formatted properly
-		log.Panicf("malformed auxiliary data '%s'", tag)
+	if comp[1] == "B" {
+		comp[1] = comp[1] + comp[2][0:1] // the B case has another value as part of the array that needs to be stored in the second part of the triplet
+		comp[2] = comp[2][2:]            // remove the character that goes to the second part of the triplet and the subsequent comma
 	}
-	comp[2] = strings.Join(comp[2:], ":") // rejoin value component of tag
+	comp[2] = strings.Join(comp[2:], ":") // in case value of tag contains literal ':'
 	comp = comp[:3]
 	return comp
 }
@@ -307,16 +268,22 @@ func writeTriplet(bw *BamWriter, triplet []string) {
 
 	typ := triplet[1]
 	values := strings.Split(triplet[2], ",")
+	if len(values) == 1 && values[0] == "" {
+		values = nil
+	}
+	realTyp := typ
 	if typ[0] == 'B' { // 'B' is array of values
 		bw.recordBuf.WriteByte(typ[0])
-		// if typ is B, then the true data type is encoded
-		// as the first entry in values and can be cCsSiIf
-		typ = values[0]
-		values = values[1:] // remove first value
+		// if typ is B, then the true data type is encoded as the second byte in typ
+		realTyp = typ[1:2]
+		bw.recordBuf.WriteByte(realTyp[0])
+		le.PutUint32(bw.u32[:], uint32(len(values)))
+		bw.recordBuf.Write(bw.u32[:])
+	} else {
+		bw.recordBuf.WriteByte(realTyp[0])
 	}
-	bw.recordBuf.WriteByte(typ[0])
 
-	switch typ[0] {
+	switch realTyp[0] {
 	case 'A': // single character
 		bw.recordBuf.WriteByte(values[0][0])
 
@@ -355,7 +322,7 @@ func writeTriplet(bw *BamWriter, triplet []string) {
 		for i := range values {
 			val, err = strconv.ParseFloat(values[i], 32)
 			exception.PanicOnErr(err)
-			le.PutUint32(bw.u32[:4], uint32(val))
+			le.PutUint32(bw.u32[:4], math.Float32bits(float32(val)))
 			bw.recordBuf.Write(bw.u32[:4])
 		}
 

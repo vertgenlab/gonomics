@@ -6,13 +6,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/vertgenlab/gonomics/simulate"
 	"log"
+	"strings"
 
+	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/reconstruct"
+	"github.com/vertgenlab/gonomics/simulate"
 )
 
 type Settings struct {
@@ -20,6 +23,7 @@ type Settings struct {
 	FastaInput             string
 	OutFile                string
 	BiasLeafName           string
+	BiasNodeName           string
 	NonBiasProbThreshold   float64
 	BiasN                  bool
 	HighestProbThreshold   float64
@@ -27,6 +31,9 @@ type Settings struct {
 	SubMatrix              bool
 	UnitBranchLength       float64
 	SubstitutionMatrixFile string
+	PDnaNode               string
+	PDnaNodeMulti          []string
+	PDnaOutFile            string
 }
 
 func ReconstructSeq(s Settings) {
@@ -54,12 +61,29 @@ func ReconstructSeq(s Settings) {
 	leaves := expandedTree.GetLeaves(tree)
 	branches := expandedTree.GetBranch(tree)
 
-	for i := range leaves[0].Fasta.Seq {
-		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.NonBiasProbThreshold, s.BiasN, s.HighestProbThreshold, s.SubMatrix)
+	//initialise pfasta for pdna node
+	pDnaRecords := []pFasta.PFasta{{Name: s.PDnaNode, Seq: make([]pDna.Float32Base, 0)}}
+	// use len(s.PDnaNodeMulti) > 0 to check for PDnaNodeMulti mode and initialize multi pfasta if necessary
+	var pDnaRecordsMulti []pFasta.PFasta
+	if len(s.PDnaNodeMulti) > 0 {
+		// have reference sequence at the top of output pfasta
+		refFa := *leaves[0].Fasta
+		refPfa := pFasta.FaToPfa(refFa, 0, len(refFa.Seq)) // convert records[0] aka leaves[0].Fasta from Fasta to Pfasta
+		pDnaRecordsMulti = append(pDnaRecordsMulti, refPfa)
+		// start pDnaNodeMulti entries in pDnaRecordsMulti, add names now, append sequences in reconstruct.LoopNodes
+		for _, v := range s.PDnaNodeMulti {
+			pDnaRecordsMulti = append(pDnaRecordsMulti, pFasta.PFasta{Name: v})
+		}
 	}
+
+	for i := range leaves[0].Fasta.Seq {
+		reconstruct.LoopNodes(tree, i, s.BiasLeafName, s.BiasNodeName, s.NonBiasProbThreshold, s.BiasN, s.HighestProbThreshold, s.SubMatrix, s.PDnaNode, s.PDnaNodeMulti, pDnaRecords, pDnaRecordsMulti)
+	}
+
 	for j := range leaves {
 		treeFastas = append(treeFastas, *leaves[j].Fasta)
 	}
+
 	for k := range branches {
 		treeFastas = append(treeFastas, *branches[k].Fasta)
 	}
@@ -81,6 +105,13 @@ func ReconstructSeq(s Settings) {
 	}
 
 	fasta.Write(s.OutFile, treeFastas)
+
+	if s.PDnaNode != "" {
+		pFasta.Write(s.PDnaOutFile, pDnaRecords)
+	}
+	if len(s.PDnaNodeMulti) > 0 {
+		pFasta.Write(s.PDnaOutFile, pDnaRecordsMulti)
+	}
 }
 
 func usage() {
@@ -95,7 +126,8 @@ func usage() {
 }
 
 func main() {
-	var biasLeafName *string = flag.String("biasLeafName", "", "Specify an extant (leaf) sequence towards which we will bias reconstruction for the immediate ancestor (parent node).")
+	var biasLeafName *string = flag.String("biasLeafName", "", "Specify an extant (leaf) sequence towards which we will bias reconstruction for the immediate ancestor (parent node), unless another node is specified.")
+	var biasNodeName *string = flag.String("biasNodeName", "", "Specify the node for biased reconstruction.")
 	var nonBiasProbThreshold *float64 = flag.Float64("nonBiasBaseThreshold", 0, "Given that a biasLeafName specifies a reference species, when reconstructing the sequence of a non-reference species, unless the sum of probabilities for all non-reference bases is above this value, the reference base is returned.")
 	var biasN *bool = flag.Bool("biasN", false, "Given -biasLeafName and -nonBiasBasThreshold, unless the sum of probabilities for all non-reference bases is above this value, dna.N is returned.")
 	var highestProbThreshold *float64 = flag.Float64("highestProbThreshold", 0, "The highest probability base must be above this value to be accepted for reconstruction. Otherwise, dna.N will be returned.")
@@ -103,6 +135,9 @@ func main() {
 	var substitutionMatrixFile *string = flag.String("substitutionMatrixFile", "", "Set a file to define a substitution matrix.")
 	var unitBranchLength *float64 = flag.Float64("unitBranchLength", -1, "If using a substitution matrix, specify the branch length over which the substitution matrix was derived.")
 	var subMatrix *bool = flag.Bool("subMatrix", false, "Use a substitution matrix instead of the default model. If no substitution matrix file is provided, the Jukes-Cantor model will be used.")
+	var pDnaNode *string = flag.String("pDnaNode", "", "Specify a node to get the pDNA sequence of. Defaults to empty. Requires pDnaOutFile")
+	var pDnaNodeMulti *string = flag.String("pDnaNodeMulti", "", "Specify >1 nodes in a comma-delimited list to get the pDNA sequence of. e.g. -pDnaNodeMulti=hca,hoa. The input multiFa alignment's reference sequence (aka sequence index 0, first sequence) will be converted from fasta to pFasta and become the reference sequence in the output pFasta. Defaults to empty. Requires pDnaOutFile")
+	var pDnaOutFile *string = flag.String("pDnaOutFile", "", "Name of pDnaNode pfasta. Requires pDnaNode or pDnaNodeMulti.")
 
 	var expectedNumArgs = 3
 
@@ -116,6 +151,11 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
+	var pDnaNodeMultiSplit []string
+	if *pDnaNodeMulti != "" {
+		pDnaNodeMultiSplit = strings.Split(*pDnaNodeMulti, ",")
+	}
+
 	newickInput := flag.Arg(0)
 	fastaInput := flag.Arg(1)
 	outFile := flag.Arg(2)
@@ -125,6 +165,7 @@ func main() {
 		FastaInput:             fastaInput,
 		OutFile:                outFile,
 		BiasLeafName:           *biasLeafName,
+		BiasNodeName:           *biasNodeName,
 		NonBiasProbThreshold:   *nonBiasProbThreshold,
 		BiasN:                  *biasN,
 		HighestProbThreshold:   *highestProbThreshold,
@@ -132,6 +173,9 @@ func main() {
 		SubstitutionMatrixFile: *substitutionMatrixFile,
 		UnitBranchLength:       *unitBranchLength,
 		SubMatrix:              *subMatrix,
+		PDnaNode:               *pDnaNode,
+		PDnaNodeMulti:          pDnaNodeMultiSplit,
+		PDnaOutFile:            *pDnaOutFile,
 	}
 
 	ReconstructSeq(s)

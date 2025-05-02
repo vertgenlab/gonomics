@@ -6,6 +6,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/numbers"
 	"log"
 
 	"github.com/vertgenlab/gonomics/exception"
@@ -14,120 +16,179 @@ import (
 	"github.com/vertgenlab/gonomics/interval/lift"
 )
 
-func overlapEnrichments(method string, inFile string, secondFile string, noGapFile string, outFile string, verbose int, trimToRefGenome bool) {
-	var err error
+type Settings struct {
+	Method            string
+	InFile            string
+	SecondFile        string
+	SearchSpaceFile   string
+	OutFile           string
+	Verbose           int
+	TrimToSearchSpace bool
+	SecondFileList    string
+	Relationship      string
+}
 
-	if method != "exact" && method != "normalApproximate" && method != "upperBound" && method != "lowerBound" {
-		log.Fatalf("Error: unknown method. Found: %s.", method)
+func overlapEnrichments(s Settings) {
+	var err error
+	var searchSpaceIntervals []interval.Interval
+	var searchSpaceTree map[string]*interval.IntervalNode
+	if s.Method != "exact" && s.Method != "normalApproximate" && s.Method != "upperBound" && s.Method != "lowerBound" {
+		log.Fatalf("Error: unknown method. Found: %s.", s.Method)
 	}
 
-	if verbose > 0 {
+	if s.Verbose > 0 {
 		log.Println("Reading files.")
 	}
-
-	elementsOne := lift.GoRead(inFile)
-	elementsTwo := lift.GoRead(secondFile)
-	noGapRegions := lift.GoRead(noGapFile)
-
-	if trimToRefGenome {
-		var overlap1, overlap2 []lift.Lift
-		var trimmedE1 []lift.Lift = make([]lift.Lift, 0)
-		var trimmedE2 []lift.Lift = make([]lift.Lift, 0)
-
-		var e1Intervals []interval.Interval
-		for i := range elementsOne {
-			e1Intervals = append(e1Intervals, elementsOne[i])
+	elementsOne := lift.GoRead(s.InFile)
+	searchSpaceRegions := lift.GoRead(s.SearchSpaceFile)
+	if s.TrimToSearchSpace {
+		elementsOne = refGenomeTrim(elementsOne, searchSpaceRegions, s.Relationship)
+	} else {
+		// if TrimToSearchSpace is not active, throw an error if foreground elements fall outside background elements.
+		searchSpaceIntervals = make([]interval.Interval, 0)
+		for i := range searchSpaceRegions {
+			searchSpaceIntervals = append(searchSpaceIntervals, searchSpaceRegions[i])
 		}
-		tree1 := interval.BuildTree(e1Intervals)
-		var e2Intervals []interval.Interval
-		for i := range elementsTwo {
-			e2Intervals = append(e2Intervals, elementsTwo[i])
+		searchSpaceTree = interval.BuildTree(searchSpaceIntervals)
+		for _, element := range elementsOne {
+			if len(interval.Query(searchSpaceTree, element, "any")) == 0 {
+				log.Fatalf("Error: foreground element from file 1 does not overlap search space. Please use 'trimToSearchSpace' to exclude this element. Offending element: %s.\n", element)
+			}
 		}
-		tree2 := interval.BuildTree(e2Intervals)
-
-		for i := range noGapRegions {
-			overlap1 = lift.IntervalSliceToLift(interval.Query(tree1, noGapRegions[i], "within"))
-			trimmedE1 = append(trimmedE1, overlap1...)
-			overlap2 = lift.IntervalSliceToLift(interval.Query(tree2, noGapRegions[i], "within"))
-			trimmedE2 = append(trimmedE2, overlap2...)
-		}
-		elementsOne = trimmedE1
-		elementsTwo = trimmedE2
 	}
-
-	if verbose > 0 {
-		log.Println("Sorting bed files.")
-	}
-
 	lift.SortByCoord(elementsOne)
-	lift.SortByCoord(elementsTwo)
-	lift.SortByCoord(noGapRegions)
+	lift.SortByCoord(searchSpaceRegions)
 
-	if verbose > 0 {
+	if s.Verbose > 0 {
 		log.Println("Running preflight checks.")
 	}
 
-	if lift.IsSelfOverlapping(noGapRegions, verbose) {
-		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", noGapFile)
+	if lift.IsSelfOverlapping(searchSpaceRegions, s.Verbose) {
+		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", s.SearchSpaceFile)
 	}
 
 	//preflight checks: check for error in user input. Beds should not be self-overlapping.
-	if lift.IsSelfOverlapping(elementsOne, verbose) {
-		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", inFile)
+	if lift.IsSelfOverlapping(elementsOne, s.Verbose) {
+		log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", s.InFile)
 	}
 
-	// Check below removed to enable overlapping elements for second bed region.
-	// The first file is viewed as elements/annotations of the human genome that are labels on the genomic coordinates.
-	// The idea of a region being labeled multiple times does not fit cleanly into the math because it is a little vague
-	// how a single element from list two overlapping multiple elements from list 1 should be counted.
-	// Right now we count it as a single "success" where the maximum number of "successes" is the number of elements in file2.
-	// File2 really represents sampling from this genome that has been annotated with file1, so there it is easier
-	// to have them overlapping, since they are treated as independent draws
-	//
-	//if lift.IsSelfOverlapping(elementsTwo, verbose) {
-	//	log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", secondFile)
-	//}
-
-	var summarySlice []float64
-	overlapCount := lift.OverlapCount(elementsTwo, elementsOne)
-
-	if verbose > 0 {
-		log.Println("Calculating enrichment probabilities.")
+	var secondFileList []string
+	if s.SecondFileList == "" {
+		secondFileList = []string{s.SecondFile}
+	} else {
+		secondFileList = fileio.Read(s.SecondFileList)
 	}
 
-	switch method {
-	case "exact":
-		probs := lift.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
-		summarySlice = lift.EnrichmentPValueExact(probs, overlapCount)
-	case "normalApproximate":
-		probs := lift.ElementOverlapProbabilities(elementsOne, elementsTwo, noGapRegions)
-		summarySlice = lift.EnrichmentPValueApproximation(probs, overlapCount)
-	case "upperBound":
-		summarySlice = lift.EnrichmentPValueUpperBound(elementsOne, elementsTwo, noGapRegions, overlapCount, verbose)
-	case "lowerBound":
-		summarySlice = lift.EnrichmentPValueLowerBound(elementsOne, elementsTwo, noGapRegions, overlapCount, verbose)
-	default:
-		log.Fatalf("Error: unknown method. Found: %s.", method)
-	}
-
-	if verbose > 0 {
-		log.Println("Done calculating enrichment. Writing to output.")
-	}
-
-	out := fileio.EasyCreate(outFile)
+	// Initialize output file
+	out := fileio.EasyCreate(s.OutFile)
 	_, err = fmt.Fprintf(out, "#Method\tFilename1\tFilename2\tLenElements1\tLenElements2\tOverlapCount\tDebugCheck\tExpectedOverlap\tEnrichment\tEnrichPValue\tDepletePValue\n")
 	exception.PanicOnErr(err)
-	_, err = fmt.Fprintf(out, "%s\t%s\t%s\t%d\t%d\t%d\t%f\t%f\t%f\t%e\t%e\n", method, inFile, secondFile, len(elementsOne), len(elementsTwo), overlapCount, summarySlice[0], summarySlice[1], float64(overlapCount)/summarySlice[1], summarySlice[2], summarySlice[3])
-	exception.PanicOnErr(err)
 
+	for currSecondFile := range secondFileList {
+		elementsTwo := lift.GoRead(secondFileList[currSecondFile])
+		if s.TrimToSearchSpace {
+			elementsTwo = refGenomeTrim(elementsTwo, searchSpaceRegions, s.Relationship)
+		} else {
+			for _, element := range elementsTwo {
+				if len(interval.Query(searchSpaceTree, element, "any")) == 0 {
+					log.Fatalf("Error: foreground element from file 2 does not overlap search space. Please use 'trimToSearchSpace' to exclude this element. Offending element: %s.\n", element)
+				}
+			}
+		}
+		lift.SortByCoord(elementsTwo)
+
+		// Check below removed to enable overlapping elements for second bed region.
+		// The first file is viewed as elements/annotations of the human genome that are labels on the genomic coordinates.
+		// The idea of a region being labeled multiple times does not fit cleanly into the math because it is a little vague
+		// how a single element from list two overlapping multiple elements from list 1 should be counted.
+		// Right now we count it as a single "success" where the maximum number of "successes" is the number of elements in file2.
+		// File2 really represents sampling from this genome that has been annotated with file1, so there it is easier
+		// to have them overlapping, since they are treated as independent draws
+		//
+		//if lift.IsSelfOverlapping(elementsTwo, verbose) {
+		//	log.Fatalf("Elements in bedEnrichments must not be self-overlapping. Self-overlap found in %s.", secondFile)
+		//}
+
+		var summarySlice []float64
+		overlapCount := lift.OverlapCount(elementsTwo, elementsOne)
+
+		if s.Verbose > 0 {
+			log.Println("Calculating enrichment probabilities.")
+		}
+
+		switch s.Method {
+		case "exact":
+			probs := lift.ElementOverlapProbabilities(elementsOne, elementsTwo, searchSpaceRegions)
+			summarySlice = lift.EnrichmentPValueExact(probs, overlapCount)
+		case "normalApproximate":
+			probs := lift.ElementOverlapProbabilities(elementsOne, elementsTwo, searchSpaceRegions)
+			summarySlice = lift.EnrichmentPValueApproximation(probs, overlapCount)
+		case "upperBound":
+			summarySlice = lift.EnrichmentPValueUpperBound(elementsOne, elementsTwo, searchSpaceRegions, overlapCount, s.Verbose)
+		case "lowerBound":
+			summarySlice = lift.EnrichmentPValueLowerBound(elementsOne, elementsTwo, searchSpaceRegions, overlapCount, s.Verbose)
+		default:
+			log.Fatalf("Error: unknown method. Found: %s.", s.Method)
+		}
+
+		if s.Verbose > 0 {
+			log.Println("Done calculating enrichment. Writing to output.")
+		}
+		_, err = fmt.Fprintf(out, "%s\t%s\t%s\t%d\t%d\t%d\t%f\t%f\t%f\t%e\t%e\n", s.Method, s.InFile, secondFileList[currSecondFile], len(elementsOne), len(elementsTwo), overlapCount, summarySlice[0], summarySlice[1], float64(overlapCount)/summarySlice[1], summarySlice[2], summarySlice[3])
+		exception.PanicOnErr(err)
+
+	}
 	err = out.Close()
 	exception.PanicOnErr(err)
+}
+
+// refGenomeTrim trims elements in the input slice `unTrimmed` to only the portions that overlap with
+// the regions specified in `noGapRegions`.
+func refGenomeTrim(unTrimmed []lift.Lift, noGapRegions []lift.Lift, relationship string) []lift.Lift {
+	var trimmed []lift.Lift = make([]lift.Lift, 0)
+	var overlappingIntervals []interval.Interval
+	var trimmedIntervals []interval.Interval
+
+	var e1Intervals []interval.Interval
+	for i := range unTrimmed {
+		e1Intervals = append(e1Intervals, unTrimmed[i])
+	}
+	tree1 := interval.BuildTree(e1Intervals)
+
+	for i := range noGapRegions {
+		overlappingIntervals = interval.Query(tree1, noGapRegions[i], relationship)
+		trimmedIntervals = trimIntervals(overlappingIntervals, noGapRegions[i])
+		for _, t := range trimmedIntervals {
+			trimmed = append(trimmed, t.(lift.Lift))
+		}
+	}
+	return trimmed
+}
+
+// trimIntervals takes a set of intervals and trims each one to only the portion that overlaps with a given region.
+func trimIntervals(overlappingIntervals []interval.Interval, region interval.Interval) []interval.Interval {
+	var trimmed []interval.Interval
+	for _, currInterval := range overlappingIntervals {
+		trimmedStart := numbers.Max(currInterval.GetChromStart(), region.GetChromStart())
+		trimmedEnd := numbers.Min(currInterval.GetChromEnd(), region.GetChromEnd())
+		trimmedInterval := &bed.Bed{
+			Chrom:             currInterval.GetChrom(),
+			ChromStart:        trimmedStart,
+			ChromEnd:          trimmedEnd,
+			FieldsInitialized: 3,
+		}
+		trimmed = append(trimmed, trimmedInterval)
+	}
+	return trimmed
 }
 
 func usage() {
 	fmt.Print(
 		"overlapEnrichments - Returns the p-value of enrichment and depletion for overlaps between the elements in two input files.\n" +
-			"noGap.lift represents a lift compatible file (current support for bed/vcf) of all regions in the search space of the genome.\n" +
+			"search.lift represents a lift compatible file (current support for bed/vcf) of all regions in the search space of the genome. This is often a noGap.bed for whole genome backgrounds.\n" +
+			"\tGenomic elements are expected to lie within the search space, and an error will occur if elements outside the search space are detected. Alternatively, the user can specify 'trimToSearchSpace'\n" +
+			"\tto ignore elements outside of the search space. Furthermore, the user may set 'relationship' to 'any' to retain elements that partially overlap search space elements.\n" +
+			"\tPlease note that in this case, elements will be trimmed to remove bases that fall outside of the search space.\n" +
 			"out.txt is in the form of a tab-separated value file with a header line starting with '#'.\n" +
 			"Calculates enrichment of the number of elements in set 2 that have any overlap in set 1.\n" +
 			"Number of overlaps reported is the number of elements in set 2 that have any overlap with set 1. This will be asymmetric if sets one and two are swapped as arguments.\n" +
@@ -138,15 +199,17 @@ func usage() {
 			"upperBound: Returns the most conservative exact estimate of the p-Value. Rapid, but the true p-Value is guaranteed to fall below this value.\n" +
 			"lowerBound: Returns the lower bound exact estimate of the p-Value. Rapid, and the true p value is guaranteed to be above this value.\n" +
 			"Usage:\n" +
-			"overlapEnrichments method elements1.lift elements2.lift noGap.lift out.txt\n")
+			"overlapEnrichments method elements1.lift elements2.lift searchSpace.lift out.txt\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 5
-
 	var verbose *int = flag.Int("verbose", 0, "Set to 1 to reveal debug prints.")
-	var trimToRefGenome *bool = flag.Bool("trimToRefGenome", false, "Ignores elements that do not lie within the reference genome, as defined by the noGap.bed file.")
+	var trimToSearchSpace *bool = flag.Bool("trimToSearchSpace", false, "Ignores elements that do not lie within the search space, as defined by the searchSpace.lift file.")
+	var trimToRefGenome *bool = flag.Bool("trimToRefGenome", false, "Depricated. This option is now called trimToSearchSpace. The program will fatal if this option is called. Use 'trimToSearchSpace' instead.")
+	var secondFileList *string = flag.String("secondFileList", "", "Specify a list of query files to calculate enrichments against the first file. Note that while using this option the command will ignore the elements2.lift argument.")
+	var relationship *string = flag.String("relationship", "within", "Specify an overlap relationship for the trimToSearchSpace option. 'all' is more permissive than the default 'within'.")
 
 	flag.Usage = usage
 	log.SetFlags(0)
@@ -157,11 +220,27 @@ func main() {
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(flag.Args()))
 	}
+
+	if *trimToRefGenome {
+		log.Fatal("The option 'trimToRefGenome' is deprecated. Please use 'trimToSearchSpace' instead, as this replaces the 'trimToRefGenome' functionality.")
+	}
 	method := flag.Arg(0)
 	inFile := flag.Arg(1)
 	secondFile := flag.Arg(2)
-	noGapFile := flag.Arg(3)
+	searchSpaceFile := flag.Arg(3)
 	outFile := flag.Arg(4)
 
-	overlapEnrichments(method, inFile, secondFile, noGapFile, outFile, *verbose, *trimToRefGenome)
+	s := Settings{
+		Method:            method,
+		InFile:            inFile,
+		SecondFile:        secondFile,
+		SearchSpaceFile:   searchSpaceFile,
+		OutFile:           outFile,
+		Verbose:           *verbose,
+		TrimToSearchSpace: *trimToSearchSpace,
+		SecondFileList:    *secondFileList,
+		Relationship:      *relationship,
+	}
+
+	overlapEnrichments(s)
 }

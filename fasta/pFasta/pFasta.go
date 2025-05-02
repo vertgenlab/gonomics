@@ -27,8 +27,20 @@ func Write(outFile string, records []PFasta) {
 	var err error
 	out := fileio.EasyCreate(outFile)
 
-	// first we write the header
-	_, err = fmt.Fprint(out, "pFasta_format_1.0\n")
+	WriteHeader(out, records)
+	var base pDna.Float32Base
+	for _, record := range records {
+		for _, base = range record.Seq {
+			WriteBase(out, base)
+		}
+	}
+
+	err = out.Close()
+	exception.PanicOnErr(err)
+}
+
+func WriteHeader(out *fileio.EasyWriter, records []PFasta) {
+	_, err := fmt.Fprint(out, "pFasta_format_1.0\n")
 	exception.PanicOnErr(err)
 	for i := range records {
 		_, err = fmt.Fprintf(out, "%s\t%v\n", records[i].Name, len(records[i].Seq))
@@ -36,19 +48,13 @@ func Write(outFile string, records []PFasta) {
 	}
 	_, err = fmt.Fprintf(out, "EndHeader\n")
 	exception.PanicOnErr(err)
+}
 
-	var currSeqIndex, currPos int
-	for currSeqIndex = range records {
-		for currPos = range records[currSeqIndex].Seq {
-			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].A)
-			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].C)
-			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].G)
-			writeBaseProbability(out, records[currSeqIndex].Seq[currPos].T)
-		}
-	}
-
-	err = out.Close()
-	exception.PanicOnErr(err)
+func WriteBase(out *fileio.EasyWriter, base pDna.Float32Base) {
+	writeBaseProbability(out, base.A)
+	writeBaseProbability(out, base.C)
+	writeBaseProbability(out, base.G)
+	writeBaseProbability(out, base.T)
 }
 
 // writeBase is a helper function of Write, which write an input float32
@@ -138,4 +144,19 @@ func Read(inFile string) []PFasta {
 	err = file.Close()
 	exception.PanicOnErr(err)
 	return records
+}
+
+// ToMap converts a slice of pFasta records (e.g. the output of the Read function)
+// to a map of sequences keyed to the sequences name.
+func ToMap(ref []PFasta) map[string][]pDna.Float32Base {
+	m := make(map[string][]pDna.Float32Base)
+	for i := range ref {
+		_, ok := m[ref[i].Name]
+		if !ok {
+			m[ref[i].Name] = ref[i].Seq
+		} else {
+			log.Panicf("%s used for multiple pFasta records. record names must be unique.", ref[i].Name)
+		}
+	}
+	return m
 }
