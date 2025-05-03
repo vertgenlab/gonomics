@@ -6,6 +6,7 @@ import (
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/starrSeq"
+	"golang.org/x/exp/slices"
 	"log"
 	"os"
 	"strings"
@@ -17,13 +18,21 @@ func bulkOutSeqUsage(bulkOutSeqFlags *flag.FlagSet) {
 	bulkOutSeqFlags.PrintDefaults()
 }
 
-func writeResults(outFile string, res []string, zscore bool) {
+func writeResults(outFile string, res []string, s starrSeq.BulkOutputSeqSettings) {
 	out := fileio.EasyCreate(outFile)
-	if zscore {
-		fileio.WriteToFileHandle(out, "construct\tcounts\tenhZScore\trep")
-	} else {
-		fileio.WriteToFileHandle(out, "construct\tcounts\trep")
+	base := "construct\trawCounts"
+	if s.InputNorm != "" {
+		base += "\tnormCounts\tnormFactor"
 	}
+	if s.IntronStats {
+		base += "\tintronCounts\tintronPercent"
+	}
+	if s.ZScore != "" {
+		base += "\tenhZScore"
+	}
+	base += "\trep"
+	fileio.WriteToFileHandle(out, base)
+	slices.Sort(res)
 	for i := range res {
 		fileio.WriteToFileHandle(out, res[i])
 	}
@@ -40,6 +49,7 @@ func parseBulkOutputArgs() {
 		"assume that the sam read will have to completely encompass the barcode region")
 	var zscore *string = bulkOutSeqFlags.String("zscore", "", "provide a line-delimited text file with the names of the constructs that all other constructs will be normalized to. The output file will have an extra column containing the z-score of that construct")
 	var checkBx *string = bulkOutSeqFlags.String("checkBx", "", "Provide the reference genome used for the alignment to check that the alignment-overlapped barcode doesn't have any mismatches. Must be used with either -singleBx or -dualBx")
+	var intronStats *bool = bulkOutSeqFlags.Bool("intronStats", false, "Add percent reads with an intron to the output file")
 
 	err := bulkOutSeqFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
@@ -55,7 +65,7 @@ func parseBulkOutputArgs() {
 		log.Fatalf("Error: -singleBx and -dualBx are incompatable with each other\n")
 	}
 
-	if *checkBx != "" && !(*dualBx && *singleBx) {
+	if *checkBx != "" && (!*dualBx && !*singleBx) {
 		log.Fatalf("Error: -checkBx must be used with either -singleBx or -dualBx")
 	}
 
@@ -65,18 +75,19 @@ func parseBulkOutputArgs() {
 	var res []string
 	for i := range inSams {
 		s = starrSeq.BulkOutputSeqSettings{
-			InSam:     inSams[i],
-			InBed:     bulkOutSeqFlags.Arg(1),
-			OutCounts: bulkOutSeqFlags.Arg(2),
-			InputNorm: *normFactor,
-			DualBx:    *dualBx,
-			PairedEnd: *pe,
-			SingleBx:  *singleBx,
-			ZScore:    *zscore,
-			RepNum:    i,
-			CheckBx:   *checkBx,
+			InSam:       inSams[i],
+			InBed:       bulkOutSeqFlags.Arg(1),
+			OutCounts:   bulkOutSeqFlags.Arg(2),
+			InputNorm:   *normFactor,
+			DualBx:      *dualBx,
+			PairedEnd:   *pe,
+			SingleBx:    *singleBx,
+			ZScore:      *zscore,
+			RepNum:      i + 1,
+			CheckBx:     *checkBx,
+			IntronStats: *intronStats,
 		}
 		res = append(res, starrSeq.BulkOutputSeq(s)...)
 	}
-	writeResults(bulkOutSeqFlags.Arg(2), res, *zscore != "")
+	writeResults(bulkOutSeqFlags.Arg(2), res, s)
 }

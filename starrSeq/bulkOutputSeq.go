@@ -3,49 +3,50 @@ package starrSeq
 import (
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/convert"
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/parse"
 	"github.com/vertgenlab/gonomics/sam"
-	"golang.org/x/exp/slices"
 	"log"
 	"strings"
 )
 
 type BulkOutputSeqSettings struct {
-	InSam     string
-	InBed     string
-	OutCounts string
-	SingleBx  bool
-	DualBx    bool
-	InputNorm string
-	PairedEnd bool
-	RepNum    int
-	ZScore    string
-	CheckBx   string
+	InSam       string
+	InBed       string
+	OutCounts   string
+	SingleBx    bool
+	DualBx      bool
+	InputNorm   string
+	PairedEnd   bool
+	RepNum      int
+	ZScore      string
+	CheckBx     string
+	IntronStats bool
 }
 
-func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.IntervalNode, countsMap map[string]float64) []string {
+type construct struct {
+	name          string
+	rawCounts     float64
+	normCounts    float64
+	normFactor    float64
+	intronCount   float64
+	intronPercent float64
+	zscore        float64
+}
+
+func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.IntervalNode, countsMap map[string]construct, ref []fasta.Fasta) []string {
 	var ansR1, ansR2 []interval.Interval
-	var samBedsR1, samBedsR2 []bed.Bed
-	var totPair, qualIntronFilter, twoCollapseToOne, diff, same, oneOfTwo, bothmultianddiff, none, other, totLen3_save, totLen3_discard, pairsFiltered, oneOnlyOtherFilterd, j int
+	var totPair, qualIntronFilter, twoCollapseToOne, diff, same, oneOfTwo, bothmultianddiff, none, other, totLen3_save, totLen3_discard, pairsFiltered, oneOnlyOtherFilterd, toAdd, bxMismatch int
 	var name string
+	var intron bool
+	var curr construct
 
-	if s.DualBx {
-		countsMap = collapseDualBx(countsMap)
-	}
-	if s.CheckBx != "" {
-		ref := fasta.ToMap(fasta.Read(s.CheckBx))
-	}
-
-	outPe := fileio.EasyCreate("/Users/sethweaver/Downloads/hsSD/starrSeq/outputseq/aln/star/testingFloor/famSS3.allreads.star.longIntron.sam")
-
-	peReads, head := sam.GoReadSamPeToChan(s.InSam)
-	sam.WriteHeaderToFileHandle(outPe, head)
+	peReads, _ := sam.GoReadSamPeToChan(s.InSam)
 
 	for pair := range peReads {
 		totPair++
@@ -55,7 +56,6 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 			pair.R1 = sam.Sam{}
 		} else if !filterIntrons(pair.R1) {
 			qualIntronFilter++
-			sam.WriteToFileHandle(outPe, pair.R1)
 			pair.R1 = sam.Sam{}
 		}
 		if pair.R1.MapQ == 0 {
@@ -63,7 +63,6 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 			pair.R2 = sam.Sam{}
 		} else if !filterIntrons(pair.R2) {
 			qualIntronFilter++
-			sam.WriteToFileHandle(outPe, pair.R2)
 			pair.R2 = sam.Sam{}
 		}
 		if pair.R1.QName == "" && pair.R2.QName == "" {
@@ -71,21 +70,16 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 			continue
 		}
 
+		intron = false
+		if detectIntron(pair.R1) || detectIntron(pair.R2) {
+			intron = true
+		}
+
 		if s.DualBx || s.SingleBx {
-			ansR1 = ansR1[:0]
-			ansR2 = ansR2[:0]
-			if pair.R1.QName != "" {
-				samBedsR1 = convert.SamToBedExcludeIntron(pair.R1)
-				for j = range samBedsR1 {
-					ansR1 = append(ansR1, interval.Query(tree, samBedsR1[j], "d")...)
-				}
-			}
-			if pair.R2.QName != "" {
-				samBedsR2 = convert.SamToBedExcludeIntron(pair.R2)
-				for j = range samBedsR2 {
-					ansR2 = append(ansR2, interval.Query(tree, samBedsR2[j], "d")...)
-				}
-			}
+			ansR1, toAdd = bxOverlap(pair.R1, tree, ref, s.CheckBx != "")
+			bxMismatch += toAdd
+			ansR2, toAdd = bxOverlap(pair.R2, tree, ref, s.CheckBx != "")
+			bxMismatch += toAdd
 		} else {
 			ansR1 = interval.Query(tree, pair.R1, "any")
 			ansR2 = interval.Query(tree, pair.R2, "any")
@@ -112,7 +106,13 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 				} else {
 					name = ansR1[0].(bed.Bed).Name
 				}
-				countsMap[name]++
+				curr = countsMap[name]
+				curr.rawCounts++
+				if intron {
+					curr.intronCount++
+
+				}
+				countsMap[name] = curr
 				same++
 			} else {
 				//sam.WriteSamPeToFileHandle(outPe, pair)
@@ -127,7 +127,13 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 			if pair.R2.QName == "" {
 				oneOnlyOtherFilterd++
 			}
-			countsMap[name]++
+			curr = countsMap[name]
+			curr.rawCounts++
+			if intron {
+				curr.intronCount++
+
+			}
+			countsMap[name] = curr
 			oneOfTwo++
 		case len(ansR1) == 0 && len(ansR2) == 1:
 			if s.DualBx {
@@ -138,12 +144,24 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 			if pair.R1.QName == "" {
 				oneOnlyOtherFilterd++
 			}
-			countsMap[name]++
+			curr = countsMap[name]
+			curr.rawCounts++
+			if intron {
+				curr.intronCount++
+
+			}
+			countsMap[name] = curr
 			oneOfTwo++
 		case (len(ansR1) == 1 && len(ansR2) == 2) || (len(ansR1) == 2 && len(ansR2) == 1):
 			name = rescueTotalThree(ansR1, ansR2, s)
 			if name != "" {
-				countsMap[name]++
+				curr = countsMap[name]
+				curr.rawCounts++
+				if intron {
+					curr.intronCount++
+
+				}
+				countsMap[name] = curr
 				totLen3_save++
 			} else {
 				totLen3_discard++
@@ -165,6 +183,7 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 	fmt.Println("read pairs completely filtered out due to quality or intron filters: ", pairsFiltered)
 	fmt.Println("reads (not pairs) that overlapped both indexes from the same construct: ", twoCollapseToOne) //counted, feel good about it
 	fmt.Println("pairs in which each read maps to the same construct (opposite bx): ", same)
+	fmt.Println("barcode overlaps that had >1 mismatch to ref and were filtered out: ", bxMismatch)
 	fmt.Println("Read pairs in which both reads mapped to a single barcode, but to different constructs: ", diff)               // not using currently, want to see if I can rescue
 	fmt.Println("Read pairs in which one read mapped to a barcode, and it's read pair didn't overlap any barcodes: ", oneOfTwo) // using currently, need to figure out why the other read doesn't map
 	fmt.Println("How many of the above pairs only mapped to one total construct because the other read pair was filtered out: ", oneOnlyOtherFilterd)
@@ -176,26 +195,132 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 	if s.InputNorm != "" {
 		inputNormalize(s.InputNorm, countsMap)
 	}
-	zMap := make(map[string]float64)
 	if s.ZScore != "" {
-		zscoreNorm(s, countsMap, zMap)
+		zscoreNorm(s, countsMap)
 	}
-	exception.PanicOnErr(outPe.Close())
-	return formatResults(countsMap, zMap, s.RepNum)
+	if s.IntronStats {
+		intronMath(countsMap)
+	}
+	return formatResults(countsMap, s)
 }
 
-func zscoreNorm(s BulkOutputSeqSettings, countsMap map[string]float64, zMap map[string]float64) {
+func processSingleEndSam(s BulkOutputSeqSettings, tree map[string]*interval.IntervalNode, countsMap map[string]construct, ref []fasta.Fasta) []string {
+	var ans []interval.Interval
+	var zero, multi, bxMismatch, toAdd int
+	var curr construct
+	var intron bool
+	var name string
+
+	inSam, _ := sam.GoReadToChan(s.InSam)
+
+	for read := range inSam {
+		if read.MapQ < 1 {
+			continue
+		} else if !filterIntrons(read) {
+			continue
+		}
+
+		intron = false
+		if detectIntron(read) || detectIntron(read) {
+			intron = true
+		}
+
+		if s.DualBx || s.SingleBx {
+			ans, toAdd = bxOverlap(read, tree, ref, s.CheckBx != "")
+			bxMismatch += toAdd
+		} else {
+			ans = interval.Query(tree, read, "any")
+		}
+
+		if len(ans) == 2 {
+			if sameConstruct(ans[0].(bed.Bed).Name, ans[1].(bed.Bed).Name, s.DualBx) {
+				ans = ans[:1]
+			}
+		}
+
+		switch len(ans) {
+		case 0:
+			zero++
+			continue
+		case 1:
+			if s.DualBx {
+				name = stripDualBx(ans[0].(bed.Bed).Name)
+			} else {
+				name = ans[0].(bed.Bed).Name
+			}
+			curr = countsMap[name]
+			curr.rawCounts++
+			if intron {
+				curr.intronCount++
+			}
+			countsMap[name] = curr
+		default:
+			multi++
+			continue
+		}
+	}
+
+	if s.IntronStats {
+		intronMath(countsMap)
+	}
+
+	if s.InputNorm != "" {
+		inputNormalize(s.InputNorm, countsMap)
+	}
+	if s.ZScore != "" {
+		zscoreNorm(s, countsMap)
+	}
+	return formatResults(countsMap, s)
+}
+
+func detectIntron(s sam.Sam) bool {
+	for i := range s.Cigar {
+		if s.Cigar[i].Op == cigar.Ns && s.Cigar[i].RunLength >= 100 {
+			return true
+		}
+	}
+	return false
+}
+
+func zscoreNorm(s BulkOutputSeqSettings, countsMap map[string]construct) {
 	var ncCounts []float64
+	var c construct
 	nc := fileio.Read(s.ZScore)
 	for i := range nc {
-		ncCounts = append(ncCounts, countsMap[nc[i]])
+		ncCounts = append(ncCounts, countsMap[nc[i]].normCounts)
 	}
 	ncAvg := numbers.AverageFloat64(ncCounts)
 	ncSD := numbers.StandardDeviationFloat64(ncCounts)
 	for i := range countsMap {
-		zMap[i] = numbers.ZScore(countsMap[i], ncAvg, ncSD)
+		c = countsMap[i]
+		c.zscore = numbers.ZScore(countsMap[i].normCounts, ncAvg, ncSD)
+		countsMap[i] = c
 	}
 
+}
+
+func bxOverlap(s sam.Sam, bedTree map[string]*interval.IntervalNode, ref []fasta.Fasta, needToCheckBx bool) ([]interval.Interval, int) {
+	if s.QName == "" {
+		return []interval.Interval{}, 0
+	}
+	var tmp, ans []interval.Interval
+	var j, bxMismatch int
+	samBeds := convert.SamToBedExcludeIntron(s)
+	for i := range samBeds {
+		tmp = interval.Query(bedTree, samBeds[i], "d")
+		if !needToCheckBx {
+			ans = append(ans, tmp...)
+			continue
+		}
+		for j = range tmp {
+			if checkBx(s, tmp[j].(bed.Bed), ref) {
+				ans = append(ans, tmp[j])
+			} else {
+				bxMismatch++
+			}
+		}
+	}
+	return ans, bxMismatch
 }
 
 func rescueTotalThree(ansR1, ansR2 []interval.Interval, s BulkOutputSeqSettings) string {
@@ -229,41 +354,57 @@ func sameConstruct(c1, c2 string, dualBx bool) bool {
 	return name1 == name2
 }
 
-func formatResults(countsMap map[string]float64, zMap map[string]float64, repNum int) []string {
+func formatResults(countsMap map[string]construct, s BulkOutputSeqSettings) []string {
 	var res []string
+	var base string
+	var curr construct
 
-	if len(zMap) == 0 {
-		for i := range countsMap {
-			res = append(res, fmt.Sprintf("%s\t%.2f\t%d", i, countsMap[i], repNum))
+	for i := range countsMap {
+		curr = countsMap[i]
+		base = fmt.Sprintf("%s\t%.0f", curr.name, curr.rawCounts)
+		if s.InputNorm != "" {
+			base += fmt.Sprintf("\t%.2f\t%.2f", curr.normCounts, curr.normFactor)
 		}
-	} else {
-		for i := range countsMap {
-			res = append(res, fmt.Sprintf("%s\t%.2f\t%.2f\t%d", i, countsMap[i], zMap[i], repNum))
+		if s.IntronStats {
+			base += fmt.Sprintf("\t%.0f\t%.2f", curr.intronCount, curr.intronPercent)
 		}
+		if s.ZScore != "" {
+			base += fmt.Sprintf("\t%.2f", curr.zscore)
+		}
+		base += fmt.Sprintf("\t%d", s.RepNum)
+		res = append(res, base)
 	}
-
-	slices.Sort(res)
 
 	return res
 }
 
-func inputNormalize(normFactor string, countsMap map[string]float64) {
+func inputNormalize(normFactor string, countsMap map[string]construct) {
 	var found bool
-	var counts float64
+	var counts construct
 	normMap := readNormFactorFile(normFactor)
 	for i := range normMap {
 		counts, found = countsMap[i]
 		if !found {
-			countsMap[i] = 0
+			counts = construct{
+				name:        i,
+				rawCounts:   0,
+				normCounts:  0,
+				normFactor:  normMap[i],
+				intronCount: 0,
+				zscore:      0,
+			}
+			countsMap[i] = construct{}
 			fmt.Printf("WARNING: %s is in the input normalization file, but no counts were found. This construct will have 0 counts in the output file\n", i)
 			continue
 		}
-		countsMap[i] = counts * normMap[i]
+		counts.normCounts = counts.rawCounts * normMap[i]
+		counts.normFactor = normMap[i]
+		countsMap[i] = counts
 	}
 	checkIfEverythingWasNormed(countsMap, normMap)
 }
 
-func checkIfEverythingWasNormed(countsMap, normMap map[string]float64) {
+func checkIfEverythingWasNormed(countsMap map[string]construct, normMap map[string]float64) {
 	var found bool
 	var notFound []string
 	for i := range countsMap {
@@ -277,16 +418,26 @@ func checkIfEverythingWasNormed(countsMap, normMap map[string]float64) {
 	}
 }
 
-func makeBedTreeAndMap(inBed string) (tree map[string]*interval.IntervalNode, countsMap map[string]float64) {
+func makeBedTreeAndMap(inBed string) (tree map[string]*interval.IntervalNode, countsMap map[string]construct) {
 	var ntrvls []interval.Interval
+	var c construct
 
-	countsMap = make(map[string]float64)
+	countsMap = make(map[string]construct)
 
 	bd := bed.Read(inBed)
 
 	for i := range bd {
 		ntrvls = append(ntrvls, bd[i])
-		countsMap[bd[i].Name] = 0
+		c = construct{
+			name:          bd[i].Name,
+			rawCounts:     0,
+			normCounts:    0,
+			normFactor:    0,
+			intronCount:   0,
+			intronPercent: 0,
+			zscore:        0,
+		}
+		countsMap[bd[i].Name] = c
 	}
 
 	tree = interval.BuildTree(ntrvls)
@@ -315,61 +466,73 @@ func readNormFactorFile(inNorm string) map[string]float64 {
 	return normFactorMap
 }
 
-func checkBx(s sam.Sam, bxCoord bed.Bed, ref map[string][]fasta.Fasta) {
-	sam.SamBedToBases(s, bxCoord)
+func checkBx(s sam.Sam, bxCoord bed.Bed, refs []fasta.Fasta) bool {
+	var mismatch int
+	obs := sam.SamBedToBases(s, bxCoord)
+	refbx := convert.BedToFasta([]bed.Bed{bxCoord}, refs)[0].Seq
+
+	for i := range obs {
+		if obs[i] != refbx[i] {
+			mismatch++
+		}
+		if mismatch > 1 {
+			return false
+		}
+	}
+	return true
 }
 
 // non-pe
 func BulkOutputSeq(s BulkOutputSeqSettings) []string {
-	var ans []interval.Interval
-	var zero, multi int
+	var ref []fasta.Fasta
 
 	tree, countsMap := makeBedTreeAndMap(s.InBed)
 
-	if s.PairedEnd {
-		return processPairEndSam(s, tree, countsMap)
-	}
-
-	inSam, _ := sam.GoReadToChan(s.InSam)
-
-	for read := range inSam {
-		if read.MapQ < 1 {
-			continue
-		} else if !filterIntrons(read) {
-			continue
-		}
-		if s.DualBx || s.SingleBx {
-			ans = interval.Query(tree, read, "d")
-		} else {
-			ans = interval.Query(tree, read, "any")
-		}
-
-		if len(ans) == 2 {
-			if sameConstruct(ans[0].(bed.Bed).Name, ans[1].(bed.Bed).Name, s.DualBx) {
-				ans = ans[:1]
-			}
-		}
-
-		switch len(ans) {
-		case 0:
-			zero++
-			continue
-		case 1:
-			countsMap[ans[0].(bed.Bed).Name]++
-		default:
-			multi++
-			continue
-		}
-	}
 	if s.DualBx {
-		countsMap = collapseDualBx(countsMap)
+		countsMap = collapseDualBxOutput(countsMap)
 	}
-	if s.InputNorm != "" {
-		inputNormalize(s.InputNorm, countsMap)
+
+	if s.CheckBx != "" {
+		ref = fasta.Read(s.CheckBx)
 	}
-	zMap := make(map[string]float64)
-	if s.ZScore != "" {
-		zscoreNorm(s, countsMap, zMap)
+
+	if s.PairedEnd {
+		return processPairEndSam(s, tree, countsMap, ref)
+	} else {
+		return processSingleEndSam(s, tree, countsMap, ref)
 	}
-	return formatResults(countsMap, zMap, s.RepNum)
+}
+
+func collapseDualBxOutput(countsMap map[string]construct) map[string]construct {
+	var slc []string
+	var c construct
+
+	collapseMap := make(map[string]construct)
+
+	for i := range countsMap {
+		slc = strings.Split(i, "_")
+		c = construct{
+			name:          strings.Join(slc[:len(slc)-1], "_"),
+			rawCounts:     0,
+			normCounts:    0,
+			normFactor:    0,
+			intronCount:   0,
+			intronPercent: 0,
+			zscore:        0,
+		}
+		collapseMap[c.name] = c
+	}
+	if len(collapseMap)*2 != len(countsMap) {
+		fmt.Printf("WARNING: Dual barcode collapsed map does not have twice as fewer constructs as the original map, some constructs may not have collapsed.")
+	}
+	return collapseMap
+}
+
+func intronMath(countsMap map[string]construct) {
+	var curr construct
+	for i := range countsMap {
+		curr = countsMap[i]
+		curr.intronPercent = (curr.intronCount / curr.rawCounts) * 100
+		countsMap[i] = curr
+	}
 }
