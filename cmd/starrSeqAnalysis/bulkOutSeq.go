@@ -43,12 +43,15 @@ func parseBulkOutputArgs() {
 	var expectedNumArgs int = 3
 	bulkOutSeqFlags := flag.NewFlagSet("bulkOutput", flag.ExitOnError)
 	var normFactor *string = bulkOutSeqFlags.String("normFactor", "", "Provide the output of starrSeqAnalysis inputSeq for input normalization")
-	var dualBx *bool = bulkOutSeqFlags.Bool("dualBx", false, "The bed file provided reflects barcodes that are on each side of both construct. The bed file must be formatted with each barcode having the name: \"constructName_a\" or \"constructName_b\"")
+	var dualBx *bool = bulkOutSeqFlags.Bool("dualBx", false, "The bed file provided reflects barcodes that are on each side of both construct. "+
+		"The bed file must be formatted with each barcode having the name: \"constructName_a\" or \"constructName_b\"")
 	var pe *bool = bulkOutSeqFlags.Bool("pe", false, "The output sequencing file is from paired-end sequencing and name sorted with samtools sort -n")
-	var singleBx *bool = bulkOutSeqFlags.Bool("singleBx", false, "Use if the bed file contains a single barcode region for each construct. Important to use because the program will"+
-		"assume that the sam read will have to completely encompass the barcode region")
-	var zscore *string = bulkOutSeqFlags.String("zscore", "", "provide a line-delimited text file with the names of the constructs that all other constructs will be normalized to. The output file will have an extra column containing the z-score of that construct")
-	var checkBx *string = bulkOutSeqFlags.String("checkBx", "", "Provide the reference genome used for the alignment to check that the alignment-overlapped barcode doesn't have any mismatches. Must be used with either -singleBx or -dualBx")
+	var singleBx *bool = bulkOutSeqFlags.Bool("singleBx", false, "Use if the bed file contains a single barcode region for each construct. "+
+		"Important to use because the program will assume that the sam read will have to completely encompass the barcode region")
+	var zscore *string = bulkOutSeqFlags.String("zscore", "", "provide a line-delimited text file with the names of the constructs that all other constructs will be normalized to. "+
+		"The output file will have an extra column containing the z-score of that construct")
+	var checkBx *string = bulkOutSeqFlags.String("checkBx", "", "Provide the reference genome used for the alignment to check that the alignment-overlapped barcode doesn't "+
+		"have any mismatches. Must be used with either -singleBx or -dualBx")
 	var intronStats *bool = bulkOutSeqFlags.Bool("intronStats", false, "Add percent reads with an intron to the output file")
 
 	err := bulkOutSeqFlags.Parse(os.Args[2:])

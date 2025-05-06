@@ -64,15 +64,15 @@ func combineEnds(data <-chan Sam, peChan chan<- SamPE) {
 func parseReads(tmpSlice []Sam) SamPE {
 	var pe SamPE
 	for i := range tmpSlice {
-		if tmpSlice[i].Flag&2048 == 2048 { // Flag 2048 == supplementary reads
-			if tmpSlice[i].Flag&64 == 64 { // Flag 64 == Read 1
+		if IsSupplementaryAlign(tmpSlice[i]) || IsNotPrimaryAlign(tmpSlice[i]) { // Flag 2048 == supplementary reads
+			if IsForwardRead(tmpSlice[i]) { // Flag 64 == Read 1
 				pe.SupR1 = append(pe.SupR1, tmpSlice[i])
-			} else if tmpSlice[i].Flag&128 == 128 { // Flag 128 == Read 2
+			} else if IsReverseRead(tmpSlice[i]) { // Flag 128 == Read 2
 				pe.SupR2 = append(pe.SupR2, tmpSlice[i])
 			}
-		} else if tmpSlice[i].Flag&64 == 64 { // is Read 1
+		} else if IsForwardRead(tmpSlice[i]) { // is Read 1
 			pe.R1 = tmpSlice[i]
-		} else if tmpSlice[i].Flag&128 == 128 { // is Read 2
+		} else if IsReverseRead(tmpSlice[i]) { // is Read 2
 			pe.R2 = tmpSlice[i]
 		}
 	}
