@@ -30,7 +30,7 @@ func writeResults(outFile string, res []string, s starrSeq.BulkOutputSeqSettings
 	if s.ZScore != "" {
 		base += "\tenhZScore"
 	}
-	base += "\trep"
+	base += "\trep\thalfCounts"
 	fileio.WriteToFileHandle(out, base)
 	slices.Sort(res)
 	for i := range res {
@@ -53,6 +53,8 @@ func parseBulkOutputArgs() {
 	var checkBx *string = bulkOutSeqFlags.String("checkBx", "", "Provide the reference genome used for the alignment to check that the alignment-overlapped barcode doesn't "+
 		"have any mismatches. Must be used with either -singleBx or -dualBx")
 	var intronStats *bool = bulkOutSeqFlags.Bool("intronStats", false, "Add percent reads with an intron to the output file")
+	var bxHopping *string = bulkOutSeqFlags.String("bxHopping", "", "Useful for when many similar constructs are being tested and chimeras between similar alleles of enhancers may be created. "+
+		"This option will detect if a misaligned barcode actually belongs to another allele of the same enhancer in the library. The file provided must contain \"ConstructName -tab- alleleGroup -tab- barcodeBases\"")
 
 	err := bulkOutSeqFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
@@ -89,6 +91,7 @@ func parseBulkOutputArgs() {
 			RepNum:      i + 1,
 			CheckBx:     *checkBx,
 			IntronStats: *intronStats,
+			BxHopping:   *bxHopping,
 		}
 		res = append(res, starrSeq.BulkOutputSeq(s)...)
 	}
