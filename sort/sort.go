@@ -237,3 +237,17 @@ func readIdx(filename string) []uint32 {
 
 	return answer
 }
+
+// Unique takes in a slice of string and returns a slice of string with duplicate strings removed. Out slice will be sorted.
+func Unique(s []string) []string { //is it faster to use a map or to sort and then check strings by the one below it?
+	var newSlice []string
+	mp := make(map[string]int)
+	for _, i := range s {
+		mp[i] = 0
+	}
+	for i := range mp {
+		newSlice = append(newSlice, i)
+	}
+	sort.Strings(newSlice)
+	return newSlice
+}
