@@ -401,7 +401,6 @@ func bxOverlap(s sam.Sam, bedTree map[string]*interval.IntervalNode, ref []fasta
 			} else {
 				toAdd.Name = saved
 			}
-			toAdd.Name = saved
 			ans = append(ans, toAdd)
 		} else {
 			bxMismatch++
@@ -413,11 +412,9 @@ func bxOverlap(s sam.Sam, bedTree map[string]*interval.IntervalNode, ref []fasta
 func checkBx(s sam.Sam, bxCoord bed.Bed, refs []fasta.Fasta, countsMap map[string]construct) string {
 	var mismatch int
 	var err error
-	fmt.Println(s)
-	fmt.Println(bxCoord)
 	obs, err := sam.SamBedToBases(s, bxCoord)
 	if err != nil {
-		return ""
+		return s.RName
 	}
 	refbx := convert.BedToFasta([]bed.Bed{bxCoord}, refs)[0]
 
