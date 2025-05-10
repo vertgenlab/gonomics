@@ -1,7 +1,6 @@
 package sam
 
 import (
-	"errors"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
@@ -31,8 +30,8 @@ func SamBedToBases(s Sam, b bed.Bed) ([]dna.Base, error) {
 		if samPos >= b.ChromStart {
 			idxStart = idxStart - (samPos - b.ChromStart)
 			idxEnd = idxStart + (b.ChromEnd - b.ChromStart)
-			if s.Cigar[j].Op != cigar.Match || samPos < idxEnd {
-				return []dna.Base{}, errors.New("error: bed interval is not in a region of alignment match and cannot be easily converted")
+			if s.Cigar[j].Op == cigar.Match && samPos >= idxEnd {
+				break
 			}
 			break
 		}
