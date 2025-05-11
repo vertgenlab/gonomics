@@ -10,7 +10,7 @@ import (
 // SamBedToBases takes a sam record and bed record and returns the sam sequence that corresponds to the reference coordinates
 // specified by the bed record. Log-fatals if the bed record is not completely within the sam record. Currently, SamBedToBases only returns bases that match the reference,
 // (that have an M annotation in the cigar). If other cigar annotations are present, the output will be truncated to the matching portion
-func SamBedToBases(s Sam, b bed.Bed) ([]dna.Base, error) {
+func SamBedToBases(s Sam, b bed.Bed) []dna.Base {
 	var idx, idxStart, idxEnd int
 	var withinBed bool = false
 	if !within(b, s) {
@@ -45,14 +45,10 @@ func SamBedToBases(s Sam, b bed.Bed) ([]dna.Base, error) {
 			break
 		}
 	}
-	//fmt.Println(idx)
-	//fmt.Println(samPos)
-	//fmt.Println(b.ChromStart, b.ChromEnd)
-	//fmt.Println(idxStart, idxEnd)
 	if !withinBed {
 		idxStart = idx
 	}
-	return s.Seq[idxStart:idxEnd], nil
+	return s.Seq[idxStart:idxEnd]
 }
 
 // within returns true if alpha falls completely within or is equal to beta, otherwise, returns false
