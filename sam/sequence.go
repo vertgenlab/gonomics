@@ -8,10 +8,11 @@ import (
 )
 
 // SamBedToBases takes a sam record and bed record and returns the sam sequence that corresponds to the reference coordinates
-// specified by the bed record. Log-fatals if the bed record is not completely within the sam record. Currently, SamBedToBases cannot deal with any
-// insertions, deletions, or introns within the specified bed region. It will return an empty slice of dna.Base and an error if it encounters this issue.
+// specified by the bed record. Log-fatals if the bed record is not completely within the sam record. Currently, SamBedToBases only returns bases that match the reference,
+// (that have an M annotation in the cigar). If other cigar annotations are present, the output will be truncated to the matching portion
 func SamBedToBases(s Sam, b bed.Bed) ([]dna.Base, error) {
-	var idxStart, idxEnd int
+	var idx, idxStart, idxEnd int
+	var withinBed bool = false
 	if !within(b, s) {
 		log.Fatalf("Error in SamBedToBases: The bed interval isn't completely within the sam inerval")
 	}
@@ -22,21 +23,35 @@ func SamBedToBases(s Sam, b bed.Bed) ([]dna.Base, error) {
 			continue
 		}
 		if cigar.ConsumesQuery(s.Cigar[j].Op) {
-			idxStart += s.Cigar[j].RunLength
+			idx += s.Cigar[j].RunLength
 		}
 		if cigar.ConsumesReference(s.Cigar[j].Op) {
 			samPos += s.Cigar[j].RunLength
 		}
-		if samPos >= b.ChromStart {
-			idxStart = idxStart - (samPos - b.ChromStart)
-			idxEnd = idxStart + (b.ChromEnd - b.ChromStart)
-			if s.Cigar[j].Op == cigar.Match && samPos >= idxEnd {
-				break
+		if samPos >= b.ChromStart && !withinBed {
+			withinBed = true
+			if s.Cigar[j].Op == cigar.Match {
+				idxStart = idx - (samPos - b.ChromStart)
+			} else {
+				idxStart = idx
+			}
+		}
+		if samPos >= b.ChromEnd {
+			if s.Cigar[j].Op == cigar.Match {
+				idxEnd = idx - (samPos - b.ChromEnd)
+			} else {
+				idxEnd = idx
 			}
 			break
 		}
 	}
-
+	//fmt.Println(idx)
+	//fmt.Println(samPos)
+	//fmt.Println(b.ChromStart, b.ChromEnd)
+	//fmt.Println(idxStart, idxEnd)
+	if !withinBed {
+		idxStart = idx
+	}
 	return s.Seq[idxStart:idxEnd], nil
 }
 
