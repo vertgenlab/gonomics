@@ -410,16 +410,33 @@ func bxOverlap(s sam.Sam, bedTree map[string]*interval.IntervalNode, ref []fasta
 }
 
 func checkBx(s sam.Sam, bxCoord bed.Bed, refs []fasta.Fasta, countsMap map[string]construct) string {
-	var mismatch int
-	var err error
-	obs, err := sam.SamBedToBases(s, bxCoord)
-	if err != nil {
+	var mismatch, skipBasesObs, skipBasesExp int
+
+	obs, anno := sam.SamBedToBases(s, bxCoord)
+	if len(obs) == 0 {
 		return s.RName
 	}
+
 	refbx := convert.BedToFasta([]bed.Bed{bxCoord}, refs)[0]
 
-	for i := range obs {
-		if obs[i] != dna.ToUpper(refbx.Seq[i]) {
+	if len(anno) != len(refbx.Seq) {
+		fmt.Println(refbx.Name, dna.BasesToString(refbx.Seq), anno, dna.BasesToString(obs))
+	}
+
+	for i := range anno {
+		if anno[i] == 'N' {
+			skipBasesObs++
+			continue
+		} else if anno[i] == 'D' {
+			skipBasesObs++
+			mismatch++
+			continue
+		} else if anno[i] == 'I' {
+			skipBasesExp++
+			//mismatch++ all the insertions look like they shouldn't contribute to mismatch count? They all see like they are being faithfully placed. Is there a more robust way to do this. Sequence similarity?
+			continue
+		}
+		if obs[i-skipBasesObs] != dna.ToUpper(refbx.Seq[i-skipBasesExp]) {
 			mismatch++
 		}
 		if mismatch > 1 && countsMap[s.RName].family != "" {
