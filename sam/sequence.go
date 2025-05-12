@@ -8,13 +8,14 @@ import (
 )
 
 // SamBedToBases takes a sam record and bed record and returns the sam sequence that corresponds to the reference coordinates
-// specified by the bed record. Log-fatals if the bed record is not completely within the sam record. Currently, SamBedToBases only returns bases that match the reference,
-// (that have an M annotation in the cigar). If other cigar annotations are present, the output will be truncated to the matching portion. Additionally, an "annotation" string corresponding to the cigar
-// values behind the sequence in the output, one letter in the annotation string per base. At a minimum the string will have the same length as the bed region (using 'D' or 'N') if there are introns or deletion that truncate the sequence output.
-// The annotation string can also be longer than the bed region in the case on a sequence insertion in the Sam record. In that case 'I' will be used in the annotation string.
-func SamBedToBases(s Sam, b bed.Bed) (ans []dna.Base, annotation string) {
+// specified by the bed record. The program log-fatal's if the bed record is not completely within the sam record. If deletions or introns exist in the sam sequence,
+// they will be annotated with gaps in the output (-). If insertions exist in the sam sequence they will be represented with lower-case bases in the output. The length
+// of the output will be the same length as the bed record at a minimum, but can be longer if insertions exist in the sam sequence within the bed interval.
+func SamBedToBases(s Sam, b bed.Bed) []dna.Base {
 	var idx, idxStart, idxEnd int
-	var withinBed, secondIter bool = false, false
+	var withinBed bool = false
+	var ans, tmp []dna.Base
+
 	if !within(b, s) {
 		log.Fatalf("Error in SamBedToBases: The bed interval isn't completely within the sam inerval")
 	}
@@ -32,50 +33,63 @@ func SamBedToBases(s Sam, b bed.Bed) (ans []dna.Base, annotation string) {
 			samPos += s.Cigar[j].RunLength
 		}
 
-		//for building the annotation string, we need to know if the loop is on an iteration after we have been within the bed region
-		if samPos >= b.ChromStart && withinBed {
-			secondIter = true
+		//if the above position/index updates occur in the loop after we have already crossed into bed region, we go in here
+		if withinBed {
+			//if the position/index updates take us past the end of the bed region, we need to grab the remaining sequence/gaps and exit the loop
+			if samPos >= b.ChromEnd {
+				idxEnd = idx - (samPos - b.ChromEnd)
+				idxStart = idx - s.Cigar[j].RunLength
+				if s.Cigar[j].Op == cigar.Match {
+					return append(ans, s.Seq[idxStart:idxEnd]...)
+				} else {
+					return addGaps(ans, idxEnd-idxStart)
+				}
+			}
+
+			//if we still aren't passed, we need to add the sequence/gaps pertaining to the cigar value
+			if s.Cigar[j].Op == cigar.Match {
+				idxStart = idx - s.Cigar[j].RunLength
+				ans = append(ans, s.Seq[idxStart:idx]...)
+			} else if s.Cigar[j].Op == cigar.Insertion {
+				tmp = s.Seq[idx-s.Cigar[j].RunLength : idx]
+				dna.AllToLower(tmp)
+				ans = append(ans, tmp...)
+			} else if cigar.ConsumesReference(s.Cigar[j].Op) {
+				ans = addGaps(ans, s.Cigar[j].RunLength)
+			}
+			continue
 		}
 
 		//if sam position is above the bed start value, we need to set the start index of the sequence we want to grab
 		if samPos >= b.ChromStart && !withinBed {
 			withinBed = true
-			if s.Cigar[j].Op == cigar.Match {
-				idxStart = idx - (samPos - b.ChromStart)
-			} else {
-				idxStart = idx
-			}
+			//get the start sequence index of the bed region
+			idxStart = idx - (samPos - b.ChromStart)
 
-			//update the annotation string with different rules based on if this will be the last loop in the interation
+			//simplest case, grab the sequence and return
+			idxStart = idx - (samPos - b.ChromStart)
 			if samPos >= b.ChromEnd {
-				annotation = buildAnnoString(annotation, string(s.Cigar[j].Op), b.ChromEnd-b.ChromStart)
-			} else {
-				annotation = buildAnnoString(annotation, string(s.Cigar[j].Op), samPos-b.ChromStart)
+				if s.Cigar[j].Op == cigar.Match {
+					idxEnd = idx - (samPos - b.ChromEnd)
+					return s.Seq[idxStart:idxEnd]
+				} else if s.Cigar[j].Op == cigar.Deletion || s.Cigar[j].Op == cigar.Ns {
+					return addGaps(ans, b.ChromEnd-b.ChromStart)
+				}
 			}
-
-		}
-		//if sam position in above the bed end value, we need to set the end index of the sequence we want to grab
-		if samPos >= b.ChromEnd {
+			//if there are multiple cigars within the bed region we continue with our loop
 			if s.Cigar[j].Op == cigar.Match {
-				idxEnd = idx - (samPos - b.ChromEnd)
-			} else {
-				idxEnd = idx
+				ans = append(ans, s.Seq[idxStart:idx]...)
+			} else if s.Cigar[j].Op == cigar.Insertion {
+				tmp = s.Seq[idxStart:idx]
+				dna.AllToLower(tmp)
+				ans = append(ans, tmp...)
+			} else if cigar.ConsumesReference(s.Cigar[j].Op) {
+				ans = addGaps(ans, idx-idxStart)
 			}
-
-			//update the annotation string if this isn't the only iteration that overlaps the bed region (if it is, the annotation string has already been build above)
-			if secondIter {
-				annotation = buildAnnoString(annotation, string(s.Cigar[j].Op), s.Cigar[j].RunLength-(samPos-b.ChromEnd))
-			}
-			break
-		}
-
-		//if we are in the bed region for the 2+ time, but we still haven't reached the end of the bed region, we need to update the annotation string for the current cigar operation and run length
-		if secondIter {
-			annotation = buildAnnoString(annotation, string(s.Cigar[j].Op), s.Cigar[j].RunLength)
 		}
 	}
 
-	return s.Seq[idxStart:idxEnd], annotation
+	return s.Seq[idxStart:idxEnd]
 }
 
 // within returns true if alpha falls completely within or is equal to beta, otherwise, returns false
@@ -89,9 +103,9 @@ func within(alpha bed.Bed, beta Sam) bool {
 	return false
 }
 
-func buildAnnoString(anno string, op string, count int) string {
-	for i := 0; i < count; i++ {
-		anno += op
+func addGaps(ans []dna.Base, numGap int) []dna.Base {
+	for i := 0; i < numGap; i++ {
+		ans = append(ans, dna.Gap)
 	}
-	return anno
+	return ans
 }
