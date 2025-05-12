@@ -1,7 +1,6 @@
 package sam
 
 import (
-	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/dna"
@@ -9,14 +8,26 @@ import (
 )
 
 func TestSamBedToBases(t *testing.T) {
-	b := bed.Bed{Chrom: "enh4.3e_RevComp_ACCAA", ChromStart: 170, ChromEnd: 175}
-	s := Sam{RName: "enh4.3e_RevComp_ACCAA", Cigar: cigar.FromString("1S19M56N55M223N76M"), Pos: 151, Seq: dna.StringToBases("ATGATCTAGAGCATGCACCGGGATAAGTGTCGTTGGGGCAGGTCCTCGGGAGAGTTCAGGTTGGTGGGTCCTGGGGCGGGGCCAGGGCGGGGCGTTGGCTATGTCGTAGCACGTGGCCAGGCGCTGCTCGGACTCTGGGAGGCGGAGCTTA")}
-	//s := Sam{RName: "enh4.3e_RevComp_ACCAA", Cigar: cigar.FromString("10M5N10M"), Pos: 161, Seq: dna.StringToBases("AAAAAAAAAAGGGGGGGGGG")}
-	exp := "ACCAA"
-	obs, err := SamBedToBases(s, b)
-	if err != nil {
-		fmt.Println(err)
-	} else if exp != dna.BasesToString(obs) {
-		t.Errorf("FAIL! Expected %s, observed: %s", exp, obs)
+	var obs []dna.Base
+	var anno string
+	rec := []Sam{
+		{RName: "chrA", Pos: 101, Cigar: cigar.FromString("10M"), Seq: dna.StringToBases("AACCTTGGAA")},
+		{RName: "chrA", Pos: 101, Cigar: cigar.FromString("1S4M2N5M"), Seq: dna.StringToBases("AACCTTGGAA")},
+		{RName: "chrA", Pos: 103, Cigar: cigar.FromString("4M2I4M"), Seq: dna.StringToBases("AACCTTGGAA")},
+		{RName: "chrA", Pos: 101, Cigar: cigar.FromString("7M5N3M"), Seq: dna.StringToBases("AACCTTGGAA")},
+		{RName: "chrA", Pos: 101, Cigar: cigar.FromString("7M1D3M"), Seq: dna.StringToBases("AACCTTGGAA")},
+		{RName: "chrA", Pos: 71, Cigar: cigar.FromString("10M100N10M"), Seq: dna.StringToBases("AACCTTGGAA")},
+	}
+	b := bed.Bed{Chrom: "chrA", ChromStart: 105, ChromEnd: 110}
+	exp := []string{"TGGAA", "TGGA", "CTTGGAA", "TG", "TGGA", ""}
+	expAnno := []string{"MMMMM", "NMMMM", "MIIMMMM", "MMNNN", "MMDMM", "NNNNN"}
+	for i := range rec {
+		obs, anno = SamBedToBases(rec[i], b)
+		if exp[i] != dna.BasesToString(obs) {
+			t.Errorf("Error in SamBedToBases. Expected bases output: %s, observed: %s", exp[i], dna.BasesToString(obs))
+		}
+		if expAnno[i] != anno {
+			t.Errorf("Error in SamBedToBases. Expected annotation string output: %s, observed: %s", expAnno[i], anno)
+		}
 	}
 }
