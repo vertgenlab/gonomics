@@ -9,7 +9,6 @@ import (
 
 func TestSamBedToBases(t *testing.T) {
 	var obs []dna.Base
-	var anno string
 	rec := []Sam{
 		{RName: "chrA", Pos: 101, Cigar: cigar.FromString("10M"), Seq: dna.StringToBases("AACCTTGGAA")},
 		{RName: "chrA", Pos: 101, Cigar: cigar.FromString("1S4M2N5M"), Seq: dna.StringToBases("AACCTTGGAA")},
@@ -19,15 +18,11 @@ func TestSamBedToBases(t *testing.T) {
 		{RName: "chrA", Pos: 71, Cigar: cigar.FromString("10M100N10M"), Seq: dna.StringToBases("AACCTTGGAA")},
 	}
 	b := bed.Bed{Chrom: "chrA", ChromStart: 105, ChromEnd: 110}
-	exp := []string{"TGGAA", "TGGA", "CTTGGAA", "TG", "TGGA", ""}
-	expAnno := []string{"MMMMM", "NMMMM", "MIIMMMM", "MMNNN", "MMDMM", "NNNNN"}
+	exp := []string{"TGGAA", "-TGGA", "CttGGAA", "TG---", "TG-GA", "-----"}
 	for i := range rec {
-		obs, anno = SamBedToBases(rec[i], b)
+		obs = SamBedToBases(rec[i], b)
 		if exp[i] != dna.BasesToString(obs) {
 			t.Errorf("Error in SamBedToBases. Expected bases output: %s, observed: %s", exp[i], dna.BasesToString(obs))
-		}
-		if expAnno[i] != anno {
-			t.Errorf("Error in SamBedToBases. Expected annotation string output: %s, observed: %s", expAnno[i], anno)
 		}
 	}
 }
