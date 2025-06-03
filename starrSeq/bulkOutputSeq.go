@@ -2,6 +2,7 @@ package starrSeq
 
 import (
 	"fmt"
+	"github.com/vertgenlab/gonomics/align"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/cigar"
 	"github.com/vertgenlab/gonomics/convert"
@@ -46,8 +47,9 @@ type construct struct {
 
 func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.IntervalNode, countsMap map[string]construct, ref []fasta.Fasta) []string {
 	var ansR1, ansR2 []interval.Interval
-	var totPair, qualIntronFilter, twoCollapseToOne, same, bothmultianddiff, none, other, totLen3_save, totLen3_discard, pairsFiltered, oneOnlyOtherFilterd, toAdd, bxMismatch, twoBxHalfCounts, oneBxHalfCount, oneOnlyOtherUnmap int
+	var totPair, qualIntronFilter, twoCollapseToOne, same, bothmultianddiff, none, other, totLen3_save, totLen3_discard, pairsFiltered, oneOnlyOtherFilterd, toAdd, bxMismatch, twoBxHalfCounts, oneBxHalfCount, oneOnlyOtherUnmap, twoAndZero, bothMultiHalfCounts int
 	var nameR1, nameR2 string
+	var names []string
 	var intron bool
 	var curr construct
 
@@ -60,14 +62,14 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 	for pair := range peReads {
 		totPair++
 
-		if pair.R1.MapQ == 0 {
+		if pair.R1.MapQ == 0 { //empty reads in a read pair (STAR unmapped) will also satisfy this filter
 			qualIntronFilter++
 			pair.R1.RName = ""
 		} else if !filterIntrons(pair.R1) {
 			qualIntronFilter++
 			pair.R1.RName = ""
 		}
-		if pair.R2.MapQ == 0 {
+		if pair.R2.MapQ == 0 { //empty reads in a read pair (STAR unmapped) will also satisfy this filter
 			qualIntronFilter++
 			pair.R2.RName = ""
 		} else if !filterIntrons(pair.R2) {
@@ -148,26 +150,22 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 			}
 		case len(ansR1)+len(ansR2) == 1:
 			if len(ansR1) == 1 {
-				if s.DualBx {
-					nameR1 = stripDualBx(ansR1[0].(bed.Bed).Name)
-				} else {
-					nameR1 = ansR1[0].(bed.Bed).Name
-				}
-				if pair.R2.QName == "" {
+				nameR1 = ansR1[0].(bed.Bed).Name
+				if pair.R2.QName == "" && pair.R2.RName == "" {
 					oneOnlyOtherUnmap++
-				} else {
+				} else if pair.R2.RName == "" {
 					oneOnlyOtherFilterd++
 				}
-
 			} else {
-				if s.DualBx {
-					nameR1 = stripDualBx(ansR2[0].(bed.Bed).Name)
-				} else {
-					nameR1 = ansR2[0].(bed.Bed).Name
-				}
-				if pair.R1.RName == "" {
+				nameR1 = ansR2[0].(bed.Bed).Name
+				if pair.R1.QName == "" && pair.R1.RName == "" {
+					oneOnlyOtherUnmap++
+				} else if pair.R1.RName == "" {
 					oneOnlyOtherFilterd++
 				}
+			}
+			if s.DualBx {
+				nameR1 = stripDualBx(nameR1)
 			}
 
 			curr = countsMap[nameR1]
@@ -180,26 +178,31 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 			oneBxHalfCount++
 
 		case (len(ansR1) == 1 && len(ansR2) == 2) || (len(ansR1) == 2 && len(ansR2) == 1):
-			nameR1 = rescueTotalThree(ansR1, ansR2, s)
-			if nameR1 != "" {
-				curr = countsMap[nameR1]
-				curr.rawCounts++
-				if intron {
-					curr.intronCount++
-
-				}
-				countsMap[nameR1] = curr
-				totLen3_save++
-			} else {
+			names = rescueTotalThree(ansR1, ansR2, s)
+			if len(names) == 0 {
 				totLen3_discard++
+				continue
 			}
-		case len(ansR1) > 1 && len(ansR2) > 1:
-			//fmt.Println(ansR1, ansR2)
-			bothmultianddiff++
+			totLen3_save++
+			awardHalfCounts(names, countsMap, intron)
+		case len(ansR1) == 2 && len(ansR2) == 2:
+			names = processBoth2(ansR1, ansR2, s)
+			if len(names) == 0 {
+				bothmultianddiff++
+				continue
+			}
+			awardHalfCounts(names, countsMap, intron)
+			bothMultiHalfCounts++
+
+		case (len(ansR1) == 2 && len(ansR2) == 0) || (len(ansR1) == 0 && len(ansR2) == 2):
+			names = process2and0(ansR1, ansR2, s)
+			//add a half count for both construct
+			awardHalfCounts(names, countsMap, intron)
+			twoAndZero++
+
 		case len(ansR1)+len(ansR2) == 0:
 			none++
 		default:
-			//sam.WriteSamPeToFileHandle(outPe, pair)
 			other++
 		}
 	}
@@ -217,8 +220,9 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 	fmt.Println("How many of the above pairs only mapped to one total construct because the other read pair was unmapped by STAR: ", oneOnlyOtherUnmap)
 	fmt.Println("How many of the above pairs only mapped to one total construct because the other read pair didn't overlap a Bx (intron usually?): ", oneBxHalfCount-(oneOnlyOtherFilterd+oneOnlyOtherUnmap))
 	fmt.Println("Total length of three saved and discarded: ", totLen3_save, totLen3_discard)
-	fmt.Println("Read pairs where both reads map to 2+ barcodes: ", bothmultianddiff) // not using need to look into
-	fmt.Println("Read pairs where neither pair overlapped a barcode: ", none)         // obvi not using, haven't looked at
+	fmt.Println("Read pairs where both reads map to 2+ barcodes saved, discarded: ", bothMultiHalfCounts, bothmultianddiff)       // not using need to look into
+	fmt.Println("Read pairs where one reads mapped to 2 barcodes, and the other mapped to 0 (half counts awarded): ", twoAndZero) // not using need to look into
+	fmt.Println("Read pairs where neither pair overlapped a barcode: ", none)                                                     // obvi not using, haven't looked at
 	fmt.Println("other, didn't match any of the other categories: ", other)
 
 	if s.InputNorm != "" {
@@ -234,15 +238,58 @@ func processPairEndSam(s BulkOutputSeqSettings, tree map[string]*interval.Interv
 	return formatResults(countsMap, s)
 }
 
+func awardHalfCounts(names []string, countsMap map[string]construct, intron bool) {
+	var curr construct
+	for i := range names {
+		curr = countsMap[names[i]]
+		curr.rawCounts += 0.5
+		curr.halfCounts++
+		if intron {
+			curr.intronCount += 0.5
+		}
+		countsMap[names[i]] = curr
+	}
+}
+
+func processBoth2(ansR1, ansR2 []interval.Interval, s BulkOutputSeqSettings) []string {
+	if ansR1[0].(bed.Bed).Name == ansR2[0].(bed.Bed).Name && ansR1[1].(bed.Bed).Name == ansR2[1].(bed.Bed).Name {
+		nameR1, nameR2 := ansR1[0].(bed.Bed).Name, ansR1[1].(bed.Bed).Name
+		if s.DualBx {
+			nameR1, nameR2 = stripDualBx(nameR1), stripDualBx(nameR2)
+		}
+		return []string{nameR1, nameR2}
+	}
+	return []string{}
+}
+
+func process2and0(ansR1, ansR2 []interval.Interval, s BulkOutputSeqSettings) []string {
+	var nameR1, nameR2 string
+	if len(ansR1) == 2 {
+		nameR1 = ansR1[0].(bed.Bed).Name
+		nameR2 = ansR1[1].(bed.Bed).Name
+	} else {
+		nameR1 = ansR2[0].(bed.Bed).Name
+		nameR2 = ansR2[1].(bed.Bed).Name
+	}
+	if s.DualBx {
+		nameR1 = stripDualBx(nameR1)
+		nameR2 = stripDualBx(nameR2)
+	}
+	return []string{nameR1, nameR2}
+}
+
 func readBxHoppingFile(countsMap map[string]construct, bxHoppingFile string) {
 	var cols []string
 	var curr construct
+	var tmp []dna.Base
 	slc := fileio.Read(bxHoppingFile)
 	for i := range slc {
 		cols = strings.Split(slc[i], "\t")
 		curr = countsMap[cols[0]]
 		curr.family = cols[1]
-		curr.barcode = dna.StringToBases(cols[2])
+		tmp = dna.StringToBases(cols[2])
+		dna.AllToUpper(tmp)
+		curr.barcode = tmp
 		countsMap[cols[0]] = curr
 	}
 }
@@ -410,39 +457,69 @@ func bxOverlap(s sam.Sam, bedTree map[string]*interval.IntervalNode, ref []fasta
 }
 
 func checkBx(s sam.Sam, bxCoord bed.Bed, refs []fasta.Fasta, countsMap map[string]construct) string {
-	var mismatch, skipBasesObs, skipBasesExp int
+	//var mismatch, skipBasesExp int
+	var alnScore, highest int64
+	var curr string
+	var ties []string
+	//var cig []align.Cigar
 
-	obs, anno := sam.SamBedToBases(s, bxCoord)
-	if len(obs) == 0 {
-		return s.RName
-	}
+	obs := sam.SamBedToBases(s, bxCoord)
+	//tmp := dna.BasesToString(obs)
 
 	refbx := convert.BedToFasta([]bed.Bed{bxCoord}, refs)[0]
 
-	if len(anno) != len(refbx.Seq) {
-		fmt.Println(refbx.Name, dna.BasesToString(refbx.Seq), anno, dna.BasesToString(obs))
+	if countsMap[stripDualBx(bxCoord.Name)].family != "" {
+		if dna.CompareSeqsIgnoreCase(obs, refbx.Seq) == 0 {
+			return s.RName
+		}
+		obs = dna.RemoveGaps(obs)
+		dna.AllToUpper(obs)
+		for i := range countsMap {
+			if countsMap[i].family == countsMap[stripDualBx(bxCoord.Name)].family {
+				alnScore, _ = align.ConstGap_highMem(obs, countsMap[i].barcode, align.HumanChimpTwoScoreMatrix, 10)
+				if alnScore > highest {
+					ties = ties[:0]
+					highest = alnScore
+					curr = i
+				} else if alnScore == highest {
+					ties = append(ties, i)
+				}
+			}
+		}
+		if len(ties) == 0 {
+			return curr
+		} else {
+			//fmt.Println(tmp, bxCoord.Name, dna.BasesToString(obs), curr, dna.BasesToString(countsMap[curr].barcode), ties)
+			ties = append(ties, curr)
+			for i := range ties {
+				if ties[i] == stripDualBx(bxCoord.Name) {
+					return ties[i]
+				}
+			}
+			//fmt.Println(tmp, bxCoord.Name, dna.BasesToString(obs), curr, dna.BasesToString(countsMap[curr].barcode), ties)
+			return ""
+		}
 	}
 
-	for i := range anno {
-		if anno[i] == 'N' {
-			skipBasesObs++
-			continue
-		} else if anno[i] == 'D' {
-			skipBasesObs++
-			mismatch++
-			continue
-		} else if anno[i] == 'I' {
-			skipBasesExp++
-			//mismatch++ all the insertions look like they shouldn't contribute to mismatch count? They all see like they are being faithfully placed. Is there a more robust way to do this. Sequence similarity?
-			continue
+	/*
+		for i := range obs {
+			if obs[i] == dna.Gap { // usually introns
+				continue
+			} else if dna.IsLower(obs[i]) {
+				skipBasesExp++
+				continue
+			}
+			if dna.ToUpper(obs[i]) != dna.ToUpper(refbx.Seq[i-skipBasesExp]) {
+				mismatch++
+			}
+			if mismatch > 1 {
+				fmt.Println("missymatch", dna.BasesToString(obs), dna.BasesToString(refbx.Seq), refbx.Name)
+				return ""
+			}
 		}
-		if obs[i-skipBasesObs] != dna.ToUpper(refbx.Seq[i-skipBasesExp]) {
-			mismatch++
-		}
-		if mismatch > 1 && countsMap[s.RName].family != "" {
-			return checkForChimeras(obs, countsMap, s.RName)
-		}
-	}
+
+	*/
+
 	return s.RName
 }
 
@@ -455,20 +532,30 @@ func checkForChimeras(obs []dna.Base, countsMap map[string]construct, alnChrom s
 	return ""
 }
 
-func rescueTotalThree(ansR1, ansR2 []interval.Interval, s BulkOutputSeqSettings) string {
+func rescueTotalThree(ansR1, ansR2 []interval.Interval, s BulkOutputSeqSettings) []string {
 	var j int
+	var pass bool = false
+	var nameR1, nameR2 string
 	for i := range ansR1 {
 		for j = range ansR2 {
 			if sameConstruct(ansR1[i].(bed.Bed).Name, ansR2[j].(bed.Bed).Name, true) {
-				if s.DualBx {
-					return stripDualBx(ansR1[i].(bed.Bed).Name)
-				} else {
-					return ansR1[i].(bed.Bed).Name
-				}
+				pass = true
+				break
 			}
 		}
 	}
-	return ""
+	if !pass {
+		return []string{}
+	}
+	if len(ansR1) == 2 {
+		nameR1, nameR2 = ansR1[0].(bed.Bed).Name, ansR1[1].(bed.Bed).Name
+	} else {
+		nameR1, nameR2 = ansR2[0].(bed.Bed).Name, ansR2[1].(bed.Bed).Name
+	}
+	if s.DualBx {
+		nameR1, nameR2 = stripDualBx(nameR1), stripDualBx(nameR2)
+	}
+	return []string{nameR1, nameR2}
 }
 
 func stripDualBx(s string) string {
