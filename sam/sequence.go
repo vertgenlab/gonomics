@@ -67,7 +67,6 @@ func SamBedToBases(s Sam, b bed.Bed) []dna.Base {
 			idxStart = idx - (samPos - b.ChromStart)
 
 			//simplest case, grab the sequence and return
-			idxStart = idx - (samPos - b.ChromStart)
 			if samPos >= b.ChromEnd {
 				if s.Cigar[j].Op == cigar.Match {
 					idxEnd = idx - (samPos - b.ChromEnd)
