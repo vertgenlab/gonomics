@@ -158,3 +158,14 @@ func OverlapProportionRecursive(a Interval, b Interval, proportion float64) bool
 	}
 	return false
 }
+
+// Within returns true if alpha falls completely within or is equal to beta, otherwise, returns false
+func Within(alpha, beta Interval) bool {
+	if alpha.GetChrom() != beta.GetChrom() {
+		return false
+	}
+	if alpha.GetChromStart() >= beta.GetChromStart() && alpha.GetChromEnd() <= beta.GetChromEnd() {
+		return true
+	}
+	return false
+}
