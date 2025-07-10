@@ -124,7 +124,6 @@ func findAndReplace(inFile, inFileDelim, findReplaceFile, findReplaceDelim, outF
 			line = findReplaceColumn(line, inFileDelim, columnNumber, findReplaceMap)
 		} else if regex {
 			patternReplaceMap = compilePatternReplaceMap(findReplaceMap)
-			fmt.Println("done compiling pattern map")
 			line = findReplaceRegexAnywhere(line, patternReplaceMap)
 		} else {
 			line = findReplaceAnyColumn(line, inFileDelim, findReplaceMap)
