@@ -40,7 +40,7 @@ func readFindReplacePairs(filename string, delim string) map[string]string {
 }
 
 func compilePatternReplaceMap(findReplaceMap map[string]string) map[*regexp.Regexp]string {
-	var patternReplaceMap map[*regexp.Regexp]string
+	var patternReplaceMap = make(map[*regexp.Regexp]string)
 	var find string
 	var replace string
 	var pattern *regexp.Regexp
