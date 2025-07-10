@@ -17,23 +17,26 @@ var findAndReplaceColumnTests = []struct {
 	expectedFile        string
 	columnNumber        int
 	ignoreColumns       bool
+	regex               bool
 }{
 	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedColumn0.tsv",
-		"testdata/outputFileExpectedColumn0.tsv", 0, false},
+		"testdata/outputFileExpectedColumn0.tsv", 0, false, false},
 	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedColumn1.tsv",
-		"testdata/outputFileExpectedColumn1.tsv", 1, false},
+		"testdata/outputFileExpectedColumn1.tsv", 1, false, false},
 	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedColumn2.tsv",
-		"testdata/outputFileExpectedColumn2.tsv", 2, false},
+		"testdata/outputFileExpectedColumn2.tsv", 2, false, false},
 	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedWholeFile.tsv",
-		"testdata/outputFileExpectedWholeFile.tsv", -1, false},
+		"testdata/outputFileExpectedWholeFile.tsv", -1, false, false},
 	{"testdata/inputOne.txt", "\t", "testdata/findReplaceOne.txt", "\t", "testdata/temp.txt",
-		"testdata/expectedOne.txt", -1, true},
+		"testdata/expectedOne.txt", -1, true, false},
+	{"testdata/inputOne.txt", "\t", "testdata/findReplaceRegex.txt", "\t", "testdata/outputFileRegex.tsv",
+		"testdata/expectedRegex.txt", -1, false, true},
 }
 
 func TestFindAndReplaceColumnSpecific(t *testing.T) {
 	var err error
 	for _, v := range findAndReplaceColumnTests {
-		findAndReplace(v.inFile, v.inFileDelim, v.findAndReplaceFile, v.findAndReplaceDelim, v.outFile, v.columnNumber, v.ignoreColumns)
+		findAndReplace(v.inFile, v.inFileDelim, v.findAndReplaceFile, v.findAndReplaceDelim, v.outFile, v.columnNumber, v.ignoreColumns, v.regex)
 		if !fileio.AreEqual(v.outFile, v.expectedFile) {
 			t.Errorf("Error in findAndReplace")
 		} else {
