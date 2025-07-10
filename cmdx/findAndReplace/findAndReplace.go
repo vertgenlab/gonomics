@@ -113,14 +113,18 @@ func findAndReplace(inFile, inFileDelim, findReplaceFile, findReplaceDelim, outF
 	var done bool
 	var err error
 
+	if regex && columnNumber != -1 {
+		log.Fatalf("Error: regex ignores columns. regex and columnNumber are not compatible.")
+	}
+
 	findReplaceMap = readFindReplacePairs(findReplaceFile, findReplaceDelim)
 
 	out = fileio.EasyCreate(outFile)
 	in = fileio.EasyOpen(inFile)
 	for line, done = fileio.EasyNextLine(in); !done; line, done = fileio.EasyNextLine(in) {
-		if ignoreColumns {
+		if ignoreColumns && !regex {
 			line = findReplaceAnywhere(line, findReplaceMap)
-		} else if regex {
+		} else if (regex) || (regex && ignoreColumns) {
 			patternReplaceMap = compilePatternReplaceMap(findReplaceMap)
 			line = findReplaceRegexAnywhere(line, patternReplaceMap)
 		} else if columnNumber != -1 {
