@@ -1,2 +1,2 @@
-^H	greeting
+^Hello	Greetings
 M.*	No
