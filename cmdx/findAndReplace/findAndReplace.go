@@ -115,7 +115,7 @@ func findAndReplace(inFile, inFileDelim, findReplaceFile, findReplaceDelim, outF
 
 	if regex && columnNumber != -1 {
 		log.Fatalf("Error: Regex ignores columns. Regex is not compatible with columns in the input file.")
-	} else if ignoreColumns && columnNumber != 1 {
+	} else if ignoreColumns && columnNumber != -1 {
 		log.Fatalf("Error: IgnoreColumns is not compatible with columns in the input file.")
 	}
 
