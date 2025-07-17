@@ -60,7 +60,6 @@ func findReplaceRegexAnywhere(line string, patternReplaceMap map[*regexp.Regexp]
 	for pattern, replace = range patternReplaceMap {
 		line = pattern.ReplaceAllLiteralString(line, replace)
 	}
-
 	return line
 }
 
@@ -104,19 +103,19 @@ func findReplaceColumn(line string, delim string, columnIndex int, findReplaceMa
 	return line
 }
 
-func findAndReplace(inFile, inFileDelim, findReplaceFile, findReplaceDelim, outFile string, columnNumber int, ignoreColumns bool, regex bool) {
+func findAndReplace(inFile, inFileDelim, findReplaceFile, findReplaceDelim, outFile string, columnNumber int, regex bool) {
 	var findReplaceMap map[string]string
 	var patternReplaceMap map[*regexp.Regexp]string
 	var line string
+	var outLine string
+	var replaceCounter int = 0
 	var in *fileio.EasyReader
 	var out *fileio.EasyWriter
 	var done bool
 	var err error
 
 	if regex && columnNumber != -1 {
-		log.Fatalf("Error: Regex ignores columns. Regex is not compatible with columns in the input file.")
-	} else if ignoreColumns && columnNumber != -1 {
-		log.Fatalf("Error: IgnoreColumns is not compatible with columns in the input file.")
+		log.Fatalf("Error: Regex ignores columns. Regex is not compatible with columns in the input file.\n")
 	}
 
 	findReplaceMap = readFindReplacePairs(findReplaceFile, findReplaceDelim)
@@ -124,18 +123,35 @@ func findAndReplace(inFile, inFileDelim, findReplaceFile, findReplaceDelim, outF
 	out = fileio.EasyCreate(outFile)
 	in = fileio.EasyOpen(inFile)
 	for line, done = fileio.EasyNextLine(in); !done; line, done = fileio.EasyNextLine(in) {
-		if ignoreColumns && !regex {
-			line = findReplaceAnywhere(line, findReplaceMap)
-		} else if (regex) || (regex && ignoreColumns) {
+		if columnNumber == -1 && !regex {
+			outLine = findReplaceAnywhere(line, findReplaceMap)
+			if line != outLine {
+				replaceCounter++
+			}
+		} else if regex {
 			patternReplaceMap = compilePatternReplaceMap(findReplaceMap)
-			line = findReplaceRegexAnywhere(line, patternReplaceMap)
+			outLine = findReplaceRegexAnywhere(line, patternReplaceMap)
+			if line != outLine {
+				replaceCounter++
+			}
 		} else if columnNumber != -1 {
 			line = findReplaceColumn(line, inFileDelim, columnNumber, findReplaceMap)
+			if line != outLine {
+				replaceCounter++
+			}
 		} else {
 			line = findReplaceAnyColumn(line, inFileDelim, findReplaceMap)
+			if line != outLine {
+				replaceCounter++
+			}
 		}
-		fmt.Fprintf(out, "%s\n", line)
+		fmt.Fprintf(out, "%s\n", outLine)
 	}
+
+	if replaceCounter == 0 {
+		log.Fatalf("Error: pattern(s) not found in input file.\n")
+	}
+
 	err = in.Close()
 	exception.PanicOnErr(err)
 	err = out.Close()
@@ -159,7 +175,6 @@ func main() {
 	var replaceDelim *string = flag.String("replaceDelim", "\t", "Lines in the findReplaceFile will be broken into columns based on this substring.  This should result in two substrings for each line where the first is the find and the second is the replace.")
 	var inDelim *string = flag.String("inDelim", "\t", "Lines in the input file should be broken into columns based on this substring and substrings in the findReplaceFile must match the entire column")
 	var columnNumber *int = flag.Int("columnNumber", -1, "The index of the column to use when finding and replacing. This is zero-based (ie for column 1 use 0. Default is to search all columns.  This must be used with inDelim to know where the columns are located.")
-	var ignoreColumns = flag.Bool("ignoreColumns", false, "Ignore parsing the input file into columns and replace the found substrings wherever they are in the file.")
 	var regex = flag.Bool("regex", false, "Use regular expressions findReplaceFile. Replaces all matching patterns in the file, ignores parsing the input into columns. Not compatible with columnNumber or inDelim.")
 	flag.Usage = usage
 
@@ -175,5 +190,5 @@ func main() {
 	findReplaceFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	findAndReplace(inFile, *inDelim, findReplaceFile, *replaceDelim, outFile, *columnNumber, *ignoreColumns, *regex)
+	findAndReplace(inFile, *inDelim, findReplaceFile, *replaceDelim, outFile, *columnNumber, *regex)
 }
