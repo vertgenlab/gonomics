@@ -135,12 +135,12 @@ func findAndReplace(inFile, inFileDelim, findReplaceFile, findReplaceDelim, outF
 				replaceCounter++
 			}
 		} else if columnNumber != -1 {
-			line = findReplaceColumn(line, inFileDelim, columnNumber, findReplaceMap)
+			outLine = findReplaceColumn(line, inFileDelim, columnNumber, findReplaceMap)
 			if line != outLine {
 				replaceCounter++
 			}
 		} else {
-			line = findReplaceAnyColumn(line, inFileDelim, findReplaceMap)
+			outLine = findReplaceAnyColumn(line, inFileDelim, findReplaceMap)
 			if line != outLine {
 				replaceCounter++
 			}
