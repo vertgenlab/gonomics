@@ -125,26 +125,19 @@ func findAndReplace(inFile, inFileDelim, findReplaceFile, findReplaceDelim, outF
 	for line, done = fileio.EasyNextLine(in); !done; line, done = fileio.EasyNextLine(in) {
 		if columnNumber == -1 && !regex {
 			outLine = findReplaceAnywhere(line, findReplaceMap)
-			if line != outLine {
-				replaceCounter++
-			}
 		} else if regex {
 			patternReplaceMap = compilePatternReplaceMap(findReplaceMap)
 			outLine = findReplaceRegexAnywhere(line, patternReplaceMap)
-			if line != outLine {
-				replaceCounter++
-			}
 		} else if columnNumber != -1 {
 			outLine = findReplaceColumn(line, inFileDelim, columnNumber, findReplaceMap)
-			if line != outLine {
-				replaceCounter++
-			}
 		} else {
 			outLine = findReplaceAnyColumn(line, inFileDelim, findReplaceMap)
-			if line != outLine {
-				replaceCounter++
-			}
 		}
+
+		if line != outLine {
+			replaceCounter++
+		}
+
 		fmt.Fprintf(out, "%s\n", outLine)
 	}
 
