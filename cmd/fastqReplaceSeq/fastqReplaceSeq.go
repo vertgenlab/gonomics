@@ -94,7 +94,7 @@ type Settings struct {
 
 func usage() {
 	fmt.Print(
-		"fastqReplaceSeq\n" +
+		"fastqReplaceSeq - finds a sequence in a fastq file (beginning from the beginning of the line) and replaces it with a new sequence. \n" +
 			"Usage:\n" +
 			"fastqReplaceSeq input.fastq findReplaceFile output.fastq\n" +
 			"options:\n")
