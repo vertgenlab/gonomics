@@ -1,27 +1,21 @@
 package fastqReplaceSeq
 
-import(
+import (
 	"flag"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fastq"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-type Settings struct {
-	inFile	string
-	outFile	string
-	findReplaceFile string
-	findReplaceDelim string
-}
-
-func readFindReplacePairs(filename string, delim string) map[string]string {
+func readFindReplaceDNA(filename string, delim string) map[dna.Base]dna.Base {
+	// TODO: convert to DNA base from string
 	var in *fileio.EasyReader
-	var findReplaceMap = make(map[string]string)
+	var findReplaceMap = make(map[dna.Base]dna.Base)
 	var words []string
 	var found, done bool
 	var line string
@@ -45,18 +39,64 @@ func readFindReplacePairs(filename string, delim string) map[string]string {
 	return findReplaceMap
 }
 
-func replacePrefix(seq []dna.Base, find []dna.Base, replace []dna.Base, ignoreCase bool) []dna.Base {
-	if ignoreCase{
-		if dna.CompareSeqsIgnoreCase(seq[1:len(find)], find) == 0{
-			copy(seq, replace[0:])
-		}
-	}else{
-		if dna.CompareSeqsCaseSensitive(seq[1:len(find)], find) == 0{
-			copy(seq, replace[0:])
+// compareBase returns an integer related to the lexographical order of nucleotides.
+// i.e. A < C < a < c < Dot < Gap.
+func compareBase(alpha dna.Base, beta dna.Base, ignoreCase bool) int {
+	if ignoreCase {
+		alpha = dna.ToUpper(alpha)
+		beta = dna.ToUpper(beta)
+	}
+	if alpha < beta {
+		return -1
+	} else if alpha > beta {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+// findSeq loops through a query sequence starting at the beginning and compares it to a find sequence, base by base
+// outputs true if find sequence is found in query sequence
+func findSeq(seq []dna.Base, find []dna.Base, ignoreCase bool) bool {
+	if len(find) > len(seq) {
+		log.Fatalf("Error: Length of find sequence must be less then or equal to length of query sequence.")
+	}
+	found := true
+	for currBase := range find {
+		if found {
+			if compareBase(seq[currBase], find[currBase], ignoreCase) != 0 {
+				found = false
+			}
 		}
 	}
+	return found
+}
 
+// replacePrefix replaces bases in a query sequence with a replace sequence, starting from the beginning of the query sequence
+func replacePrefix(seq []dna.Base, replace []dna.Base) []dna.Base {
+	copy(seq, replace[0:])
 	return seq
+}
+
+type Settings struct {
+	inFile                   string
+	outFile                  string
+	findReplaceFile          string
+	findReplaceDelim         string
+	ignoreCase               bool
+	onlyPrintReplacedRecords bool
+}
+
+func usage() {
+	fmt.Print(
+		"bedMath - Performs comparative arithmetic operations on float values in bed files.\n" +
+			"Usage:\n" +
+			"bedMath a.bed operation b.bed out.bed\n" +
+			"operation may be one of the following options:" +
+			"plus\tminus\ttimes\tdivideBy\n" +
+			"Input bed files must be pre-sorted by coordinate.\n" +
+			"options:\n")
+	flag.PrintDefaults()
 }
 
 func fastqReplaceSeq(s Settings) {
@@ -64,18 +104,19 @@ func fastqReplaceSeq(s Settings) {
 	fq := fastq.GoReadToChan(s.inFile)
 	out := fileio.EasyCreate(s.outFile)
 
-	findReplaceMap = readFindReplacePairs(s.findReplaceFile, s.findReplaceDelim)
+	findReplaceMap = readFindReplaceDNA(s.findReplaceFile, s.findReplaceDelim)
 
-	for i := range fq {
-		if s.RetainNamesList != "" {
-			if _, NameInMap = namesMap[i.Name]; !NameInMap {
-				continue
+	for currRecord := range fq {
+		found := false
+		for find, replace = range findReplaceMap {
+			found = findSeq(currRecord.Seq, find, s.ignoreCase)
+			if found {
+				currRecord.Seq = replacePrefix(currRecord.Seq, replace)
+				fastq.WriteToFileHandle(out, currRecord)
 			}
 		}
-		if s.DiscardNamesList != "" {
-			if _, NameInMap = namesMap[i.Name]; NameInMap {
-				continue
-			}
+		if !found && !s.onlyPrintReplacedRecords {
+			fastq.WriteToFileHandle(out, currRecord)
 		}
-		fastq.WriteToFileHandle(out, i)
+	}
 }
