@@ -145,7 +145,10 @@ func main() {
 	var replaceDelim *string = flag.String("replaceDelim", "\t", "Lines in the findReplaceFile will be broken into columns based on this substring.  This should result in two substrings for each line where the first is the find and the second is the replace.")
 	var ignoreCase *bool = flag.Bool("ignoreCase", true, "Ignore case when finding matches. Default is true.")
 	var replacedRecordsOnly *bool = flag.Bool("replacedRecordsOnly", false, "Only output fastq records with a replacement in the sequence field. Default is false (outputs all records, regardless of whether a replacement was made).")
+
 	flag.Usage = usage
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	flag.Parse()
 
 	if len(flag.Args()) != expectedNumArgs {
 		flag.Usage()
@@ -154,7 +157,7 @@ func main() {
 
 	inFile := flag.Arg(0)
 	findReplaceFile := flag.Arg(1)
-	outFile := flag.Arg(3)
+	outFile := flag.Arg(2)
 
 	s := Settings{
 		inFile,
