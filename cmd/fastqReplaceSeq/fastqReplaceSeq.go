@@ -1,4 +1,8 @@
-package fastqReplaceSeq
+// Command Group: "FASTQ TOOLS"
+
+// Finds and replaces specified bits of sequence field
+
+package main
 
 import (
 	"flag"
