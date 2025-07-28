@@ -91,6 +91,7 @@ func usage() {
 
 func fastqReplaceSeq(s Settings) {
 	var findReplacePairs []FindReplaceSeq
+	var currPair FindReplaceSeq
 	var find []dna.Base
 	var replace []dna.Base
 	var replaceCounter int = 0
@@ -102,7 +103,9 @@ func fastqReplaceSeq(s Settings) {
 
 	for currRecord := range fq {
 		found := false
-		for find, replace = range findReplacePairs {
+		for _, currPair = range findReplacePairs {
+			find = currPair.find
+			replace = currPair.replace
 			found = findSeq(currRecord.Seq, find, s.ignoreCase)
 			if found {
 				currRecord.Seq = replacePrefix(currRecord.Seq, replace)
