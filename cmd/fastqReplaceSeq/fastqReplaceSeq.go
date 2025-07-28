@@ -98,7 +98,7 @@ type Settings struct {
 
 func usage() {
 	fmt.Print(
-		"fastqReplaceSeq - finds a sequence in a fastq file (beginning from the beginning of the line) and replaces it with a new sequence. \n" +
+		"fastqReplaceSeq - finds a sequence in a fastq file (starting from the beginning of the line) and replaces it with a new sequence. \n" +
 			"Usage:\n" +
 			"fastqReplaceSeq input.fastq findReplaceFile output.fastq\n" +
 			"options:\n")
@@ -143,8 +143,8 @@ func fastqReplaceSeq(s Settings) {
 func main() {
 	var expectedNumArgs int = 3
 	var replaceDelim *string = flag.String("replaceDelim", "\t", "Lines in the findReplaceFile will be broken into columns based on this substring.  This should result in two substrings for each line where the first is the find and the second is the replace.")
-	var ignoreCase = flag.Bool("ignoreCase", true, "Ignore case when finding matches. Default is true.")
-	var replacedRecordsOnly = flag.Bool("replacedRecordsOnly", false, "Only output fastq records with a replacement in the sequence field. Default is false (outputs all records, regardless of whether a replacement was made).")
+	var ignoreCase *bool = flag.Bool("ignoreCase", true, "Ignore case when finding matches. Default is true.")
+	var replacedRecordsOnly *bool = flag.Bool("replacedRecordsOnly", false, "Only output fastq records with a replacement in the sequence field. Default is false (outputs all records, regardless of whether a replacement was made).")
 	flag.Usage = usage
 
 	if len(flag.Args()) != expectedNumArgs {
