@@ -16,13 +16,18 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-// readFindReplaceDNA converts a delim separated findReplace file to a map of []dna.Base
-func readFindReplaceDNA(filename string, delim string) map[string][]dna.Base {
+type FindReplaceSeq struct {
+	find    []dna.Base
+	replace []dna.Base
+}
+
+// readFindReplaceDNA converts a delim separated findReplace file to a []FindReplaceSeqs
+func readFindReplaceDNA(filename string, delim string) []FindReplaceSeq {
 	var in *fileio.EasyReader
-	var findReplaceMap = make(map[string][]dna.Base)
+	var findReplacePairs []FindReplaceSeq
+	var currPair FindReplaceSeq
 	var seqs []string
-	var replace []dna.Base
-	var found, done bool
+	var done bool
 	var line string
 	var err error
 
@@ -32,36 +37,18 @@ func readFindReplaceDNA(filename string, delim string) map[string][]dna.Base {
 
 		if len(seqs) != 2 {
 			log.Fatalf("Error: the following line:\n\"%s\"\ndoes not give two substrings when split with \"%s\"", line, delim)
+		} else if len(seqs[0]) != len(seqs[1]) {
+			log.Fatalf("Error: find sequence must be same length as replace sequence.\n")
 		}
 
-		_, found = findReplaceMap[seqs[0]]
-		if found {
-			log.Fatalf("Error: this key:\"%s\" is found more than once in the findReplaceFile.\n", seqs[0])
-		}
-
-		replace = dna.StringToBases(seqs[1])
-		findReplaceMap[seqs[0]] = replace
+		currPair.find = dna.StringToBases(seqs[0])
+		currPair.replace = dna.StringToBases(seqs[1])
+		findReplacePairs = append(findReplacePairs, currPair)
 	}
 	err = in.Close()
 	exception.PanicOnErr(err)
 
-	return findReplaceMap
-}
-
-// compareBase returns an integer related to the lexographical order of nucleotides.
-// i.e. A < C < a < c < Dot < Gap.
-func compareBase(alpha dna.Base, beta dna.Base, ignoreCase bool) int {
-	if ignoreCase {
-		alpha = dna.ToUpper(alpha)
-		beta = dna.ToUpper(beta)
-	}
-	if alpha < beta {
-		return -1
-	} else if alpha > beta {
-		return 1
-	} else {
-		return 0
-	}
+	return findReplacePairs
 }
 
 // findSeq loops through a query sequence starting at the beginning and compares it to a find sequence, base by base
@@ -70,15 +57,12 @@ func findSeq(seq []dna.Base, find []dna.Base, ignoreCase bool) bool {
 	if len(find) > len(seq) {
 		log.Fatalf("Error: Length of find sequence must be less then or equal to length of query sequence.")
 	}
-	found := true
 	for currBase := range find {
-		if found {
-			if compareBase(seq[currBase], find[currBase], ignoreCase) != 0 {
-				found = false
-			}
+		if dna.CompareBases(seq[currBase], find[currBase], ignoreCase) != 0 {
+			return false
 		}
 	}
-	return found
+	return true
 }
 
 // replacePrefix replaces bases in a query sequence with a replace sequence, starting from the beginning of the query sequence
@@ -98,7 +82,7 @@ type Settings struct {
 
 func usage() {
 	fmt.Print(
-		"fastqReplaceSeq - finds a sequence in a fastq file (starting from the beginning of the line) and replaces it with a new sequence. \n" +
+		"fastqReplaceSeq - finds a sequence in a fastq file (starting from the beginning of the line) and replaces it with a new sequence of the same length. \n" +
 			"Usage:\n" +
 			"fastqReplaceSeq input.fastq findReplaceFile output.fastq\n" +
 			"options:\n")
@@ -106,22 +90,20 @@ func usage() {
 }
 
 func fastqReplaceSeq(s Settings) {
-	var findReplaceMap map[string][]dna.Base
-	var find string
-	var findBase []dna.Base
+	var findReplacePairs []FindReplaceSeq
+	var find []dna.Base
 	var replace []dna.Base
 	var replaceCounter int = 0
 	fq := fastq.GoReadToChan(s.inFile)
 	out := fileio.EasyCreate(s.outFile)
 	var err error
 
-	findReplaceMap = readFindReplaceDNA(s.findReplaceFile, s.findReplaceDelim)
+	findReplacePairs = readFindReplaceDNA(s.findReplaceFile, s.findReplaceDelim)
 
 	for currRecord := range fq {
 		found := false
-		for find, replace = range findReplaceMap {
-			findBase = dna.StringToBases(find)
-			found = findSeq(currRecord.Seq, findBase, s.ignoreCase)
+		for find, replace = range findReplacePairs {
+			found = findSeq(currRecord.Seq, find, s.ignoreCase)
 			if found {
 				currRecord.Seq = replacePrefix(currRecord.Seq, replace)
 				replaceCounter++
