@@ -1,8 +1,8 @@
 package dna
 
-// compareBases returns an integer related to the lexographical order of nucleotides.
+// CompareBases returns an integer related to the lexographical order of nucleotides.
 // i.e. A < C < a < c < Dot < Gap.
-func compareBases(alpha Base, beta Base, ignoreCase bool) int {
+func CompareBases(alpha Base, beta Base, ignoreCase bool) int {
 	if ignoreCase {
 		alpha = ToUpper(alpha)
 		beta = ToUpper(beta)
@@ -27,7 +27,7 @@ func compareSeqsIgnoreGaps(alpha []Base, beta []Base, ignoreCase bool) int {
 		for ; j < len(beta) && beta[j] == Gap; j++ {
 		}
 		if i < len(alpha) && j < len(beta) {
-			res = compareBases(alpha[i], beta[j], ignoreCase)
+			res = CompareBases(alpha[i], beta[j], ignoreCase)
 			if res != 0 {
 				return res
 			}
@@ -55,7 +55,7 @@ func compareSeqs(alpha []Base, beta []Base, ignoreCase bool) int {
 	var res int
 	stop := min(len(alpha), len(beta))
 	for i := 0; i < stop; i++ {
-		res = compareBases(alpha[i], beta[i], ignoreCase)
+		res = CompareBases(alpha[i], beta[i], ignoreCase)
 		if res != 0 {
 			return res
 		}
@@ -172,7 +172,7 @@ func SeqsAreSimilar(a, b []Base, numAllowedMismatch int) bool {
 		return false
 	}
 	for i := range a {
-		if compareBases(a[i], b[i], true) != 0 {
+		if CompareBases(a[i], b[i], true) != 0 {
 			c++
 			if c > numAllowedMismatch {
 				return false
