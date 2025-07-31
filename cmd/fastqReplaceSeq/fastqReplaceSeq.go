@@ -21,6 +21,15 @@ type FindReplaceSeq struct {
 	replace []dna.Base
 }
 
+type Settings struct {
+	inFile              string
+	outFile             string
+	findReplaceFile     string
+	findReplaceDelim    string
+	ignoreCase          bool
+	replacedRecordsOnly bool
+}
+
 // readFindReplaceDNA converts a delim separated findReplace file to a []FindReplaceSeqs
 func readFindReplaceDNA(filename string, delim string) []FindReplaceSeq {
 	var in *fileio.EasyReader
@@ -71,18 +80,11 @@ func replacePrefix(seq []dna.Base, replace []dna.Base) []dna.Base {
 	return seq
 }
 
-type Settings struct {
-	inFile              string
-	outFile             string
-	findReplaceFile     string
-	findReplaceDelim    string
-	ignoreCase          bool
-	replacedRecordsOnly bool
-}
-
 func usage() {
 	fmt.Print(
-		"fastqReplaceSeq - finds a sequence in a fastq file (starting from the beginning of the line) and replaces it with a new sequence of the same length. \n" +
+		"fastqReplaceSeq - finds a sequence in a fastq file (starting from the beginning of the line) and replaces it with a new sequence of the same length. \n " +
+			"The findReplace file should be a tab separated list by default, where the first column is the find sequence and the second column is the replace sequence. \n" +
+			"Example: findSeq \t replaceSeq\n" +
 			"Usage:\n" +
 			"fastqReplaceSeq input.fastq findReplaceFile output.fastq\n" +
 			"options:\n")
@@ -94,6 +96,7 @@ func fastqReplaceSeq(s Settings) {
 	var currPair FindReplaceSeq
 	var find []dna.Base
 	var replace []dna.Base
+	var found bool
 	var replaceCounter int = 0
 	fq := fastq.GoReadToChan(s.inFile)
 	out := fileio.EasyCreate(s.outFile)
@@ -102,7 +105,7 @@ func fastqReplaceSeq(s Settings) {
 	findReplacePairs = readFindReplaceDNA(s.findReplaceFile, s.findReplaceDelim)
 
 	for currRecord := range fq {
-		found := false
+		found = false
 		for _, currPair = range findReplacePairs {
 			find = currPair.find
 			replace = currPair.replace
