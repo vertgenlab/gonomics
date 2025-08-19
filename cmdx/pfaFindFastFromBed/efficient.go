@@ -216,7 +216,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, "+", percentDiverged, rawPValue, alnIdxBeforeWindow+1)
 						exception.PanicOnErr(err)
 					} else {
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps)
+						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, totalSubst, totalGaps)
 						exception.PanicOnErr(err)
 					}
 				}
