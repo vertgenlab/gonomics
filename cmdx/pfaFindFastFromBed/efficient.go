@@ -27,7 +27,7 @@ import (
 //  7. numSecondQueryNsMatch: the number of Ns in the secondQuery sequence after this increment from matches with the firstQuery
 //  8. numSubst: the number of substitutions/mismatches (0 or 1) between firstQuery and secondQuery
 //  9. numConfident: the number of secondQuery positions where the most likely base >= threshold, within numSubst (<= numSubst), float32 threshold
-func incrementWindowEdge(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, alnIdxOrig int, baseDotToSubstThreshold float64) (alnIdx, gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst, numConfident int) {
+func incrementWindowEdge(firstQuery []pDna.Float32Base, secondQuery []pDna.Float32Base, alnIdxOrig int, baseDotToSubstThreshold float64, confidentThreshold float32) (alnIdx, gapOpenCloseFirstQuery, gapOpenedSecondQuery, gapClosedSecondQuery, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst, numConfident int) {
 	alnIdx = alnIdxOrig
 	// at initialization, lastAlnIdxOfWindow == -1, which is assigned to alnIdxOrig when incrementWindowEdge is called, so alnIdx = alnIdxOrig == -1. For loop will start at alnIdx++ which is 0, the 1st position in the alignment
 
@@ -68,7 +68,7 @@ func incrementWindowEdge(firstQuery []pDna.Float32Base, secondQuery []pDna.Float
 		if baseDot >= baseDotToSubstThreshold {                              // if the substitution probability >= threshold
 			numSubst++ // then this position is a substitution
 			// add 9. numConfident here
-			if pDna.IsConfident(secondQuery[alnIdx], 0.8) {
+			if pDna.IsConfident(secondQuery[alnIdx], confidentThreshold) {
 				numConfident++
 			}
 		}
@@ -140,7 +140,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 	for lastAlnIdxOfWindow < len(firstQuery) { // this check could also be "!done", I am not sure what is more clear
 		// we always move the lastBaseOfTheWindow (right side) and add on what we find to the counters because
 		// all this stuff is now inside the current window
-		lastAlnIdxOfWindow, gapOpenCloseFirstQuery, gapOpenedSecondQuery, _, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst, numConfident = incrementWindowEdge(firstQuery, secondQuery, lastAlnIdxOfWindow, s.BaseDotToSubstThreshold)
+		lastAlnIdxOfWindow, gapOpenCloseFirstQuery, gapOpenedSecondQuery, _, numFirstQueryNs, numSecondQueryNsGap, numSecondQueryNsMatch, numSubst, numConfident = incrementWindowEdge(firstQuery, secondQuery, lastAlnIdxOfWindow, s.BaseDotToSubstThreshold, s.ConfidentThreshold)
 		lastFirstQueryIdxOfWindow++
 		totalGaps += gapOpenCloseFirstQuery + gapOpenedSecondQuery
 		totalNs += numFirstQueryNs + numSecondQueryNsGap + numSecondQueryNsMatch
@@ -150,7 +150,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 		// usually increment the baseBeforeWindow,
 		// but not at the beginning when we have not yet incremented the end enough to have a full "windowSize" of bases in the window
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow > s.WindowSize {
-			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch, numSubst, numConfident = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow, s.BaseDotToSubstThreshold)
+			alnIdxBeforeWindow, _, _, _, numFirstQueryNs, _, numSecondQueryNsMatch, numSubst, numConfident = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow, s.BaseDotToSubstThreshold, s.ConfidentThreshold)
 			alnIdxBeforeWindowForRef = updateAlnIdxBeforeWindow(firstQuery, alnIdxBeforeWindow)
 			firstQueryIdxBeforeWindow++
 			totalNs -= numFirstQueryNs + numSecondQueryNsMatch
@@ -160,7 +160,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 
 		// the trailing window needs to "look ahead" to see what happens before the next firstQuery base
 		if lastFirstQueryIdxOfWindow-firstQueryIdxBeforeWindow == s.WindowSize {
-			_, gapOpenCloseFirstQuery, _, gapClosedSecondQuery, _, numSecondQueryNsGap, _, _, _ = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow, s.BaseDotToSubstThreshold)
+			_, gapOpenCloseFirstQuery, _, gapClosedSecondQuery, _, numSecondQueryNsGap, _, _, _ = incrementWindowEdge(firstQuery, secondQuery, alnIdxBeforeWindow, s.BaseDotToSubstThreshold, s.ConfidentThreshold)
 			totalGaps -= gapOpenCloseFirstQuery + gapClosedSecondQuery
 			totalNs -= numSecondQueryNsGap
 		}
