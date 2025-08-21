@@ -67,10 +67,6 @@ func incrementWindowEdge(firstQuery []pDna.Float32Base, secondQuery []pDna.Float
 		baseDot = pDna.DotSubstProb(firstQuery[alnIdx], secondQuery[alnIdx]) // for non-gap position, calculate substitution probability from dot product method
 		if baseDot >= baseDotToSubstThreshold {                              // if the substitution probability >= threshold
 			numSubst++ // then this position is a substitution
-			// add 9. numConfident here
-			if pDna.IsConfident(secondQuery[alnIdx], confidentThreshold) {
-				numConfident++
-			}
 		}
 	}
 	// 3. gapOpenedSecondQuery: did we open a gap in the secondQuery sequence when moving the window edge?
@@ -83,6 +79,10 @@ func incrementWindowEdge(firstQuery []pDna.Float32Base, secondQuery []pDna.Float
 		gapClosedSecondQuery++
 	}
 
+	// 9. numConfident
+	if pDna.IsConfident(secondQuery[alnIdx], confidentThreshold) {
+		numConfident++
+	}
 	return
 }
 
