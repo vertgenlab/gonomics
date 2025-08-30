@@ -1,0 +1,2 @@
+Chrom	RefStart	RefEnd	Type	Ref	Alt	AlnStart	AlnEnd
+chr8	4	6	loss	AG	CG	4	6
