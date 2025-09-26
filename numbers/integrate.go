@@ -69,7 +69,8 @@ func rombergsMethod(f func(float64) float64, a float64, b float64, estimatedErro
 	var currR, prevR []float64 = make([]float64, maxIter), make([]float64, maxIter)
 	var minIter int = 10
 
-	prevR[0] = 0.5 * (f(a) + f(b))
+	prevR[0] = 0.5 * (b - a) * (f(a) + f(b))
+	//prevR[0] = 0.5 * (f(a) + f(b))
 	for n = 1; n < maxIter; n++ {
 		// compute the current h value
 		h = math.Exp2(float64(-n)) * (b - a)

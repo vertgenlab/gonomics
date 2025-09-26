@@ -10,10 +10,12 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/gtf"
 	"github.com/vertgenlab/gonomics/interval"
-	"github.com/vertgenlab/gonomics/numbers"
+	//"github.com/vertgenlab/gonomics/interval/lift"
+	//"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/ontology/gaf"
 	"github.com/vertgenlab/gonomics/ontology/obo"
 	"log"
+	"math"
 	"strings"
 )
 
@@ -126,18 +128,34 @@ func termProportionOfGenome(ontologies map[string]*Ontology, geneProportions map
 // bedpe form, an annotation file in gaf form and a map that takes GO term ID's and relates them to other GO term features
 // in obo format, and finally it takes a string which will write out all regions of the genome with their assigned
 // genes in the name column and their assigned ontologies in the annotation field.
-func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, geneFile string, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo, out3dOntology string, geneEnrichments bool, termEnrichments bool) {
+func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, geneFile string, contacts []bedpe.BedPe, annotations []gaf.Gaf, oboMap map[string]*obo.Obo, out3dOntology string, geneEnrichments bool, enrichments bool) {
 	var err error
+	var totalBases int
 	var filledSpace, tssBed []bed.Bed
+	//ontologyBedSet []bed.Bed
 	var filledSpaceIntervals []interval.Interval
 	var queryOverlaps []interval.Interval
+	//var ontologyLiftSet, queryLiftSet, noGapLift []lift.Lift
 	var kCache = make(map[string]int) //mapping Go Term Names to number of query elements that overlap. This is 'k' in the binomial test.
-	var n = len(queries)              // this stores the number of query elements, which is the number of trials in the binomial test.
 	var currOverlapGene string
-	var currOntologyIndex int
+	var currOntologyIndex, queryBases int
+	//var count int
 	var currOntologyName string
+	var proportionsForTerms map[string]float64
+	//var enrichment, mu, sigma float64
+	//var pvalE, pvalD float64
+	overlapProb := make([]float64, 1)
+	//var probs []float64
+	//summary := make([]float64, 4)
+	ontologiesIndex := make(map[int]string)
+	queryOntOverlapLen := make(map[string]int)
 	name := strings.TrimSuffix(out3dOntology, ".bed")
 	var ontologiesForCurrGene []*Ontology
+
+	//noGap := bed.ReadChromSizesToBed(chromSizes)
+	//for n := range noGap {
+	//	noGapLift = append(noGapLift, noGap[n])
+	//}
 
 	geneString := strings.Split(geneFile, ".")
 	if geneString[len(geneString)-1] != "bed" {
@@ -148,11 +166,19 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 	}
 	bed.SortByCoord(tssBed)
 	filledSpace = Fill3dSpace(contacts, tssBed, chromSizes)
+	for f := range filledSpace {
+		totalBases += filledSpace[f].ChromEnd - filledSpace[f].ChromStart
+	}
+	for q := range queries {
+		queryBases += queries[q].ChromEnd - queries[q].ChromStart
+		//queryLiftSet = append(queryLiftSet, queries[q])
+	}
 	ontologies := OboToOntology(oboMap)
 	GeneAssignmentsFromGaf(annotations, ontologies)
 	geneOntologies := GenesToOntologies(ontologies)
 
-	//TODO: filtering out genes without ontology annotations? as an option?
+	//TODO: filtering out genes without ontology annotations? as an option? Currently these are ignored since
+	//TODO (cont'd): we use the ontologies for all calculations, they go in the map and stay blank,, but for efficiency's sake, we may want to filter them
 
 	if out3dOntology != "" {
 		write3dOntologies(out3dOntology, geneOntologies, filledSpace)
@@ -171,49 +197,116 @@ func ThreeDGreat(queries []bed.Bed, chromSizes map[string]chromInfo.ChromInfo, g
 		err = geneOut.Close()
 		exception.PanicOnErr(err)
 	}
-
 	for i := range filledSpace {
 		filledSpaceIntervals = append(filledSpaceIntervals, filledSpace[i])
 	}
 	tree := interval.BuildTree(filledSpaceIntervals)
 
+	//7.298204e+08 3.490146e-04 1.867867e-02
+
+	queryCopy := queries
 	bed.AllToMidpoint(queries)
 
 	for i := range queries {
 		queryOverlaps = interval.Query(tree, queries[i], "any")
 		if len(queryOverlaps) != 1 {
-			log.Fatalf("Query overlapped multiple regions in filled space. %v", queries[i])
+			log.Fatalf("Query overlapped multiple regions in filled space. %v, Number of overlaps: %v", queries[i], len(queryOverlaps))
 		}
 		currOverlapGene = queryOverlaps[0].(bed.Bed).Name // type assert as bed and extract name of gene assigned to query
 		ontologiesForCurrGene = geneOntologies[currOverlapGene]
 		for currOntologyIndex = range ontologiesForCurrGene {
 			currOntologyName = ontologiesForCurrGene[currOntologyIndex].Id
 			kCache[currOntologyName] += 1
+			queryOntOverlapLen[currOntologyName] += queryCopy[i].ChromEnd - queryCopy[i].ChromStart
 		}
 	}
 
-	var proportionsForTerms map[string]float64
-	var enrichment float64
-	if termEnrichments {
+	inputEnrichOut := fileio.EasyCreate(name + ".inputEnrichments.txt")
+	_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\tvalue\tmu\tsigma\n")
+	exception.PanicOnErr(err)
+
+	//for o := range ontologies {
+	//	if len(ontologies[o].Genes) > 0 {
+	//		ontologyBedSet = bed.BedsWithNameSet(filledSpace, ontologies[o].Genes)
+	//	}
+	//	if len(ontologyBedSet) > 0 {
+	//		for b := range ontologyBedSet {
+	//			ontologyLiftSet = append(ontologyLiftSet, ontologyBedSet[b])
+	//			probs = lift.ElementOverlapProbabilities(ontologyLiftSet, queryLiftSet, noGapLift)
+	//
+	//			for i := range probs {
+	//				mu += probs[i]
+	//				sigma += probs[i] * (1 - probs[i])
+	//			}
+	//			sigma = math.Sqrt(sigma)
+	//			summary[0] = 1.0
+	//			summary[1] = mu //expected
+	//			count = lift.OverlapCount(ontologyLiftSet, queryLiftSet)
+	//			//summary[2] = numbers.NormalRightIntegral(float64(count), mu, sigma)
+	//			//summary[3] = numbers.NormalLeftIntegral(float64(count), mu, sigma)
+	//
+	//			//summary = lift.EnrichmentPValueApproximation(probs, count)
+	//			enrichment = float64(count) / mu
+	//			//pvalE = summary[2]
+	//			//pvalD = summary[3]
+	//			if b == 0 {
+	//			}
+	//		}
+	//
+	//		_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\t%d\t%e\t%e\n", o, ontologies[o].Name, enrichment, count, mu, sigma)
+	//		exception.PanicOnErr(err)
+	//	}
+	//
+	//}
+	//err = inputEnrichOut.Close()
+	//exception.PanicOnErr(err)
+
+	var mu, sigma float64
+	//var currP float64
+	var mus, sigmas []float64
+	//var pvals []float64
+	if enrichments {
 		proportionsForTerms = termProportionOfGenome(ontologies, proportionsForGenes) // this stores the proportion of the genome that is covered by each term. Values are the 'p', or success probability, in the binomial test
 		out := fileio.EasyCreate(name + ".termProportions.txt")
 		_, err = fmt.Fprintf(out, "Term\tName\tProportion\n")
-		enrichOut := fileio.EasyCreate(name + ".termEnrichment.txt")
-		_, err = fmt.Fprintf(enrichOut, "Term\tName\tEnrichment\n")
 		for i := range proportionsForTerms {
 			if proportionsForTerms[i] > 0 {
 				_, err = fmt.Fprintf(out, "%s\t%s\t%e\n", i, ontologies[i].Name, proportionsForTerms[i])
 				exception.PanicOnErr(err)
-				enrichment = numbers.BinomialRightSummation(n, kCache[i], proportionsForTerms[i], true)
-				_, err = fmt.Fprintf(enrichOut, "%s\t%s\t%e\n", i, ontologies[i].Name, enrichment)
-				exception.PanicOnErr(err)
-			} else {
-				continue
+				//calculations to determine the enrichment and p-value for each GO term in the input dataset
+				ontologiesIndex[len(overlapProb)-1] = i
+				//this represents a mu that is equivalent to the number of bases of query that overlaps a GO term divided by the size of the genome
+				//overlapProb = append(overlapProb, float64(queryOntOverlapLen[i])/float64(totalBases))
+				//this mu would be if the query bases were randomly distributed in the genome, we want the
+				//probability that a random base is both a query and a given ontology
+				//overlapProb = append(overlapProb, proportionsForTerms[i]*(float64(queryBases)/float64(totalBases)))
+				//this calculation represents if both the queries and the bases for the GO term were randomly distributed, whats the probability they overlap
+				//normal approximation from binomial calculating mu = n*p
+				overlapProb = append(overlapProb, proportionsForTerms[i]*float64(len(queries)))
+				mu = overlapProb[len(overlapProb)-1]
+				mus = append(mus, mu)
+				//normal approximation of binomial to calculate sigma = square root of n*p*(1-p)
+				sigma = math.Sqrt(mu * (1 - proportionsForTerms[i]))
+				sigmas = append(sigmas, sigma)
+				//currP = numbers.NormalRightIntegral(float64(kCache[i]), mu, math.Sqrt(mu*(1-mu)))
+				//exception.PanicOnErr(err)
+				//pvals = append(pvals, currP)
 			}
 		}
+
 		err = out.Close()
 		exception.PanicOnErr(err)
-		err = enrichOut.Close()
+
+		inputEnrichOut = fileio.EasyCreate(name + ".inputEnrichments.txt")
+		//_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tEnrichment\tMu\tSigma\tValue\tP-Value\n")
+		_, err = fmt.Fprintf(inputEnrichOut, "Term\tName\tLength of Queries\tMu\tSigma\tValue\tPorportion for Term\n")
+		for o := range ontologiesIndex {
+			//_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%e\t%e\t%e\t%d\t%e\n", ontologiesIndex[o], ontologies[ontologiesIndex[o]].Name, float64(kCache[ontologiesIndex[o]])/mu, mus[o], sigmas[o], kCache[ontologiesIndex[o]])
+			_, err = fmt.Fprintf(inputEnrichOut, "%s\t%s\t%d\t%e\t%e\t%d\t%e\n", ontologiesIndex[o], ontologies[ontologiesIndex[o]].Name, len(queries), mus[o], sigmas[o], kCache[ontologiesIndex[o]], proportionsForTerms[ontologiesIndex[o]])
+
+			exception.PanicOnErr(err)
+		}
+		err = inputEnrichOut.Close()
 		exception.PanicOnErr(err)
 	}
 }

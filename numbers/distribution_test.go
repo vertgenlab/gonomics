@@ -80,7 +80,7 @@ func TestBinomialSum(t *testing.T) {
 		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedLeft) {
 			t.Errorf("Error: in BinomialSum Left Sum. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedLeft)
 		}
-		observed = BinomialRightSummation(v.N, v.K, v.P, false)
+		observed = BinomialRightSummation(v.N, v.K, v.P, false, true)
 		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedRight) {
 			t.Errorf("Error: in BinomialSum Right Sum. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedRight)
 		}
@@ -88,7 +88,7 @@ func TestBinomialSum(t *testing.T) {
 		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedLeftLog) {
 			t.Errorf("Error: in BinomialSum Left Sum Logspace. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedLeftLog)
 		}
-		observed = BinomialRightSummation(v.N, v.K, v.P, true)
+		observed = BinomialRightSummation(v.N, v.K, v.P, true, true)
 		if fmt.Sprintf("%e", observed) != fmt.Sprintf("%e", v.ExpectedRightLog) {
 			t.Errorf("Error: in BinomialSum Right Sum Logspace. N: %v. K: %v. P: %v. Observed: %v. Expected: %v.\n", v.N, v.K, v.P, observed, v.ExpectedRightLog)
 		}
