@@ -1,11 +1,10 @@
 package main
 
 import (
-	"os"
-	"testing"
-
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"os"
+	"testing"
 )
 
 var SimulateVcfTests = []struct {
@@ -18,8 +17,48 @@ var SimulateVcfTests = []struct {
 	BoundAlpha      float64
 	BoundBeta       float64
 	BoundMultiplier float64
+	RefFile         string
+	HasRef          bool
 }{
-	{"testdata/expected.vcf", "testdata/out.vcf", 4, 100, 100, 11, 0.001, 0.001, 10000},
+	{
+		ExpectedFile:    "testdata/expected.vcf",
+		OutFile:         "testdata/out.vcf",
+		Alpha:           4,
+		NumAlleles:      100,
+		NumSites:        100,
+		SetSeed:         11,
+		BoundAlpha:      0.001,
+		BoundBeta:       0.001,
+		BoundMultiplier: 10000,
+		RefFile:         "",
+		HasRef:          false,
+	},
+	{
+		ExpectedFile:    "testdata/expected_2.vcf",
+		OutFile:         "testdata/out_2.vcf",
+		Alpha:           4,
+		NumAlleles:      100,
+		NumSites:        10,
+		SetSeed:         11,
+		BoundAlpha:      0.001,
+		BoundBeta:       0.001,
+		BoundMultiplier: 10000,
+		RefFile:         "testdata/refFa_short.fasta",
+		HasRef:          true,
+	},
+	{
+		ExpectedFile:    "testdata/expected_3.vcf",
+		OutFile:         "testdata/out_3.vcf",
+		Alpha:           4,
+		NumAlleles:      100,
+		NumSites:        20,
+		SetSeed:         29,
+		BoundAlpha:      0.001,
+		BoundBeta:       0.001,
+		BoundMultiplier: 10000,
+		RefFile:         "testdata/refFa_short.fasta",
+		HasRef:          true,
+	},
 }
 
 func TestSimulateVcf(t *testing.T) {
@@ -35,6 +74,8 @@ func TestSimulateVcf(t *testing.T) {
 			BoundAlpha:      v.BoundAlpha,
 			BoundBeta:       v.BoundBeta,
 			BoundMultiplier: v.BoundMultiplier,
+			RefFile:         v.RefFile,
+			HasRef:          v.HasRef,
 		}
 		simulateVcf(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
