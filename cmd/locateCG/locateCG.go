@@ -33,7 +33,7 @@ type CGdiff struct {
 }
 
 // helper function for file writing in --compare mode
-func ToFile(fileName string, records []CGdiff) {
+func toFile(fileName string, records []CGdiff) {
 	var err error
 
 	//create file
@@ -52,9 +52,33 @@ func ToFile(fileName string, records []CGdiff) {
 	exception.PanicOnErr(err)
 }
 
+func IsCons(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
+	if firstSeq1 == dna.C && firstSeq2 == dna.G && secondSeq1 == dna.C && secondSeq2 == dna.G {
+		return true
+	} else {
+		return false
+	}
+}
+
+func IsGain(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
+	if firstSeq1 == dna.C && firstSeq2 == dna.G && !(secondSeq1 == dna.C && secondSeq2 == dna.G) {
+		return true
+	} else {
+		return false
+	}
+}
+
+func IsLoss(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
+	if !(firstSeq1 == dna.C && firstSeq2 == dna.G) && secondSeq1 == dna.C && secondSeq2 == dna.G {
+		return true
+	} else {
+		return false
+	}
+}
+
 // default function for one fasta sequence
 func locateCG(s Settings) {
-	var f1, f2 dna.Base
+	var base1, base2 dna.Base
 	var output []bed.Bed
 	f := fasta.Read(s.InFa)
 
@@ -79,10 +103,10 @@ func locateCG(s Settings) {
 	//for length of fasta sequence
 	for i := 0; i < len(seq)-1; i++ {
 		//store dna.Bases in pairs
-		f1, f2 = seq[i], seq[i+1]
+		base1, base2 = seq[i], seq[i+1]
 
 		//if "CG" present
-		if f1 == dna.C && f2 == dna.G {
+		if base1 == dna.C && base2 == dna.G {
 			output = append(output, bed.Bed{Chrom: s.ChromName, ChromStart: i, ChromEnd: i + 2, FieldsInitialized: 3})
 		}
 	}
@@ -145,39 +169,28 @@ func compareCG(s Settings) {
 		refBases = dna.BaseToString(f1) + dna.BaseToString(f2)
 		altBases = dna.BaseToString(s1) + dna.BaseToString(s2)
 
-		//if CG in sequence 1
-		if f1 == dna.C && f2 == dna.G {
-			//and CG in sequence 2
-			if s1 == dna.C && s2 == dna.G {
-
-				//convert alignment positions to reference positions
+		switch s.CGtype {
+		case "cons":
+			if IsCons(f1, f2, s1, s2) {
 				startPos := fasta.AlnPosToRefPosCounter(f[0], i, refStart, alnStart)
 				endPos := startPos + 1
-				//add to "conserved CpGs"
-				if s.CGtype == "cons" {
-					output = append(output, CGdiff{Chrom: s.ChromName, StartPos: startPos, EndPos: endPos, Type: "cons", Ref: refBases, Alt: altBases, AlnStart: i, AlnEnd: i + 1})
-				}
-				//if CG in sequence 1 but NOT in sequence 2
-			} else {
-				//convert alignment positions to reference positions
-				startPos := fasta.AlnPosToRefPosCounter(f[0], i, refStart, alnStart)
-				endPos := startPos + 1
-				//add to "gained" CGs
-				if s.CGtype == "gain" {
-					output = append(output, CGdiff{Chrom: s.ChromName, StartPos: startPos, EndPos: endPos, Type: "gain", Ref: refBases, Alt: altBases, AlnStart: i, AlnEnd: i + 1})
-				}
+				output = append(output, CGdiff{Chrom: s.ChromName, StartPos: startPos, EndPos: endPos, Type: "cons", Ref: refBases, Alt: altBases, AlnStart: i, AlnEnd: i + 1})
 			}
-			//if there is no CG in sequence 1, but there is a CG in sequence 2
-		} else if s1 == dna.C && s2 == dna.G {
-			//convert alignment position to reference position
-			startPos := fasta.AlnPosToRefPosCounter(f[0], i, refStart, alnStart)
-			endPos := startPos + 1
-			//add to "lost" CGs
-			if s.CGtype == "loss" {
+		case "gain":
+			if IsGain(f1, f2, s1, s2) {
+				startPos := fasta.AlnPosToRefPosCounter(f[0], i, refStart, alnStart)
+				endPos := startPos + 1
+				output = append(output, CGdiff{Chrom: s.ChromName, StartPos: startPos, EndPos: endPos, Type: "gain", Ref: refBases, Alt: altBases, AlnStart: i, AlnEnd: i + 1})
+			}
+		case "loss":
+			if IsLoss(f1, f2, s1, s2) {
+				startPos := fasta.AlnPosToRefPosCounter(f[0], i, refStart, alnStart)
+				endPos := startPos + 1
 				output = append(output, CGdiff{Chrom: s.ChromName, StartPos: startPos, EndPos: endPos, Type: "loss", Ref: refBases, Alt: altBases, AlnStart: i, AlnEnd: i + 1})
 			}
+		default:
+			log.Fatalf("Unknown CpG comparison type: %s. Options: gain, loss, cons", s.CGtype)
 		}
-
 		//if a CG site has already been recorded in "output"
 		if len(output) > 0 {
 			//reset the refStart to the last reference position
@@ -190,7 +203,7 @@ func compareCG(s Settings) {
 
 	//write to file
 	outfileName := s.Outfile
-	ToFile(outfileName, output)
+	toFile(outfileName, output)
 	fmt.Println("CG comparisons found and written to", outfileName)
 }
 
@@ -219,7 +232,6 @@ func main() {
 	var expectedNumArgs int = 3
 	var compare *bool = flag.Bool("compare", false, "Will compare 2 aligned genomes from an alignment file. Must use with -cgtype to specify type of CpG comparison to report.")
 	var cgtype *string = flag.String("cgtype", "", "Type(s) of CpG site comparisons to report when comparing genomes. Options: 'gain', 'loss', 'cons'. All comparisons are reported for sequence 1 relative to sequence 2.")
-	/*var saneAlign bool = flag.Bool("saneAlign", false, "Sanity check for --compare mode's conversion of alignment coordinates to reference genome coordinates. Will report alignment coordinates of CpG sites alongside reference coordinates in output file.")*/
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -237,7 +249,6 @@ func main() {
 		Outfile:   flag.Arg(2),
 		Compare:   *compare,
 		CGtype:    *cgtype,
-		/*SaneAlign: *saneAlign,*/
 	}
 
 	//run locate() function on provided args; will output a slice of structs
