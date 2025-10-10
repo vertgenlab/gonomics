@@ -11,62 +11,41 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 type Settings struct {
 	FaDir   string //input fasta directory with all chromosomes
 	Bed     string //input bed file
-	BaseOne string
-	BaseTwo string
 	Outfile string //output file name
 	Compare bool
 }
 
-type PairOfBaseCounts struct {
-	Chrom        string
-	Name         string
-	Gain         int
-	Loss         int
-	Cons         int
-	WeakToStrong int
-	StrongToWeak int
+type CpGcounts struct {
+	Chrom string
+	Name  string
+	Gain  int
+	Loss  int
+	Cons  int
 }
 
-func isCons(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool {
-	if (firstSeq1 == b1 && firstSeq2 == b2) && (secondSeq1 == b1 && secondSeq2 == b2) {
+func isCons(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
+	if firstSeq1 == dna.C && firstSeq2 == dna.G && secondSeq1 == dna.C && secondSeq2 == dna.G {
 		return true
 	} else {
 		return false
 	}
 }
 
-func isGain(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool {
-	if (firstSeq1 == b1 && firstSeq2 == b2) && !(secondSeq1 == b1 && secondSeq2 == b2) {
+func isGain(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
+	if firstSeq1 == dna.C && firstSeq2 == dna.G && !(secondSeq1 == dna.C && secondSeq2 == dna.G) {
 		return true
 	} else {
 		return false
 	}
 }
 
-func isLoss(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool {
-	if !(firstSeq1 == b1 && firstSeq2 == b2) && (secondSeq1 == b1 && secondSeq2 == b2) {
-		return true
-	} else {
-		return false
-	}
-}
-
-func isStrongToWeak(firstSeq1, secondSeq1 dna.Base) bool {
-	if (firstSeq1 == dna.A || firstSeq1 == dna.T) && (secondSeq1 == dna.C || secondSeq1 == dna.G) {
-		return true
-	} else {
-		return false
-	}
-}
-
-func isWeakToStrong(firstSeq1, secondSeq1 dna.Base) bool {
-	if (firstSeq1 == dna.C || firstSeq1 == dna.G) && (secondSeq1 == dna.A || secondSeq1 == dna.T) {
+func isLoss(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
+	if !(firstSeq1 == dna.C && firstSeq2 == dna.G) && secondSeq1 == dna.C && secondSeq2 == dna.G {
 		return true
 	} else {
 		return false
@@ -82,21 +61,21 @@ func nextBase(region []dna.Base, currPos int) (nextBase dna.Base) {
 	return dna.Gap
 }
 
-func findChromInFile(fileDir string, chrom string) (string, error) {
+func findChromInFile(filedir string, chrom string) (string, error) {
 	//09-29-25: force naming convention: chr1.fa, chr2.fa, etc. so chr name can be extracted easily
-	files, err := os.ReadDir(fileDir)
+	files, err := os.ReadDir(filedir)
 	if err != nil {
 		return "", err
 	}
 	expectedName := chrom + ".fa"
 	for _, f := range files {
 		fileName := f.Name()
-		if fileName == expectedName || fileName == expectedName+".gz" {
-			filePath := filepath.Join(fileDir, fileName)
+		if fileName == expectedName {
+			filePath := filepath.Join(filedir, fileName)
 			return filePath, nil
 		}
 	}
-	return "", fmt.Errorf("%s fasta not found in %s", chrom, fileDir)
+	return "", fmt.Errorf("File %s not found in %s", chrom+".fa", filedir)
 }
 
 // RefPosToAlnPosBed loops existing functions for converting reference positions to alignment positions
@@ -159,7 +138,8 @@ func RefPosToAlnPosBed(input []bed.Bed, fastaFile string) (output []bed.Bed) {
 	return output
 }
 
-func countPairOfBase(fastaFile string, alnBed []bed.Bed, b1, b2 dna.Base) (regionCpGs []bed.Bed, err error) {
+func countCpG(fastaFile string, alnBed []bed.Bed) (regionCpGs []bed.Bed, err error) {
+
 	chr := fasta.Read(fastaFile)
 
 	//check that there are not more than 1 fasta sequence
@@ -182,31 +162,33 @@ func countPairOfBase(fastaFile string, alnBed []bed.Bed, b1, b2 dna.Base) (regio
 		name := region.Name
 
 		//Find the current region in the fasta sequences:
+		//(Here, we assume that both the genome of interest and the ancestral genome are unmodified
+		//from the original multiple alignment, so the same alignment coordinates apply to both)
 		regSeq := seq[start:end]
 
-		//initialize number of each category of paired sites to 0
+		//initialize number of each category of CpG sites to 0
 
-		pairOfBaseCount := 0
+		cpgCount := 0
 
 		//for length of entire sequence defined by alignment start/end coordinates
 		for i := 0; i < len(regSeq)-1; i++ {
 			f1, f2 = regSeq[i], regSeq[i+1]
-			if f1 == b1 && f2 == b2 {
-				pairOfBaseCount++
+			if f1 == dna.C && f2 == dna.G {
+				cpgCount++
 			}
 		}
-		regionCpGs = append(regionCpGs, bed.Bed{Chrom: chrom, ChromStart: start, ChromEnd: end, Name: name, Score: pairOfBaseCount, FieldsInitialized: 5})
+		regionCpGs = append(regionCpGs, bed.Bed{Chrom: chrom, ChromStart: start, ChromEnd: end, Name: name, Score: cpgCount, FieldsInitialized: 5})
 	}
 	return regionCpGs, nil
 }
 
-func comparePairOfBaseCount(fastaFile string, alnBed []bed.Bed, b1, b2 dna.Base) (regionCpGs []PairOfBaseCounts, err error) {
+func compareCpGcount(fastaFile string, alnBed []bed.Bed) (regionCpGs []CpGcounts, err error) {
 	seqs := fasta.Read(fastaFile)
 
 	if len(seqs) != 2 {
 		log.Fatalf("Error: expecting exactly two records in fasta file, but got %d. --compare mode compares exactly 2 aligned sequences.\n", len(seqs))
 	}
-	//define genome 1 and genome 2 in the multiFa
+	//define genome of interest and ancestral genome in the multiFa
 	firstSeq := seqs[0].Seq
 	secondSeq := seqs[1].Seq
 
@@ -219,18 +201,16 @@ func comparePairOfBaseCount(fastaFile string, alnBed []bed.Bed, b1, b2 dna.Base)
 		name := region.Name
 
 		//Find the current region in the fasta sequences:
-		//(Here, we assume that both genome 1 and genome 2 are unmodified
+		//(Here, we assume that both the genome of interest and the ancestral genome are unmodified
 		//from the original multiple alignment, so the same alignment coordinates apply to both)
 		firstRegseq := firstSeq[start:end]
 		secondRegseq := secondSeq[start:end]
 
-		//initialize number of each category of paired sites to 0
+		//initialize number of each category of CpG sites to 0
 
 		gainCount := 0
 		lossCount := 0
 		consCount := 0
-		weakToStrongCount := 0
-		strongToWeakCount := 0
 
 		//for length of entire sequence defined by alignment start/end coordinates
 		for i := 0; i < len(firstRegseq)-1; i++ {
@@ -240,42 +220,22 @@ func comparePairOfBaseCount(fastaFile string, alnBed []bed.Bed, b1, b2 dna.Base)
 			s2 := nextBase(secondRegseq, i+1)
 
 			switch {
-			case isCons(f1, f2, s1, s2, b1, b2):
+			case isCons(f1, f2, s1, s2):
 				consCount++
-			case isGain(f1, f2, s1, s2, b1, b2):
+			case isGain(f1, f2, s1, s2):
 				gainCount++
-			case isLoss(f1, f2, s1, s2, b1, b2):
+			case isLoss(f1, f2, s1, s2):
 				lossCount++
 			}
-
-			if isWeakToStrong(f1, s1) {
-				weakToStrongCount++
-			}
-			if isStrongToWeak(f1, s1) {
-				strongToWeakCount++
-			}
-
-			if i == len(firstRegseq)-2 {
-				if isWeakToStrong(f2, s2) {
-					weakToStrongCount++
-				}
-
-				if isStrongToWeak(f2, s2) {
-					strongToWeakCount++
-				}
-			}
 		}
-		regionCpGs = append(regionCpGs, PairOfBaseCounts{Chrom: chrom, Name: name, Gain: gainCount, Loss: lossCount, Cons: consCount, WeakToStrong: weakToStrongCount, StrongToWeak: strongToWeakCount})
+		regionCpGs = append(regionCpGs, CpGcounts{Chrom: chrom, Name: name, Gain: gainCount, Loss: lossCount, Cons: consCount})
 	}
 	return regionCpGs, nil
 }
 
 func countByChrom(s Settings) {
 	var counts bed.Bed
-	var countsComp PairOfBaseCounts
-
-	baseOne := dna.StringToBase(strings.TrimSpace(s.BaseOne))
-	baseTwo := dna.StringToBase(strings.TrimSpace(s.BaseTwo))
+	var countsComp CpGcounts
 
 	bedBychrom := make(map[string][]bed.Bed)
 	bedFile := s.Bed
@@ -290,15 +250,15 @@ func countByChrom(s Settings) {
 	file := fileio.EasyCreate(s.Outfile)
 
 	if !s.Compare {
-		fileio.WriteToFileHandle(file, "Chrom\tStart\tEnd\tName\tPairOfBaseCount")
+		fileio.WriteToFileHandle(file, "Chrom\tStart\tEnd\tName\tCpGcount")
 	} else {
-		fileio.WriteToFileHandle(file, "Chrom\tStart\tEnd\tName\tGain\tLoss\tCons\tWeakToStrongSubs\tStrongToWeakSubs")
+		fileio.WriteToFileHandle(file, "Chrom\tStart\tEnd\tName\tGain\tLoss\tCons")
 	}
 
 	//fast lookup table, PER CHROMOSOME, to match CpGcounts to the region's name in comp mode
 	chromCountsMap := make(map[string]map[string]bed.Bed)
 	//fast lookup table, PER CHROMOSOME, to match CpGcounts to the region's name in comp mode
-	chromCountsCompMap := make(map[string]map[string]PairOfBaseCounts)
+	chromCountsCompMap := make(map[string]map[string]CpGcounts)
 
 	for chrom, regions := range bedBychrom {
 		fastaFile, err := findChromInFile(s.FaDir, chrom)
@@ -307,7 +267,7 @@ func countByChrom(s Settings) {
 		alnBed := RefPosToAlnPosBed(regions, fastaFile)
 
 		if !s.Compare {
-			counts, err := countPairOfBase(fastaFile, alnBed, baseOne, baseTwo)
+			counts, err := countCpG(fastaFile, alnBed)
 			exception.PanicOnErr(err)
 
 			cpgMap := make(map[string]bed.Bed)
@@ -317,10 +277,10 @@ func countByChrom(s Settings) {
 			}
 			chromCountsMap[chrom] = cpgMap
 		} else {
-			counts, err := comparePairOfBaseCount(fastaFile, alnBed, baseOne, baseTwo)
+			counts, err := compareCpGcount(fastaFile, alnBed)
 			exception.PanicOnErr(err)
 
-			cpgMap := make(map[string]PairOfBaseCounts)
+			cpgMap := make(map[string]CpGcounts)
 
 			for _, c := range counts {
 				cpgMap[c.Name] = c
@@ -356,9 +316,9 @@ func countByChrom(s Settings) {
 				region.Chrom, region.ChromStart, region.ChromEnd, region.Name, counts.Score)
 			fileio.WriteToFileHandle(file, line)
 		} else {
-			line := fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%d",
+			line := fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%d",
 				region.Chrom, region.ChromStart, region.ChromEnd, region.Name,
-				countsComp.Gain, countsComp.Loss, countsComp.Cons, countsComp.WeakToStrong, countsComp.StrongToWeak)
+				countsComp.Gain, countsComp.Loss, countsComp.Cons)
 			fileio.WriteToFileHandle(file, line)
 		}
 	}
@@ -371,23 +331,19 @@ func countByChrom(s Settings) {
 }
 
 func usage() {
-	fmt.Print("countPairOfBases fastaDir bedfileName baseOne baseTwo outfileName\n" +
-		"\tCounts pairs of bases (ex: CG) within BED regions.\n" +
-		"\tIn --compare mode, gained, lost, and constant pairs in genome 1 relative to genome 2 are counted.\n" +
-		"\tAll paired base changes from substitutions, insertions, and deletions are reported.\n" +
-		"\tIn --compare mode, weak to strong (A/T -> C/G) and strong to weak (C/G -> A/T) substitutions are also reported." +
+	fmt.Print("countCG fastaDir bedfileName outfileName\n" +
+		"\tCounts gained, lost, and constant CpG sites within BED regions in genome 1 relative to (aligned) genome 2.\n" +
+		"\tAll CpG changes from substitutions, insertions, and deletions are reported.\n\n" +
 		"\tARGS: \n" +
 		"\tfastaDir - path to directory containing multiFas for all chromosomes to analyze. Files must be named: {chromosome name}.fa (files can be gzipped).\n" +
 		"\tbedfileName - name of BED file containing all genomic regions in which to count CpG changes. All regions are required to have a name in column 4.\n" +
-		"\t**Note: please ensure that all chromosomes in the BED file have corresponding fastas in the provided fasta directory.**\n" +
-		"\tbaseOne - first base of pair to find (ex: 'C')\n" +
-		"\tbaseTwo - second base of pair to find (ex: 'G')\n" +
+		"\t**Note: please ensure that all chromosomes in the BED file have corresponding multiFas in the provided fasta directory.**\n" +
 		"\toutfileName - name of final output file, which will contain region information from BED file and its counts of gained, lost, and constant CpG sites.\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	var expectedNumArgs int = 5
+	var expectedNumArgs int = 3
 	var compare *bool = flag.Bool("compare", false, "Will find CpG changes (gain, loss, cons) in genome 1 relative to genome 2 in the provided multiFas.")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -402,9 +358,7 @@ func main() {
 	s := Settings{
 		FaDir:   flag.Arg(0),
 		Bed:     flag.Arg(1),
-		BaseOne: flag.Arg(2),
-		BaseTwo: flag.Arg(3),
-		Outfile: flag.Arg(4),
+		Outfile: flag.Arg(2),
 		Compare: *compare,
 	}
 
