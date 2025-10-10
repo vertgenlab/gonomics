@@ -1,4 +1,4 @@
-Chrom	Start	End	Name	CpGcount
+Chrom	Start	End	Name	PairOfBaseCount
 chr1	10	40	HAMER001	1
 chr1	60	98	HAMER002	3
 chr11	0	25	HAMER003	5
