@@ -29,7 +29,7 @@ func TestCountCG(t *testing.T) {
 			Outfile: v.outfile,
 			Compare: v.compare,
 		}
-		countBychrom(s)
+		countByChrom(s)
 
 		if !fileio.AreEqual(v.expectedTxt, v.outfile) {
 			t.Errorf("Error in countCG.go, expected output file != actual output file")

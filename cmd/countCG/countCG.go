@@ -11,7 +11,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 type Settings struct {
@@ -53,41 +52,37 @@ func isLoss(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
 	}
 }
 
-func nextBase(region []dna.Base, currPos int) (nextBase dna.Base, err error) {
+func nextBase(region []dna.Base, currPos int) (nextBase dna.Base) {
 	for i := currPos; i < len(region); i++ {
 		if dna.DefineBase(region[i]) {
-			return region[i], nil
+			return region[i]
 		}
 	}
-	return dna.Gap, nil
+	return dna.Gap
 }
 
-func findChrominFile(filedir string, chrom string) (string, error) {
+func findChromInFile(filedir string, chrom string) (string, error) {
 	//09-29-25: force naming convention: chr1.fa, chr2.fa, etc. so chr name can be extracted easily
 	files, err := os.ReadDir(filedir)
 	if err != nil {
 		return "", err
 	}
+	expectedName := chrom + ".fa"
 	for _, f := range files {
 		fileName := f.Name()
-		idxFa := strings.Index(fileName, ".fa")
-		if idxFa == -1 {
-			fmt.Printf(".fa extension not found in %s. Check fasta file names in directory.\n", filedir)
-			continue
-		}
-		chromFaname := fileName[0:idxFa]
-		if chromFaname == chrom {
-			return filepath.Join(filedir, fileName), nil
+		if fileName == expectedName {
+			filePath := filepath.Join(filedir, fileName)
+			return filePath, nil
 		}
 	}
-	return "", fmt.Errorf("Chromosome %s not found in %s", chrom, filedir)
+	return "", fmt.Errorf("File %s not found in %s", chrom+".fa", filedir)
 }
 
-// RefPostoAlnPosBed loops existing functions for converting reference positions to alignment positions
-// (RefPostoAlnPos and RefPostoAlnPosCount), to convert the coordinates of an entire bed file.
+// RefPosToAlnPosBed loops existing functions for converting reference positions to alignment positions
+// (RefPosToAlnPos and RefPostoAlnPosCount), to convert the coordinates of an entire bed file.
 // It takes a bed file and a multiFa as inputs and outputs the bed regions with alignment coordinates.
 
-func RefPosToAlnPosBed(input []bed.Bed, fastaFile string) (output []bed.Bed, err error) {
+func RefPosToAlnPosBed(input []bed.Bed, fastaFile string) (output []bed.Bed) {
 	var regName string
 
 	seqs := fasta.Read(fastaFile)
@@ -119,7 +114,11 @@ func RefPosToAlnPosBed(input []bed.Bed, fastaFile string) (output []bed.Bed, err
 	for i := 1; i < len(input); i++ {
 		region := input[i]
 
-		regName := region.Name
+		if region.Name != "" {
+			regName = region.Name
+		} else {
+			log.Fatalf("Error: each BED region must have a name in column 4")
+		}
 
 		//use the last reference/alignment position pair to convert the current region's ref start coordinate to an
 		//alignment start coordinate
@@ -136,7 +135,7 @@ func RefPosToAlnPosBed(input []bed.Bed, fastaFile string) (output []bed.Bed, err
 		lastRefPos = region.ChromEnd
 		lastAlnPos = endAlnPos
 	}
-	return output, nil
+	return output
 }
 
 func countCpG(fastaFile string, alnBed []bed.Bed) (regionCpGs []bed.Bed, err error) {
@@ -144,12 +143,8 @@ func countCpG(fastaFile string, alnBed []bed.Bed) (regionCpGs []bed.Bed, err err
 	chr := fasta.Read(fastaFile)
 
 	//check that there are not more than 1 fasta sequence
-	if len(chr) == 2 {
-		log.Fatalf("Error: expecting exactly one record in fasta file, but got 2. Are you trying to compare two sequences? If yes, use --compare mode.\n")
-	}
-
-	if len(chr) > 2 {
-		log.Fatalf("Error: expecting exactly one record in fasta file, but got %d. Using --compare mode will allow for comparison of 2 sequences, but not more than 2.\n", len(chr))
+	if len(chr) != 1 {
+		log.Fatalf("Error: expecting exactly one record in fasta file, but got %d. If you want to compare 2 sequences, use --compare mode.\n", len(chr))
 	}
 
 	seq := chr[0].Seq
@@ -159,6 +154,7 @@ func countCpG(fastaFile string, alnBed []bed.Bed) (regionCpGs []bed.Bed, err err
 	}
 
 	for _, region := range alnBed {
+		var f1, f2 dna.Base
 		//get the following information
 		chrom := region.Chrom
 		start := region.ChromStart
@@ -176,7 +172,7 @@ func countCpG(fastaFile string, alnBed []bed.Bed) (regionCpGs []bed.Bed, err err
 
 		//for length of entire sequence defined by alignment start/end coordinates
 		for i := 0; i < len(regSeq)-1; i++ {
-			f1, f2 := regSeq[i], regSeq[i+1]
+			f1, f2 = regSeq[i], regSeq[i+1]
 			if f1 == dna.C && f2 == dna.G {
 				cpgCount++
 			}
@@ -189,6 +185,9 @@ func countCpG(fastaFile string, alnBed []bed.Bed) (regionCpGs []bed.Bed, err err
 func compareCpGcount(fastaFile string, alnBed []bed.Bed) (regionCpGs []CpGcounts, err error) {
 	seqs := fasta.Read(fastaFile)
 
+	if len(seqs) != 2 {
+		log.Fatalf("Error: expecting exactly two records in fasta file, but got %d. --compare mode compares exactly 2 aligned sequences.\n", len(seqs))
+	}
 	//define genome of interest and ancestral genome in the multiFa
 	firstSeq := seqs[0].Seq
 	secondSeq := seqs[1].Seq
@@ -217,14 +216,8 @@ func compareCpGcount(fastaFile string, alnBed []bed.Bed) (regionCpGs []CpGcounts
 		for i := 0; i < len(firstRegseq)-1; i++ {
 			//f1, f2 and s1, s2 are calls to nextBase()
 			f1, s1 := firstRegseq[i], secondRegseq[i]
-			f2, err := nextBase(firstRegseq, i+1)
-			if err != nil {
-				return nil, err
-			}
-			s2, err := nextBase(secondRegseq, i+1)
-			if err != nil {
-				return nil, err
-			}
+			f2 := nextBase(firstRegseq, i+1)
+			s2 := nextBase(secondRegseq, i+1)
 
 			switch {
 			case isCons(f1, f2, s1, s2):
@@ -240,12 +233,16 @@ func compareCpGcount(fastaFile string, alnBed []bed.Bed) (regionCpGs []CpGcounts
 	return regionCpGs, nil
 }
 
-func countBychrom(s Settings) {
-	//take first region from bed
+func countByChrom(s Settings) {
+	var counts bed.Bed
+	var countsComp CpGcounts
+
 	bedBychrom := make(map[string][]bed.Bed)
 	bedFile := s.Bed
+	//preserve the original order of bed regions in the file
 	bedRegions := bed.Read(bedFile)
 
+	//make map by chromosome, to process one chromosome at a time (only open one fasta file at a time, loading it only once)
 	for _, region := range bedRegions {
 		bedBychrom[region.Chrom] = append(bedBychrom[region.Chrom], region)
 	}
@@ -258,68 +255,70 @@ func countBychrom(s Settings) {
 		fileio.WriteToFileHandle(file, "Chrom\tStart\tEnd\tName\tGain\tLoss\tCons")
 	}
 
-	chromCounts := make(map[string][]CpGcounts)
-	chromCountsMap := make(map[string]map[string]CpGcounts)
+	//fast lookup table, PER CHROMOSOME, to match CpGcounts to the region's name in comp mode
+	chromCountsMap := make(map[string]map[string]bed.Bed)
+	//fast lookup table, PER CHROMOSOME, to match CpGcounts to the region's name in comp mode
+	chromCountsCompMap := make(map[string]map[string]CpGcounts)
 
 	for chrom, regions := range bedBychrom {
-		fastaFile, err := findChrominFile(s.FaDir, chrom)
+		fastaFile, err := findChromInFile(s.FaDir, chrom)
 		exception.PanicOnErr(err)
 
-		alnBed, err := RefPosToAlnPosBed(regions, fastaFile)
-		exception.PanicOnErr(err)
+		alnBed := RefPosToAlnPosBed(regions, fastaFile)
 
 		if !s.Compare {
 			counts, err := countCpG(fastaFile, alnBed)
 			exception.PanicOnErr(err)
 
-			cpgList := make([]CpGcounts, len(counts))
-			cpgMap := make(map[string]CpGcounts)
-			for i, r := range counts {
-				c := CpGcounts{
-					Chrom: r.Chrom,
-					Name:  r.Name,
-					Gain:  0,
-					Loss:  0,
-					Cons:  r.Score,
-				}
-				cpgList[i] = c
-				cpgMap[c.Name] = c
+			cpgMap := make(map[string]bed.Bed)
+
+			for _, r := range counts {
+				cpgMap[r.Name] = r
 			}
-			chromCounts[chrom] = cpgList
 			chromCountsMap[chrom] = cpgMap
 		} else {
 			counts, err := compareCpGcount(fastaFile, alnBed)
 			exception.PanicOnErr(err)
 
 			cpgMap := make(map[string]CpGcounts)
+
 			for _, c := range counts {
 				cpgMap[c.Name] = c
 			}
-			chromCounts[chrom] = counts
-			chromCountsMap[chrom] = cpgMap
+			chromCountsCompMap[chrom] = cpgMap
 		}
 	}
 
-	// output regions in original BED order
+	// output regions in original BED order by looping through the regions from the original BED file
 	for _, region := range bedRegions {
-		countsMap, ok := chromCountsMap[region.Chrom]
-		if !ok {
-			log.Fatalf("No counts found for chromosome %s", region.Chrom)
-		}
-
-		counts, ok := countsMap[region.Name]
-		if !ok {
-			log.Fatalf("Counts not found for region %s", region.Name)
+		if !s.Compare {
+			countsMap, ok := chromCountsMap[region.Chrom]
+			if !ok {
+				log.Fatalf("No counts found for chromosome %s", region.Chrom)
+			}
+			counts, ok = countsMap[region.Name]
+			if !ok {
+				log.Fatalf("Counts not found for region %s", region.Name)
+			}
+		} else {
+			countsCompMap, ok := chromCountsCompMap[region.Chrom]
+			if !ok {
+				log.Fatalf("No counts found for chromosome %s", region.Chrom)
+			}
+			countsComp, ok = countsCompMap[region.Name]
+			if !ok {
+				log.Fatalf("Counts not found for region %s", region.Name)
+			}
 		}
 
 		if !s.Compare {
 			line := fmt.Sprintf("%s\t%d\t%d\t%s\t%d",
-				region.Chrom, region.ChromStart, region.ChromEnd, region.Name, counts.Cons)
+				region.Chrom, region.ChromStart, region.ChromEnd, region.Name, counts.Score)
 			fileio.WriteToFileHandle(file, line)
 		} else {
 			line := fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%d",
 				region.Chrom, region.ChromStart, region.ChromEnd, region.Name,
-				counts.Gain, counts.Loss, counts.Cons)
+				countsComp.Gain, countsComp.Loss, countsComp.Cons)
 			fileio.WriteToFileHandle(file, line)
 		}
 	}
@@ -363,5 +362,5 @@ func main() {
 		Compare: *compare,
 	}
 
-	countBychrom(s)
+	countByChrom(s)
 }
