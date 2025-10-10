@@ -23,10 +23,11 @@ var FaFindFastTests = []struct {
 	OutputAlnPos            bool
 	BaseDistToDivThreshold  float64
 	BaseDotToSubstThreshold float64
+	ConfidentThreshold      float32
 }{
 	{InFile: "testdata/human_hca_hga.pfa",
 		OutFile:                 "testdata/tmp.out.bed",
-		ExpectedFile:            "testdata/expected.bed",
+		ExpectedFile:            "testdata/expected.expanded.bed",
 		FirstQueryName:          "hca",
 		SecondQueryName:         "hga",
 		WindowSize:              10,
@@ -36,7 +37,9 @@ var FaFindFastTests = []struct {
 		LongOutput:              false,
 		OutputAlnPos:            false,
 		BaseDistToDivThreshold:  0.7,
-		BaseDotToSubstThreshold: 0.8},
+		BaseDotToSubstThreshold: 0.8,
+		ConfidentThreshold:      0.8,
+	},
 }
 
 func TestFaFindFast(t *testing.T) {
@@ -55,10 +58,11 @@ func TestFaFindFast(t *testing.T) {
 			OutputAlnPos:            v.OutputAlnPos,
 			BaseDistToDivThreshold:  v.BaseDistToDivThreshold,
 			BaseDotToSubstThreshold: v.BaseDotToSubstThreshold,
+			ConfidentThreshold:      v.ConfidentThreshold,
 		}
 		pfaFindFast(s)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-			t.Errorf("Error in faFindFast. Output did not match expected.")
+			t.Errorf("Error in faFindFastExpanded. Output did not match expected.")
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)
