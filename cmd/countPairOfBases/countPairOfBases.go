@@ -367,7 +367,7 @@ func countByChrom(s Settings) {
 	err := file.Close()
 	exception.PanicOnErr(err)
 
-	fmt.Println("CG counts found and written to", s.Outfile)
+	fmt.Println("Pair counts found and written to", s.Outfile)
 }
 
 func usage() {
