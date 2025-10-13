@@ -29,7 +29,6 @@ type CGdiff struct {
 	Alt      string //sequence 2 base(s)
 	AlnStart int    //corresponding alignment position of reference StartPos
 	AlnEnd   int    //corresponding alignment position of reference EndPos
-	//FieldsInitialized int ////number of fields that are initialized, used for smart writing
 }
 
 // helper function for file writing in --compare mode
@@ -52,7 +51,8 @@ func toFile(fileName string, records []CGdiff) {
 	exception.PanicOnErr(err)
 }
 
-func IsCons(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
+// -compare mode check if constant CG
+func isCons(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
 	if firstSeq1 == dna.C && firstSeq2 == dna.G && secondSeq1 == dna.C && secondSeq2 == dna.G {
 		return true
 	} else {
@@ -60,7 +60,8 @@ func IsCons(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
 	}
 }
 
-func IsGain(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
+// -compare mode check if gained CG in seq1
+func isGain(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
 	if firstSeq1 == dna.C && firstSeq2 == dna.G && !(secondSeq1 == dna.C && secondSeq2 == dna.G) {
 		return true
 	} else {
@@ -68,7 +69,8 @@ func IsGain(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
 	}
 }
 
-func IsLoss(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
+// -compare mode check if lost CG in seq1
+func isLoss(firstSeq1, firstSeq2, secondSeq1, secondSeq2 dna.Base) bool {
 	if !(firstSeq1 == dna.C && firstSeq2 == dna.G) && secondSeq1 == dna.C && secondSeq2 == dna.G {
 		return true
 	} else {
@@ -96,9 +98,6 @@ func locateCG(s Settings) {
 	if len(seq) == 0 {
 		log.Fatalf("Error: fasta sequence is empty.\n")
 	}
-
-	//pre-allocate size of output
-	//output = make([]CGsite, 0, 10000)
 
 	//for length of fasta sequence
 	for i := 0; i < len(seq)-1; i++ {
@@ -171,19 +170,19 @@ func compareCG(s Settings) {
 
 		switch s.CGtype {
 		case "cons":
-			if IsCons(f1, f2, s1, s2) {
+			if isCons(f1, f2, s1, s2) {
 				startPos := fasta.AlnPosToRefPosCounter(f[0], i, refStart, alnStart)
 				endPos := startPos + 1
 				output = append(output, CGdiff{Chrom: s.ChromName, StartPos: startPos, EndPos: endPos, Type: "cons", Ref: refBases, Alt: altBases, AlnStart: i, AlnEnd: i + 1})
 			}
 		case "gain":
-			if IsGain(f1, f2, s1, s2) {
+			if isGain(f1, f2, s1, s2) {
 				startPos := fasta.AlnPosToRefPosCounter(f[0], i, refStart, alnStart)
 				endPos := startPos + 1
 				output = append(output, CGdiff{Chrom: s.ChromName, StartPos: startPos, EndPos: endPos, Type: "gain", Ref: refBases, Alt: altBases, AlnStart: i, AlnEnd: i + 1})
 			}
 		case "loss":
-			if IsLoss(f1, f2, s1, s2) {
+			if isLoss(f1, f2, s1, s2) {
 				startPos := fasta.AlnPosToRefPosCounter(f[0], i, refStart, alnStart)
 				endPos := startPos + 1
 				output = append(output, CGdiff{Chrom: s.ChromName, StartPos: startPos, EndPos: endPos, Type: "loss", Ref: refBases, Alt: altBases, AlnStart: i, AlnEnd: i + 1})
