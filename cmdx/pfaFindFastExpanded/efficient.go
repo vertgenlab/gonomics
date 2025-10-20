@@ -10,6 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/numbers/logspace"
 	"log"
 	"math"
+	"strings"
 )
 
 // incrementWindowEdge
@@ -196,36 +197,51 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 				// print output
 				// an option/flag can tell us not to print if there are Ns in the firstQuery or secondQuery
 				if !s.RemoveN || totalNs == 0 {
-					if s.LongOutput && !s.OutputAlnPos {
+					// use strings.Builder to construct the bed output line for each window
+					var sb strings.Builder
+
+					// common prefix: chrom, refStart, refEnd, composite name, and mutation count
+					//_, err = fmt.Fprintf(&sb, "%s\t%d\t%d\t%s_%d\t%d",
+					_, err = fmt.Fprintf(&sb, "%s\t%d\t%d\t%s_%d\t%d\t%d\t%d\t%d\t%d",
+						s.RefChromName,
+						refIdxWindowStart,
+						lastRefIdxOfWindowPlusOne,
+						s.RefChromName,
+						refIdxWindowStart,
+						totalSubst+totalGaps,
+						totalSubst, //TODO: for exapnded
+						totalGaps,
+						lastRefIdxOfWindowPlusOne-refIdxWindowStart,
+						totalConfident,
+					)
+
+					// Long output needs percentDiverged and rawPValue
+					if s.LongOutput {
 						percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
-						//percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
-						//if totalSubst+totalGaps > s.WindowSize {
 						if totalSubst+totalGaps > s.WindowSize {
 							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
 						}
-						rawPValue = scorePValueCache[totalSubst+totalGaps]
-						//rawPValue = scorePValueCache[totalSubst+totalGaps]
+						// rawPValue only valid if cache exists; original code expects it when DivergenceRate was set
+						if scorePValueCache != nil {
+							rawPValue = scorePValueCache[totalSubst+totalGaps]
+						} else {
+							rawPValue = 0
+						}
+						// add strand, percent and pvalue
 						// in the below output, windowDotSubst+totalGaps replaces totalSubst+totalGaps
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, "+", percentDiverged, rawPValue)
-						exception.PanicOnErr(err)
-					} else if !s.LongOutput && s.OutputAlnPos {
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, alnIdxBeforeWindow+1)
-						exception.PanicOnErr(err)
-					} else if s.LongOutput && s.OutputAlnPos {
-						percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
-						//percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
-						//if totalSubst+totalGaps > s.WindowSize {
-						if totalSubst+totalGaps > s.WindowSize {
-							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
-						}
-						//rawPValue = scorePValueCache[totalSubst+totalGaps]
-						rawPValue = scorePValueCache[totalSubst+totalGaps]
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%s\t%e\t%e\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, "+", percentDiverged, rawPValue, alnIdxBeforeWindow+1)
-						exception.PanicOnErr(err)
-					} else {
-						_, err = fmt.Fprintf(file, "%s\t%d\t%d\t%s_%d\t%d\t%d\t%d\t%d\t%d\n", s.RefChromName, refIdxWindowStart, lastRefIdxOfWindowPlusOne, s.RefChromName, refIdxWindowStart, totalSubst+totalGaps, totalSubst, totalGaps, lastRefIdxOfWindowPlusOne-refIdxWindowStart, totalConfident)
-						exception.PanicOnErr(err)
+						_, err = fmt.Fprintf(&sb, "\t%s\t%e\t%e", "+", percentDiverged, rawPValue)
 					}
+
+					// Output alignment position if requested
+					if s.OutputAlnPos {
+						// report aln position
+						_, err = fmt.Fprintf(&sb, "\t%d", alnIdxBeforeWindow+1)
+					}
+
+					// finish line and write once
+					sb.WriteByte('\n')
+					_, err = fmt.Fprintf(file, sb.String())
+					exception.PanicOnErr(err)
 				}
 			}
 		}
