@@ -1,0 +1,2 @@
+Chrom	Gain	Loss	Cons	WeakToStrongSubs	StrongToWeakSubs
+chr1	6	5	0	3	3
