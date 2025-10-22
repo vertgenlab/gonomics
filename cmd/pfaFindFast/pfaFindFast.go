@@ -27,6 +27,7 @@ type Settings struct {
 	OutputAlnPos            bool
 	BaseDistToDivThreshold  float64
 	BaseDotToSubstThreshold float64
+	ConfidentThreshold      float32
 }
 
 func pfaFindFast(s Settings) {
@@ -93,6 +94,7 @@ func main() {
 	var outputAlnPos *bool = flag.Bool("outputAlnPos", false, "Print the alignment position of the window's start in output as the last column.")
 	var baseDotToSubstThreshold *float64 = flag.Float64("baseDotToSubstThreshold", 0.8, "Specify the threshold above which to call the 1 - dot product of 2 bases a substitution. Defaults to 0.8.")
 	var baseDistToDivThreshold *float64 = flag.Float64("baseDistToDivThreshold", 0.7, "Specify the threshold above which to call the distance between 2 bases a divergence. Defaults to 0.7.")
+	var confidentThreshold *float64 = flag.Float64("confidentThreshold", 0.8, "Specify the threshold above which to call the most likely base at a position confident. Defaults to 0.8.")
 	// for go proflier cpu
 	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
@@ -141,6 +143,7 @@ func main() {
 		OutputAlnPos:            *outputAlnPos,
 		BaseDistToDivThreshold:  *baseDistToDivThreshold,
 		BaseDotToSubstThreshold: *baseDotToSubstThreshold,
+		ConfidentThreshold:      float32(*confidentThreshold),
 	}
 
 	pfaFindFast(s)
