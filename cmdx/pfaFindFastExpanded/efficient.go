@@ -202,21 +202,18 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 
 					// common prefix: chrom, refStart, refEnd, composite name, and mutation count
 					//_, err = fmt.Fprintf(&sb, "%s\t%d\t%d\t%s_%d\t%d",
-					_, err = fmt.Fprintf(&sb, "%s\t%d\t%d\t%s_%d\t%d\t%d\t%d\t%d\t%d",
+					_, err = fmt.Fprintf(&sb, "%s\t%d\t%d\t%s_%d\t%d\t",
 						s.RefChromName,
 						refIdxWindowStart,
 						lastRefIdxOfWindowPlusOne,
 						s.RefChromName,
 						refIdxWindowStart,
 						totalSubst+totalGaps,
-						totalSubst, //TODO: for exapnded
-						totalGaps,
-						lastRefIdxOfWindowPlusOne-refIdxWindowStart,
-						totalConfident,
 					)
 
-					// Long output needs percentDiverged and rawPValue
+					// LongOutput adds: percentDiverged, rawPValue, totalSubst, totalGaps, refWindowSize, totalConfident
 					if s.LongOutput {
+						// percentDiverged
 						percentDiverged = 100 * (float64(totalSubst+totalGaps) / float64(s.WindowSize))
 						if totalSubst+totalGaps > s.WindowSize {
 							log.Fatalf("Error: total number of mutations exceeds windowSize. This may or may not be a bug, but your sequence has deviated from our use case.\n")
@@ -227,12 +224,12 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 						} else {
 							rawPValue = 0
 						}
-						// add strand, percent and pvalue
+						// output add "+" (for bed strand field), percentDiverged, rawPValue
 						// in the below output, windowDotSubst+totalGaps replaces totalSubst+totalGaps
-						_, err = fmt.Fprintf(&sb, "\t%s\t%e\t%e", "+", percentDiverged, rawPValue)
+						_, err = fmt.Fprintf(&sb, "\t%s\t%e\t%e\t%d\t%d\t%d\t%d", "+", percentDiverged, rawPValue, totalSubst, totalGaps, lastRefIdxOfWindowPlusOne-refIdxWindowStart, totalConfident)
 					}
 
-					// Output alignment position if requested
+					// OutputAlnPose adds: alnPos (alignment position)
 					if s.OutputAlnPos {
 						// report aln position
 						_, err = fmt.Fprintf(&sb, "\t%d", alnIdxBeforeWindow+1)
