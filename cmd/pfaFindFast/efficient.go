@@ -230,7 +230,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 						_, err = fmt.Fprintf(&sb, "\t%s\t%e\t%e\t%d\t%d\t%d\t%d", "+", percentDiverged, rawPValue, totalSubst, totalGaps, lastRefIdxOfWindowPlusOne-refIdxWindowStart, totalConfident)
 					}
 
-					// OutputAlnPose adds: alnPos (alignment position)
+					// OutputAlnPos adds: alnPos (alignment position)
 					if s.OutputAlnPos {
 						// report aln position
 						_, err = fmt.Fprintf(&sb, "\t%d", alnIdxBeforeWindow+1)
