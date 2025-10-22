@@ -134,8 +134,8 @@ func RefPosToAlnPosBed(input []bed.Bed, multiFa []fasta.Fasta) (output []bed.Bed
 }
 
 // count pairs of user-provided bases (such as CG or GC) in a SINGLE sequence fasta (default mode)
-// inputs: fastaFile for the correct chromosome returned by findChromInFile, original reference bed file, base 1 and base 2 to count as a pair
-// output: counts of that pair of bases for each genomic region
+// inputs: user-provided single Fasta, base 1 and base 2 to count as a pair
+// output: counts of that pair of bases for the sequence
 func countPairOfBasesHelper(inFa fasta.Fasta, b1, b2 dna.Base) (counts int) {
 	var f1, f2 dna.Base
 
@@ -161,7 +161,8 @@ func countPairOfBasesHelper(inFa fasta.Fasta, b1, b2 dna.Base) (counts int) {
 }
 
 // -compare mode counting gains, losses, and constant pairs of bases provided by user
-// inputs: multiFasta for the correct chromosome returned by findChromInFile, alignment-converted BED returned by RefPosToAlnPosBed, base 1 and base 2 to count as a pair
+// inputs: first and second seqs from user-provided multiFasta, base 1 and base 2 to count as a pair
+// output: counts of gains, losses, cons for that pair of bases in the sequence
 func comparePairOfBaseCount(firstFa, secondFa fasta.Fasta, b1, b2 dna.Base) (gainCount, lossCount, consCount, weakToStrongCount, strongToWeakCount int) {
 	//define sequence 1 and sequence 2 in the multiFa
 	firstSeq := firstFa.Seq
@@ -217,76 +218,116 @@ func comparePairOfBaseCount(firstFa, secondFa fasta.Fasta, b1, b2 dna.Base) (gai
 
 // perform above^ functions to count pairs of bases in each FASTA or BED region
 func countPairOfBases(s Settings) {
-	//convert user-provided bases to dna.Base type
+	//check that a total of only 2 bases are provided (ex: C G or A T)
 	if len(s.BaseOne) != 1 || len(s.BaseTwo) != 1 {
 		log.Fatalf("Error: Enter one DNA base for 'base one' and one DNA base for 'base two'.\n")
 	}
 
+	//convert user-provided bases to dna.Base type
 	baseOne := dna.StringToBase(strings.TrimSpace(s.BaseOne))
 	baseTwo := dna.StringToBase(strings.TrimSpace(s.BaseTwo))
 
+	//read input fasta
 	inFasta := fasta.Read(s.InFa)
 
+	//create outfile
 	outfile := fileio.EasyCreate(s.Outfile)
 
+	//if not compare mode
 	if !s.Compare {
+		//check that there's only one sequence in the fasta
+		if len(inFasta) != 1 {
+			log.Fatalf("Error: expecting exactly one record in fasta file, but got %d. If you want to compare 2 sequences, use --compare mode.\n", len(inFasta))
+		}
+		//if no BED file provided
 		if s.BedFile == "" {
-			if len(inFasta) != 1 {
-				log.Fatalf("Error: expecting exactly one record in fasta file, but got %d. If you want to compare 2 sequences, use --compare mode.\n", len(inFasta))
-			}
+			//get the single Fasta entry
 			inFaEntry := inFasta[0]
+			//get counts for entire Fasta sequence
 			pairCounts := countPairOfBasesHelper(inFaEntry, baseOne, baseTwo)
-
+			//write total counts to file
 			fileio.WriteToFileHandle(outfile, "Chrom\tPairOfBasesCount")
 			fileio.WriteToFileHandle(outfile, fmt.Sprintf("%s\t%d",
 				s.Chrom, pairCounts))
 		} else {
-			fileio.WriteToFileHandle(outfile, "Chrom\tStart\tEnd\tName\tPairOfBasesCount")
+			//if BED file provided, read it
 			bedRegions := bed.Read(s.BedFile)
+			//get fasta length (to check that BED regions fall within the fasta sequence)
+			fastaLength := len(inFasta[0].Seq)
+			//write outfile header
+			fileio.WriteToFileHandle(outfile, "Chrom\tStart\tEnd\tName\tPairOfBasesCount")
+			//loop through BED regions
 			for _, region := range bedRegions {
+				//check that user-provided chromosome matches chr of BED region
 				if region.Chrom != s.Chrom {
 					log.Fatalf("Error: Chromosome in BED region does not match.")
 				}
+				//check that BED start/end coords fall within the fasta sequence
+				//can use fastaLength instead of fastaLength-1, because BED regions are end-exclusive
+				if region.ChromStart > fastaLength || region.ChromEnd > fastaLength {
+					log.Fatalf("Error: BED region outside of chromosome.")
+				}
+				//pull sub-Fasta sequences for each BED region
 				inSubFa := convert.SingleBedToFasta(region, inFasta)
+				//get counts for each BED region
 				regPairCounts := countPairOfBasesHelper(inSubFa, baseOne, baseTwo)
+				//print info to file
 				line := fmt.Sprintf("%s\t%d\t%d\t%s\t%d", region.Chrom, region.ChromStart, region.ChromEnd, region.Name, regPairCounts)
 				fileio.WriteToFileHandle(outfile, line)
 			}
 		}
+		//if -compare mode:
 	} else {
+		//check that exactly 2 sequences in multiFasta
+		if len(inFasta) != 2 {
+			log.Fatalf("Error: expecting exactly two records in fasta file, but got %d. --compare mode compares exactly 2 aligned sequences.\n", len(inFasta))
+		}
+		//if no BED file provided
 		if s.BedFile == "" {
-			if len(inFasta) != 2 {
-				log.Fatalf("Error: expecting exactly two records in fasta file, but got %d. --compare mode compares exactly 2 aligned sequences.\n", len(inFasta))
-			}
+			//get each entry
 			seqOne := inFasta[0]
 			seqTwo := inFasta[1]
-
+			//get counts for entire fasta
 			gain, loss, cons, weakToStrong, strongToWeak := comparePairOfBaseCount(seqOne, seqTwo, baseOne, baseTwo)
+			//write to file
 			fileio.WriteToFileHandle(outfile, "Chrom\tGain\tLoss\tCons\tWeakToStrongSubs\tStrongToWeakSubs")
 			fileio.WriteToFileHandle(outfile, fmt.Sprintf("%s\t%d\t%d\t%d\t%d\t%d", s.Chrom, gain, loss, cons, weakToStrong, strongToWeak))
 		} else {
-			fileio.WriteToFileHandle(outfile, "Chrom\tStart\tEnd\tName\tGain\tLoss\tCons\tWeakToStrongSubs\tStrongToWeakSubs")
+			//if BED file provided, read it
 			bedRegions := bed.Read(s.BedFile)
 			//make map to key by name for easy ref coordinate writing to file
 			bedMap := make(map[string]bed.Bed)
+			//loop through BED regions
 			for _, region := range bedRegions {
+				//check that user-provided chromosome matches chr of BED region
 				if region.Chrom != s.Chrom {
 					log.Fatalf("Error: Chromosome in BED region does not match.")
 				}
+				//add reference info to map, keyed by region name. ex: bedMap[region001] = bed.Bed{Chrom: 1, ChromStart: 200, ChromEnd: 700, Name: region001}
 				bedMap[region.Name] = region
 			}
+			//write header to outfile
+			fileio.WriteToFileHandle(outfile, "Chrom\tStart\tEnd\tName\tGain\tLoss\tCons\tWeakToStrongSubs\tStrongToWeakSubs")
 
-			if len(inFasta) != 2 {
-				log.Fatalf("Error: expecting exactly two records in fasta file, but got %d. --compare mode compares exactly 2 aligned sequences.\n", len(inFasta))
-			}
+			//get fasta length (to check that BED regions fall within the fasta sequence)
+			fastaLength := len(inFasta[0].Seq)
+			//convert BED reference coordinates to alignment coordinates from the multiFa
 			alnBed := RefPosToAlnPosBed(bedRegions, inFasta)
+			//for each alignment-converted BED region
 			for _, alnRegion := range alnBed {
-
+				//check that adjusted "alignment" coordinates fall within the fasta sequence
+				//can use fastaLength instead of fastaLength-1, because BED regions are end-exclusive
+				if alnRegion.ChromStart > fastaLength || alnRegion.ChromEnd > fastaLength {
+					log.Fatalf("Error: BED region outside of chromosome.")
+				}
+				//get sequence of region in first fasta entry, then in second aligned fasta entry
 				firstRegSeq := fasta.Extract(inFasta[0], alnRegion.ChromStart, alnRegion.ChromEnd, alnRegion.Name)
 				secondRegSeq := fasta.Extract(inFasta[1], alnRegion.ChromStart, alnRegion.ChromEnd, alnRegion.Name)
-
+				//get counts for region
 				gain, loss, cons, weakToStrong, strongToWeak := comparePairOfBaseCount(firstRegSeq, secondRegSeq, baseOne, baseTwo)
+				//get reference info for that region for easy file writing
 				ref := bedMap[alnRegion.Name]
+				//write to file: chom, reference start/end coords, name, counts
 				fileio.WriteToFileHandle(outfile, fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%d", ref.Chrom, ref.ChromStart, ref.ChromEnd, ref.Name, gain, loss, cons, weakToStrong, strongToWeak))
 			}
 		}
