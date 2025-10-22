@@ -25,29 +25,32 @@ type Settings struct {
 
 // -compare mode: check if constant pair
 func isCons(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool {
-	if (firstSeq1 == b1 && firstSeq2 == b2) && (secondSeq1 == b1 && secondSeq2 == b2) {
-		return true
-	} else {
+	//ignore if N
+	if firstSeq1 == dna.N || firstSeq2 == dna.N || secondSeq1 == dna.N || secondSeq2 == dna.N {
 		return false
 	}
+	//if pair in first and second sequence
+	return (firstSeq1 == b1 && firstSeq2 == b2) && (secondSeq1 == b1 && secondSeq2 == b2)
 }
 
 // -compare mode: check if gained pair in sequence 1
 func isGain(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool {
-	if (firstSeq1 == b1 && firstSeq2 == b2) && !(secondSeq1 == b1 && secondSeq2 == b2) {
-		return true
-	} else {
+	//ignore if N
+	if firstSeq1 == dna.N || firstSeq2 == dna.N || secondSeq1 == dna.N || secondSeq2 == dna.N {
 		return false
 	}
+	//if pair in first but not in second sequence
+	return (firstSeq1 == b1 && firstSeq2 == b2) && (secondSeq1 != b1 || secondSeq2 != b2)
 }
 
 // -compare mode: check if lost pair in sequence 1
 func isLoss(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool {
-	if !(firstSeq1 == b1 && firstSeq2 == b2) && (secondSeq1 == b1 && secondSeq2 == b2) {
-		return true
-	} else {
+	//ignore if N
+	if firstSeq1 == dna.N || firstSeq2 == dna.N || secondSeq1 == dna.N || secondSeq2 == dna.N {
 		return false
 	}
+	//if pair not in first sequence but in second sequence
+	return (firstSeq1 != b1 || firstSeq2 != b2) && (secondSeq1 == b1 && secondSeq2 == b2)
 }
 
 // -compare mode: track strong -> weak substitutions (C||G -> A||T)
@@ -71,7 +74,9 @@ func isWeakToStrong(firstSeq1, secondSeq1 dna.Base) bool {
 // as you're scanning the sequence, nextBase() recognizes when base 2 in the pair is a gap, traverses the gaps until a base is found, and uses that as "base 2" instead
 func nextBase(region []dna.Base, currPos int) (nextBase dna.Base) {
 	for i := currPos; i < len(region); i++ {
-		if dna.DefineBase(region[i]) {
+		//if base (A,T,C,G) or N, return
+		//allowing N to be returned prevents slowdowns at long stretches of Ns in gapped reference assemblies
+		if dna.DefineBase(region[i]) || region[i] == dna.N {
 			return region[i]
 		}
 	}
