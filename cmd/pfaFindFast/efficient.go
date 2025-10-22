@@ -225,8 +225,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 						} else {
 							rawPValue = 0
 						}
-						// output add "+" (for bed strand field), percentDiverged, rawPValue
-						// in the below output, windowDotSubst+totalGaps replaces totalSubst+totalGaps
+						// output add "+" (for bed strand field), percentDiverged, rawPValue, totalSubst, totalGaps, refWindowSize, totalConfident
 						_, err = fmt.Fprintf(&sb, "\t%s\t%e\t%e\t%d\t%d\t%d\t%d", "+", percentDiverged, rawPValue, totalSubst, totalGaps, lastRefIdxOfWindowPlusOne-refIdxWindowStart, totalConfident)
 					}
 
