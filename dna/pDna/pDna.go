@@ -56,7 +56,7 @@ func IsConfident(p Float32Base, threshold float32) bool {
 	if p.T > maxBase {
 		maxBase = p.T
 	}
-	if maxBase > threshold {
+	if maxBase >= threshold {
 		return true
 	} else {
 		return false
