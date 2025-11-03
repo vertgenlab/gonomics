@@ -188,12 +188,12 @@ func NumSegregatingSites(aln []Fasta) int {
 }
 
 // CountSubs counts substitution types across 2 aligned fasta sequences.
-func CountSubs(firstSeq, secondSeq []dna.Base) (weakToStrongCount, strongToWeakCount, otherCount int) {
+func CountSubs(firstSeq, secondSeq []dna.Base) (weakToStrongCount, strongToWeakCount, otherSubCount int) {
 	var f1, s1 dna.Base
 	//initialize each category of substitutions to 0
 	weakToStrongCount = 0
 	strongToWeakCount = 0
-	otherCount = 0
+	otherSubCount = 0
 
 	//for length of entire sequence
 	for i := 0; i < len(firstSeq); i++ {
@@ -203,17 +203,21 @@ func CountSubs(firstSeq, secondSeq []dna.Base) (weakToStrongCount, strongToWeakC
 			continue
 		}
 
+		if f1 == s1 {
+			continue
+		}
+
 		//check substitution type & count
 		switch {
 		case IsStrongToWeak(f1, s1):
 			strongToWeakCount++
 		case IsWeakToStrong(f1, s1):
 			weakToStrongCount++
-		case f1 != s1:
-			otherCount++
+		default:
+			otherSubCount++
 		}
 	}
-	return weakToStrongCount, strongToWeakCount, otherCount
+	return weakToStrongCount, strongToWeakCount, otherSubCount
 }
 
 // PairwiseMutationDistanceReferenceWindow takes two input fasta sequences and calculates the number of mutations in a reference window of a given size. Segregating sites are counted as 1, as are INDELs regardless of length.

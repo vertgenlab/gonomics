@@ -161,7 +161,7 @@ func comparePairOfBaseCount(firstFa, secondFa fasta.Fasta, b1, b2 dna.Base) (gai
 		//define first base
 		f1, s1 = firstSeq[i], secondSeq[i]
 
-		if f1 == dna.C || s1 == dna.C {
+		if f1 == b1 || s1 == b1 {
 			//before running nextBase on a sequence, check to see if the first base is a gap
 			//if first base is a base, but second is gap, find the next base
 			f2 = firstSeq[i+1]
