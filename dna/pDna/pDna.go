@@ -43,6 +43,26 @@ func IsN(p Float32Base) bool {
 	}
 }
 
+// IsConfident returns true for a position if the most likely base >= threshold
+func IsConfident(p Float32Base, threshold float32) bool {
+	var maxBase float32
+	maxBase = p.A
+	if p.C > p.A {
+		maxBase = p.C
+	}
+	if p.G > maxBase {
+		maxBase = p.G
+	}
+	if p.T > maxBase {
+		maxBase = p.T
+	}
+	if maxBase >= threshold {
+		return true
+	} else {
+		return false
+	}
+}
+
 // EqualBase returns true if two input Float32Base structs, p and q, are 'equal', defined
 // within a user-defined degree of precision.
 func EqualBase(p Float32Base, q Float32Base, precision float32) bool {
