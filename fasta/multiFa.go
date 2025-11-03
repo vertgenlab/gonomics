@@ -147,6 +147,24 @@ func IsSegregating(aln []Fasta, colIdx int) bool {
 	return false
 }
 
+// IsStrongToWeak finds strong -> weak substitutions (C||G -> A||T)
+func IsStrongToWeak(firstSeqBase, secondSeqBase dna.Base) bool {
+	if (firstSeqBase == dna.A || firstSeqBase == dna.T) && (secondSeqBase == dna.C || secondSeqBase == dna.G) {
+		return true
+	} else {
+		return false
+	}
+}
+
+// IsWeakToStrong finds weak -> strong substitutions (A||T -> C||G)
+func IsWeakToStrong(firstSeqBase, secondSeqBase dna.Base) bool {
+	if (firstSeqBase == dna.C || firstSeqBase == dna.G) && (secondSeqBase == dna.A || secondSeqBase == dna.T) {
+		return true
+	} else {
+		return false
+	}
+}
+
 // SegregatingSites takes in a multiFa alignment and returns a new alignment containing only the columns with segregating sites.
 func SegregatingSites(aln []Fasta) []Fasta {
 	var answer []Fasta = EmptyCopy(aln)
@@ -167,6 +185,35 @@ func NumSegregatingSites(aln []Fasta) int {
 		return 0
 	}
 	return len(SegregatingSites(aln)[0].Seq)
+}
+
+// CountSubs counts substitution types across 2 aligned fasta sequences.
+func CountSubs(firstSeq, secondSeq []dna.Base) (weakToStrongCount, strongToWeakCount, otherCount int) {
+	var f1, s1 dna.Base
+	//initialize each category of substitutions to 0
+	weakToStrongCount = 0
+	strongToWeakCount = 0
+	otherCount = 0
+
+	//for length of entire sequence
+	for i := 0; i < len(firstSeq); i++ {
+		f1, s1 = firstSeq[i], secondSeq[i]
+
+		if !(dna.DefineBase(f1)) || !(dna.DefineBase(s1)) {
+			continue
+		}
+
+		//check substitution type & count
+		switch {
+		case IsStrongToWeak(f1, s1):
+			strongToWeakCount++
+		case IsWeakToStrong(f1, s1):
+			weakToStrongCount++
+		case f1 != s1:
+			otherCount++
+		}
+	}
+	return weakToStrongCount, strongToWeakCount, otherCount
 }
 
 // PairwiseMutationDistanceReferenceWindow takes two input fasta sequences and calculates the number of mutations in a reference window of a given size. Segregating sites are counted as 1, as are INDELs regardless of length.
