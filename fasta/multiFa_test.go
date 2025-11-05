@@ -134,3 +134,13 @@ func TestRefPosToAlnPos(t *testing.T) {
 		t.Errorf("Error in refPosToAlnPos. Expected: %v. Found: %v.", 8, tmp)
 	}
 }
+
+var sequence1 = dna.StringToBases("TTTCAGGACCCGCGAAAGGTCCCGCCTCCAAAACCAAAGAAGCNNCGNGAGGGGAAGTTTCCCCGCACA-GAGAAAAATCCCTCGACCTGCCCGACAGAC")
+var sequence2 = dna.StringToBases("TTTCCGGACG---GAAAGGTCCAGCCTCCAATACCAAAGAAGCNNNNNGAGGGGAAGTTTCCCATCACACGAGAACGATCCCTGGACCTGCC-GACAGAC")
+
+func TestCountSubs(t *testing.T) {
+	wts, stw, oth := CountSubs(sequence1, sequence2)
+	if wts != 3 || stw != 3 || oth != 3 {
+		t.Errorf("Error in CountSubs. Expected: weakToStrong: 3, strongToWeak: 3, otherSubs: 3. Found: weakToStrong: %d, strongToWeak: %d, otherSubs: %d.", wts, stw, oth)
+	}
+}
