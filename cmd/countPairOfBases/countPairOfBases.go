@@ -25,10 +25,6 @@ type Settings struct {
 
 // -compare mode: check if constant pair
 func isCons(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool {
-	//ignore if N
-	if firstSeq1 == dna.N || firstSeq2 == dna.N || secondSeq1 == dna.N || secondSeq2 == dna.N {
-		return false
-	}
 	//if pair in first and second sequence
 	return (firstSeq1 == b1 && firstSeq2 == b2) && (secondSeq1 == b1 && secondSeq2 == b2)
 }
@@ -36,7 +32,7 @@ func isCons(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool 
 // -compare mode: check if gained pair in sequence 1
 func isGain(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool {
 	//ignore if N
-	if firstSeq1 == dna.N || firstSeq2 == dna.N || secondSeq1 == dna.N || secondSeq2 == dna.N {
+	if secondSeq1 == dna.N || secondSeq2 == dna.N {
 		return false
 	}
 	//if pair in first but not in second sequence
@@ -46,29 +42,11 @@ func isGain(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool 
 // -compare mode: check if lost pair in sequence 1
 func isLoss(firstSeq1, firstSeq2, secondSeq1, secondSeq2, b1, b2 dna.Base) bool {
 	//ignore if N
-	if firstSeq1 == dna.N || firstSeq2 == dna.N || secondSeq1 == dna.N || secondSeq2 == dna.N {
+	if secondSeq1 == dna.N || secondSeq2 == dna.N {
 		return false
 	}
 	//if pair not in first sequence but in second sequence
 	return (firstSeq1 != b1 || firstSeq2 != b2) && (secondSeq1 == b1 && secondSeq2 == b2)
-}
-
-// -compare mode: track strong -> weak substitutions (C||G -> A||T)
-func isStrongToWeak(firstSeq1, secondSeq1 dna.Base) bool {
-	if (firstSeq1 == dna.A || firstSeq1 == dna.T) && (secondSeq1 == dna.C || secondSeq1 == dna.G) {
-		return true
-	} else {
-		return false
-	}
-}
-
-// -compare mode: track weak -> strong substitutions (A||T -> C||G)
-func isWeakToStrong(firstSeq1, secondSeq1 dna.Base) bool {
-	if (firstSeq1 == dna.C || firstSeq1 == dna.G) && (secondSeq1 == dna.A || secondSeq1 == dna.T) {
-		return true
-	} else {
-		return false
-	}
 }
 
 // as you're scanning the sequence, nextBase() recognizes when base 2 in the pair is a gap, traverses the gaps until a base is found, and uses that as "base 2" instead
@@ -168,7 +146,7 @@ func countPairOfBasesHelper(inFa fasta.Fasta, b1, b2 dna.Base) (counts int) {
 // -compare mode counting gains, losses, and constant pairs of bases provided by user
 // inputs: first and second seqs from user-provided multiFasta, base 1 and base 2 to count as a pair
 // output: counts of gains, losses, cons for that pair of bases in the sequence
-func comparePairOfBaseCount(firstFa, secondFa fasta.Fasta, b1, b2 dna.Base) (gainCount, lossCount, consCount, weakToStrongCount, strongToWeakCount int) {
+func comparePairOfBaseCount(firstFa, secondFa fasta.Fasta, b1, b2 dna.Base) (gainCount, lossCount, consCount int) {
 	//define sequence 1 and sequence 2 in the multiFa
 	firstSeq := firstFa.Seq
 	secondSeq := secondFa.Seq
@@ -177,48 +155,37 @@ func comparePairOfBaseCount(firstFa, secondFa fasta.Fasta, b1, b2 dna.Base) (gai
 	gainCount = 0
 	lossCount = 0
 	consCount = 0
-
-	//initialize each category of substitutions to 0
-	weakToStrongCount = 0
-	strongToWeakCount = 0
-
+	var f1, s1, f2, s2 dna.Base
 	//for length of entire sequence defined by alignment start/end coordinates
 	for i := 0; i < len(firstSeq)-1; i++ {
-		//f1, f2 and s1, s2 are calls to nextBase()
-		f1, s1 := firstSeq[i], secondSeq[i]
-		f2 := nextBase(firstSeq, i+1)
-		s2 := nextBase(secondSeq, i+1)
+		//define first base
+		f1, s1 = firstSeq[i], secondSeq[i]
 
-		//check is constant, gained, or lost pair of bases
-		switch {
-		case isCons(f1, f2, s1, s2, b1, b2):
-			consCount++
-		case isGain(f1, f2, s1, s2, b1, b2):
-			gainCount++
-		case isLoss(f1, f2, s1, s2, b1, b2):
-			lossCount++
-		}
-
-		//check for weak->strong or strong->weak substitutions
-		if isWeakToStrong(f1, s1) {
-			weakToStrongCount++
-		}
-		if isStrongToWeak(f1, s1) {
-			strongToWeakCount++
-		}
-
-		//evaluate last base in the sequence for a weak->strong or strong->weak substitution
-		if i == len(firstSeq)-2 {
-			if isWeakToStrong(f2, s2) {
-				weakToStrongCount++
+		//check first base in each sequence
+		//only proceed if at least one of the sequences has the first base we're looking for (ex: C in CG)
+		if f1 == b1 || s1 == b1 {
+			//if first base is the right base in either sequence, but second base is a gap in either sequence, find the next valid base (base or N)
+			f2 = firstSeq[i+1]
+			s2 = secondSeq[i+1]
+			if f2 == dna.Gap && f1 != dna.Gap {
+				f2 = nextBase(firstSeq, i+1)
+			}
+			if s2 == dna.Gap && s1 != dna.Gap {
+				s2 = nextBase(secondSeq, i+1)
 			}
 
-			if isStrongToWeak(f2, s2) {
-				strongToWeakCount++
+			//check if constant, gained, or lost pair of bases
+			switch {
+			case isCons(f1, f2, s1, s2, b1, b2):
+				consCount++
+			case isGain(f1, f2, s1, s2, b1, b2):
+				gainCount++
+			case isLoss(f1, f2, s1, s2, b1, b2):
+				lossCount++
 			}
 		}
 	}
-	return gainCount, lossCount, consCount, weakToStrongCount, strongToWeakCount
+	return gainCount, lossCount, consCount
 }
 
 // perform above^ functions to count pairs of bases in each FASTA or BED region
@@ -293,10 +260,10 @@ func countPairOfBases(s Settings) {
 			seqOne := inFasta[0]
 			seqTwo := inFasta[1]
 			//get counts for entire fasta
-			gain, loss, cons, weakToStrong, strongToWeak := comparePairOfBaseCount(seqOne, seqTwo, baseOne, baseTwo)
+			gain, loss, cons := comparePairOfBaseCount(seqOne, seqTwo, baseOne, baseTwo)
 			//write to file
-			fileio.WriteToFileHandle(outfile, "Chrom\tGain\tLoss\tCons\tWeakToStrongSubs\tStrongToWeakSubs")
-			fileio.WriteToFileHandle(outfile, fmt.Sprintf("%s\t%d\t%d\t%d\t%d\t%d", s.Chrom, gain, loss, cons, weakToStrong, strongToWeak))
+			fileio.WriteToFileHandle(outfile, "Chrom\tGain\tLoss\tCons")
+			fileio.WriteToFileHandle(outfile, fmt.Sprintf("%s\t%d\t%d\t%d", s.Chrom, gain, loss, cons))
 		} else {
 			//if BED file provided, read it
 			bedRegions := bed.Read(s.BedFile)
@@ -312,7 +279,7 @@ func countPairOfBases(s Settings) {
 				bedMap[region.Name] = region
 			}
 			//write header to outfile
-			fileio.WriteToFileHandle(outfile, "Chrom\tStart\tEnd\tName\tGain\tLoss\tCons\tWeakToStrongSubs\tStrongToWeakSubs")
+			fileio.WriteToFileHandle(outfile, "Chrom\tStart\tEnd\tName\tGain\tLoss\tCons")
 
 			//get fasta length (to check that BED regions fall within the fasta sequence)
 			fastaLength := len(inFasta[0].Seq)
@@ -329,11 +296,11 @@ func countPairOfBases(s Settings) {
 				firstRegSeq := fasta.Extract(inFasta[0], alnRegion.ChromStart, alnRegion.ChromEnd, alnRegion.Name)
 				secondRegSeq := fasta.Extract(inFasta[1], alnRegion.ChromStart, alnRegion.ChromEnd, alnRegion.Name)
 				//get counts for region
-				gain, loss, cons, weakToStrong, strongToWeak := comparePairOfBaseCount(firstRegSeq, secondRegSeq, baseOne, baseTwo)
+				gain, loss, cons := comparePairOfBaseCount(firstRegSeq, secondRegSeq, baseOne, baseTwo)
 				//get reference info for that region for easy file writing
 				ref := bedMap[alnRegion.Name]
-				//write to file: chom, reference start/end coords, name, counts
-				fileio.WriteToFileHandle(outfile, fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%d", ref.Chrom, ref.ChromStart, ref.ChromEnd, ref.Name, gain, loss, cons, weakToStrong, strongToWeak))
+				//write to file: chrom, reference start/end coords, name, counts
+				fileio.WriteToFileHandle(outfile, fmt.Sprintf("%s\t%d\t%d\t%s\t%d\t%d\t%d", ref.Chrom, ref.ChromStart, ref.ChromEnd, ref.Name, gain, loss, cons))
 			}
 		}
 	}
@@ -345,21 +312,21 @@ func countPairOfBases(s Settings) {
 }
 
 func usage() {
-	fmt.Print("countPairOfBases [options] fastaDir chromName baseOne baseTwo outfileName\n" +
-		"\tCounts pairs of bases (ex: CG) within BED regions.\n" +
+	fmt.Print("countPairOfBases [options] fastaFile chromName baseOne baseTwo outfileName\n" +
+		"\tCounts pairs of bases (ex: CG) within entire fasta sequences or BED regions.\n" +
+		"\tCounts in a single sequence (default) or differences between two aligned genomes (-compare).\n" +
 		"\tARGS: \n" +
 		"\tfastaFile - path to fasta/multiFasta for the chromosome to analyze (files can be gzipped).\n" +
 		"\tchromName - name of chromosome to analyze in format: 'chr1', 'chrX', etc.\n" +
 		"\tbaseOne - first base of pair to find (ex: 'C')\n" +
 		"\tbaseTwo - second base of pair to find (ex: 'G')\n" +
-		"\toutfileName - name of final output file, which will contain region information from BED file and its counts of gained, lost, and constant CpG sites.\n\n" +
+		"\toutfileName - name of final output file, which will contain region information from BED file and its counts of gained, lost, and constant paired sites.\n\n" +
 		"\tOPTIONS: \n" +
 		"\tbedfile - name of BED file containing all genomic regions in which to count CpG changes. All regions are required to have a name in column 4.\n" +
 		"\t**Note: please ensure that BED file is split by chromosome/only contains regions on the chromosome provided in the fastaFile/chromName.**\n" +
 		"\t-compare\n" +
 		"\tIn --compare mode, fastaFile is a 2-entry multiFasta, and gained, lost, and constant pairs in genome 1 relative to genome 2 are counted.\n" +
 		"\tAll paired base changes from substitutions, insertions, and deletions are reported.\n" +
-		"\tWeak to strong (A/T -> C/G) and strong to weak (C/G -> A/T) substitutions are also reported.\n" +
 		"\tNote: the algorithm counts seq1: C-G vs. seq2: CCG as a CG gain, followed by a CG loss, in seq1 relative to seq2.\n" +
 		"\tSome may interpret this as constant CG site instead; check alignments if this is a concern.\n")
 	flag.PrintDefaults()
