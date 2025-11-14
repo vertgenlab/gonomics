@@ -87,8 +87,8 @@ func RefPosToAlnPosBed(input []bed.Bed, multiFa []fasta.Fasta) (output []bed.Bed
 	output = append(output, bed.Bed{Chrom: chrom, ChromStart: startAlnPos, ChromEnd: endAlnPos, Name: regName, FieldsInitialized: 4})
 
 	//use the end coordinates of firstRegion (reference and alignment) for next function
-	lastRefPos := firstRegion.ChromEnd
-	lastAlnPos := endAlnPos
+	lastRefPos := firstRegion.ChromStart
+	lastAlnPos := startAlnPos
 
 	//starting from second region, loop through regions in input bed
 	for i := 1; i < len(input); i++ {
@@ -110,8 +110,8 @@ func RefPosToAlnPosBed(input []bed.Bed, multiFa []fasta.Fasta) (output []bed.Bed
 		output = append(output, bed.Bed{Chrom: chrom, ChromStart: startAlnPos, ChromEnd: endAlnPos, Name: regName, FieldsInitialized: 4})
 
 		//reset the ref/alignment position pair to that of the current region, so that it can be used for the next region
-		lastRefPos = region.ChromEnd
-		lastAlnPos = endAlnPos
+		lastRefPos = region.ChromStart
+		lastAlnPos = startAlnPos
 	}
 	return output
 }
