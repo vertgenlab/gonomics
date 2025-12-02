@@ -135,6 +135,25 @@ func TestRefPosToAlnPos(t *testing.T) {
 	}
 }
 
+var RefPosToAlnPosCounterInput []Fasta = Read("testdata/refPosToAlnPosCounter.fa")
+
+func TestRefPosToAlnPosCounter(t *testing.T) {
+	tmp := RefPosToAlnPosCounter(RefPosToAlnPosCounterInput[0], 31, 0, 0)
+	if tmp != 31 {
+		t.Errorf("Error in refPosToAlnPosCounter. Expected: %v. Found: %v.", 31, tmp)
+	}
+
+	tmp = RefPosToAlnPosCounter(RefPosToAlnPosCounterInput[0], 32, 0, 0)
+	if tmp != 32 {
+		t.Errorf("Error in refPosToAlnPosCounter. Expected: %v. Found: %v.", 32, tmp)
+	}
+
+	tmp = RefPosToAlnPosCounter(RefPosToAlnPosCounterInput[0], 35, 0, 0)
+	if tmp != 35 {
+		t.Errorf("Error in refPosToAlnPosCounter. Expected: %v. Found: %v.", 35, tmp)
+	}
+}
+
 var sequence1 = dna.StringToBases("TTTCAGGACCCGCGAAAGGTCCCGCCTCCAAAACCAAAGAAGCNNCGNGAGGGGAAGTTTCCCCGCACA-GAGAAAAATCCCTCGACCTGCCCGACAGAC")
 var sequence2 = dna.StringToBases("TTTCCGGACG---GAAAGGTCCAGCCTCCAATACCAAAGAAGCNNNNNGAGGGGAAGTTTCCCATCACACGAGAACGATCCCTGGACCTGCC-GACAGAC")
 
