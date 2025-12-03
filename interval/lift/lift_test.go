@@ -1,6 +1,7 @@
 package lift
 
 import (
+	"github.com/vertgenlab/gonomics/axt"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/bed"
@@ -47,5 +48,18 @@ func TestMatchOverlapLen(t *testing.T) {
 	expected := 3
 	if overlapSize != expected {
 		t.Errorf("Error: MatchOverlapLen(%d, %d, %d, %d) %d != %d\n", one.GetChromStart(), one.GetChromEnd(), two.GetChromStart(), two.GetChromEnd(), overlapSize, expected)
+	}
+}
+
+func TestLiftCoordinatesWithAxt(t *testing.T) {
+	var outBed bed.Bed = bed.Bed{FieldsInitialized: 3}
+	axtRecords := axt.Read("testdata/in.axt")
+	bedsToLift := []bed.Bed{{Chrom: "chr1", ChromStart: 100, ChromEnd: 110}, {Chrom: "chr1", ChromStart: 105, ChromEnd: 110}}
+	expectedBed := []bed.Bed{{Chrom: "chr2", ChromStart: 200, ChromEnd: 210, FieldsInitialized: 3}, {Chrom: "chr2", ChromStart: 789, ChromEnd: 796, FieldsInitialized: 3}}
+	for i := range bedsToLift {
+		outBed.Chrom, outBed.ChromStart, outBed.ChromEnd = LiftCoordinatesWithAxt(axtRecords[i], bedsToLift[i], 1000)
+		if !bed.Equal(expectedBed[i], outBed) {
+			t.Errorf("Error in LiftCoordinatesWithAxt. Expected: %v, output: %v\n", expectedBed[i], outBed)
+		}
 	}
 }

@@ -1,0 +1,4 @@
+Chrom	RefStart	RefEnd	Type	Ref	Alt	AlnStart	AlnEnd
+chr8	22	24	gain	CG	AG	22	24
+chr8	63	65	gain	CG	AT	63	65
+chr8	82	84	gain	CG	GG	83	85

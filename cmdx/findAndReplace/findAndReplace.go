@@ -6,11 +6,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"strings"
-
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
+	"log"
+	"regexp"
+	"strings"
 )
 
 func readFindReplacePairs(filename string, delim string) map[string]string {
@@ -37,6 +37,30 @@ func readFindReplacePairs(filename string, delim string) map[string]string {
 	exception.PanicOnErr(err)
 
 	return findReplaceMap
+}
+
+func compilePatternReplaceMap(findReplaceMap map[string]string) map[*regexp.Regexp]string {
+	var patternReplaceMap = make(map[*regexp.Regexp]string)
+	var find string
+	var replace string
+	var pattern *regexp.Regexp
+
+	for find, replace = range findReplaceMap {
+		pattern = regexp.MustCompile(find)
+		patternReplaceMap[pattern] = replace
+	}
+
+	return patternReplaceMap
+}
+
+func findReplaceRegexAnywhere(line string, patternReplaceMap map[*regexp.Regexp]string) string {
+	var pattern *regexp.Regexp
+	var replace string
+
+	for pattern, replace = range patternReplaceMap {
+		line = pattern.ReplaceAllLiteralString(line, replace)
+	}
+	return line
 }
 
 func findReplaceAnywhere(line string, findReplaceMap map[string]string) string {
@@ -79,28 +103,51 @@ func findReplaceColumn(line string, delim string, columnIndex int, findReplaceMa
 	return line
 }
 
-func findAndReplace(inFile, inFileDelim, findReplaceFile, findReplaceDelim, outFile string, columnNumber int, ignoreColumns bool) {
+func findAndReplace(inFile, inFileDelim, findReplaceFile, findReplaceDelim, outFile string, columnNumber int, regex bool) {
 	var findReplaceMap map[string]string
+	var patternReplaceMap map[*regexp.Regexp]string
 	var line string
+	var outLine string
+	var replaceCounter int = 0
 	var in *fileio.EasyReader
 	var out *fileio.EasyWriter
 	var done bool
 	var err error
 
+	if regex && columnNumber != -1 {
+		log.Fatalf("Error: Regex ignores columns. Regex is not compatible with columns in the input file.\n")
+	}
+
 	findReplaceMap = readFindReplacePairs(findReplaceFile, findReplaceDelim)
+
+	if regex {
+		patternReplaceMap = compilePatternReplaceMap(findReplaceMap)
+	}
 
 	out = fileio.EasyCreate(outFile)
 	in = fileio.EasyOpen(inFile)
 	for line, done = fileio.EasyNextLine(in); !done; line, done = fileio.EasyNextLine(in) {
-		if ignoreColumns {
-			line = findReplaceAnywhere(line, findReplaceMap)
+		if columnNumber == -1 && !regex {
+			outLine = findReplaceAnywhere(line, findReplaceMap)
+		} else if regex {
+			outLine = findReplaceRegexAnywhere(line, patternReplaceMap)
 		} else if columnNumber != -1 {
-			line = findReplaceColumn(line, inFileDelim, columnNumber, findReplaceMap)
+			outLine = findReplaceColumn(line, inFileDelim, columnNumber, findReplaceMap)
 		} else {
-			line = findReplaceAnyColumn(line, inFileDelim, findReplaceMap)
+			outLine = findReplaceAnyColumn(line, inFileDelim, findReplaceMap)
 		}
-		fmt.Fprintf(out, "%s\n", line)
+
+		if line != outLine {
+			replaceCounter++
+		}
+
+		fmt.Fprintf(out, "%s\n", outLine)
 	}
+
+	if replaceCounter == 0 {
+		log.Fatalf("Error: pattern(s) not found in input file.\n")
+	}
+
 	err = in.Close()
 	exception.PanicOnErr(err)
 	err = out.Close()
@@ -124,8 +171,7 @@ func main() {
 	var replaceDelim *string = flag.String("replaceDelim", "\t", "Lines in the findReplaceFile will be broken into columns based on this substring.  This should result in two substrings for each line where the first is the find and the second is the replace.")
 	var inDelim *string = flag.String("inDelim", "\t", "Lines in the input file should be broken into columns based on this substring and substrings in the findReplaceFile must match the entire column")
 	var columnNumber *int = flag.Int("columnNumber", -1, "The index of the column to use when finding and replacing. This is zero-based (ie for column 1 use 0. Default is to search all columns.  This must be used with inDelim to know where the columns are located.")
-	var ignoreColumns = flag.Bool("ignoreColumns", false, "Ignore parsing the input file into columns and replace the found substrings wherever they are in the file.")
-
+	var regex = flag.Bool("regex", false, "Use regular expressions findReplaceFile. Replaces all matching patterns in the file, ignores parsing the input into columns. Not compatible with columnNumber or inDelim.")
 	flag.Usage = usage
 
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -140,5 +186,5 @@ func main() {
 	findReplaceFile := flag.Arg(1)
 	outFile := flag.Arg(2)
 
-	findAndReplace(inFile, *inDelim, findReplaceFile, *replaceDelim, outFile, *columnNumber, *ignoreColumns)
+	findAndReplace(inFile, *inDelim, findReplaceFile, *replaceDelim, outFile, *columnNumber, *regex)
 }

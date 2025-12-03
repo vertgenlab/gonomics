@@ -136,24 +136,22 @@ func gapBedPass(posSpeciesOne int, speciesOneChromStart int, speciesOneChromEnd 
 
 // Step 1: Filter maf to remove S lines we don't trust, creating filtered maf (aka anchors, or "match")
 // not to be confused with cmd/mafFilter, which filters for scores above a threshold.
-func mafToMatch(in_maf string, speciesOne string, speciesTwo string, outFilenamePrefix string, chrMap_filename string, diagonal bool) (string, string) {
+func mafToMatch(in_maf string, speciesOne string, speciesTwo string, outFilenamePrefix string, chrMap_filename string, diagonal bool) ([]bed.Bed, []bed.Bed) {
 	mafRecords := maf.Read(in_maf) // read input maf
 	chrMap := makeChrMap(chrMap_filename)
 
 	// open output files to write line-by-line and create variable for error
 	outMafFilename := outFilenamePrefix + ".filtered.maf"
-	out_species1_filename := outFilenamePrefix + "_" + speciesOne + "_match.bed"
-	out_species2_filename := outFilenamePrefix + "_" + speciesTwo + "_match.bed"
 	outMaf := fileio.EasyCreate(outMafFilename)
-	outSpeciesOne := fileio.EasyCreate(out_species1_filename)
-	outSpeciesTwo := fileio.EasyCreate(out_species2_filename)
 	var err error
 
 	// initialize variables before loop
 	// keep track of assembly, chromosome
 	var assemblySpeciesOne, assemblySpeciesTwo, chromSpeciesOne, chromSpeciesTwo string
-	// containers for entries to write to output files
+	// entries to write to output bed slices
 	var bedSpeciesOne, bedSpeciesTwo bed.Bed
+	// output bed slices
+	var outSpeciesOne, outSpeciesTwo []bed.Bed
 
 	// loop through input maf
 	// I assume pairwise alignment, not >2 species
@@ -180,8 +178,8 @@ func mafToMatch(in_maf string, speciesOne string, speciesTwo string, outFilename
 				pass := matchMafPass(assemblySpeciesOne, assemblySpeciesTwo, chromSpeciesOne, chromSpeciesTwo, mafRecords[i].Species[0].SLine.SrcSize, mafRecords[i].Species[k].SLine.SrcSize, bedSpeciesOne.ChromStart, bedSpeciesOne.ChromEnd, bedSpeciesTwo.ChromStart, bedSpeciesTwo.ChromEnd, chrMap, diagonal)
 				if pass {
 					maf.WriteToFileHandle(outMaf, mafRecords[i])
-					bed.WriteBed(outSpeciesOne, bedSpeciesOne)
-					bed.WriteBed(outSpeciesTwo, bedSpeciesTwo)
+					outSpeciesOne = append(outSpeciesOne, bedSpeciesOne)
+					outSpeciesTwo = append(outSpeciesTwo, bedSpeciesTwo)
 				}
 			}
 		}
@@ -190,35 +188,18 @@ func mafToMatch(in_maf string, speciesOne string, speciesTwo string, outFilename
 	// close output files and check for errors
 	err = outMaf.Close()
 	exception.PanicOnErr(err)
-	err = outSpeciesOne.Close()
-	exception.PanicOnErr(err)
-	err = outSpeciesTwo.Close()
-	exception.PanicOnErr(err)
 
 	// return output filenames
-	return out_species1_filename, out_species2_filename
+	return outSpeciesOne, outSpeciesTwo
 }
 
 // Step 2: Use match to calculate coordinates that still need to be aligned, aka "gap".
-func matchToGap(in_species1_match string, in_species2_match string, species1_genome string, species2_genome string, speciesOne string, speciesTwo string, gapSizeProductLimit int, outFilenamePrefix string) (string, string) {
+func matchToGap(speciesOneMatchBed []bed.Bed, speciesTwoMatchBed []bed.Bed, species1_genome string, species2_genome string, gapSizeProductLimit int) ([]bed.Bed, []bed.Bed) {
 	// read input files
-	speciesOneMatchBed := bed.Read(in_species1_match)
-	speciesTwoMatchBed := bed.Read(in_species2_match)
 	species1_genome_fa := fasta.Read(species1_genome)
 	species1_genome_fastaMap := fasta.ToMap(species1_genome_fa)
 	species2_genome_fa := fasta.Read(species2_genome)
 	species2_genome_fastaMap := fasta.ToMap(species2_genome_fa)
-
-	// open output files to write line-by-line and create variable for error
-	out_species1_filename := outFilenamePrefix + "_" + speciesOne + "_gap.bed"
-	out_species2_filename := outFilenamePrefix + "_" + speciesTwo + "_gap.bed"
-	out_species1_doNotCalculate_filename := outFilenamePrefix + "_" + speciesOne + "_gap_doNotCalculate.bed"
-	out_species2_doNotCalculate_filename := outFilenamePrefix + "_" + speciesTwo + "_gap_doNotCalculate.bed"
-	outSpeciesOne := fileio.EasyCreate(out_species1_filename)
-	outSpeciesTwo := fileio.EasyCreate(out_species2_filename)
-	outSpeciesOneDoNotCalculate := fileio.EasyCreate(out_species1_doNotCalculate_filename)
-	outSpecies2DoNotCalculate := fileio.EasyCreate(out_species2_doNotCalculate_filename)
-	var err error
 
 	// initialize variables before loop
 	// keep track of chromosome, position
@@ -230,8 +211,10 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 	pos_species2 := 1
 	// check for gapBedPass
 	var pass bool
-	// containers for entries to write to output files
+	// entries to write to output bed slices
 	var currentSpeciesOne, currentSpeciesTwo bed.Bed
+	// output bed slices
+	var outSpeciesOne, outSpeciesTwo, outSpeciesOneDoNotCalculate, outSpecies2DoNotCalculate []bed.Bed
 
 	// write i==0 case outside of loop to avoid checking for i==0 in each iteration
 	currentSpeciesOne = bed.Bed{Chrom: chrCurrSpeciesOne, ChromStart: posSpeciesOne, ChromEnd: speciesOneMatchBed[0].ChromStart, Name: "species1_gap", FieldsInitialized: 4}
@@ -239,11 +222,11 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 	// before writing bed, test if the bed entries pass filtering criteria
 	pass, currentSpeciesOne.Name, currentSpeciesTwo.Name = gapBedPass(posSpeciesOne, currentSpeciesOne.ChromStart, currentSpeciesOne.ChromEnd, pos_species2, currentSpeciesTwo.ChromStart, currentSpeciesTwo.ChromEnd, gapSizeProductLimit)
 	if !pass {
-		bed.WriteBed(outSpeciesOneDoNotCalculate, currentSpeciesOne)
-		bed.WriteBed(outSpecies2DoNotCalculate, currentSpeciesTwo)
+		outSpeciesOneDoNotCalculate = append(outSpeciesOneDoNotCalculate, currentSpeciesOne)
+		outSpecies2DoNotCalculate = append(outSpecies2DoNotCalculate, currentSpeciesTwo)
 	} else {
-		bed.WriteBed(outSpeciesOne, currentSpeciesOne)
-		bed.WriteBed(outSpeciesTwo, currentSpeciesTwo)
+		outSpeciesOne = append(outSpeciesOne, currentSpeciesOne)
+		outSpeciesTwo = append(outSpeciesTwo, currentSpeciesTwo)
 		// update variables at the end of each iteration
 		// only update position if bed passes
 		posSpeciesOne = speciesOneMatchBed[0].ChromEnd
@@ -264,11 +247,11 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 			currentSpeciesTwo = bed.Bed{Chrom: chr_prev_species2, ChromStart: speciesTwoMatchBed[i-1].ChromEnd, ChromEnd: len(species2_genome_fastaMap[chr_prev_species2]), Name: "species2_gap", FieldsInitialized: 4}
 			pass, currentSpeciesOne.Name, currentSpeciesTwo.Name = gapBedPass(posSpeciesOne, currentSpeciesOne.ChromStart, currentSpeciesOne.ChromEnd, pos_species2, currentSpeciesTwo.ChromStart, currentSpeciesTwo.ChromEnd, gapSizeProductLimit)
 			if !pass {
-				bed.WriteBed(outSpeciesOneDoNotCalculate, currentSpeciesOne)
-				bed.WriteBed(outSpecies2DoNotCalculate, currentSpeciesTwo)
+				outSpeciesOneDoNotCalculate = append(outSpeciesOneDoNotCalculate, currentSpeciesOne)
+				outSpecies2DoNotCalculate = append(outSpecies2DoNotCalculate, currentSpeciesTwo)
 			} else {
-				bed.WriteBed(outSpeciesOne, currentSpeciesOne)
-				bed.WriteBed(outSpeciesTwo, currentSpeciesTwo)
+				outSpeciesOne = append(outSpeciesOne, currentSpeciesOne)
+				outSpeciesTwo = append(outSpeciesTwo, currentSpeciesTwo)
 			}
 
 			// update variables at the end of each iteration
@@ -284,11 +267,11 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 			// before writing bed, test if the bed entries pass filtering criteria
 			pass, currentSpeciesOne.Name, currentSpeciesTwo.Name = gapBedPass(posSpeciesOne, currentSpeciesOne.ChromStart, currentSpeciesOne.ChromEnd, pos_species2, currentSpeciesTwo.ChromStart, currentSpeciesTwo.ChromEnd, gapSizeProductLimit)
 			if !pass {
-				bed.WriteBed(outSpeciesOneDoNotCalculate, currentSpeciesOne)
-				bed.WriteBed(outSpecies2DoNotCalculate, currentSpeciesTwo)
+				outSpeciesOneDoNotCalculate = append(outSpeciesOneDoNotCalculate, currentSpeciesOne)
+				outSpecies2DoNotCalculate = append(outSpecies2DoNotCalculate, currentSpeciesTwo)
 			} else {
-				bed.WriteBed(outSpeciesOne, currentSpeciesOne)
-				bed.WriteBed(outSpeciesTwo, currentSpeciesTwo)
+				outSpeciesOne = append(outSpeciesOne, currentSpeciesOne)
+				outSpeciesTwo = append(outSpeciesTwo, currentSpeciesTwo)
 				// update variables at the end of each iteration
 				// only update position if bed passes
 				posSpeciesOne = speciesOneMatchBed[i].ChromEnd
@@ -301,11 +284,11 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 			// before writing bed, test if the bed entries pass filtering criteria
 			pass, currentSpeciesOne.Name, currentSpeciesTwo.Name = gapBedPass(posSpeciesOne, currentSpeciesOne.ChromStart, currentSpeciesOne.ChromEnd, pos_species2, currentSpeciesTwo.ChromStart, currentSpeciesTwo.ChromEnd, gapSizeProductLimit)
 			if !pass {
-				bed.WriteBed(outSpeciesOneDoNotCalculate, currentSpeciesOne)
-				bed.WriteBed(outSpecies2DoNotCalculate, currentSpeciesTwo)
+				outSpeciesOneDoNotCalculate = append(outSpeciesOneDoNotCalculate, currentSpeciesOne)
+				outSpecies2DoNotCalculate = append(outSpecies2DoNotCalculate, currentSpeciesTwo)
 			} else {
-				bed.WriteBed(outSpeciesOne, currentSpeciesOne)
-				bed.WriteBed(outSpeciesTwo, currentSpeciesTwo)
+				outSpeciesOne = append(outSpeciesOne, currentSpeciesOne)
+				outSpeciesTwo = append(outSpeciesTwo, currentSpeciesTwo)
 				// update variables at the end of each iteration
 				// only update position if bed passes
 				posSpeciesOne = speciesOneMatchBed[i].ChromEnd
@@ -322,33 +305,21 @@ func matchToGap(in_species1_match string, in_species2_match string, species1_gen
 		currentSpeciesTwo = bed.Bed{Chrom: chrCurrSpeciesTwo, ChromStart: speciesTwoMatchBed[len(speciesTwoMatchBed)-1].ChromEnd, ChromEnd: len(species2_genome_fastaMap[chrCurrSpeciesTwo]), Name: "species2_gap", FieldsInitialized: 4}
 		pass, currentSpeciesOne.Name, currentSpeciesTwo.Name = gapBedPass(posSpeciesOne, currentSpeciesOne.ChromStart, currentSpeciesOne.ChromEnd, pos_species2, currentSpeciesTwo.ChromStart, currentSpeciesTwo.ChromEnd, gapSizeProductLimit)
 		if !pass {
-			bed.WriteBed(outSpeciesOneDoNotCalculate, currentSpeciesOne)
-			bed.WriteBed(outSpecies2DoNotCalculate, currentSpeciesTwo)
+			outSpeciesOneDoNotCalculate = append(outSpeciesOneDoNotCalculate, currentSpeciesOne)
+			outSpecies2DoNotCalculate = append(outSpecies2DoNotCalculate, currentSpeciesTwo)
 		} else {
-			bed.WriteBed(outSpeciesOne, currentSpeciesOne)
-			bed.WriteBed(outSpeciesTwo, currentSpeciesTwo)
+			outSpeciesOne = append(outSpeciesOne, currentSpeciesOne)
+			outSpeciesTwo = append(outSpeciesTwo, currentSpeciesTwo)
 		}
 	}
 
-	// close output files and check for errors
-	err = outSpeciesOne.Close()
-	exception.PanicOnErr(err)
-	err = outSpeciesTwo.Close()
-	exception.PanicOnErr(err)
-	err = outSpeciesOneDoNotCalculate.Close()
-	exception.PanicOnErr(err)
-	err = outSpecies2DoNotCalculate.Close()
-	exception.PanicOnErr(err)
-
 	// return output filenames
-	return out_species1_filename, out_species2_filename
+	return outSpeciesOne, outSpeciesTwo
 }
 
 // Step 3: align "gap" sequences.
-func gapToAlignment(in_species1_gap string, in_species2_gap string, species1_genome string, species2_genome string, speciesOne string, speciesTwo string, outFilenamePrefix string) {
+func gapToAlignment(species1_gap_bed []bed.Bed, species2_gap_bed []bed.Bed, species1_genome string, species2_genome string, speciesOne string, speciesTwo string, outFilenamePrefix string) {
 	// read input files
-	species1_gap_bed := bed.Read(in_species1_gap)
-	species2_gap_bed := bed.Read(in_species2_gap)
 	species1_genome_fa := fasta.Read(species1_genome)
 	species1_genome_fastaMap := fasta.ToMap(species1_genome_fa)
 	species2_genome_fa := fasta.Read(species2_genome)
@@ -469,7 +440,7 @@ func globalAlignmentAnchor(in_maf string, speciesOne string, speciesTwo string, 
 	}
 
 	in_species1_match, in_species2_match := mafToMatch(in_maf, speciesOne, speciesTwo, outFilenamePrefix, chrMap_filename, diagonal)
-	in_species1_gap, in_species2_gap := matchToGap(in_species1_match, in_species2_match, species1_genome, species2_genome, speciesOne, speciesTwo, gapSizeProductLimit, outFilenamePrefix)
+	in_species1_gap, in_species2_gap := matchToGap(in_species1_match, in_species2_match, species1_genome, species2_genome, gapSizeProductLimit)
 	gapToAlignment(in_species1_gap, in_species2_gap, species1_genome, species2_genome, speciesOne, speciesTwo, outFilenamePrefix)
 }
 
