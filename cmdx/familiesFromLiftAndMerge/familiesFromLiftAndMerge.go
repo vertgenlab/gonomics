@@ -29,6 +29,17 @@ type bed struct {
 	writeCopy bool
 }
 
+func usage() {
+	fmt.Print("familiesFromLiftAndMerge -- Intended for use in a noncoding element clustering analysis. " +
+		"This program takes in a liftAndMerge bed file produced with liftWithAxt and does graph-based clustering. The clusters are output in the following " +
+		"formats: 1. a bed file with all nodes and what cluster they belong to. 2. a text file with all clusters and which elements are in the cluster. Also averge, minimum and maximum percent " +
+		"ID of elements in the cluster are provided. 3. A direct print-out of the map data structure which the clusters were stored in \n" +
+		"Optionally, data useful for cluster visualization can sent to stdout with the -igraph and/or -startnode options.\n" +
+		"Usage:\n" +
+		"familiesFromLiftAndMerge [options] liftAndMerge.bed out.clusters.bed out.clusters.txt rawClusterMap.txt\n")
+	flag.PrintDefaults()
+}
+
 func main() {
 	var cols, names, ocr, cp []string
 	var percID []float64
@@ -38,10 +49,16 @@ func main() {
 	var n *Node
 
 	var startNode *string = flag.String("startNode", "", "Provide a node name to build a graph with. If \"all\" is used, a graph of all nodes will be created. The output will be directed to stdout.")
+	var igraph *bool = flag.Bool("igraph", false, "If used, the resulting text-representation of the graph (sent to stdout) will be in a format for use with the R package igraph")
+
 	flag.Parse()
 	if len(flag.Args()) != 4 {
-		fmt.Println("Usage: familiesFromLiftAndMerge in.merge.bed out.fam.bed out.fam.txt out.wholeMap.txt")
-		log.Fatalf("Expected 4 args, got %d", len(flag.Args()))
+		usage()
+		log.Fatalf("Expected 4 args, got %d\n", len(flag.Args()))
+	}
+
+	if *igraph && *startNode == "" {
+		log.Fatalf("-igraph cannot be used without specifying a node with -startNode\n")
 	}
 
 	mp := make(map[string]*Node)
@@ -104,7 +121,7 @@ func main() {
 		for i := range mp {
 			mp[i].seen = false
 		}
-		buildGraphRecursive(mp, *startNode, "stdout")
+		buildGraphRecursive(mp, *startNode, *igraph, "stdout")
 	}
 }
 
@@ -346,48 +363,62 @@ func stripLiftName(name string) string {
 	return strings.Join(tmp[:len(tmp)-1], "_")
 }
 
-func buildGraphRecursive(mp map[string]*Node, startNode string, outDot string) {
+func buildGraphRecursive(mp map[string]*Node, startNode string, igraph bool, outDot string) {
 	out := fileio.EasyCreate(outDot)
-	fileio.WriteToFileHandle(out, "strict graph {")
-	fileio.WriteToFileHandle(out, fmt.Sprintf("outputorder=\"edgesfirst\""))
+	if !igraph {
+		fileio.WriteToFileHandle(out, "strict graph {")
+		fileio.WriteToFileHandle(out, fmt.Sprintf("outputorder=\"edgesfirst\""))
+	} else {
+		fileio.WriteToFileHandle(out, "from\tto\tpID\tfromOCR\ttoOCR")
+	}
+
 	if startNode == "all" {
 		for i := range mp {
-			dfsDotFile(mp[i], "", out)
+			dfsDotFile(mp[i], "", igraph, out)
 		}
-		fileio.WriteToFileHandle(out, "}")
+
 		exception.PanicOnErr(out.Close())
 		return
 	}
 
-	fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=green, style=filled, label=\"\"]", removeUnderscore(startNode)))
+	if !igraph {
+		fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=green, style=filled, label=\"\"]", removeUnderscore(startNode)))
+	}
 	n := mp[startNode]
 
-	dfsDotFile(n, startNode, out)
+	dfsDotFile(n, startNode, igraph, out)
 
-	fileio.WriteToFileHandle(out, "}")
+	if !igraph {
+		fileio.WriteToFileHandle(out, "}")
+	}
+
 	exception.PanicOnErr(out.Close())
 }
 
-func dfsDotFile(node *Node, startNode string, out *fileio.EasyWriter) {
+func dfsDotFile(node *Node, startNode string, igraph bool, out *fileio.EasyWriter) {
 	if node.seen {
 		return
 	}
 	node.seen = true
-	if node.ocr && node.name != startNode {
+	if node.ocr && node.name != startNode && !igraph {
 		fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=red, style=filled, label=\"\"]", removeUnderscore(node.name)))
 	}
 
 	for i := range node.connections {
-		if strings.Contains(node.connections[i].name, "homologous") && node.connections[i].name != startNode {
+		if strings.Contains(node.connections[i].name, "homologous") && node.connections[i].name != startNode && !igraph {
 			fileio.WriteToFileHandle(out, fmt.Sprintf("\t%s [fillcolor=white, style=filled, label=\"\"]", removeUnderscore(node.connections[i].name)))
 		}
 		if !node.connections[i].seen {
-			fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- \"%s\" [len = %.2f];", removeUnderscore(node.name), removeUnderscore(node.connections[i].name), 100-node.percID[i]))
+			if !igraph {
+				fileio.WriteToFileHandle(out, fmt.Sprintf("\t\"%s\" -- \"%s\" [len = %.2f];", removeUnderscore(node.name), removeUnderscore(node.connections[i].name), 100-node.percID[i]))
+			} else {
+				fileio.WriteToFileHandle(out, fmt.Sprintf("%s\t%s\t%.2f\t%t\t%t", node.name, node.connections[i].name, node.percID[i], node.ocr, node.connections[i].ocr))
+			}
 		}
 	}
 
 	for i := range node.connections {
-		dfsDotFile(node.connections[i], startNode, out)
+		dfsDotFile(node.connections[i], startNode, igraph, out)
 	}
 }
 
