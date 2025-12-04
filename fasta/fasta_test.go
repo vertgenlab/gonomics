@@ -88,3 +88,24 @@ func TestToMap(t *testing.T) {
 		}
 	}
 }
+
+var extractTests = []struct {
+	fa Fasta
+	start int
+	end int
+	name string
+	expected Fasta
+}{
+	{fa: Fasta{Name: "chr1", Seq: dna.StringToBases("ATCA")}, start: 0, end: 1, name: "chr1_subset", expected: Fasta{Name: "chr1_subset", Seq: dna.StringToBases("A")}},
+	{fa: Fasta{Name: "chr1", Seq: dna.StringToBases("ATCA")}, start: 3, end: 4, name: "chr1_lastBase", expected: Fasta{Name: "chr1_lastBase", Seq: dna.StringToBases("A")}}, // last base
+}
+
+func TestExtract(t *testing.T) {
+	var actual Fasta
+	for _, v := range extractTests {
+		actual = Extract(v.fa, v.start, v.end, v.name)
+		if !IsEqual(actual, v.expected) {
+			t.Errorf("Error in testExtract. Actual: %v. Expected: %v.\n", actual, v.expected)
+		}
+	}
+}
