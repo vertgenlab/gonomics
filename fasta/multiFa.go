@@ -45,7 +45,7 @@ func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int)
 		}
 	}
 
-	if incremented < (RefPos-initRefStart) {
+	if incremented < (RefPos - initRefStart) {
 		log.Fatalf("Ran out of chromosome.")
 	}
 
