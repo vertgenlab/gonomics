@@ -3,6 +3,7 @@ package fasta
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
+	// "fmt"
 )
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
@@ -27,6 +28,7 @@ func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int)
 	}
 
 	if alnStart == len(record.Seq) {
+		// fmt.Println("HI")
 		log.Fatalf("Ran out of chromosome.")
 	}
 
@@ -35,20 +37,25 @@ func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int)
 	for t := alnStart; refStart < RefPos; alnStart++ {
 		t++
 		if t > len(record.Seq) {
+			// fmt.Println("HIHIHI\t", t)
 			log.Fatalf("Ran out of chromosome.")
 		} else if t == len(record.Seq) {
 			alnStart++
+			incremented++
+			// fmt.Println("equal\t", t)
 			break
 		} else if record.Seq[t] != dna.Gap {
 			refStart++
 			incremented++
+			// fmt.Println("increment\t", t)
 		}
 	}
 
+	// temp := (RefPos - initRefStart)
+	// fmt.Println("temp\t", temp)
 	if incremented < (RefPos - initRefStart) {
-		log.Fatalf("Ran out of chromosome.")
+		log.Fatalf("Ran out of chromosome. needed %d, advanced %d", RefPos-initRefStart, incremented)
 	}
-
 	return alnStart
 }
 
