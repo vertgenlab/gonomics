@@ -152,7 +152,7 @@ func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) 
 	if len(inputFa) > 1 {
 		log.Fatalf("Error: expecting only one chromosome in the input fasta file.\n")
 	}
-	answer := faToPfa(inputFa[0], start, end)
+	answer := FaToPfa(inputFa[0], start, end)
 
 	vcfRecords, _ = vcf.GoReadToChan(inVcfFilename)
 
@@ -232,7 +232,10 @@ func vcfSampleToPdnaBase(samples []vcf.Sample, ref string, alts []string) pDna.F
 	answer.C = float32(Counts.C) / float32(totalSamples)
 	answer.G = float32(Counts.G) / float32(totalSamples)
 	answer.T = float32(Counts.T) / float32(totalSamples)
-=========
+
+	return answer
+}
+
 // RandSeq returns a randomly-generated pFasta of sequence length 'length' and name 'name' where each base sums to 1 across its probabilities
 func RandSeq(length int, name string, seedSet bool, setSeed int64, randSource *rand.Rand) PFasta {
 	var source *rand.Rand
