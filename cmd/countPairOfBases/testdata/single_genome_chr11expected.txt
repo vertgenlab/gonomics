@@ -1,0 +1,2 @@
+Chrom	PairOfBasesCount
+chr11	6

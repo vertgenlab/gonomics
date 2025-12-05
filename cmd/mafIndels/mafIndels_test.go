@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"os"
 	"testing"
 )
@@ -32,12 +33,12 @@ func TestMafIndels(t *testing.T) {
 		err := os.Remove("outIns_tmp.bed")
 		exception.PanicOnErr(err)
 
-		records_del := bed.Read("outDel_tmp.bed")
-		expected_del := bed.Read(v.outDelBed)
-		if !bed.AllAreEqual(records_del, expected_del) {
+		// because outDel might have illegal bed entries (start==end) that will cause bed.Read to log fatal, use fileio to compare test and expected
+		if !fileio.AreEqual("outDel_tmp.bed", v.outDelBed) {
 			t.Errorf("Error in mafIndels for outDel.")
+		} else {
+			err = os.Remove("outDel_tmp.bed")
+			exception.PanicOnErr(err)
 		}
-		err = os.Remove("outDel_tmp.bed")
-		exception.PanicOnErr(err)
 	}
 }

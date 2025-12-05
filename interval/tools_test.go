@@ -85,3 +85,18 @@ func TestOverlapProportionRecursive(t *testing.T) {
 		}
 	}
 }
+
+func TestWithin(t *testing.T) {
+	exp := []bool{false, true, false, true}
+	in := bed.Read("testdata/in.prop.bed")
+	b := bed.Bed{
+		Chrom:      "chr1",
+		ChromStart: 100,
+		ChromEnd:   190,
+	}
+	for a := range in {
+		if Within(in[a], b) != exp[a] {
+			t.Errorf("Error in Within")
+		}
+	}
+}

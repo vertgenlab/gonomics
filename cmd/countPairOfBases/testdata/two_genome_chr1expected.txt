@@ -1,0 +1,2 @@
+Chrom	Gain	Loss	Cons
+chr1	6	5	0

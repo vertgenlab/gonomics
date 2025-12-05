@@ -26,6 +26,7 @@ type Settings struct {
 	LongOutput      bool
 	DivergenceRate  float64
 	OutputAlnPos    bool
+	GcContent       bool
 }
 
 func faFindFast(s Settings) {
@@ -90,6 +91,7 @@ func main() {
 	var longOutput *bool = flag.Bool("longOutput", false, "Print percent diverged and raw -Log10PValue in output. Requires the 'divergenceRate' argument.")
 	var divergenceRate *float64 = flag.Float64("divergenceRate", math.MaxFloat64, "Set the null divergence rate for p value calculations with 'longOutput'.")
 	var outputAlnPos *bool = flag.Bool("outputAlnPos", false, "Print the alignment position of the window's start in output as the last column.")
+	var gcContent *bool = flag.Bool("gcContent", false, "Print the gc content calculations of the window. These 6 fields will be printed: totalFirstQueryGCs, totalSecondQueryGCs, totalFirstQueryATs, totalSecondQueryATs, firstQueryGcContent, secondQueryGcContent. Currently not written to be used together with other options: -removeN, -longOutput, -outputAlnPos.")
 	// for go proflier cpu
 	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
@@ -101,6 +103,10 @@ func main() {
 		if *divergenceRate < 0 || *divergenceRate > 1 {
 			log.Fatalf("Error: divergence rate must be a value between 0 and 1.\n")
 		}
+	}
+
+	if (*gcContent && *removeN) || (*gcContent && *longOutput) || (*gcContent && *outputAlnPos) {
+		log.Fatalf("Error: 'gcContent' currently cannot be used together with 'removeN', 'longOutput' or 'outputAlnPos'.\n")
 	}
 
 	flag.Usage = usage
@@ -136,6 +142,7 @@ func main() {
 		LongOutput:      *longOutput,
 		DivergenceRate:  *divergenceRate,
 		OutputAlnPos:    *outputAlnPos,
+		GcContent:       *gcContent,
 	}
 
 	faFindFast(s)
