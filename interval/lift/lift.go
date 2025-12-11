@@ -203,3 +203,21 @@ func checkCompatability(a axt.Axt, region interval.Interval) bool {
 	}
 	return false
 }
+
+func AxtPercentIdentityInInterval(a axt.Axt, refInterval interval.Interval) float64 {
+	if !checkCompatability(a, refInterval) {
+		log.Fatalf("The interval you are trying to assay is not entirely within the axt refernce coordinates.")
+	}
+	idxStart, idxEnd := refCoordToRefIdx(a, refInterval)
+	return percentIdentity(a, idxStart, idxEnd)
+}
+
+func percentIdentity(a axt.Axt, idxStart, idxEnd int) float64 {
+	var c int
+	for i := idxStart; i < idxEnd; i++ {
+		if dna.ToUpper(a.RSeq[i]) == dna.ToUpper(a.QSeq[i]) {
+			c++
+		}
+	}
+	return (float64(c) / float64(idxEnd-idxStart)) * 100
+}
