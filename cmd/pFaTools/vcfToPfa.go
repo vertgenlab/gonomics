@@ -21,6 +21,7 @@ type VcfToPfaSettings struct {
 // VcfToPfaUsage defines the usage statement for the pFaTools VcfToPfa subcommand.
 func VcfToPfaUsage(VcfToPfaFlags *flag.FlagSet) {
 	fmt.Printf("pFaTools VcfToPfa - Builds a pFasta representing an input VCF and reference Fasta.\n" +
+		"Note that this program assumes a sorted input VCF file.\n" +
 		"Positions without VCF records are represented as one-hot pDNA vectors.\n" +
 		"For positions with VCF records, we represent allele frequencies (calculated from VCF samples) in pDNA vectors.\n" +
 		"Currently supports variants from a single chromosome, and will fatal if a reference fasta with multiple chromosomes is provided.\n" +
@@ -35,8 +36,8 @@ func parseVcfToPfaArgs() {
 	var expectedNumArgs int = 3
 	var err error
 	VcfToPfaFlags := flag.NewFlagSet("VcfToPfa", flag.ExitOnError)
-	var start *int = VcfToPfaFlags.Int("start", 0, "Specify the position of the input sequence to begin build the pfa from.")
-	var end *int = VcfToPfaFlags.Int("end", -1, "Specify the position of the input sequence to end building the pfa at. Defaults to the end of the sequence.")
+	var start *int = VcfToPfaFlags.Int("start", 0, "Specify the start position of the output pFa.")
+	var end *int = VcfToPfaFlags.Int("end", -1, "Specify the end position of the output pFa.")
 
 	err = VcfToPfaFlags.Parse(os.Args[3:])
 	exception.PanicOnErr(err)
