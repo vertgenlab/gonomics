@@ -156,7 +156,16 @@ func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) 
 
 	vcfRecords, _ = vcf.GoReadToChan(inVcfFilename)
 
+	var prev vcf.Vcf
 	for v := range vcfRecords {
+		if prev.Chr == "" {
+			prev = v
+		}
+
+		if v.Pos < prev.Pos && v.Chr == prev.Chr {
+			log.Fatalf("ERROR: input vcf is not sorted. Offending records:\n%s\n%s", prev, v)
+		} 
+
 		if v.Pos >= end {
 			break
 		}
@@ -175,6 +184,8 @@ func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) 
 		}
 
 		answer.Seq[v.Pos-1] = vcfSampleToPdnaBase(v.Samples, v.Ref, v.Alt)
+	
+		prev = v
 	}
 
 	return answer
