@@ -24,7 +24,7 @@ func VcfToPfaUsage(VcfToPfaFlags *flag.FlagSet) {
 		"Note that this program assumes a sorted input VCF file.\n" +
 		"Positions without VCF records are represented as one-hot pDNA vectors.\n" +
 		"For positions with VCF records, we represent allele frequencies (calculated from VCF samples) in pDNA vectors.\n" +
-		"Currently supports variants from a single chromosome, and will fatal if a reference fasta with multiple chromosomes is provided.\n" +
+		"Currently supports variants from a single chromosome, and will fatal if a reference fasta with multiple chromosomes is provided or if a VCF with variants from multiple chromosomes is provided.\n" +
 		"Usage:\n" +
 		"pFaTools vcfToPfa inFile.vcf ref.fa outDir.pfa\n" +
 		"options:\n")
