@@ -44,8 +44,8 @@ func GenerateBedRegion(searchSpace []bed.Bed, randPos int, regionLength int) (be
 		} else {
 			return bed.Bed{
 				Chrom:             searchSpace[j].Chrom,
-				ChromStart:        searchSpace[j].ChromStart + randPos,
-				ChromEnd:          searchSpace[j].ChromStart + randPos + regionLength,
+				ChromStart:        searchSpace[j].ChromStart + randPos - 1,
+				ChromEnd:          searchSpace[j].ChromStart + randPos - 1 + regionLength,
 				Name:              searchSpace[j].Name,
 				FieldsInitialized: 4}, true
 		}
