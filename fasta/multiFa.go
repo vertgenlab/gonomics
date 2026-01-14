@@ -20,8 +20,18 @@ func RefPosToAlnPos(record Fasta, RefPos int) int {
 	return alnStart
 }
 
-// RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
+// RefPosToAlnPosCounter 
 func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
+	return RefPosToAlnPosCounterExposed(record, RefPos, refStart, alnStart, false)
+}
+
+func RefPosToAlnPosCounterBed(record Fasta, RefPos int, refStart int, alnStart int) int {
+	return RefPosToAlnPosCounterExposed(record, RefPos, refStart, alnStart, true)
+}
+
+// RefPosToAlnPosCounterExposed is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
+// the allowBed option permits  RefPosToAlnPosCounter to read one more base beyond the length of the rec, which accounts for BED file coordinates being end-exclusive
+func RefPosToAlnPosCounterExposed(record Fasta, RefPos int, refStart int, alnStart int, allowBed bool) int {
 	if refStart > RefPos {
 		//refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
 		log.Fatalf("refStart > RefPos")
@@ -31,25 +41,37 @@ func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int)
 		log.Fatalf("Ran out of chromosome.")
 	}
 
-	initRefStart := refStart
-	incremented := 0
-	for t := alnStart; refStart < RefPos; alnStart++ {
-		t++
-		if t > len(record.Seq) {
-			log.Fatalf("Ran out of chromosome.")
-		} else if t == len(record.Seq) {
-			alnStart++
-			incremented++
-			break
-		} else if record.Seq[t] != dna.Gap {
-			refStart++
-			incremented++
+	if !allowBed {
+		for t := alnStart; refStart < RefPos; alnStart++ {
+			t++
+			if t == len(record.Seq) {
+				log.Fatalf("Ran out of chromosome.")
+			} else if record.Seq[t] != dna.Gap {
+				refStart++
+			}
+		}
+	} else {
+		initRefStart := refStart
+		incremented := 0
+		for t := alnStart; refStart < RefPos; alnStart++ {
+			t++
+			if t > len(record.Seq) {
+				log.Fatalf("Ran out of chromosome.")
+			} else if t == len(record.Seq) {
+				alnStart++
+				incremented++
+				break
+			} else if record.Seq[t] != dna.Gap {
+				refStart++
+				incremented++
+			}
+		}
+
+		if incremented < (RefPos - initRefStart) {
+			log.Fatalf("Ran out of chromosome. needed %d, advanced %d", RefPos-initRefStart, incremented)
 		}
 	}
-
-	if incremented < (RefPos - initRefStart) {
-		log.Fatalf("Ran out of chromosome. needed %d, advanced %d", RefPos-initRefStart, incremented)
-	}
+	
 	return alnStart
 }
 
