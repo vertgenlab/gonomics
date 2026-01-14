@@ -23,10 +23,10 @@ var SimulateBedTests = []struct {
 
 func TestSimulateBed(t *testing.T) {
 	var err error
-	for _, v := range SimulateBedTests {
+	for idx, v := range SimulateBedTests {
 		simulateBed(v.RegionCount, v.SimLength, v.MatchedBed, v.NoGapFile, v.OutFile, v.SetSeed)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
-			t.Errorf("Error in SimulateBed. Output did not match expected.")
+			t.Errorf("Error in SimulateBed. Output %v did not match expected.", idx)
 		} else {
 			err = os.Remove(v.OutFile)
 			exception.PanicOnErr(err)
