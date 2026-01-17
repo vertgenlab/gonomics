@@ -3,6 +3,7 @@ package fasta
 import (
 	"github.com/vertgenlab/gonomics/dna"
 	"log"
+	// "fmt"
 )
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
@@ -21,18 +22,59 @@ func RefPosToAlnPos(record Fasta, RefPos int) int {
 
 // RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
 func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
+	return refPosToAlnPosCounterExposed(record, RefPos, refStart, alnStart, false)
+}
+
+// RefPosToAlnPosCounterBed is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
+// Unlike RefPosToAlnPosCounter, RefPosToAlnPosCounterBed is allowed to read one more base beyond the length of the Fasta record, which accounts for BED file coordinates being end-exclusive.
+func RefPosToAlnPosCounterBed(record Fasta, RefPos int, refStart int, alnStart int) int {
+	return refPosToAlnPosCounterExposed(record, RefPos, refStart, alnStart, true)
+}
+
+// refPosToAlnPosCounterExposed is the function underlying both RefPosToAlnPosCounter and RefPosToAlnPosCounterBed.
+// the allowBed option permits RefPosToAlnPosCounter to read one more base beyond the length of the rec, which accounts for BED file coordinates being end-exclusive,
+// and is used in RefPosToAlnPosCounterBed. allowBed is false for RefPosToAlnPosCounter. 
+func refPosToAlnPosCounterExposed(record Fasta, RefPos int, refStart int, alnStart int, allowBed bool) int {
 	if refStart > RefPos {
 		//refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
 		log.Fatalf("refStart > RefPos")
 	}
-	for t := alnStart; refStart < RefPos; alnStart++ {
-		t++
-		if t == len(record.Seq) {
-			log.Fatalf("Ran out of chromosome.")
-		} else if record.Seq[t] != dna.Gap {
-			refStart++
+
+	if alnStart == len(record.Seq) {
+		log.Fatalf("Ran out of chromosome.")
+	}
+
+	if !allowBed {
+		for t := alnStart; refStart < RefPos; alnStart++ {
+			t++
+			if t == len(record.Seq) {
+				log.Fatalf("Ran out of chromosome.")
+			} else if record.Seq[t] != dna.Gap {
+				refStart++
+			}
+		}
+	} else {
+		initRefStart := refStart
+		incremented := 0
+		for t := alnStart; refStart < RefPos; alnStart++ {
+			t++
+			if t > len(record.Seq) {
+				log.Fatalf("Ran out of chromosome.")
+			} else if t == len(record.Seq) {
+				alnStart++
+				incremented++
+				break
+			} else if record.Seq[t] != dna.Gap {
+				refStart++
+				incremented++
+			}
+		}
+
+		if incremented < (RefPos - initRefStart) {
+			log.Fatalf("Ran out of chromosome. needed %d, advanced %d", RefPos-initRefStart, incremented)
 		}
 	}
+	
 	return alnStart
 }
 
