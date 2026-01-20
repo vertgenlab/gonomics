@@ -112,6 +112,10 @@ func processBedLine(line string) Bed {
 	startNum := parse.StringToInt(words[1])
 	endNum := parse.StringToInt(words[2])
 
+	if startNum >= endNum {
+		log.Fatalf("Error: Found region with length <= 0 : %s\n Filter out regions with length <= 0 before proceeding.\n", line)
+	}
+
 	current := Bed{Chrom: words[0], ChromStart: startNum, ChromEnd: endNum, Strand: None, FieldsInitialized: len(words)}
 	if len(words) >= 4 {
 		current.Name = words[3]
