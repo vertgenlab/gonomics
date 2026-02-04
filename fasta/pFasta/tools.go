@@ -1,12 +1,13 @@
 package pFasta
 
 import (
-	"log"
-	"math/rand"
-
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/vcf"
+	"log"
+	"math/rand"
+	"strings"
 )
 
 // checks if input pFasta has a sequence with chrom as name and returns its index
@@ -137,6 +138,111 @@ func MultiFaToPfa(inputFaFilename string, start int, end int, chrom string) PFas
 	if chromInInput == false {
 		log.Fatalf("Error: input sequence name does not match requested chrom.")
 	}
+
+	return answer
+}
+
+// VcfToPfa returns a pFasta representation of the given VCF sequence, only accepts single sequence Fasta
+func VcfToPfa(inVcfFilename string, inputFaFilename string, start int, end int) PFasta {
+	// TODO: relax to not bi-allelic
+	// TODO: multi chromosome compatibility
+	var vcfRecords <-chan vcf.Vcf
+
+	inputFa := fasta.Read(inputFaFilename)
+	if len(inputFa) > 1 {
+		log.Fatalf("Error: expecting only one chromosome in the input fasta file.\n")
+	}
+	answer := FaToPfa(inputFa[0], start, end)
+
+	vcfRecords, _ = vcf.GoReadToChan(inVcfFilename)
+
+	var prev vcf.Vcf
+	for v := range vcfRecords {
+		if prev.Chr == "" {
+			prev = v
+		}
+
+		if v.Pos < prev.Pos && v.Chr == prev.Chr {
+			log.Fatalf("ERROR: input vcf is not sorted. Offending records:\n%s\n%s", prev, v)
+		} 
+
+		if v.Pos >= end {
+			break
+		}
+
+		if strings.Compare(v.Chr, answer.Name) != 0 {
+			log.Fatalf("Error: variant chrom: (%s) is not equal to reference chrom: (%s).\n", v.Chr, answer.Name)
+		}
+
+		if !(vcf.IsBiallelic(v) && vcf.IsSubstitution(v)) {
+			log.Fatal("Error: currently we only handle bi-allelic substitutions\n")
+		}
+
+		// check that fa matches vcf before editing
+		if inputFa[0].Seq[v.Pos-1] != dna.StringToBase(v.Ref) {
+			log.Fatal("Error: base in fasta didn't match ref base from VCF record\n")
+		}
+
+		answer.Seq[v.Pos-1] = vcfSampleToPdnaBase(v.Samples, v.Ref, v.Alt)
+	
+		prev = v
+	}
+
+	return answer
+}
+
+type alleleCounts struct {
+	A int
+	C int
+	G int
+	T int
+}
+
+// vcfSampleToPdnaBase calculates the distribution of samples at a position
+func vcfSampleToPdnaBase(samples []vcf.Sample, ref string, alts []string) pDna.Float32Base {
+	// struct {A: 0, C: 0, G: 0, T: 0}
+	totalSamples := 2 * len(samples)
+
+	var Counts alleleCounts
+	mapAlleleIdx := make([]string, 4) // create map between allele number [0, 3] and nucleotide
+
+	// (e.g. if ref=A, mapping[0] = "A")
+	mapAlleleIdx[0] = ref
+	for idx, alt := range alts {
+		mapAlleleIdx[idx+1] = alt
+	}
+
+	// iterate through each sample and count which alleles are present (given as 0, 1, 2, or 3)
+	tempCounts := make([]int, 4)
+	for _, s := range samples {
+		if len(s.Alleles) > 3 {
+			log.Print("Invalid number of alleles, must have less than 4.")
+		}
+
+		for _, p := range s.Alleles {
+			tempCounts[p]++
+		}
+	}
+
+	// Update Counts based on tempCounts
+	for i, count := range tempCounts {
+		switch mapAlleleIdx[i] {
+		case "A":
+			Counts.A = count
+		case "C":
+			Counts.C = count
+		case "G":
+			Counts.G = count
+		case "T":
+			Counts.T = count
+		}
+	}
+
+	var answer pDna.Float32Base
+	answer.A = float32(Counts.A) / float32(totalSamples)
+	answer.C = float32(Counts.C) / float32(totalSamples)
+	answer.G = float32(Counts.G) / float32(totalSamples)
+	answer.T = float32(Counts.T) / float32(totalSamples)
 
 	return answer
 }

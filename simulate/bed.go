@@ -1,9 +1,9 @@
 package simulate
 
 import (
-	"log"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/numbers"
+	"log"
 )
 
 // CountWindows counts the total viable windows of length regionLength in the sequence searchSpace
@@ -28,6 +28,7 @@ func GenerateBedRegion(searchSpace []bed.Bed, randPos int, regionLength int) (be
 	for j := range searchSpace {
 		length = searchSpace[j].ChromEnd - searchSpace[j].ChromStart
 
+		// number of windows of length regionLength in the specific bed region
 		// check that the window can fit a sequence of that length e.g. want 10 bp, but window is 5bp
 		chromWindows = length - regionLength + 1
 
@@ -35,8 +36,10 @@ func GenerateBedRegion(searchSpace []bed.Bed, randPos int, regionLength int) (be
 			continue
 		}
 
-		// Decrement randomly generated overall position until it fits within the region
-		if randPos > chromWindows {
+		// Decrement randomly generated overall position (corresponds to start of generated region) until it fits within a region
+		// must have randPos < chromWindows (randPos is 0-indexed, chromWindows is not), at most randPos + 1 = chromWindows
+		// e.g. randPos=0, chromWindows must be at least 1, 0-1 = -1
+		if randPos-chromWindows > -1 {
 			randPos -= chromWindows
 		} else {
 			if searchSpace[j].Name == "" {
@@ -47,10 +50,10 @@ func GenerateBedRegion(searchSpace []bed.Bed, randPos int, regionLength int) (be
 				FieldsInitialized: 3}, true
 			}
 			return bed.Bed{
-				Chrom: searchSpace[j].Chrom, 
-				ChromStart: searchSpace[j].ChromStart + randPos - 1, 
-				ChromEnd: searchSpace[j].ChromStart + randPos - 1 + regionLength, 
-				Name: searchSpace[j].Name,
+				Chrom:             searchSpace[j].Chrom,
+				ChromStart:        searchSpace[j].ChromStart + randPos - 1,
+				ChromEnd:          searchSpace[j].ChromStart + randPos - 1 + regionLength,
+				Name:              searchSpace[j].Name,
 				FieldsInitialized: 4}, true
 		}
 	}
