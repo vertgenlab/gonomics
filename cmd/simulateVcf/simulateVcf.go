@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"strings"
 
 	"github.com/vertgenlab/gonomics/simulate"
 )
