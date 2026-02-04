@@ -60,7 +60,7 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
 
-	if strings.ToLower(*refFile) != "" {
+	if *refFile != "" {
 		hasRef = true
 	}
 	if len(flag.Args()) != expectedNumArgs {
