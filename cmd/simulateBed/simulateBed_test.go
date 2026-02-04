@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
+	//"os"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/exception"
+	//"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -22,14 +22,14 @@ var SimulateBedTests = []struct {
 }
 
 func TestSimulateBed(t *testing.T) {
-	var err error
+	//var err error
 	for _, v := range SimulateBedTests {
 		simulateBed(v.RegionCount, v.SimLength, v.MatchedBed, v.NoGapFile, v.OutFile, v.SetSeed)
 		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
 			t.Errorf("Error in SimulateBed. Output did not match expected.")
 		} else {
-			err = os.Remove(v.OutFile)
-			exception.PanicOnErr(err)
+		//	err = os.Remove(v.OutFile)
+		//	exception.PanicOnErr(err)
 		}
 	}
 }
