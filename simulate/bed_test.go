@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"os"
 	"testing"
-
+	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -111,6 +111,7 @@ func TestGenerateBedRegion(t *testing.T) {
 			t.Errorf("No bed generated.")
 		}
 		if !bed.Equal(region, expected) {
+			fmt.Println(region)
 			t.Errorf("Error in GenerateBedRegion testcase %v.", idx)
 		}
 	}

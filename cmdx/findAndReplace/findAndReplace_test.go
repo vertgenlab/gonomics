@@ -16,7 +16,7 @@ var findAndReplaceColumnTests = []struct {
 	outFile             string
 	expectedFile        string
 	columnNumber        int
-	ignoreColumns       bool
+	regex               bool
 }{
 	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedColumn0.tsv",
 		"testdata/outputFileExpectedColumn0.tsv", 0, false},
@@ -27,13 +27,15 @@ var findAndReplaceColumnTests = []struct {
 	{"testdata/inputFileFake.tsv", "\t", "testdata/findReplaceFake.tsv", "\t", "testdata/outputFileCreatedWholeFile.tsv",
 		"testdata/outputFileExpectedWholeFile.tsv", -1, false},
 	{"testdata/inputOne.txt", "\t", "testdata/findReplaceOne.txt", "\t", "testdata/temp.txt",
-		"testdata/expectedOne.txt", -1, true},
+		"testdata/expectedOne.txt", -1, false},
+	{"testdata/inputOne.txt", "\t", "testdata/findReplaceRegex.txt", "\t", "testdata/outputFileRegex.tsv",
+		"testdata/expectedRegex.txt", -1, true},
 }
 
 func TestFindAndReplaceColumnSpecific(t *testing.T) {
 	var err error
 	for _, v := range findAndReplaceColumnTests {
-		findAndReplace(v.inFile, v.inFileDelim, v.findAndReplaceFile, v.findAndReplaceDelim, v.outFile, v.columnNumber, v.ignoreColumns)
+		findAndReplace(v.inFile, v.inFileDelim, v.findAndReplaceFile, v.findAndReplaceDelim, v.outFile, v.columnNumber, v.regex)
 		if !fileio.AreEqual(v.outFile, v.expectedFile) {
 			t.Errorf("Error in findAndReplace")
 		} else {

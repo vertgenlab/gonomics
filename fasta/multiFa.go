@@ -1,9 +1,9 @@
 package fasta
 
 import (
-	"log"
-
 	"github.com/vertgenlab/gonomics/dna"
+	"log"
+	// "fmt"
 )
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
@@ -22,18 +22,59 @@ func RefPosToAlnPos(record Fasta, RefPos int) int {
 
 // RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
 func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
+	return refPosToAlnPosCounterExposed(record, RefPos, refStart, alnStart, false)
+}
+
+// RefPosToAlnPosCounterBed is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
+// Unlike RefPosToAlnPosCounter, RefPosToAlnPosCounterBed is allowed to read one more base beyond the length of the Fasta record, which accounts for BED file coordinates being end-exclusive.
+func RefPosToAlnPosCounterBed(record Fasta, RefPos int, refStart int, alnStart int) int {
+	return refPosToAlnPosCounterExposed(record, RefPos, refStart, alnStart, true)
+}
+
+// refPosToAlnPosCounterExposed is the function underlying both RefPosToAlnPosCounter and RefPosToAlnPosCounterBed.
+// the allowBed option permits RefPosToAlnPosCounter to read one more base beyond the length of the rec, which accounts for BED file coordinates being end-exclusive,
+// and is used in RefPosToAlnPosCounterBed. allowBed is false for RefPosToAlnPosCounter. 
+func refPosToAlnPosCounterExposed(record Fasta, RefPos int, refStart int, alnStart int, allowBed bool) int {
 	if refStart > RefPos {
 		//refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
 		log.Fatalf("refStart > RefPos")
 	}
-	for t := alnStart; refStart < RefPos; alnStart++ {
-		t++
-		if t == len(record.Seq) {
-			log.Fatalf("Ran out of chromosome.")
-		} else if record.Seq[t] != dna.Gap {
-			refStart++
+
+	if alnStart == len(record.Seq) {
+		log.Fatalf("Ran out of chromosome.")
+	}
+
+	if !allowBed {
+		for t := alnStart; refStart < RefPos; alnStart++ {
+			t++
+			if t == len(record.Seq) {
+				log.Fatalf("Ran out of chromosome.")
+			} else if record.Seq[t] != dna.Gap {
+				refStart++
+			}
+		}
+	} else {
+		initRefStart := refStart
+		incremented := 0
+		for t := alnStart; refStart < RefPos; alnStart++ {
+			t++
+			if t > len(record.Seq) {
+				log.Fatalf("Ran out of chromosome.")
+			} else if t == len(record.Seq) {
+				alnStart++
+				incremented++
+				break
+			} else if record.Seq[t] != dna.Gap {
+				refStart++
+				incremented++
+			}
+		}
+
+		if incremented < (RefPos - initRefStart) {
+			log.Fatalf("Ran out of chromosome. needed %d, advanced %d", RefPos-initRefStart, incremented)
 		}
 	}
+	
 	return alnStart
 }
 
@@ -123,9 +164,9 @@ func DistColumn(records []Fasta) []Fasta {
 	return subFa
 }
 
-// emptyCopy returns a new alignment where the sequences have the same names as the input
+// EmptyCopy returns a new alignment where the sequences have the same names as the input
 // alignment, but empty sequences.
-func emptyCopy(aln []Fasta) []Fasta {
+func EmptyCopy(aln []Fasta) []Fasta {
 	var answer []Fasta = make([]Fasta, len(aln))
 	for i := range aln {
 		answer[i].Name = aln[i].Name
@@ -133,9 +174,9 @@ func emptyCopy(aln []Fasta) []Fasta {
 	return answer
 }
 
-// isSegregating returns false if the value of all bases in the column (colIdx) are of
+// IsSegregating returns false if the value of all bases in the column (colIdx) are of
 // equal value, and true otherwise.
-func isSegregating(aln []Fasta, colIdx int) bool {
+func IsSegregating(aln []Fasta, colIdx int) bool {
 	var i int
 	var firstBase dna.Base
 
@@ -148,12 +189,30 @@ func isSegregating(aln []Fasta, colIdx int) bool {
 	return false
 }
 
+// IsStrongToWeak finds strong -> weak substitutions (C||G -> A||T)
+func IsStrongToWeak(firstSeqBase, secondSeqBase dna.Base) bool {
+	if (firstSeqBase == dna.A || firstSeqBase == dna.T) && (secondSeqBase == dna.C || secondSeqBase == dna.G) {
+		return true
+	} else {
+		return false
+	}
+}
+
+// IsWeakToStrong finds weak -> strong substitutions (A||T -> C||G)
+func IsWeakToStrong(firstSeqBase, secondSeqBase dna.Base) bool {
+	if (firstSeqBase == dna.C || firstSeqBase == dna.G) && (secondSeqBase == dna.A || secondSeqBase == dna.T) {
+		return true
+	} else {
+		return false
+	}
+}
+
 // SegregatingSites takes in a multiFa alignment and returns a new alignment containing only the columns with segregating sites.
 func SegregatingSites(aln []Fasta) []Fasta {
-	var answer []Fasta = emptyCopy(aln)
+	var answer []Fasta = EmptyCopy(aln)
 	var i, k int
 	for i = 0; i < len(aln[0].Seq); i++ {
-		if isSegregating(aln, i) {
+		if IsSegregating(aln, i) {
 			for k = 0; k < len(aln); k++ {
 				answer[k].Seq = append(answer[k].Seq, aln[k].Seq[i])
 			}
@@ -168,6 +227,39 @@ func NumSegregatingSites(aln []Fasta) int {
 		return 0
 	}
 	return len(SegregatingSites(aln)[0].Seq)
+}
+
+// CountSubs counts substitution types across 2 aligned fasta sequences.
+func CountSubs(firstSeq, secondSeq []dna.Base) (weakToStrongCount, strongToWeakCount, otherSubCount int) {
+	var f1, s1 dna.Base
+	//initialize each category of substitutions to 0
+	weakToStrongCount = 0
+	strongToWeakCount = 0
+	otherSubCount = 0
+
+	//for length of entire sequence
+	for i := 0; i < len(firstSeq); i++ {
+		f1, s1 = firstSeq[i], secondSeq[i]
+
+		if !(dna.DefineBase(f1)) || !(dna.DefineBase(s1)) {
+			continue
+		}
+
+		if f1 == s1 {
+			continue
+		}
+
+		//check substitution type & count
+		switch {
+		case IsStrongToWeak(f1, s1):
+			strongToWeakCount++
+		case IsWeakToStrong(f1, s1):
+			weakToStrongCount++
+		default:
+			otherSubCount++
+		}
+	}
+	return weakToStrongCount, strongToWeakCount, otherSubCount
 }
 
 // PairwiseMutationDistanceReferenceWindow takes two input fasta sequences and calculates the number of mutations in a reference window of a given size. Segregating sites are counted as 1, as are INDELs regardless of length.
@@ -280,10 +372,70 @@ func ScanN(aln []Fasta, queryName string) [][]int {
 	return bedPos
 }
 
-// findSequenceIndex is a helper function for ScanN to find the sequenceIndex of queryName in the multiFa
+// ScanPresentBase takes in a multiFa alignment, scans the user-specified sequence for a user-specified pattern ('present bases (A,C,G,T, not gap- or N)' for now) and reports the count
+func ScanPresentBase(aln []Fasta, queryName string) int {
+	// create variables
+	var presentBaseCount = 0
+
+	// find the sequenceIndex of queryName in the multiFa
+	queryIndex := findSequenceIndex(aln, queryName)
+
+	// loop through the query sequence in the multiFa
+	for i := 0; i < len(aln[queryIndex].Seq); i++ {
+		if aln[queryIndex].Seq[i] == dna.A || aln[queryIndex].Seq[i] == dna.C || aln[queryIndex].Seq[i] == dna.G || aln[queryIndex].Seq[i] == dna.T { // scan for present base (A or C or G or T)
+			presentBaseCount++
+		}
+	}
+
+	return presentBaseCount
+}
+
+// ScanPresentBaseBoth takes in a multiFa alignment, scans the 2 user-specified sequences for a user-specified pattern ('present bases (A,C,G,T, not gap- or N)' for now) and reports the count of positions where both 2 sequences match the pattern
+func ScanPresentBaseBoth(aln []Fasta, firstQueryName string, secondQueryName string) int {
+	// create variables
+	var presentBaseCount = 0
+
+	// find the sequenceIndex of queryNames in the multiFa
+	firstQueryIndex := findSequenceIndex(aln, firstQueryName)
+	secondQueryIndex := findSequenceIndex(aln, secondQueryName)
+
+	// loop through the query sequence in the multiFa
+	for i := 0; i < len(aln[firstQueryIndex].Seq); i++ {
+		if aln[firstQueryIndex].Seq[i] == dna.A || aln[firstQueryIndex].Seq[i] == dna.C || aln[firstQueryIndex].Seq[i] == dna.G || aln[firstQueryIndex].Seq[i] == dna.T { // scan for present base (A or C or G or T)
+			if aln[secondQueryIndex].Seq[i] == dna.A || aln[secondQueryIndex].Seq[i] == dna.C || aln[secondQueryIndex].Seq[i] == dna.G || aln[secondQueryIndex].Seq[i] == dna.T { // in both sequences, requiring AND for both sequences, OR within each sequence
+				presentBaseCount++
+			}
+		}
+	}
+
+	return presentBaseCount
+}
+
+// ScanPresentBaseEither takes in a multiFa alignment, scans the 3 user-specified sequences for a user-specified pattern ('present bases (A,C,G,T, not gap- or N)' for now) and reports the count of positions where any of the 3 sequences matches the pattern
+func ScanPresentBaseEither(aln []Fasta, firstQueryName string, secondQueryName string, thirdQueryName string) int {
+	// create variables
+	var presentBaseCount = 0
+
+	// find the sequenceIndex of queryNames in the multiFa
+	firstQueryIndex := findSequenceIndex(aln, firstQueryName)
+	secondQueryIndex := findSequenceIndex(aln, secondQueryName)
+	thirdQueryIndex := findSequenceIndex(aln, thirdQueryName)
+
+	// loop through the query sequence in the multiFa
+	for i := 0; i < len(aln[firstQueryIndex].Seq); i++ {
+		if aln[firstQueryIndex].Seq[i] == dna.A || aln[firstQueryIndex].Seq[i] == dna.C || aln[firstQueryIndex].Seq[i] == dna.G || aln[firstQueryIndex].Seq[i] == dna.T || aln[secondQueryIndex].Seq[i] == dna.A || aln[secondQueryIndex].Seq[i] == dna.C || aln[secondQueryIndex].Seq[i] == dna.G || aln[secondQueryIndex].Seq[i] == dna.T || aln[thirdQueryIndex].Seq[i] == dna.A || aln[thirdQueryIndex].Seq[i] == dna.C || aln[thirdQueryIndex].Seq[i] == dna.G || aln[thirdQueryIndex].Seq[i] == dna.T { // scan for present base (A or C or G or T)
+			presentBaseCount++
+		}
+	}
+
+	return presentBaseCount
+}
+
+// findSequenceIndex is a helper function to find the sequenceIndex of queryName in the multiFa
 func findSequenceIndex(aln []Fasta, queryName string) int {
 	nameIndexMap := make(map[string]int) // map of [sequenceName]sequenceIndex
-	for i := range aln {                 // range through the entire multiFa to make sure record names are unique
+
+	for i := range aln { // range through the entire multiFa to make sure record names are unique
 		_, found := nameIndexMap[aln[i].Name]
 		if !found {
 			nameIndexMap[aln[i].Name] = i
@@ -291,5 +443,11 @@ func findSequenceIndex(aln []Fasta, queryName string) int {
 			log.Panicf("%s used for multiple fasta records. record names must be unique.", aln[i].Name)
 		}
 	}
-	return nameIndexMap[queryName]
+
+	index, found := nameIndexMap[queryName]
+	if !found {
+		log.Fatalf("queryName %s not found in fasta records.", queryName)
+	}
+	return index
+
 }

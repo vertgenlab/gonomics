@@ -110,7 +110,7 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 	bw.recordBuf.Write(bw.u32[:2])
 
 	// num cigar op
-	if len(s.Cigar) > 0 && s.Cigar[0].Op == '*' {
+	if cigar.IsUnmapped(s.Cigar) {
 		le.PutUint16(bw.u32[:2], 0)
 	} else {
 		le.PutUint16(bw.u32[:2], uint16(len(s.Cigar)))
@@ -156,15 +156,13 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 	bw.recordBuf.WriteString(s.QName)
 	bw.recordBuf.WriteByte(nul)
 
-	// cigar
-	for i := range s.Cigar {
-		if i == 0 && s.Cigar[0].Op == '*' {
-			break
+	// cigar is mapped (i.e. length is greater than 0).
+	if !cigar.IsUnmapped(s.Cigar) {
+		for i := range s.Cigar {
+			le.PutUint32(bw.u32[:4], cigar.ToUint32(s.Cigar[i]))
+			bw.recordBuf.Write(bw.u32[:4])
 		}
-		le.PutUint32(bw.u32[:4], getCigUint32(s.Cigar[i]))
-		bw.recordBuf.Write(bw.u32[:4])
 	}
-
 	// seq
 	var seqInt uint8
 	for i := range s.Seq {
@@ -215,41 +213,6 @@ func WriteToBamFileHandle(bw *BamWriter, s Sam, bin uint16) {
 // gonomics val: 11 0  1  -1 2  -1 -1 -1 3  -1 -1 -1 -1 -1 -1 4
 // lowercase converted to uppercase and all non-spec bases converted to 'N'.
 var baseEncoder = []uint8{1, 2, 4, 8, 15, 1, 2, 4, 8, 15, 15, 15, 15, 15, 15, 15}
-
-// getCigUint32 encodes cigar op and runlen as a uint32 defined by op_len<<4|op.
-func getCigUint32(c cigar.Cigar) uint32 {
-	var cigint uint32
-	cigint = uint32(c.RunLength) << 4  // move 4 bits to the left
-	cigint = cigint | opToUint32(c.Op) // bitwise OR with op
-	return cigint
-}
-
-// opToUint32 returns the uint32 corresponding to the rune per the Sam specifications.
-func opToUint32(r rune) uint32 {
-	switch r {
-	case 'M':
-		return 0
-	case 'I':
-		return 1
-	case 'D':
-		return 2
-	case 'N':
-		return 3
-	case 'S':
-		return 4
-	case 'H':
-		return 5
-	case 'P':
-		return 6
-	case '=':
-		return 7
-	case 'X':
-		return 8
-	default:
-		log.Fatalf("ERROR (opToUint32): Unrecognized cigar op '%v'", r)
-		return 0 // unreachable
-	}
-}
 
 // writeExtra writes the Extra field of a sam to a BamWriter.
 func writeExtra(bw *BamWriter, s Sam) {

@@ -42,6 +42,13 @@ func GenerateBedRegion(searchSpace []bed.Bed, randPos int, regionLength int) (be
 		if randPos-chromWindows > -1 {
 			randPos -= chromWindows
 		} else {
+			if searchSpace[j].Name == "" {
+				return bed.Bed{
+				Chrom: searchSpace[j].Chrom, 
+				ChromStart: searchSpace[j].ChromStart + randPos, 
+				ChromEnd: searchSpace[j].ChromStart + randPos + regionLength, 
+				FieldsInitialized: 3}, true
+			}
 			return bed.Bed{
 				Chrom:             searchSpace[j].Chrom,
 				ChromStart:        searchSpace[j].ChromStart + randPos,

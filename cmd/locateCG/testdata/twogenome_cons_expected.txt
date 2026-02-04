@@ -1,0 +1,2 @@
+Chrom	RefStart	RefEnd	Type	Ref	Alt	AlnStart	AlnEnd
+chr8	8	10	cons	CG	CG	8	10

@@ -1,0 +1,4 @@
+Greetings	GoodBye
+Yes	No
+Plus	No
+Fast	No

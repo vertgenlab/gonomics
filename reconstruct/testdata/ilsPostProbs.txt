@@ -1,0 +1,4 @@
+testdata/ilsPostProb_0.wig
+testdata/ilsPostProb_1.wig
+testdata/ilsPostProb_2.wig
+testdata/ilsPostProb_3.wig

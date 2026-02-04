@@ -75,3 +75,28 @@ func TestUnique(t *testing.T) {
 		exception.PanicOnErr(err)
 	}
 }
+
+func TestOverlapProportionRecursive(t *testing.T) {
+	exp := []bool{true, false, false, true}
+	in := bed.Read("testdata/in.prop.bed")
+	for i := range in {
+		if OverlapProportionRecursive(in[0], in[i], 0.5) != exp[i] {
+			t.Errorf("Error in OverlapProportionRecursive")
+		}
+	}
+}
+
+func TestWithin(t *testing.T) {
+	exp := []bool{false, true, false, true}
+	in := bed.Read("testdata/in.prop.bed")
+	b := bed.Bed{
+		Chrom:      "chr1",
+		ChromStart: 100,
+		ChromEnd:   190,
+	}
+	for a := range in {
+		if Within(in[a], b) != exp[a] {
+			t.Errorf("Error in Within")
+		}
+	}
+}
