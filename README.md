@@ -23,6 +23,9 @@ The complete documentation for gonomics can be found [here](https://pkg.go.dev/g
 ## Clone gonomics repository  
 git clone https://github.com/vertgenlab/gonomics.git && cd gonomics
 
+#### If you are on a Windows machine, turn off auto-CRLF otherwise some testcases will fail
+git config core.autocrlf false
+
 ## Run gonomics tests
 go test ./...
 
