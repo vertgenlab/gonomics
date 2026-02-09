@@ -1,9 +1,8 @@
 package main
 
 import (
-	"testing"
-
 	"github.com/vertgenlab/gonomics/fileio"
+	"testing"
 )
 
 /*
@@ -36,36 +35,36 @@ var SamCoverageTests = []struct {
 	ExpectedHistFile string
 	ExpectedStatFile string
 }{
-	{InFile: "testdata/test1.bam",
-		OutHistFile:      "testdata/tmp.test1.hist.txt",
-		StatSummaryFile:  "testdata/tmp.test1.stats.txt",
+	{InFile: "testdata/coverage/test1.bam",
+		OutHistFile:      "testdata/coverage/tmp.test1.hist.txt",
+		StatSummaryFile:  "testdata/coverage/tmp.test1.stats.txt",
 		HighEndFilter:    0.1,
 		CountNinDepth:    false,
 		Verbose:          0,
-		ExpectedHistFile: "testdata/expected.test1.hist.txt",
-		ExpectedStatFile: "testdata/expected.test1.stats.txt"},
-	{InFile: "testdata/test2.bam",
-		OutHistFile:      "testdata/tmp.test2.hist.txt",
-		StatSummaryFile:  "testdata/tmp.test2.stats.txt",
+		ExpectedHistFile: "testdata/coverage/expected.test1.hist.txt",
+		ExpectedStatFile: "testdata/coverage/expected.test1.stats.txt"},
+	{InFile: "testdata/coverage/test2.bam",
+		OutHistFile:      "testdata/coverage/tmp.test2.hist.txt",
+		StatSummaryFile:  "testdata/coverage/tmp.test2.stats.txt",
 		HighEndFilter:    0.5,
 		CountNinDepth:    false,
 		Verbose:          0,
-		ExpectedHistFile: "testdata/expected.test2.hist.txt",
-		ExpectedStatFile: "testdata/expected.test2.stats.txt"},
-	{InFile: "testdata/test3.bam",
-		OutHistFile:      "testdata/tmp.test3.hist.txt",
-		StatSummaryFile:  "testdata/tmp.test3.stats.txt",
+		ExpectedHistFile: "testdata/coverage/expected.test2.hist.txt",
+		ExpectedStatFile: "testdata/coverage/expected.test2.stats.txt"},
+	{InFile: "testdata/coverage/test3.bam",
+		OutHistFile:      "testdata/coverage/tmp.test3.hist.txt",
+		StatSummaryFile:  "testdata/coverage/tmp.test3.stats.txt",
 		HighEndFilter:    0.01,
 		CountNinDepth:    false,
 		Verbose:          0,
-		ExpectedHistFile: "testdata/expected.test3.hist.txt",
-		ExpectedStatFile: "testdata/expected.test3.stats.txt"},
+		ExpectedHistFile: "testdata/coverage/expected.test3.hist.txt",
+		ExpectedStatFile: "testdata/coverage/expected.test3.stats.txt"},
 }
 
 func TestSamCoverage(t *testing.T) {
-	var s Settings
+	var s CoverageSettings
 	for _, v := range SamCoverageTests {
-		s = Settings{
+		s = CoverageSettings{
 			SamFileName:      v.InFile,
 			HistogramOutFile: v.OutHistFile,
 			StatSummaryFile:  v.StatSummaryFile,
@@ -75,12 +74,12 @@ func TestSamCoverage(t *testing.T) {
 		}
 		samCoverage(s)
 		if !fileio.AreEqual(v.OutHistFile, v.ExpectedHistFile) {
-			t.Errorf("Error in samCoverage")
+			t.Errorf("Error: samInfo coverage. Output histogram was not as expected.\n")
 		} else {
 			fileio.MustRemove(v.OutHistFile)
 		}
 		if !fileio.AreEqual(v.StatSummaryFile, v.ExpectedStatFile) {
-			t.Errorf("Error in samCoverage")
+			t.Errorf("Error: samInfo coverage. Output summary statistics file was not as expected.\n")
 		} else {
 			fileio.MustRemove(v.StatSummaryFile)
 		}
