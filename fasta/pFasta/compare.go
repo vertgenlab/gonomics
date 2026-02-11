@@ -2,6 +2,7 @@ package pFasta
 
 import (
 	"github.com/vertgenlab/gonomics/dna/pDna"
+	"github.com/vertgenlab/gonomics/wig"
 	"strings"
 )
 
@@ -41,4 +42,24 @@ func IsEqual(a PFasta, b PFasta, precision float32) bool {
 		}
 	}
 	return true
+}
+
+// DistTrack reports a wig track from two input pFastas, providing base-by-base
+// information about the similarity of the pFastas. Assumes the pFastas are aligned.
+func DistTrack(a PFasta, b PFasta, outName string) wig.Wig {
+	n := len(a.Seq)
+	if n > len(b.Seq) {
+		n = len(b.Seq)
+	}
+
+	if outName == "" {
+		outName = a.Name
+	}
+	outWig = wig.Wig{StepType: "fixedStep", Chrom: outName, Start: 1, Step: 1, DefaultValue: s.DefaultValue}
+	outWig.Values = make([]float64, len(n))
+
+	for pos := range n {
+		outWig.Values[pos] = pDna.Dist(a.Seq[pos], b.Seq[pos])
+	}
+	return outWig
 }
