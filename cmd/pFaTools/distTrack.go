@@ -17,6 +17,7 @@ type DistTrackSettings struct {
 	InFile2       string
 	OutFile      string
 	DefaultValue float64 // default value for wig.
+	DefaultName  string
 }
 
 // distTrackUsage defines the usage statement for the pFaTools distTrack subcommand.

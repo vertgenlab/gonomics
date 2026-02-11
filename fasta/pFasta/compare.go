@@ -48,7 +48,7 @@ func IsEqual(a PFasta, b PFasta, precision float32) bool {
 // information about the similarity of the pFastas. Assumes the pFastas are aligned.
 func DistTrack(a PFasta, b PFasta, outName string) wig.Wig {
 	n := len(a.Seq)
-	if n > len(b.Seq) {
+	if n < len(b.Seq) {
 		n = len(b.Seq)
 	}
 
@@ -59,6 +59,7 @@ func DistTrack(a PFasta, b PFasta, outName string) wig.Wig {
 	outWig.Values = make([]float64, len(n))
 
 	for pos := range n {
+		// TODO: determine what to do for trailing - 1 or -1
 		outWig.Values[pos] = pDna.Dist(a.Seq[pos], b.Seq[pos])
 	}
 	return outWig
