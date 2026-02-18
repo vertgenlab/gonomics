@@ -60,7 +60,11 @@ func DistTrack(a PFasta, b PFasta, outName string, defaultValue float64) wig.Wig
 	outWig.Values = make([]float64, len(a.Seq))
 
 	for pos := range len(a.Seq) {
-		outWig.Values[pos] = pDna.Dist(a.Seq[pos], b.Seq[pos])
+		if pDna.IsGap(a.Seq[pos]) || pDna.IsGap(b.Seq[pos]) {
+			log.Fatal("Error (DistTrack): input has a gap that distTrack does not currently handle.")
+		} else {
+			outWig.Values[pos] = pDna.Dist(a.Seq[pos], b.Seq[pos])
+		}
 	}
 	return outWig
 }
