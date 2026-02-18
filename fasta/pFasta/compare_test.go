@@ -6,7 +6,6 @@ import (
     "github.com/vertgenlab/gonomics/fasta"
     "github.com/vertgenlab/gonomics/wig"
 	"testing"
-    // "fmt"
 )
 
 // DistTrackTests tests a valid input to DistTrack
@@ -90,8 +89,8 @@ func TestDistTrack(t *testing.T) {
 		if !wig.AllEqual(res, v.Expected, v.Precision) {
 			t.Errorf("Error: in pFasta. DistTrack valid input test was not as expected.")
 		}
-        Write("testdata/test_distTrack_input_A_2.pfa", []PFasta{v.Input1})
-        Write("testdata/test_distTrack_input_B_2.pfa", []PFasta{v.Input2})
+        // Write("testdata/test_distTrack_input_A_2.pfa", []PFasta{v.Input1})
+        // Write("testdata/test_distTrack_input_B_2.pfa", []PFasta{v.Input2})
 	}
 }
 
