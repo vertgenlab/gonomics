@@ -92,4 +92,5 @@ func DistTrackMulti(a []PFasta, aName string, b []PFasta, bName string, outName 
 	a_single := Extract(a, 0, a_len, aName, aName, false)
 	b_single := Extract(b, 0, b_len, aName, aName, false)
 	return DistTrack(a_single, b_single, outName, defaultValue)
+
 }
