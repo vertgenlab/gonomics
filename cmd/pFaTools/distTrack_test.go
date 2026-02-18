@@ -11,18 +11,45 @@ var distTrackTests = []struct {
 	InFile1       string
     InFile2       string
 	OutFile      string
+	DefaultValue float64
     OutName      string
 	ChromSizes   string
 	ExpectedFile string
-	DefaultValue float64
+	
 }{
-	{InFile1: "testdata/test_sample_input.pfa",
-        InFile2: "testdata/test_sample_input_2.pfa"
-		OutFile:      "testdata/distTrack.wig",
-		ChromSizes:   "testdata/test_sample_input.chrom.sizes",
-		ExpectedFile: "testdata/expected.distTrack.wig",
+	{InFile1: "testdata/test_distTrack_input_A_1.pfa",
+        InFile2: "testdata/test_distTrack_input_B_1.pfa",
+		OutName: "chr1.dist",
+		OutFile:      "testdata/test_distTrack_1_out.wig",
+		ChromSizes:   "testdata/test_distTrack_1.chrom.sizes",
+		ExpectedFile: "testdata/test_distTrack_1_expected.wig",
 		DefaultValue: -1,
 	},
+	{InFile1: "testdata/test_distTrack_input_A_2.pfa",
+        InFile2: "testdata/test_distTrack_input_B_2.pfa",
+		OutName: "chr1.dist",
+		OutFile:      "testdata/test_distTrack_2_out.wig",
+		ChromSizes:   "testdata/test_distTrack_1.chrom.sizes",
+		ExpectedFile: "testdata/test_distTrack_2_expected.wig",
+		DefaultValue: -1,
+	},
+	{InFile1: "testdata/test_distTrackFasta_input_A_1.pfa",
+        InFile2: "testdata/test_distTrackFasta_input_B_1.fa",
+		OutName: "chr1.dist",
+		OutFile:      "testdata/test_distTrackFasta_1_out.wig",
+		ChromSizes:   "testdata/test_distTrack_1.chrom.sizes",
+		ExpectedFile: "testdata/test_distTrackFasta_1_expected.wig",
+		DefaultValue: -1,
+	},
+	{InFile1: "testdata/test_distTrackFasta_input_A_2.pfa",
+        InFile2: "testdata/test_distTrackFasta_input_B_2.fa",
+		OutName: "chr1.dist",
+		OutFile:      "testdata/test_distTrackFasta_2_out.wig",
+		ChromSizes:   "testdata/test_distTrack_1.chrom.sizes",
+		ExpectedFile: "testdata/test_distTrackFasta_2_expected.wig",
+		DefaultValue: -1,
+	},
+	
 }
 
 func TestDistTrack(t *testing.T) {
@@ -31,11 +58,11 @@ func TestDistTrack(t *testing.T) {
 	var s DistTrackSettings
 	for _, testCase := range distTrackTests {
 		s = DistTrackSettings{
-			InFile:       testCase.InFile,
+			InFile1:       testCase.InFile1,
             InFile2:       testCase.InFile2,
 			OutFile:      testCase.OutFile,
 			DefaultValue: testCase.DefaultValue,
-            DefaultName: testCase.DefaultName,
+            OutName: testCase.OutName,
 		}
 		pFaDistTrack(s)
 		// TODO: need to create the second input file

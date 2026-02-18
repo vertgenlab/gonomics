@@ -4,11 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/wig"
 	"log"
 	"math"
 	"os"
+	"strings"
 )
 
 // DistTrackSettings defines the usage settings for the pFa distTrack subcommand.
@@ -17,7 +19,7 @@ type DistTrackSettings struct {
 	InFile2       string
 	OutFile      string
 	DefaultValue float64 // default value for wig.
-	DefaultName  string
+	OutName  string
 }
 
 // distTrackUsage defines the usage statement for the pFaTools distTrack subcommand.
@@ -36,7 +38,7 @@ func parseDistTrackArgs() {
 	var err error
 	distTrackFlags := flag.NewFlagSet("distTrack", flag.ExitOnError)
 	var defaultValue *float64 = distTrackFlags.Float64("defaultValue", math.MaxFloat64, "Set the default value for the wig. Positions with this value will not be written to the file.")
-	var defaultName *string = extractFlags.String("outName", "", "Specify name of the out file. If none is provided, output name will be the same as the first input name.")
+	var outName *string = distTrackFlags.String("outName", "", "Specify name of the out file. If none is provided, output name will be the same as the first input name.")
 	err = distTrackFlags.Parse(os.Args[3:])
 	exception.PanicOnErr(err)
 	distTrackFlags.Usage = func() { distTrackUsage(distTrackFlags) }
@@ -53,19 +55,25 @@ func parseDistTrackArgs() {
 		InFile2:       inFile2,
 		OutFile:      outFile,
 		DefaultValue: *defaultValue,
-		DefaultName: *defaultName,
+		OutName: *outName,
 	}
 	pFaDistTrack(s)
 }
 
-// pFaDistTrack reports a wig track two input pFastas, providing base-by-base
+// pFaDistTrack reports a wig track two input singular pFastas (ie takes the first pfasta in the file), providing base-by-base
 // information about the similarity of the pFastas. Assumes the pFastas are aligned.
 func pFaDistTrack(s DistTrackSettings) {
-	var currPos int
-	var currentWig wig.Wig
 	recordA := pFasta.Read(s.InFile1)
-	recordB := pFasta.Read(s.InFile2)
-	var answer = make(map[string]wig.Wig, len(recordsA))
-	answer[s.DefaultName] = pFasta.DistTrack(recordA, recordB, s.DefaultName)
+	var answer = make(map[string]wig.Wig, 1)
+	if strings.HasSuffix(s.InFile2, ".fa") || strings.HasSuffix(s.InFile2, ".fasta") {
+		recordB := fasta.Read(s.InFile2)
+		answer[s.OutName] = pFasta.DistTrackFasta(recordA[0], recordB[0], s.OutName, s.DefaultValue)
+	} else {
+		recordB := pFasta.Read(s.InFile2)
+		answer[s.OutName] = pFasta.DistTrack(recordA[0], recordB[0], s.OutName, s.DefaultValue)
+	}
+
+	
+	
 	wig.Write(s.OutFile, answer)
 }

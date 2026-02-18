@@ -3,6 +3,7 @@ package pFasta
 import (
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/wig"
+	"github.com/vertgenlab/gonomics/fasta"
 	"strings"
 )
 
@@ -46,7 +47,7 @@ func IsEqual(a PFasta, b PFasta, precision float32) bool {
 
 // DistTrack reports a wig track from two input pFastas, providing base-by-base
 // information about the similarity of the pFastas. Assumes the pFastas are aligned.
-func DistTrack(a PFasta, b PFasta, outName string) wig.Wig {
+func DistTrack(a PFasta, b PFasta, outName string, defaultValue float64) wig.Wig {
 	n := len(a.Seq)
 	if n < len(b.Seq) {
 		n = len(b.Seq)
@@ -55,12 +56,40 @@ func DistTrack(a PFasta, b PFasta, outName string) wig.Wig {
 	if outName == "" {
 		outName = a.Name
 	}
-	outWig = wig.Wig{StepType: "fixedStep", Chrom: outName, Start: 1, Step: 1, DefaultValue: s.DefaultValue}
-	outWig.Values = make([]float64, len(n))
+	outWig := wig.Wig{StepType: "fixedStep", Chrom: outName, Start: 1, Step: 1, Span: 1, DefaultValue: defaultValue}
+	outWig.Values = make([]float64, n)
 
 	for pos := range n {
 		// TODO: determine what to do for trailing - 1 or -1
 		outWig.Values[pos] = pDna.Dist(a.Seq[pos], b.Seq[pos])
 	}
 	return outWig
+}
+
+// DistTrackFasta reports a wig track from an input pFasta and Fasta, providing base-by-base
+// information about the similarity of the pFastas. Assumes the pFastas are aligned.
+func DistTrackFasta(a PFasta, b fasta.Fasta, outName string, defaultValue float64) wig.Wig {
+	return DistTrack(a, FaToPfa(b, 0, -1), outName, defaultValue)
+}
+
+// DistTrackMulti reports a wig track from an input pFasta and Fasta, providing base-by-base
+// information about the similarity of the pFastas. Assumes the pFastas are aligned.
+func DistTrackMulti(a []PFasta, aName string, b []PFasta, bName string, outName string, defaultValue float64) wig.Wig {
+	a_len := 0
+	for _, record := range a {
+		if record.Name == aName {
+			a_len = len(record.Seq)
+		}
+	}
+
+	b_len := 0
+	for _, record := range b {
+		if record.Name == bName {
+			b_len = len(record.Seq)
+		}
+	}
+
+	a_single := Extract(a, 0, a_len, aName, aName, false)
+	b_single := Extract(b, 0, b_len, aName, aName, false)
+	return DistTrack(a_single, b_single, outName, defaultValue)
 }
