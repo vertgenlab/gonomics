@@ -7,8 +7,8 @@ import (
 )
 
 func usage() {
-	fmt.Print("starrSeqAnalysis -- A suite of tools to analysis single cell STARR-seq data\n\n" +
-		"\tstarrSeqAnalysis makeRef up.fa constructs.fa down.fa outfilePrefix\n" +
+	fmt.Print("starrSeqAnalysis -- A suite of tools to analysis bulk and single cell STARR-seq data\n\n" +
+		"\tstarrSeqAnalysis makeRef [options] up.fa constructs.fa down.fa outfilePrefix\n" +
 		"\tstarrSeqAnalysis inputSeq [options] in.sam in.bed out.txt\n" +
 		"\tstarrSeqAnalysis outputSeq [options] in.sam out.txt\n" +
 		"\tstarrSeqAnalysis bulkOutput [options] in.sam in.bed out.txt\n" +
