@@ -18,7 +18,7 @@ var DistTrackTests = []struct {
     Expected    map[string]wig.Wig
     Precision   float64
 }{
-	{Input1: PFasta{Name: "chr1", # first test uses two identical pFas, ensuring the output wig is all zeroes
+	{Input1: PFasta{Name: "chr1", // first test uses two identical pFas, ensuring the output wig is all zeroes
             Seq: []pDna.Float32Base{
                 {A: 0.2,  C: 0.3,  G: 0.4,  T: 0.1},
                 {A: 0.25, C: 0.25, G: 0.25, T: 0.25},
