@@ -5,6 +5,7 @@ import (
 	"github.com/vertgenlab/gonomics/wig"
 	"github.com/vertgenlab/gonomics/fasta"
 	"strings"
+	"log"
 )
 
 // AllAreEqual returns true if two []pFasta data structures are determined
@@ -70,27 +71,27 @@ func DistTrackFasta(a PFasta, b fasta.Fasta, outName string, defaultValue float6
 	return DistTrack(a, FaToPfa(b, 0, -1), outName, defaultValue)
 }
 
-// DistTrackMulti reports a wig track from an input pFasta and Fasta, providing base-by-base
-// information about the similarity of the pFastas. Assumes the pFastas are aligned.
-func DistTrackMulti(a []PFasta, aName string, b []PFasta, bName string, outName string, defaultValue float64) wig.Wig {
-	//TODO: Check if aName and bName are found in a and b
-	a_len := 0
-	for _, record := range a {
-		if record.Name == aName {
-			a_len = len(record.Seq)
-		}
-	}
+// // TODO unimplemented and not used
+// // DistTrackMulti reports a wig track from an input pFasta and Fasta, providing base-by-base
+// // information about the similarity of the pFastas. Assumes the pFastas are aligned.
+// func DistTrackMulti(a []PFasta, aName string, b []PFasta, bName string, outName string, defaultValue float64) wig.Wig {
+// // 	a_len := 0
+// 	for _, record := range a {
+// 		if record.Name == aName {
+// 			a_len = len(record.Seq)
+// 		}
+// 	}
 
-	b_len := 0
-	for _, record := range b {
-		if record.Name == bName {
-			b_len = len(record.Seq)
-		}
-	}
+// 	b_len := 0
+// 	for _, record := range b {
+// 		if record.Name == bName {
+// 			b_len = len(record.Seq)
+// 		}
+// 	}
 
-	a_single := Extract(a, 0, a_len, aName, aName, false)
-	b_single := Extract(b, 0, b_len, aName, aName, false)
-	return DistTrack(a_single, b_single, outName, defaultValue)
+// 	a_single := Extract(a, 0, a_len, aName, aName, false)
+// 	b_single := Extract(b, 0, b_len, aName, aName, false)
+// 	return DistTrack(a_single, b_single, outName, defaultValue)
 
-}
+// }
 

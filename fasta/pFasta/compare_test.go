@@ -168,80 +168,77 @@ func TestDistTrackFasta(t *testing.T) {
 
 
 
-// DistTrackMultiTests tests a valid input to DistTrack
-var DistTrackMultiTests = []struct {
-	Input1     []PFasta
-    Name1  string
-    Input2     []PFasta
-    Name2   string
-    OutName     string
-    DefaultValue    float64
-    Expected    map[string]wig.Wig
-    Precision   float64
-}{
-	{
-        Input1: []PFasta{
-            PFasta{Name: "chr1",
-                Seq: []pDna.Float32Base{
-                    {A: 0.2,  C: 0.3,  G: 0.4,  T: 0.1},
-                    {A: 0.25, C: 0.25, G: 0.25, T: 0.25},
-                    {A: 0.2,  C: 0.3,  G: 0.3,  T: 0.2},
-                    {A: 0.1,  C: 0.2,  G: 0.3,  T: 0.4},
-                    {A: 0.6,  C: 0.2,  G: 0.1,  T: 0.1},},
-                },
-            PFasta{Name: "chr2",
-                Seq: []pDna.Float32Base{
-                    {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
-                    {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
-                    {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
-                    {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
-                    {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},},
-                },
-            },
-        Name1: "chr1",
-		Input2: []PFasta{
-            PFasta{Name: "chr1",
-                Seq: []pDna.Float32Base{
-                    {A: 0.2,  C: 0.3,  G: 0.4,  T: 0.1},
-                    {A: 0.25, C: 0.25, G: 0.25, T: 0.25},
-                    {A: 0.2,  C: 0.3,  G: 0.3,  T: 0.2},
-                    {A: 0.1,  C: 0.2,  G: 0.3,  T: 0.4},
-                    {A: 0.6,  C: 0.2,  G: 0.1,  T: 0.1},},
-                },
-            PFasta{Name: "chr2",
-                Seq: []pDna.Float32Base{
-                    {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
-                    {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
-                    {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
-                    {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
-                    {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},},
-                    },
-                },
-        Name2: "chr1",
-		OutName:      "chr1.dist",
-		DefaultValue: 0.0,
-		Expected: map[string]wig.Wig{
-			"chr1": wig.Wig{
-                StepType:     "fixedStep",
-                Chrom:        "chr1.dist",
-                Start:        1,
-                Step:         1,
-                Span:         1,
-                DefaultValue: 0.0,
-                Values: []float64{0, 0, 0, 0, 0},},},
-        Precision: 0.001,
-    },
-}
+// // DistTrackMultiTests tests a valid input to DistTrack
+// var DistTrackMultiTests = []struct {
+// 	Input1     []PFasta
+//     Name1  string
+//     Input2     []PFasta
+//     Name2   string
+//     OutName     string
+//     DefaultValue    float64
+//     Expected    map[string]wig.Wig
+//     Precision   float64
+// }{
+// 	{
+//         Input1: []PFasta{
+//             PFasta{Name: "chr1",
+//                 Seq: []pDna.Float32Base{
+//                     {A: 0.2,  C: 0.3,  G: 0.4,  T: 0.1},
+//                     {A: 0.25, C: 0.25, G: 0.25, T: 0.25},
+//                     {A: 0.2,  C: 0.3,  G: 0.3,  T: 0.2},
+//                     {A: 0.1,  C: 0.2,  G: 0.3,  T: 0.4},
+//                     {A: 0.6,  C: 0.2,  G: 0.1,  T: 0.1},},
+//                 },
+//             PFasta{Name: "chr2",
+//                 Seq: []pDna.Float32Base{
+//                     {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
+//                     {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
+//                     {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
+//                     {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
+//                     {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},},
+//                 },
+//             },
+//         Name1: "chr1",
+// 		Input2: []PFasta{
+//             PFasta{Name: "chr1",
+//                 Seq: []pDna.Float32Base{
+//                     {A: 0.2,  C: 0.3,  G: 0.4,  T: 0.1},
+//                     {A: 0.25, C: 0.25, G: 0.25, T: 0.25},
+//                     {A: 0.2,  C: 0.3,  G: 0.3,  T: 0.2},
+//                     {A: 0.1,  C: 0.2,  G: 0.3,  T: 0.4},
+//                     {A: 0.6,  C: 0.2,  G: 0.1,  T: 0.1},},
+//                 },
+//             PFasta{Name: "chr2",
+//                 Seq: []pDna.Float32Base{
+//                     {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
+//                     {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
+//                     {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
+//                     {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},
+//                     {A: 0.5,  C: 0.5,  G: 0.0,  T: 0.0},},
+//                     },
+//                 },
+//         Name2: "chr1",
+// 		OutName:      "chr1.dist",
+// 		DefaultValue: 0.0,
+// 		Expected: map[string]wig.Wig{
+// 			"chr1": wig.Wig{
+//                 StepType:     "fixedStep",
+//                 Chrom:        "chr1.dist",
+//                 Start:        1,
+//                 Step:         1,
+//                 Span:         1,
+//                 DefaultValue: 0.0,
+//                 Values: []float64{0, 0, 0, 0, 0},},},
+//         Precision: 0.001,
+//     },
+// }
 
 
-func TestDistTrackMulti(t *testing.T) {
-    var res map[string]wig.Wig
-	for _, v := range DistTrackMultiTests {
-		res = map[string]wig.Wig{"chr1": DistTrackMulti(v.Input1, v.Name1, v.Input2, v.Name2, v.OutName, v.DefaultValue)}
-		if !wig.AllEqual(res, v.Expected, v.Precision) {
-            // Write("testdata/test_distTrack_input1_2.pfa", []PFasta{v.Input1})
-            // Write("testdata/test_distTrack_input2_2.pfa", []PFasta{v.Input2})
-			t.Errorf("Error: in pFasta. DistTrack valid input test was not as expected.")
-		}
-	}
-}
+// func TestDistTrackMulti(t *testing.T) {
+//     var res map[string]wig.Wig
+// 	for _, v := range DistTrackMultiTests {
+// 		res = map[string]wig.Wig{"chr1": DistTrackMulti(v.Input1, v.Name1, v.Input2, v.Name2, v.OutName, v.DefaultValue)}
+// 		if !wig.AllEqual(res, v.Expected, v.Precision) {			t.Errorf("Error: in pFasta. DistTrack valid input test was not as expected.")
+// 		}
+// 	}
+// }
