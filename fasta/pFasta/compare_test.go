@@ -167,7 +167,7 @@ func TestDistTrackFasta(t *testing.T) {
 }
 
 
-
+// // Unusued and unimplemented code (might delete later)
 // // DistTrackMultiTests tests a valid input to DistTrack
 // var DistTrackMultiTests = []struct {
 // 	Input1     []PFasta

@@ -71,7 +71,8 @@ func DistTrackFasta(a PFasta, b fasta.Fasta, outName string, defaultValue float6
 	return DistTrack(a, FaToPfa(b, 0, -1), outName, defaultValue)
 }
 
-// // TODO unimplemented and not used
+// // TODO unimplemented and not used (might delete later)
+// // DistTrackMultiTests tests a valid input to DistTrack
 // // DistTrackMulti reports a wig track from an input pFasta and Fasta, providing base-by-base
 // // information about the similarity of the pFastas. Assumes the pFastas are aligned.
 // func DistTrackMulti(a []PFasta, aName string, b []PFasta, bName string, outName string, defaultValue float64) wig.Wig {
