@@ -50,6 +50,7 @@ func mapq(s mapqSettings) {
 	//mp := make(map[uint8]int)
 	var otherMapq []uint8
 	var j int
+	var found bool
 	hist := make([]int, 61)
 	out := fileio.EasyCreate(s.OutFile)
 	aln, _ := sam.GoReadToChan(s.InFile)
@@ -62,16 +63,20 @@ func mapq(s mapqSettings) {
 		}
 		//check for unusual mapq score. For example, sometimes cellranger uses mapq 255
 		if i.MapQ > 60 || i.MapQ < 0 {
+			found = false
 			for j = range otherMapq { //check to see if the unusual mapq has been seen before
 				if i.MapQ == otherMapq[j] {
 					//if it has, add it to the histogram and break
 					hist[61+j]++
+					found = true
 					break
 				}
 			}
-			//if it hasn't, add to both the histogram and list of unusual MapQ's
-			otherMapq = append(otherMapq, i.MapQ)
-			hist = append(hist, 1)
+			if !found {
+				//if it hasn't, add to both the histogram and list of unusual MapQ's
+				otherMapq = append(otherMapq, i.MapQ)
+				hist = append(hist, 1)
+			}
 		} else {
 			//normal case for mapq 0-60, iterate the slice with the index corresponding to mapq
 			hist[i.MapQ]++
