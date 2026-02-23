@@ -35,14 +35,15 @@ func parseMapqArgs() {
 
 	exception.PanicOnErr(err)
 	mapqFlags.Usage = func() { mapqUsage(mapqFlags) }
+
+	var bedfile *string = mapqFlags.String("bedfile", "", "Provide a file with bed regions. Only reads that overlap a bed regions will be analyzed. Only compatible with"+
+		"bam files. Any alignment with any degree of overlap will be considered.")
+
 	if len(mapqFlags.Args()) != expectedNumArgs {
 		mapqFlags.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(mapqFlags.Args()))
 	}
-
-	var bedfile *string = mapqFlags.String("bedfile", "", "Provide a file with bed regions. Only reads that overlap a bed regions will be analyzed. Only compatible with"+
-		"bam files. Any alignment with any degree of overlap will be considered.")
 
 	inFile := mapqFlags.Arg(0)
 	outFile := mapqFlags.Arg(1)
