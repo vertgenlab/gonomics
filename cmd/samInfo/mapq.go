@@ -49,6 +49,7 @@ func parseMapqArgs() {
 	outFile := mapqFlags.Arg(1)
 
 	if *bedfile != "" && filepath.Ext(inFile) != ".bam" {
+		//since the bed region option uses the bamseeker function, we check to see if the user input is a bam (not a sam)
 		log.Fatalf("Error: -bedfile must be used with a bam alignment file input. Alignment file provided: %s\n", inFile)
 	}
 
