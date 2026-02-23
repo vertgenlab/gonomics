@@ -13,7 +13,9 @@ func usage() {
 			"\tsamInfo readLength in.sam/bam out.txt\n" +
 			"\tOR\n" +
 			"\tsamInfo coverage in.sam/bam histogram.txt statSummary.txt\n" +
-			"Enter a subcommand to fiew options.\n")
+			"\tOR\n" +
+			"\tsamInfo mapq in.sam/bam histogram.txt\n" +
+			"Enter a subcommand to view options.\n")
 }
 
 func main() {
@@ -31,6 +33,8 @@ func main() {
 		parseReadLengthArgs()
 	case "coverage":
 		parseCoverageArgs()
+	case "mapq":
+		parseMapqArgs()
 	default:
 		flag.Usage()
 		log.Fatalf("Error: unrecognized subcommand: %v.\n", flag.Arg(0))
