@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
@@ -94,6 +95,12 @@ func bedRegionsOnly(s mapqSettings, hist []int, otherMapq []uint8) ([]int, []uin
 
 	//open up the alinment file with a bam reader (more efficient search for overlapped regions)
 	br, _ := sam.OpenBam(s.InFile)
+
+	_, err := os.Stat(s.InFile + ".bai")
+	if errors.Is(err, os.ErrNotExist) {
+		log.Fatalf("A .bai file must be created for the input bam file: %s. Create a bam file with: samtools index in.bam\n", s.InFile)
+	}
+
 	bai := sam.ReadBai(s.InFile + ".bai")
 
 	//loop through bed file
