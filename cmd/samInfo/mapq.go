@@ -31,13 +31,13 @@ func parseMapqArgs() {
 	var expectedNumArgs int = 2
 	var err error
 	mapqFlags := flag.NewFlagSet("mapq", flag.ExitOnError)
-	err = mapqFlags.Parse(os.Args[2:])
-
-	exception.PanicOnErr(err)
-	mapqFlags.Usage = func() { mapqUsage(mapqFlags) }
 
 	var bedfile *string = mapqFlags.String("bedfile", "", "Provide a file with bed regions. Only reads that overlap a bed regions will be analyzed. Only compatible with"+
 		"bam files. Any alignment with any degree of overlap will be considered.")
+
+	err = mapqFlags.Parse(os.Args[2:])
+	exception.PanicOnErr(err)
+	mapqFlags.Usage = func() { mapqUsage(mapqFlags) }
 
 	if len(mapqFlags.Args()) != expectedNumArgs {
 		mapqFlags.Usage()
