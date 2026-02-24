@@ -1,6 +1,7 @@
 package sort
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -28,4 +29,18 @@ func TestReadAndWriteIdx(t *testing.T) {
 	}
 	os.Remove("testdata/testWrite")
 	fileio.EasyRemove("testdata/testWrite.idx")
+}
+
+func TestUnique(t *testing.T) {
+	in := []string{"hello", "welcome", "hello"}
+	out := Unique(in)
+	exp := []string{"hello", "welcome"}
+	for i := range out {
+		if out[i] == exp[i] {
+			continue
+		} else {
+			t.Error("Removing duplicates and sorting is broken.")
+			fmt.Println(out[i], exp[i])
+		}
+	}
 }
