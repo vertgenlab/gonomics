@@ -50,9 +50,9 @@ func parseCoverageArgs() {
 			expectedNumArgs, len(coverageFlags.Args()))
 	}
 
-	samFileName := flag.Arg(0)
-	outHistFile := flag.Arg(1)
-	outStatFile := flag.Arg(2)
+	samFileName := coverageFlags.Arg(0)
+	outHistFile := coverageFlags.Arg(1)
+	outStatFile := coverageFlags.Arg(2)
 	s := CoverageSettings{
 		SamFileName:      samFileName,
 		HistogramOutFile: outHistFile,
