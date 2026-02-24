@@ -35,21 +35,24 @@ func parseCoverageArgs() {
 	var expectedNumArgs int = 3
 	var err error
 	coverageFlags := flag.NewFlagSet("coverage", flag.ExitOnError)
+
+	var countNinDepth *bool = coverageFlags.Bool("countNinDepth", true, "If true, count 'N' reads towards total depth of pileups.")
+	var verbose *int = coverageFlags.Int("verbose", 0, "Set to 1 to reveal debug prints. Verbose in this program reports Poisson parameter lambda.")
+	var highEndFilter *float64 = coverageFlags.Float64("highEndFilter", 0.001, "Percent threshold from right end of distribution to be filtered out")
+
 	err = coverageFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	coverageFlags.Usage = func() { coverageUsage(coverageFlags) }
+
 	if len(coverageFlags.Args()) != expectedNumArgs {
 		coverageFlags.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
 			expectedNumArgs, len(coverageFlags.Args()))
 	}
 
-	var countNinDepth *bool = coverageFlags.Bool("countNinDepth", true, "If true, count 'N' reads towards total depth of pileups.")
-	var verbose *int = coverageFlags.Int("verbose", 0, "Set to 1 to reveal debug prints. Verbose in this program reports Poisson parameter lambda.")
-	var highEndFilter *float64 = coverageFlags.Float64("highEndFilter", 0.001, "Percent threshold from right end of distribution to be filtered out")
-	samFileName := flag.Arg(0)
-	outHistFile := flag.Arg(1)
-	outStatFile := flag.Arg(2)
+	samFileName := coverageFlags.Arg(0)
+	outHistFile := coverageFlags.Arg(1)
+	outStatFile := coverageFlags.Arg(2)
 	s := CoverageSettings{
 		SamFileName:      samFileName,
 		HistogramOutFile: outHistFile,
