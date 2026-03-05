@@ -2,6 +2,7 @@ package lift
 
 import (
 	"github.com/vertgenlab/gonomics/axt"
+	"github.com/vertgenlab/gonomics/numbers"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/bed"
@@ -53,7 +54,7 @@ func TestMatchOverlapLen(t *testing.T) {
 
 func TestLiftCoordinatesWithAxt(t *testing.T) {
 	var outBed bed.Bed = bed.Bed{FieldsInitialized: 3}
-	axtRecords := axt.Read("testdata/in.axt")
+	axtRecords := axt.Read("testdata/test.axt")
 	bedsToLift := []bed.Bed{{Chrom: "chr1", ChromStart: 100, ChromEnd: 110}, {Chrom: "chr1", ChromStart: 105, ChromEnd: 110}}
 	expectedBed := []bed.Bed{{Chrom: "chr2", ChromStart: 200, ChromEnd: 210, FieldsInitialized: 3}, {Chrom: "chr2", ChromStart: 789, ChromEnd: 796, FieldsInitialized: 3}}
 	for i := range bedsToLift {
@@ -61,5 +62,24 @@ func TestLiftCoordinatesWithAxt(t *testing.T) {
 		if !bed.Equal(expectedBed[i], outBed) {
 			t.Errorf("Error in LiftCoordinatesWithAxt. Expected: %v, output: %v\n", expectedBed[i], outBed)
 		}
+	}
+}
+
+func TestAxtPercentIdentityInInterval(t *testing.T) {
+	axtRecords := axt.Read("testdata/test.axt")
+	region1 := bed.Bed{Chrom: "chr1", ChromStart: 100, ChromEnd: 120}
+	region2 := bed.Bed{Chrom: "chr2", ChromStart: 200, ChromEnd: 220}
+	var exp float64 = 60.869565
+	out1 := AxtPercentIdentityInInterval(axtRecords[1], region1)
+
+	if !numbers.ApproxEqual(out1, exp, 1e-6) {
+		t.Errorf("Error in AxtPercentIdentityInInterval. Expeced: %f, output: %f", exp, out1)
+	}
+	axtRecords[1].QStrandPos = true
+	axt.Swap(&axtRecords[1], 300, 300)
+	out2 := AxtPercentIdentityInInterval(axtRecords[1], region2)
+
+	if out1 != out2 {
+		t.Errorf("Error in AxtPercentIdentityInInterval after swap. Expeced: %f, output: %f", out1, out2)
 	}
 }
