@@ -1,0 +1,3 @@
+length	percentIdentity
+20	85.00
+20	60.87
