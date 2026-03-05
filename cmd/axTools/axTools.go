@@ -187,5 +187,5 @@ func QuerySwapAll(input string, output string, targetLen string, queryLen string
 		axt.WriteToFileHandle(axtWriter, each, index)
 		index++
 	}
-	axtWriter.Close()
+	exception.PanicOnErr(axtWriter.Close())
 }
