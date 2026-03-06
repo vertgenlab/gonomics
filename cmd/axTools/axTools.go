@@ -70,26 +70,34 @@ func main() {
 	}
 }
 
+// axtStats() takes in an AXT file, and creates an output text file with the length (of the reference interval) and percent ID
+// (to the query). Optionally, a bed file can be provided, and only AXT records overlapping a bed record will be analyzed.
 func axtStats(input string, output string, bedfile *string) {
 	var length int
 	var pID float64
 	var bedTree map[string]*interval.IntervalNode
 
+	//read AXT to channel
 	data, _ := axt.GoReadToChan(input)
 	out := fileio.EasyCreate(output)
 	fileio.WriteToFileHandle(out, "length\tpercentIdentity")
 
+	//if a bed file is provided, read the bedfile and create a search tree for interval query
 	if *bedfile != "" {
 		bd := bed.Read(*bedfile)
 		bedTree = interval.BedSliceToIntervalMap(bd)
 	}
 
+	//loop through AXT file
 	for i := range data {
 		if *bedfile != "" {
+			//if a bed file is provided, check to see if the AXT record overlaps a bed region
 			if !interval.QueryBool(bedTree, i, "any", []interval.Interval{}) {
+				//returns false if no overlap, so we want to continue
 				continue
 			}
 		}
+		//made it through checks, calculate stats for the AXT and write to file
 		length, pID = calcAxtStat(i)
 		fileio.WriteToFileHandle(out, fmt.Sprintf("%d\t%.2f", length, pID))
 	}
@@ -97,6 +105,7 @@ func axtStats(input string, output string, bedfile *string) {
 	exception.PanicOnErr(out.Close())
 }
 
+// calcAxtStat() takes in an AXT record to calculate size and percent ID
 func calcAxtStat(a axt.Axt) (int, float64) {
 	return interval.IntervalSize(a), lift.AxtPercentIdentityInInterval(a, a)
 }
