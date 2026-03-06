@@ -39,7 +39,7 @@ func parseDistTrackArgs() {
 	distTrackFlags := flag.NewFlagSet("distTrack", flag.ExitOnError)
 	var defaultValue *float64 = distTrackFlags.Float64("defaultValue", math.MaxFloat64, "Set the default value for the wig. Positions with this value will not be written to the file.")
 	var outName *string = distTrackFlags.String("outName", "", "Specify name of the out file. If none is provided, output name will be the same as the first input name.")
-	err = distTrackFlags.Parse(os.Args[3:])
+	err = distTrackFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	distTrackFlags.Usage = func() { distTrackUsage(distTrackFlags) }
 	if len(distTrackFlags.Args()) != expectedNumArgs {
