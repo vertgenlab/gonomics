@@ -45,7 +45,7 @@ func TestAxtToFasta(t *testing.T) {
 	log.Printf("%s %s\n", seq.Name, dna.BasesToString(seq.Seq))
 
 	for _, v := range axtStatsTests {
-		axtStats(v.inAXT, v.outStats, &v.bedregions)
+		axtStats(v.inAXT, v.bedregions, v.outStats)
 		if !fileio.AreEqual(v.outStats, v.expected) {
 			t.Errorf("ERROR in axTools -stats: The output (%s) and expected (%s) files are not equal", v.outStats, v.expected)
 		} else {

@@ -204,6 +204,11 @@ func checkCompatability(a axt.Axt, region interval.Interval) bool {
 	return false
 }
 
+// AxtPercentIdentityInInterval calculates the percent identity within a region of an AXT record. If the percent
+// identity of the whole alignment is to be calculated, proved the AXT record in both arguments, as AXT records
+// fulfill the Interval interface. The numerator consists of the number of base matches, regardless of repeat masking.
+// The denominator is the total number of characters in the alignment (Bases + Gaps). The output is a float64 between 0 and 100 (inclusive).
+// If the program detects two gaps aligned to each other, it will error. Any 'N' bases aligned to each other will not count as matches.
 func AxtPercentIdentityInInterval(a axt.Axt, refInterval interval.Interval) float64 {
 	if !checkCompatability(a, refInterval) {
 		log.Fatalf("The interval you are trying to assay is not entirely within the axt reference coordinates.")
@@ -213,11 +218,17 @@ func AxtPercentIdentityInInterval(a axt.Axt, refInterval interval.Interval) floa
 }
 
 func percentIdentity(a axt.Axt, idxStart, idxEnd int) float64 {
-	var c int
+	var c, alignedN int
 	for i := idxStart; i < idxEnd; i++ {
 		if dna.ToUpper(a.RSeq[i]) == dna.ToUpper(a.QSeq[i]) {
+			if a.RSeq[i] == dna.Gap {
+				log.Fatalf("ERROR: Gaps aligned to each other\n")
+			} else if a.RSeq[i] == dna.N {
+				alignedN++
+				continue
+			}
 			c++
 		}
 	}
-	return (float64(c) / float64(idxEnd-idxStart)) * 100
+	return (float64(c) / float64(idxEnd-idxStart-alignedN)) * 100
 }

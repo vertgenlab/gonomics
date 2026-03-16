@@ -61,7 +61,7 @@ func main() {
 	} else if *minScore != 0 {
 		filterAxtScore(input, output, *minScore)
 	} else if *stats {
-		axtStats(input, output, bedfile)
+		axtStats(input, output, *bedfile)
 	} else {
 		flag.Usage()
 		if len(flag.Args()) != expectedNumArgs {
@@ -72,25 +72,25 @@ func main() {
 
 // axtStats() takes in an AXT file, and creates an output text file with the length (of the reference interval) and percent ID
 // (to the query). Optionally, a bed file can be provided, and only AXT records overlapping a bed record will be analyzed.
-func axtStats(input string, output string, bedfile *string) {
+func axtStats(inputAxtFilename string, bedfile string, outputStatsFilename string) {
 	var length int
 	var pID float64
 	var bedTree map[string]*interval.IntervalNode
 
 	//read AXT to channel
-	data, _ := axt.GoReadToChan(input)
-	out := fileio.EasyCreate(output)
+	data, _ := axt.GoReadToChan(inputAxtFilename)
+	out := fileio.EasyCreate(outputStatsFilename)
 	fileio.WriteToFileHandle(out, "length\tpercentIdentity")
 
 	//if a bed file is provided, read the bedfile and create a search tree for interval query
-	if *bedfile != "" {
-		bd := bed.Read(*bedfile)
+	if bedfile != "" {
+		bd := bed.Read(bedfile)
 		bedTree = interval.BedSliceToIntervalMap(bd)
 	}
 
 	//loop through AXT file
 	for i := range data {
-		if *bedfile != "" {
+		if bedfile != "" {
 			//if a bed file is provided, check to see if the AXT record overlaps a bed region
 			if !interval.QueryBool(bedTree, i, "any", []interval.Interval{}) {
 				//returns false if no overlap, so we want to continue
