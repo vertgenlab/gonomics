@@ -1,0 +1,5 @@
+construct	umi	count
+A	ACAATTGATC	2
+A	TCTGTAGATG	1
+B	TCTGTAGATG	1
+unclear	TCTGTAGATG	1
