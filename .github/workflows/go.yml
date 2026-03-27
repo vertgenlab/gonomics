@@ -29,8 +29,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GOLANG }}
-      - name: Install
-        run: make install
       - name: Test
         if: matrix.OS == 'ubuntu-latest' || matrix.OS == 'macos-latest'
         run: make test
