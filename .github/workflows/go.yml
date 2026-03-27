@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: main
 env:
-  GOLANG: 1.22.2
+  GOLANG: 1.26.1
 jobs:
   format:
     runs-on: ubuntu-latest
