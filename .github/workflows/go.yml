@@ -16,24 +16,8 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GOLANG }}
-      - name: Setup lint
-        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.0 && go install github.com/google/yamlfmt/cmd/yamlfmt@latest
       - name: Test then Install
         run: go test ./... && go install ./...
-      - name: Lint and automate clean up
-        run: make clean && go install ./... && go test ./...
-      - name: Check and push changes
-        run: |
-          export NAME=$(git log -n 1 --pretty=format:%an)
-          export EMAIL=$(git log -n 1 --pretty=format:%ae)
-          git config user.name "NAME"
-          git config user.email "$EMAIL"
-          if git diff-index --quiet HEAD --; then
-            git add -A
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-            git commit -am "style: automated go lint ./... && go fmt ./..."
-            git push
-          fi
   gitactions:
     needs: format
     strategy:
