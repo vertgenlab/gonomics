@@ -108,6 +108,15 @@ func readPostProbs(postProbsFilename string) map[string][]float64 {
 // desiredSpecies MUST be in order, 1st listed species must be the MAF reference species
 func PostProbToWig(postProbsFile string, mafInput []*maf.Maf, desiredSpecies []string) (map[string]wig.Wig, map[string]wig.Wig) {
 	// make a chrom.sizes ChromInfo struct for the entire maf file
+	if len(mafInput) == 0 {
+		log.Fatal("mafInput is empty")
+	}
+	if len(desiredSpecies) == 0 {
+		log.Fatal("desiredSpecies is empty")
+	}
+	if len(mafInput[0].Species) == 0 {
+		log.Fatal("first maf block has no species")
+	}
 	if !strings.HasPrefix(mafInput[0].Species[0].SLine.Src, desiredSpecies[0]) {
 		log.Fatal("Reference species ", desiredSpecies[0], " not found.")
 	}
