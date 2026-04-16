@@ -71,13 +71,21 @@ func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 	return answer
 }
 
+<<<<<<< HEAD
 // Simulate acts as a wrapper for SimulateFromSeq.
 // It takes a filename of a fasta file that will be the starting sequence at the root nodes
 // and a pointer, genePred and deletions as in SimulateFromSeq.
+=======
+// Simulate takes a filename of a fasta file that will be the starting sequence at the root nodes, a pointer to a phylogenetic tree,
+// a genePred filename related to the starting sequence, and if deletions should be allowed along with substitutions.
+// The starting sequence will then be evolved according to the neutral tree provided and each node in the tree
+// will be assigned a DNA sequence.
+>>>>>>> 661b080c (skeleton code for ils simulation)
 func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, deletions bool) {
 	var rand1 []fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
+<<<<<<< HEAD
 	SimulateFromSeq(rand1, root, gene, deletions)
 }
 
@@ -88,6 +96,10 @@ func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, del
 func SimulateFromSeq(seq []fasta.Fasta, root *expandedTree.ETree, gene string, deletions bool) {
 	root.Fasta = &seq[0]
 	printSeqForNodes(root, seq[0].Seq, gene, deletions)
+=======
+	root.Fasta = &rand1[0]
+	printSeqForNodes(root, rand1[0].Seq, gene, deletions)
+>>>>>>> 661b080c (skeleton code for ils simulation)
 }
 
 // BLOSUM matrix for amino acid switching probabilities normalized to 0-1.
@@ -473,6 +485,10 @@ func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string
 
 	length = node.BranchLength
 	seq = MutateGene(sequence, length, gene, deletions)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 661b080c (skeleton code for ils simulation)
 	seqFasta = fasta.Fasta{node.Name, seq}
 	node.Fasta = &seqFasta
 	if node.Left != nil && node.Right != nil {
