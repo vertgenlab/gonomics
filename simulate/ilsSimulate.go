@@ -11,6 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/genePred"
 	"github.com/vertgenlab/gonomics/numbers"
+	"gonum.org/v1/gonum/mat"
 )
 
 // gives sum of array
@@ -24,43 +25,41 @@ func sumArray(numbers []int) int {
 
 
 // convert a 2D square transition matrix (a, b, c, ...) to (a, a+b, a+b+c, ...) per row
-func probRange(transitionMat [][]float64) {
-	n := len(transitionMat)
-
-	out := make([][]float64, n)
-	for i := range out {
-		out[i] = make([]float64, n)
+func probRange(transMat *mat.Dense) {
+	r, c := transMat.Dims()
+	if r != c {
+		log.Fatal("Must provide square transition matrix")
 	}
 
-	var curRow float64 
-	for rowIdx, row := range transitionMat {
-		curRow = 0
-		for colIdx, val := range row {
-			curRow += val
-			out[rowIdx][colIdx] = val
+	out := mat.NewDense(r, r, nil)
+	for i := range r {
+		rowSum := 0
+		colSum := 0
+		for j := range c { // r and c are the same value, named this way for clarity
+			rowSum += transMat.At(i, j) // sum at row i
+			colSum += transMat.At(j, i) // sum at col i
+			out.Set(i, j, rowSum)
+			out.Set(j, i, colSum)
+		}
+
+		if rowSum != 1{
+			log.Fatalf("Must provide transition matrix that sums to 1 across rows, row index %d sums to %d", j, rowSum)
+		}
+		if colSum != 1{
+			log.Fatalf("Must provide transition matrix that sums to 1 across rows, row index %d sums to %d", i, colSum)
 		}
 	}
 
 	return out
 }
 
-func SimulateIls(roots []*expandedTree.ETree, transitionMat [][]float64, totalLength int, seed int, outName string, GC float64) []fasta.Fasta{} {
-	if len(roots) != len(transitionMat){
-		n := len(transitionMat)
-		for idx, row := transitionMat {
-			if n != len(row) {
-				log.Fatal("Must provide square transition matrix")
-			}
-			if sumArray(row) != 1 {
-				log.Fatal("Must provide transition matrix that sums to 1 across rows")
-			}
-
-			if transitionMat[0][idx]+transitionMat[1][idx]+transitionMat[2][idx]+transitionMat[3][idx] != 1 {
-				log.Fatal("Must provide transition matrix that sums to 1 across columns")
-			}
-		}
-		log.Fatal("Must provide square transition matrix same length as roots")
+func SimulateIls(roots []*expandedTree.ETree, transMat [][]float64, totalLength int, seed int, outName string, GC float64) []fasta.Fasta{} {
+	n := len(roots)
+	r, c := transMat.Dims()
+	if r != n || c != n {
+		log.Fatal("Must provide square transition matrix that matches number of provided phylogenies")
 	}
+	transMatConverted := probRange(transMat, n)
 	
 	rand.Seed(seed)
 
@@ -72,13 +71,40 @@ func SimulateIls(roots []*expandedTree.ETree, transitionMat [][]float64, totalLe
 	/// generate an ancestral seq of length totalLength
 	/// needs to randomly generate a sequence --> this is only available in command
 	// can I reference a function made in command package?
-	anc := fasta.Fasta{Name: "Anc", Seq: simulate.RandIntergenicSeq(GC, totalLength)}
+	
+	// expandedTree.ReadNewick(filename) (*ETree, error) reades just newick
+	anc := fasta.Fasta{Name: "Anc", Seq: RandIntergenicSeq(GC, totalLength)}
+
 	// list of fastas forward simulated from anc
+	// if there are S species
+	// and N topologies
+	// we get S*N total sequences
+	fastas := make([]fasta.Fasta, n)
+	leafFastas := make([]fasta.Fasta, n)
+
+	var nodes []*ETree
+	for topologyIdx, root := range roots {
+		// Simulate takes in a filename, need to save the ancestral sequence??
+
+		func Simulate(randSeqFilename string, root, gene string, deletions bool)
+		// now the sequences for each fasta will be in the input tree
+
+		nodes := expandedTree.GetTree(root)
+		for i:= 0; i < len(nodes); i++ {
+			fastas[topologyIdx] = append(fastas[topologyIdx], *nodes[i].Fasta)
+			if nodes[i].Left == nil && nodes[i].Right == nil {
+				leafFastas[topologyIdx] = append(leafFastas[topologyIdx], *nodes[i].Fasta)
+			}
+		}
+		
+		
+
+	}
 	leaves := make([]fasta.Fasta{}, n) // ??? I need to set the name and sequence length
 	for i := range n {
 		// Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, deletions bool)
-		
-		leaves[i] = Simulate()
+
+		leaves[i].Seq = RandIntergenicSeq(GC, lenSeq)
 	}
 
 	out := fasta.Fasta{Name: outName, Seq: make([]dna.Base, totalLength)}
