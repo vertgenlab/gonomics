@@ -43,6 +43,8 @@ func probRange(transMat *mat.Dense) {
 	return out
 }
 
+// best file practice to read files in cmd
+// package deal with data structures, unless for IO
 func SimulateIls(roots []*expandedTree.ETree, transMat [][]float64, totalLength int, seed int, outSpecies string, GC float64) []fasta.Fasta{} {
 	n := len(roots)
 	r, c := transMat.Dims()
