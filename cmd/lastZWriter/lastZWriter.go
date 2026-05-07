@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -23,7 +24,7 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 	}
 	speciesList := fileio.Read(speciesListFile)
 	refList := fileio.Read(refListFile)
-	fileio.EasyCreate(outText)
+	// fileio.EasyCreate(outText)
 	var parameters []string
 	var matrix string
 	var allLines []string
@@ -45,7 +46,7 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 func MakeArraySimple(lastZ string, pairwise string, speciesListFile string, refListFile string, parameters string, outText string, targetModifier string) {
 	speciesList := fileio.Read(speciesListFile)
 	refList := fileio.Read(refListFile)
-	fileio.EasyCreate(outText)
+	// fileio.EasyCreate(outText)
 	var allLines []string
 	for ref := range refList {
 		for spec := range speciesList {
@@ -87,8 +88,8 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 	var currLine string
 	var theseLines []string
 	var tMatches, qMatches, tFiles, qFiles []string
-	tPath := filepath.Join(pairwise, reference+".byChrom")
-	qPath := filepath.Join(pairwise, species+".byChrom")
+	tPath := path.Join(pairwise, reference+".byChrom")
+	qPath := path.Join(pairwise, species+".byChrom")
 
 	if _, e := os.Stat(tPath); os.IsNotExist(e) {
 		log.Fatalf("There is no .byChrom directory for the target (reference) species.")
@@ -112,14 +113,14 @@ func fastaFinder(lastZ string, pairwise string, reference string, species string
 		tName := strings.TrimSuffix(tFiles[t], ".fa")
 		for q := range qFiles {
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
-			// note that because of filepath.Join, different systems (e.g. Windows) will write different paths (e.g. "/" vs "\"), and may cause tests to fail
-			currLine = lastZ + " " + filepath.Join(
+			// note that because of path.Join, different systems (e.g. Windows) will write different paths (e.g. "/" vs "\"), and may cause tests to fail
+			currLine = lastZ + " " + path.Join(
 				pairwise,
 				reference+".byChrom",
-				tFiles[t]) + targetModifier + " " + filepath.Join(
+				tFiles[t]) + targetModifier + " " + path.Join(
 				pairwise,
 				species+".byChrom",
-				qFiles[q]) + " --output=" + filepath.Join(
+				qFiles[q]) + " --output=" + path.Join(
 				pairwise,
 				reference+"."+species,
 				tName,
@@ -141,8 +142,8 @@ func fastaFinderSimple(lastZ string, pairwise string, reference string, species 
 	var currLine string
 	var theseLines []string
 	var tMatches, qMatches, tFiles, qFiles []string
-	tPath := filepath.Join(pairwise, reference+".byChrom")
-	qPath := filepath.Join(pairwise, species+".byChrom")
+	tPath := path.Join(pairwise, reference+".byChrom")
+	qPath := path.Join(pairwise, species+".byChrom")
 
 	if _, e := os.Stat(tPath); os.IsNotExist(e) {
 		log.Fatalf("There is no .byChrom directory for the target (reference) species.")
@@ -168,13 +169,13 @@ func fastaFinderSimple(lastZ string, pairwise string, reference string, species 
 			qName := strings.TrimSuffix(qFiles[q], ".fa")
 			// currLine reflects that fastaFinderSimple has no matrix string
 			// currLine also reflects that fastaFinderSimple has a different output file name structure: ref.species/qName/tName.qName.axt
-			currLine = lastZ + " " + filepath.Join(
+			currLine = lastZ + " " + path.Join(
 				pairwise,
 				reference+".byChrom",
-				tFiles[t]) + targetModifier + " " + filepath.Join(
+				tFiles[t]) + targetModifier + " " + path.Join(
 				pairwise,
 				species+".byChrom",
-				qFiles[q]) + " --output=" + filepath.Join(
+				qFiles[q]) + " --output=" + path.Join(
 				pairwise,
 				reference+"."+species,
 				qName,

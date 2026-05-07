@@ -18,7 +18,8 @@ func TestGonomics(t *testing.T) {
 	execPath, err = filepath.EvalSymlinks(execPath) // follow any symlinks to get true executable location
 
 	// options to choose from
-	execPath = strings.TrimSuffix(execPath, ".test") // avoid errors when testing function
+	execPath = strings.TrimSuffix(execPath, ".test")     // avoid errors when testing function
+	execPath = strings.TrimSuffix(execPath, ".test.exe") // avoid errors when testing function
 	execPath = strings.TrimSuffix(execPath, "/gonomics")
 	gobin := os.Getenv("GOBIN")
 	gopath := os.Getenv("GOPATH") + "/bin"     // default to $GOPATH/bin

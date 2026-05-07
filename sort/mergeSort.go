@@ -110,6 +110,11 @@ func mergeSort[E any](data <-chan E, less func(a, b E) bool, out chan<- E, recor
 		heap.Push(pq, currVal) // push the new value onto the heap
 	}
 
+	for _, f := range tmpFiles {
+		err = f.Close()
+		exception.PanicOnErr(err)
+	}
+
 	close(out)
 }
 
@@ -147,13 +152,17 @@ func chunkData[E any](data <-chan E, recordsPerChunk int, less func(a, b E) bool
 // gob decoder.
 func writeTmpFile[E any](chunk []E, tmpDir string) *os.File {
 	file, err := os.CreateTemp(tmpDir, "sort_chunk_")
-	defer file.Close()
 	exception.PanicOnErr(err)
+	// defer file.Close()
 
 	encoder := gob.NewEncoder(file)
 	for i := range chunk {
 		err = encoder.Encode(chunk[i]) // encode each data record
 		exception.PanicOnErr(err)
 	}
+
+	err = file.Close()
+	exception.PanicOnErr(err)
+
 	return file
 }
