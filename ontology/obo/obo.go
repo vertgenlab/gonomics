@@ -4,11 +4,12 @@ package obo
 
 import (
 	"fmt"
-	"github.com/vertgenlab/gonomics/exception"
-	"github.com/vertgenlab/gonomics/fileio"
 	"io"
 	"log"
 	"strings"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 // Obo is a struct representing one node in an Obo format file, or one ontology term.
@@ -100,6 +101,10 @@ func Read(filename string, force bool) (map[string]*Obo, Header) {
 	for curr, done = NextObo(file, force); !done; curr, done = NextObo(file, force) {
 		answer[curr.Id] = curr
 	}
+
+	err := file.Close()
+	exception.PanicOnErr(err)
+
 	buildTree(answer, force)
 	return answer, header
 }
