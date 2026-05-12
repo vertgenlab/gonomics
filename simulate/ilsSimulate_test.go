@@ -51,36 +51,36 @@ func TestIlsSimulate(t *testing.T) {
 		roots := make([]*expandedTree.ETree, len(v.Roots))
 		for i, filename := range v.Roots {
 
+<<<<<<< HEAD
 			root, err := expandedTree.ReadNewick(filename)
-			if err != nil {
-				t.Fatalf("error reading newick %s: %v", filename, err)
-			}
-			roots[i] = root
-		}
-
-		expectedIls = fasta.Read(v.ExpectedPrefix + "_ils.fasta")
-		expectedBed = bed.Read(v.ExpectedPrefix + ".bed")
-
-		anc, evolved, topoRecord, ilsEvolved := SimulateIls(roots, m, int(v.Length), v.Seed, v.OutName, true, "", 1.0)
-
-		if !fasta.AllAreEqual(ilsEvolved, expectedIls) || !bed.AllAreEqual(topoRecord, expectedBed) {
-
-			outDir := t.TempDir()
-
-			fasta.Write(filepath.Join(outDir, "anc.fasta"), anc)
-			for idx, rec := range evolved {
-				fasta.Write(filepath.Join(outDir, fmt.Sprintf("forward_evolved_topo_v%d.fasta", idx)), rec)
-			}
-
-			bed.Write("ilsSimulated_"+v.OutName+".bed", topoRecord)
-			fasta.Write("ilsSimulated_"+v.OutName+"_ils.fasta", ilsEvolved)
-			t.Errorf("simulation output differs from expected; wrote observed output to %s", outDir)
-
-		}
+=======
+// probably should move this somewhere as a helper function, probably when command written
+// ReadMatrix reads a tab-delimited file
+// this might exist already in gonum, if not, put in numbers/matrix
+// as opposed to sparse -- indices + values of non-0, implicit 0s
+func readDenseFromCSV(filePath string) ([][]float64, error) {
+	// rename variables and delete this comment
+	// Source - https://stackoverflow.com/a/58841827
+	// Posted by SyntaxRules
+	// Retrieved 2026-04-16, License - CC BY-SA 4.0
+	ff, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal("Unable to read input file "+filePath, err)
 	}
-}
+	defer f.Close()
 
-var CombineIlsSeqsTests = []struct {
+	csvReader := csv.NewReader(f)
+	csvReader.Comma = '\t'
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		log.Fatal("Unable to parse file as CSV for "+filePath, err)
+	}
+
+	matrix := make([][]float64, len(records))
+
+	for i := range records {
+		matrix[i] = make([]float64, len(records[i]))
+			val, err := strconv.ParseFloat(records[i][j], 64)
 	forwardEvolved     [][]fasta.Fasta
 	statePath          []int
 	expectedIls        []fasta.Fasta
@@ -125,6 +125,7 @@ var CombineIlsSeqsTests = []struct {
 	},
 }
 
+<<<<<<< HEAD
 func TestCombineIlsSeqsTests(t *testing.T) {
 	var states []int
 
@@ -140,5 +141,11 @@ func TestCombineIlsSeqsTests(t *testing.T) {
 		if len(stateRecord) != v.expectedPathLength {
 			t.Errorf("expected %d BED records, got %d", v.expectedPathLength, len(stateRecord))
 		}
+=======
+		transMat, err := readMatrix(v.TransMat)
+		// read the roots???
+		observed := IlsSimulate(v.Roots, transMat, v.Length, v.Seed, v.OutName)
+		// check observed
+>>>>>>> b1a8048e (make Simulate a wrapper for funtion that only deals with data structure)
 	}
 }
