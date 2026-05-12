@@ -153,7 +153,6 @@ func chunkData[E any](data <-chan E, recordsPerChunk int, less func(a, b E) bool
 func writeTmpFile[E any](chunk []E, tmpDir string) *os.File {
 	file, err := os.CreateTemp(tmpDir, "sort_chunk_")
 	exception.PanicOnErr(err)
-	// defer file.Close()
 
 	encoder := gob.NewEncoder(file)
 	for i := range chunk {

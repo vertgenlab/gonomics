@@ -24,7 +24,6 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 	}
 	speciesList := fileio.Read(speciesListFile)
 	refList := fileio.Read(refListFile)
-	// fileio.EasyCreate(outText)
 	var parameters []string
 	var matrix string
 	var allLines []string
@@ -46,7 +45,6 @@ func MakeArray(lastZ string, pairwise string, speciesListFile string, refListFil
 func MakeArraySimple(lastZ string, pairwise string, speciesListFile string, refListFile string, parameters string, outText string, targetModifier string) {
 	speciesList := fileio.Read(speciesListFile)
 	refList := fileio.Read(refListFile)
-	// fileio.EasyCreate(outText)
 	var allLines []string
 	for ref := range refList {
 		for spec := range speciesList {
