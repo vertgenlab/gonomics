@@ -1,29 +1,31 @@
 package simulate
 
 import (
-	"github.com/vertgenlab/gonomics/numbers/matrix"
-	"github.com/vertgenlab/gonomics/fasta"
 	"encoding/csv"
+	"log"
 	"os"
 	"strconv"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/expandedTree"
+	"github.com/vertgenlab/gonomics/fasta"
 )
 
 var IlsSimulateTests = []struct {
-	TransMat    string
-	Roots 	[]*expandedTree.ETree
+	TransMat  string
+	Roots     []*expandedTree.ETree
 	Length    int64
 	OutName   string
-	Seed	  int64
+	Seed      int64
 	Expected  fasta.Fasta
 	Precision float64
 }{
 	{TransMat: "testdata/transMat_1.csv",
-		Roots: "testdata/roots_1.????",
-		Length: 10,
-		OutName: "test1"
-		Seed: 3,
-		Expected: "testdata/ilsSimulate_expected_1.fasta"
+		Roots:     "testdata/roots_1.????",
+		Length:    10,
+		OutName:   "test1",
+		Seed:      3,
+		Expected:  "testdata/ilsSimulate_expected_1.fasta",
 		Precision: 1e-3,
 	},
 }
@@ -42,17 +44,17 @@ func readDenseFromCSV(filePath string) ([][]float64, error) {
 	// Posted by SyntaxRules
 	// Retrieved 2026-04-16, License - CC BY-SA 4.0
 	ff, err := os.Open(filePath)
-    if err != nil {
-        log.Fatal("Unable to read input file " + filePath, err)
-    }
-    defer f.Close()
+	if err != nil {
+		log.Fatal("Unable to read input file "+filePath, err)
+	}
+	defer f.Close()
 
-    csvReader := csv.NewReader(f)
+	csvReader := csv.NewReader(f)
 	csvReader.Comma = '\t'
-    records, err := csvReader.ReadAll()
-    if err != nil {
-        log.Fatal("Unable to parse file as CSV for " + filePath, err)
-    }
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		log.Fatal("Unable to parse file as CSV for "+filePath, err)
+	}
 
 	matrix := make([][]float64, len(records))
 
@@ -77,7 +79,7 @@ func TestIlsSimulate(t *testing.T) {
 		// func SimulateIls(roots []*expandedTree.ETree, transitionMat [][]float64, totalLength int, seed int, outName string) {
 
 		transMat, err := readMatrix(v.TransMat)
-		// read the roots??? 
+		// read the roots???
 		observed := IlsSimulate(v.Roots, transMat, v.Length, v.Seed, v.OutName)
 		// check observed
 	}
