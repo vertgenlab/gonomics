@@ -8,15 +8,10 @@ clean:
 	gofmt -s -w ./*/*.go
 	gofmt -s -w ./*/*/*.go
 	gofmt -s -w ./cmd/*/*.go
-	golangci-lint run ./... --fix
 
 install:
 	go mod download && go mod verify
 	go install ./...
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.0
-
-lint:
-	golangci-lint run ./...
 
 list:
 	@grep '^[^#[:space:]].*:' Makefile

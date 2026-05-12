@@ -38,7 +38,7 @@ func simulateDivergentWindowsVcf(s Settings) {
 	var windows []Window = make([]Window, s.NumWindows)
 
 	for i := 0; i < s.NumTotalSites; i++ {
-		TotalSites[i] = simulate.SingleVcf(s.Alpha, s.NumAlleles, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, i+1)
+		TotalSites[i] = simulate.SingleVcfRandom(s.Alpha, s.NumAlleles, s.BoundAlpha, s.BoundBeta, s.BoundMultiplier, i+1)
 	}
 
 	for i := 0; i < s.NumWindows; i++ {
