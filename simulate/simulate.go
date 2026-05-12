@@ -71,16 +71,23 @@ func RandGene(name string, length int, GCcontent float64) []fasta.Fasta {
 	return answer
 }
 
-// Simulate takes a filename of a fasta file that will be the starting sequence at the root nodes, a pointer to a phylogenetic tree,
-// a genePred filename related to the starting sequence, and if deletions should be allowed along with substitutions.
-// The starting sequence will then be evolved according to the neutral tree provided and each node in the tree
-// will be assigned a DNA sequence.
+// Simulate acts as a wrapper for SimulateFromSeq.
+// It takes a filename of a fasta file that will be the starting sequence at the root nodes
+// and a pointer, genePred and deletions as in SimulateFromSeq.
 func Simulate(randSeqFilename string, root *expandedTree.ETree, gene string, deletions bool) {
 	var rand1 []fasta.Fasta
 
 	rand1 = fasta.Read(randSeqFilename)
-	root.Fasta = &rand1[0]
-	printSeqForNodes(root, rand1[0].Seq, gene, deletions)
+	SimulateFromSeq(rand1, root, gene, deletions)
+}
+
+// SimulateFromSeq takes a fasta sequence that is the starting sequence at the root nodes, a pointer to a phylogenetic tree,
+// a genePred filename related to the starting sequence, and if deletions should be allowed along with substitutions.
+// The starting sequence will then be evolved according to the neutral tree provided and each node in the tree
+// will be assigned a DNA sequence.
+func SimulateFromSeq(seq []fasta.Fasta, root *expandedTree.ETree, gene string, deletions bool) {
+	root.Fasta = &seq[0]
+	printSeqForNodes(root, seq[0].Seq, gene, deletions)
 }
 
 // BLOSUM matrix for amino acid switching probabilities normalized to 0-1.
