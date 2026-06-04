@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ilsState	0	7	V3
 ilsState	7	17	V1
 ilsState	17	19	V0
@@ -8,3 +9,10 @@ ilsState	25	26	V3
 ilsState	26	30	V2
 ilsState	30	35	V1
 ilsState	35	50	V3
+=======
+ilsState	0	10	V2
+ilsState	10	21	V3
+ilsState	21	25	V0
+ilsState	25	31	V3
+ilsState	31	50	V2
+>>>>>>> d4a18aea (testcase for ilsSimulate)
