@@ -4,7 +4,9 @@ package simulate
 
 import (
 	"fmt"
+	"fmt"
 	"log"
+	"math"
 	"math"
 	"math/rand"
 
@@ -33,6 +35,9 @@ func probRange(transMat *mat.Dense) *mat.Dense {
 		epsilon := 1e-5
 		if math.Abs(rowSum-1.0) > epsilon {
 			log.Fatalf("Transition matrix row %d must sum to 1 (within %.1e), got %.10f", i, epsilon, rowSum)
+		epsilon := 1e-5
+		if math.Abs(rowSum-1.0) > epsilon {
+			log.Fatalf("Transition matrix row %d must sum to 1 (within %.1e), got %.10f", i, epsilon, rowSum)
 		}
 	}
 
@@ -55,13 +60,19 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength i
 	transMatConverted := probRange(transMat)
 
 	rand.New(rand.NewSource(seed))
+	rand.New(rand.NewSource(seed))
 
+	// Randomly generate ancestral sequence of length totalLength
 	// Randomly generate ancestral sequence of length totalLength
 	anc := []fasta.Fasta{{Name: "Anc", Seq: RandIntergenicSeq(GC, totalLength)}}
 
 	// (Repeat for all n topologies) Forward evolve the ancestral sequence.
 	// Produces an output fasta with C sequences, one for each node in the topology
+	// (Repeat for all n topologies) Forward evolve the ancestral sequence.
+	// Produces an output fasta with C sequences, one for each node in the topology
 	// if there are S species and N topologies,
+	// we get S*N total sequences ie a list of length N, each with S sequences
+	forwardEvolvedSeqs := make([][]fasta.Fasta, n)
 	// we get S*N total sequences ie a list of length N, each with S sequences
 	forwardEvolvedSeqs := make([][]fasta.Fasta, n)
 
