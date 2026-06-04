@@ -58,25 +58,31 @@ func TestIlsSimulate(t *testing.T) {
 // ReadMatrix reads a tab-delimited file
 // this might exist already in gonum, if not, put in numbers/matrix
 // as opposed to sparse -- indices + values of non-0, implicit 0s
-func readDenseFromCSV(filePath string) ([][]float64, error) {
+func readDenseFromCSV(filePath string) (*mat.Dense, error) {
 	// rename variables and delete this comment
 	// Source - https://stackoverflow.com/a/58841827
 	// Posted by SyntaxRules
 	// Retrieved 2026-04-16, License - CC BY-SA 4.0
-	ff, err := os.Open(filePath)
+	f, err := os.Open(filePath)
 	if err != nil {
-		log.Fatal("Unable to read input file "+filePath, err)
+		return nil, fmt.Errorf("open %q: %w", filePath, err)
 	}
 	defer f.Close()
 
-	csvReader := csv.NewReader(f)
-	csvReader.Comma = '\t'
-	records, err := csvReader.ReadAll()
+	reader := csv.NewReader(f)
+	reader.Comma = '\t'
+
+	records, err := reader.ReadAll()
 	if err != nil {
-		log.Fatal("Unable to parse file as CSV for "+filePath, err)
+		return nil, fmt.Errorf("parse %q as CSV: %w", filePath, err)
 	}
 
-	matrix := make([][]float64, len(records))
+	if len(records) == 0 {
+		return mat.NewDense(0, 0, nil), nil
+	}
+
+	cols := len(records[0])
+	data := make([]float64, 0, len(records)*cols)
 
 	for i := range records {
 		matrix[i] = make([]float64, len(records[i]))
