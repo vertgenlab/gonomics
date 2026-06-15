@@ -22,10 +22,11 @@ func multFaBedDivergence(bedFile string, alnFile string, outFile string) {
 
 func usage() {
 	fmt.Print(
-		"multFaVisualizer - Provides human-readable multiple alignments for all entries in a bed file.\n" +
+		"multFaBedDivergence - Calculates the divergence (number of mutations) between two sequences in an alignment.\n" +
 			"All bed entries must be on the same chromosome to interface with multiFa file.\n" +
+			"The number of divergences will be added to the Score field of the bed file.\n" +
 			"Usage:\n" +
-			"multiFaVisualizeBeds in.bed mult.fa\n" +
+			"multiFaVisualizeBeds in.bed aln.mfa out.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
