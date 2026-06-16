@@ -13,30 +13,25 @@ import (
 
 func multFaBedDivergence(bedFile string, alnFile string, outFile string) {
 	b := bed.Read(bedFile)
-    var 
 
 	for i := 0; i < len(b); i++ {
-		fasta.(alnFile, outFile, b[i].ChromStart, b[i].ChromEnd, noMask, lineLength, false) //hard code endOfAlignment as false, as we are getting end positions from the beds.
+		fasta.(alnFile, outFile, b[i].ChromStart, b[i].ChromEnd, noMask, lineLength, false)
 	}
 }
 
 func usage() {
 	fmt.Print(
 		"multFaBedDivergence - Calculates the divergence (number of mutations) between two sequences in an alignment.\n" +
-			"All bed entries must be on the same chromosome to interface with multiFa file.\n" +
-			"The number of divergences will be added to the Score field of the bed file.\n" +
+			"All bed entries must be on the same chromosome to interface with the multiFa file.\n" +
+			"The number of divergences will appear in the Score field of the bed file.\n" +
 			"Usage:\n" +
-			"multiFaVisualizeBeds in.bed aln.mfa out.bed\n" +
+			"multiFaBedDivergence in.bed aln.mfa out.bed\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }
 
 func main() {
 	var expectedNumArgs int = 2
-	var noMask *bool = flag.Bool("noMask", false, "Converts all bases to upper case.")
-	var outFormat *bool = flag.Bool("outFormatName", false, "Uses the name column as the outfile name (name.txt).")
-	var lineLength *int = flag.Int("lineLength", 100, "Sets to length of each alignment line.")
-	var outDir *string = flag.String("outDir", "", "Set a path for the output files. Should end with \"/\".")
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	flag.Parse()
@@ -47,8 +42,9 @@ func main() {
 			expectedNumArgs, len(flag.Args()))
 	}
 
-	bedFile := flag.Arg(0)
-	alnFile := flag.Arg(1)
+	bedFilename := flag.Arg(0)
+	alnFilename := flag.Arg(1)
+	outBedFilename := flag.Arg(2)
 
-	multFaVisualizeBeds(bedFile, alnFile, *outFormat, *noMask, *lineLength, *outDir)
+	multiFaBedDivergence(bedFilename, alnFilename, outBedFilename)
 }
