@@ -58,7 +58,6 @@ func appendSeq(s settings, outlist []fasta.Fasta) []fasta.Fasta {
 }
 
 func faFilter(s settings) {
-	//records := fasta.Read(s.InFile) //read the fasta infile
 	fastaFile := fileio.EasyOpen(s.InFile)
 	curr, done := fasta.NextFasta(fastaFile) // read in first seq now for conversion from aln to ref coordinates
 
@@ -74,8 +73,7 @@ func faFilter(s settings) {
 		s.Start = fasta.RefPosToAlnPos(curr, s.Start) //adjusts the start position of the fasta record according to user's input
 		s.End = fasta.RefPosToAlnPos(curr, s.End)     //adjusts end coodinates
 	}
-	
-	//for i := 0; i < len(records); i++ { //for each fasta record
+
 	for ; !done; curr, done = fasta.NextFasta(fastaFile) {
 		pass = true
 		if s.Name != "" && curr.Name != s.Name { //filtering based on name if a string is given to the name option by the user
