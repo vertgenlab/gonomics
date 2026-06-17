@@ -110,6 +110,11 @@ func IsSelfOverlapping(b []Bed, verbose int) bool {
 	return false
 }
 
+// Size returns the size of a singular bed entry as an int
+func Size(b Bed) int {
+	return b.ChromEnd - b.ChromStart
+}
+
 // AverageSize returns the average interval size of a slice of Bed, rounded to the nearest integer
 func AverageSize(b []Bed) int {
 	avg := float64(TotalSize(b)) / float64(len(b))
