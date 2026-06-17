@@ -1,0 +1,53 @@
+Term	Name	Enrichment	P-Value
+GO:0043569	negative regulation of insulin-like growth factor receptor signaling pathway	1.179092e-03	-6.661076e-01
+GO:0016324	apical plasma membrane	3.980013e-03	-6.722081e-01
+GO:0048839	inner ear development	7.038394e-03	-6.630651e-01
+GO:0048009	insulin-like growth factor receptor signaling pathway	1.176312e-03	-6.661076e-01
+GO:0005520	insulin-like growth factor binding	1.179092e-03	-6.282061e-01
+GO:1904707	positive regulation of vascular associated smooth muscle cell proliferation	5.525629e-03	-6.661076e-01
+GO:0005515	protein binding	1.179092e-03	-6.661391e-01
+GO:0014912	negative regulation of smooth muscle cell migration	1.176312e-03	-6.661076e-01
+GO:0043568	positive regulation of insulin-like growth factor receptor signaling pathway	1.179092e-03	-6.551255e-01
+GO:0031994	insulin-like growth factor I binding	2.355404e-03	-6.434796e-01
+GO:0042104	positive regulation of activated T cell proliferation	4.062072e-03	-6.722081e-01
+GO:0017148	negative regulation of translation	1.463557e-03	-6.661076e-01
+GO:0001649	osteoblast differentiation	1.179092e-03	-6.661076e-01
+GO:0042567	insulin-like growth factor ternary complex	1.179092e-03	-6.661076e-01
+GO:0050810	regulation of steroid biosynthetic process	1.003690e-03	-6.630651e-01
+GO:0016477	cell migration	4.062072e-03	-6.681753e-01
+GO:1904205	negative regulation of skeletal muscle hypertrophy	1.179092e-03	-6.661076e-01
+GO:0060056	mammary gland involution	1.179092e-03	-6.661076e-01
+GO:0001558	regulation of cell growth	2.976323e-03	-6.364226e-01
+GO:0019838	growth factor binding	1.179092e-03	-6.354257e-01
+GO:0071407	cellular response to organic cyclic compound	2.182782e-03	-6.661076e-01
+GO:0043410	positive regulation of MAPK cascade	1.179092e-03	-6.565446e-01
+GO:0044342	type B pancreatic cell proliferation	5.331727e-03	-6.551255e-01
+GO:0071320	cellular response to cAMP	1.179092e-03	-6.661076e-01
+GO:0030336	negative regulation of cell migration	1.179092e-03	-6.661076e-01
+GO:0001968	fibronectin binding	1.179092e-03	-6.565216e-01
+GO:0010906	regulation of glucose metabolic process	1.179092e-03	-6.661391e-01
+GO:0043567	regulation of insulin-like growth factor receptor signaling pathway	1.179092e-03	-6.434796e-01
+GO:0048662	negative regulation of smooth muscle cell proliferation	4.062072e-03	-6.661076e-01
+GO:0007155	cell adhesion	7.029775e-04	-6.630651e-01
+GO:0042802	identical protein binding	1.179092e-03	-6.681753e-01
+GO:1901862	negative regulation of muscle tissue development	1.179092e-03	-6.661076e-01
+GO:0051146	striated muscle cell differentiation	1.179092e-03	-6.661076e-01
+GO:0031995	insulin-like growth factor II binding	1.179092e-03	-6.434796e-01
+GO:0016942	insulin-like growth factor binding protein complex	7.038394e-03	-6.661076e-01
+GO:0045926	negative regulation of growth	1.003690e-03	-6.661076e-01
+GO:0005576	extracellular region	1.463557e-03	-6.282061e-01
+GO:0032874	positive regulation of stress-activated MAPK cascade	1.176312e-03	-6.681753e-01
+GO:0051897	positive regulation of phosphatidylinositol 3-kinase/protein kinase B signal transduction	7.038394e-03	-6.661076e-01
+GO:0062023	collagen-containing extracellular matrix	1.179092e-03	-6.439730e-01
+GO:0048286	lung alveolus development	2.355404e-03	-6.661076e-01
+GO:0005201	extracellular matrix structural constituent	1.179092e-03	-6.542490e-01
+GO:0009966	regulation of signal transduction	2.180002e-03	-6.504974e-01
+GO:0042568	insulin-like growth factor binary complex	1.003690e-03	-6.681753e-01
+GO:0042593	glucose homeostasis	1.179092e-03	-6.661076e-01
+GO:0040008	regulation of growth	1.179092e-03	-6.551255e-01
+GO:0007565	female pregnancy	2.355404e-03	-6.661076e-01
+GO:0045668	negative regulation of osteoblast differentiation	0.000000e+00	-6.661076e-01
+GO:1904754	positive regulation of vascular associated smooth muscle cell migration	1.003690e-03	-6.661076e-01
+GO:0031069	hair follicle morphogenesis	7.029775e-04	-6.661076e-01
+GO:0005615	extracellular space	2.467247e-03	-6.282061e-01
+GO:0000165	MAPK cascade	1.463557e-03	-6.661391e-01
