@@ -12,6 +12,7 @@ import (
 
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 )
 
 type settings struct {
@@ -57,7 +58,9 @@ func appendSeq(s settings, outlist []fasta.Fasta) []fasta.Fasta {
 }
 
 func faFilter(s settings) {
-	records := fasta.Read(s.InFile) //read the fasta infile
+	fastaFile := fileio.EasyOpen(s.InFile)
+	curr, done := fasta.NextFasta(fastaFile) // read in first seq now for conversion from aln to ref coordinates
+
 	var length int
 	var outlist []fasta.Fasta //make the variable to store the fasta records that will be written out
 	var pass bool = true
@@ -67,51 +70,51 @@ func faFilter(s settings) {
 	}
 
 	if s.RefPositions { //if the user would like the output to be written in the context of the reference genome rather than counting any gaps that could exist from a multiFasta file
-		s.Start = fasta.RefPosToAlnPos(records[0], s.Start) //adjusts the start position of the fasta record according to user's input
-		s.End = fasta.RefPosToAlnPos(records[0], s.End)     //adjusts end coodinates
+		s.Start = fasta.RefPosToAlnPos(curr, s.Start) //adjusts the start position of the fasta record according to user's input
+		s.End = fasta.RefPosToAlnPos(curr, s.End)     //adjusts end coodinates
 	}
 
-	for i := 0; i < len(records); i++ { //for each fasta record
+	for ; !done; curr, done = fasta.NextFasta(fastaFile) {
 		pass = true
-		if s.Name != "" && records[i].Name != s.Name { //filtering based on name if a string is given to the name option by the user
+		if s.Name != "" && curr.Name != s.Name { //filtering based on name if a string is given to the name option by the user
 			pass = false
 		}
-		if s.NotName != "" && records[i].Name == s.NotName { //filtering out records based on name similar to the above option, name must not match option entry
+		if s.NotName != "" && curr.Name == s.NotName { //filtering out records based on name similar to the above option, name must not match option entry
 			pass = false
 		}
-		if s.NameContains != "" && !strings.Contains(records[i].Name, s.NameContains) {
+		if s.NameContains != "" && !strings.Contains(curr.Name, s.NameContains) {
 			pass = false
 		}
-		if len(records[i].Seq) < s.MinSize { //filtering based on the size of the fasta record, must be larger than the value given to the minSize option
+		if len(curr.Seq) < s.MinSize { //filtering based on the size of the fasta record, must be larger than the value given to the minSize option
 			pass = false
 		}
-		if dna.GCContent(records[i].Seq) > s.MaxGC { //filtering based on GC content of the fasta record; GC content must be less than or equal to the value given to the maxGC option
+		if dna.GCContent(curr.Seq) > s.MaxGC { //filtering based on GC content of the fasta record; GC content must be less than or equal to the value given to the maxGC option
 			pass = false
 		}
-		if dna.GCContent(records[i].Seq) < s.MinGC { //filtering based on GC content of the fasta record; GC content must be greater than or equal to the value given to the minGC option
+		if dna.GCContent(curr.Seq) < s.MinGC { //filtering based on GC content of the fasta record; GC content must be greater than or equal to the value given to the minGC option
 			pass = false
 		}
 		if pass { //if checks passed on a record
 			if s.FinalNBases > 0 {
-				length = len(records[i].Seq)
+				length = len(curr.Seq)
 				if s.FinalNBases > length {
 					length = s.FinalNBases
 				}
-				records[i].Seq = records[i].Seq[length-s.FinalNBases:]
+				curr.Seq = curr.Seq[length-s.FinalNBases:]
 			} else if s.CutFinalNBases > 0 {
-				length = len(records[i].Seq)
+				length = len(curr.Seq)
 				if s.CutFinalNBases >= length {
 					continue
 				}
-				records[i].Seq = records[i].Seq[:length-s.CutFinalNBases]
+				curr.Seq = curr.Seq[:length-s.CutFinalNBases]
 			} else {
 				if s.End == -1 { //if the user didn't ask the record to stop at a specific location, append the fasta until the end of the record
-					records[i].Seq = records[i].Seq[s.Start:]
+					curr.Seq = curr.Seq[s.Start:]
 				} else { //if an endis specified by the user, append from the start to the finish specified
-					records[i].Seq = records[i].Seq[s.Start:s.End]
+					curr.Seq = curr.Seq[s.Start:s.End]
 				}
 			}
-			outlist = append(outlist, records[i]) //write any records to the outlist
+			outlist = append(outlist, curr) //write any records to the outlist
 		}
 	}
 	if s.AppendBefore != "" || s.AppendAfter != "" {
@@ -145,7 +148,7 @@ func main() {
 	var finalNBases *int = flag.Int("finalNBases", -1, "Retains the final N bases in the fasta record. Not compatible with -start or -end")
 	var cutFinalNBases *int = flag.Int("cutFinalNbases", -1, "cuts the final N bases from each fasta record. Not compatible with -finalNbases, -start or -end")
 	var appendBefore *string = flag.String("appendBefore", "", "Provide a fasta file with 1 sequence which will be appended in front of all fasta records in the input file. The append step will happen after any filtering steps")
-	var appendAfter *string = flag.String("appendAfter", "", "Provide a fasta file with 1 sequence which will be appended atfer all fasta records in the input file. The append step will happen after any filtering steps")
+	var appendAfter *string = flag.String("appendAfter", "", "Provide a fasta file with 1 sequence which will be appended after all fasta records in the input file. The append step will happen after any filtering steps")
 
 	flag.Usage = usage
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
