@@ -46,6 +46,7 @@ func probRange(transMat *mat.Dense) *mat.Dense {
 // First provided topology should be the non-ILS informed topology
 // no gaps
 func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength int, seed int64, chromName string, GC float64, genePred string, deletions bool, leafFastasOnly bool) ([]fasta.Fasta, [][]fasta.Fasta, []bed.Bed, []fasta.Fasta) {
+	// set entire genome to be 1 big gene
 	n := len(roots)
 	r, c := transMat.Dims()
 	if r != n || c != n {
@@ -65,6 +66,10 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength i
 	forwardEvolvedSeqs := make([][]fasta.Fasta, n)
 
 	var nodes []*expandedTree.ETree
+	// TODO
+	// try nonCoding.go NonCoding (so that it doesn't require genes)
+	// there should be a default substitution matrix
+	// unitBranchLength -- if newick is branch length of 1, then just use unitBranchLength = 1
 
 	// need to define gene and deletions
 	for topologyIdx, root := range roots {
@@ -86,7 +91,6 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength i
 	topologyRecord, ilsEvolvedSeqs := CombineIlsSeqs(forwardEvolvedSeqs, statePath, "ilsState")
 
 	return anc, forwardEvolvedSeqs, topologyRecord, ilsEvolvedSeqs
-
 }
 
 func pickState(prevState int, n int, transMatConverted mat.Matrix) int {
@@ -131,6 +135,7 @@ func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName 
 		log.Fatalf("state path length %d does not match sequence length %d", len(states), totalLength)
 	}
 
+	// get the order index in a fasta given species name
 	speciesIndex := make([]map[string]int, numTopologies)
 	for topoIdx := range speciesIndex {
 		speciesIndex[topoIdx] = make(map[string]int)
