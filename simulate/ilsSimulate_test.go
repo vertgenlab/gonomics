@@ -3,6 +3,7 @@ package simulate
 import (
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -61,16 +62,16 @@ func TestIlsSimulate(t *testing.T) {
 =======
 >>>>>>> b1a8048e (make Simulate a wrapper for funtion that only deals with data structure)
 	"encoding/csv"
+=======
+>>>>>>> f7180d0e (test cases for ilsSimulate and matrix)
 	"fmt"
-	"os"
-	"strconv"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
-	"gonum.org/v1/gonum/mat"
+	"github.com/vertgenlab/gonomics/numbers/matrix"
 )
 
 var IlsSimulateTests = []struct {
@@ -83,7 +84,7 @@ var IlsSimulateTests = []struct {
 	ExpectedPrefix string
 	Precision      float64
 }{
-	{TransMat: "testdata/ilsSimulate_transMat.csv",
+	{TransMat: "testdata/ilsSimulate_transMat.tsv",
 		Roots:          []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
 		Length:         14,
 		OutName:        "test1",
@@ -92,7 +93,7 @@ var IlsSimulateTests = []struct {
 		ExpectedPrefix: "testdata/ilsSimulate_expected_1",
 		Precision:      1e-3,
 	},
-	{TransMat: "testdata/ilsSimulate_transMat.csv",
+	{TransMat: "testdata/ilsSimulate_transMat.tsv",
 		Roots:          []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
 		Length:         50,
 		OutName:        "test2",
@@ -103,6 +104,7 @@ var IlsSimulateTests = []struct {
 	},
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 /// if helper functions called by main function that is used by testing, then covered on helper function
 
@@ -262,12 +264,14 @@ func TestCombineIlsSeqsTests(t *testing.T) {
 	return mat.NewDense(len(records), cols, data), nil
 }
 
+=======
+>>>>>>> f7180d0e (test cases for ilsSimulate and matrix)
 func TestIlsSimulate(t *testing.T) {
 	var prefix string
 	var expectedIls []fasta.Fasta
 	var expectedBed []bed.Bed
 	for _, v := range IlsSimulateTests {
-		transMat, err := readDenseFromCSV(v.TransMat)
+		m, err := matrix.ReadDense(v.TransMat, '\t')
 		if err != nil {
 			t.Fatalf("error reading transition matrix: %v", err)
 		}
@@ -292,7 +296,7 @@ func TestIlsSimulate(t *testing.T) {
 		expectedIls = fasta.Read(v.ExpectedPrefix + "_ils.fasta")
 		expectedBed = bed.Read(v.ExpectedPrefix + ".bed")
 
-		anc, evolved, topoRecord, ilsEvolved := SimulateIls(roots, transMat, int(v.Length), v.Seed, v.OutName, 0.42, v.GenePred, false, true)
+		anc, evolved, topoRecord, ilsEvolved := SimulateIls(roots, m, int(v.Length), v.Seed, v.OutName, 0.42, v.GenePred, false, true)
 
 		if !fasta.AllAreEqual(ilsEvolved, expectedIls) || !bed.AllAreEqual(topoRecord, expectedBed) {
 			t.Errorf("observed fasta does not match expected")
@@ -335,22 +339,22 @@ var CombineIlsSeqsTests = []struct {
 	},
 	{forwardEvolved: [][]fasta.Fasta{
 		{
-			{Name: "A", Seq: dna.StringToBases("AAAAAAAA")},
-			{Name: "B", Seq: dna.StringToBases("CCCCCCCC")},
+			{Name: "A", Seq: dna.StringToBases("AAAAAAAAAA")},
+			{Name: "B", Seq: dna.StringToBases("CCCCCCCCCC")},
 		},
 		{
-			{Name: "B", Seq: dna.StringToBases("GGGGGGGG")},
-			{Name: "A", Seq: dna.StringToBases("TTTTTTTT")},
+			{Name: "B", Seq: dna.StringToBases("GGGGGGGGGG")},
+			{Name: "A", Seq: dna.StringToBases("TTTTTTTTTT")},
 		},
 		{
-			{Name: "A", Seq: dna.StringToBases("ACGTACGT")},
-			{Name: "B", Seq: dna.StringToBases("TGCATGCA")},
+			{Name: "A", Seq: dna.StringToBases("AAACGTACGT")},
+			{Name: "B", Seq: dna.StringToBases("TTTGCATGCA")},
 		},
 	},
-		statePath: []int{0, 1, 2, 2, 1, 0, 2, 1},
+		statePath: []int{0, 0, 0, 1, 2, 2, 1, 0, 2, 1},
 		expectedIls: []fasta.Fasta{
-			{Name: "A", Seq: dna.StringToBases("ATGTTAGT")},
-			{Name: "B", Seq: dna.StringToBases("CGCAGCCG")},
+			{Name: "A", Seq: dna.StringToBases("AAATGTTAGT")},
+			{Name: "B", Seq: dna.StringToBases("CCCGCAGCCG")},
 		},
 		expectedPathLength: 7,
 	},
@@ -363,17 +367,7 @@ func TestCombineIlsSeqsTests(t *testing.T) {
 		states = v.statePath
 
 		stateRecord, outIls := CombineIlsSeqs(v.forwardEvolved, states, "ilsState")
-		// for _, seq := range outIls {
-		// 	fmt.Println(dna.BasesToString(seq.Seq))
-		// }
 
-		// for idx := range outIls {
-		// 	if dna.BasesToString(outIls[idx].Seq) != dna.BasesToString(v.expectedIls[idx].Seq) {
-		// 		t.Errorf("expected %s , got %s", dna.BasesToString(v.expectedIls[idx].Seq), dna.BasesToString(outIls[idx].Seq))
-		// 	}
-		// }
-
-		/// OR I could just do a generic "these seqs don't match up"
 		if !fasta.AllAreEqual(outIls, v.expectedIls) {
 			t.Errorf("Expected and combined sequences are not equal")
 		}
