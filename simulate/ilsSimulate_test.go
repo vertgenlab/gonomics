@@ -65,6 +65,7 @@ func TestIlsSimulate(t *testing.T) {
 =======
 >>>>>>> f7180d0e (test cases for ilsSimulate and matrix)
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/bed"
@@ -79,7 +80,6 @@ var IlsSimulateTests = []struct {
 	Roots          []string
 	Length         int64
 	OutName        string
-	GenePred       string
 	Seed           int64
 	ExpectedPrefix string
 	Precision      float64
@@ -88,7 +88,6 @@ var IlsSimulateTests = []struct {
 		Roots:          []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
 		Length:         14,
 		OutName:        "test1",
-		GenePred:       "testdata/debug.gp",
 		Seed:           3,
 		ExpectedPrefix: "testdata/ilsSimulate_expected_1",
 		Precision:      1e-3,
@@ -97,7 +96,6 @@ var IlsSimulateTests = []struct {
 		Roots:          []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
 		Length:         50,
 		OutName:        "test2",
-		GenePred:       "testdata/debug.gp",
 		Seed:           5,
 		ExpectedPrefix: "testdata/ilsSimulate_expected_2",
 		Precision:      1e-3,
@@ -267,7 +265,6 @@ func TestCombineIlsSeqsTests(t *testing.T) {
 =======
 >>>>>>> f7180d0e (test cases for ilsSimulate and matrix)
 func TestIlsSimulate(t *testing.T) {
-	var prefix string
 	var expectedIls []fasta.Fasta
 	var expectedBed []bed.Bed
 	for _, v := range IlsSimulateTests {
@@ -296,20 +293,20 @@ func TestIlsSimulate(t *testing.T) {
 		expectedIls = fasta.Read(v.ExpectedPrefix + "_ils.fasta")
 		expectedBed = bed.Read(v.ExpectedPrefix + ".bed")
 
-		anc, evolved, topoRecord, ilsEvolved := SimulateIls(roots, m, int(v.Length), v.Seed, v.OutName, 0.42, v.GenePred, false, true)
+		anc, evolved, topoRecord, ilsEvolved := SimulateIls(roots, m, int(v.Length), v.Seed, v.OutName, true, "", 1.0)
 
 		if !fasta.AllAreEqual(ilsEvolved, expectedIls) || !bed.AllAreEqual(topoRecord, expectedBed) {
-			t.Errorf("observed fasta does not match expected")
-			// write if wrong
-			fasta.Write(v.ExpectedPrefix+"_anc.fasta", anc)
+
+			outDir := t.TempDir()
+
+			fasta.Write(filepath.Join(outDir, "anc.fasta"), anc)
 			for idx, rec := range evolved {
-				prefix = fmt.Sprintf("%s_forward_evolved_topo_v%d", v.ExpectedPrefix, idx)
-				fasta.Write(prefix+".fasta", rec)
+				fasta.Write(filepath.Join(outDir, fmt.Sprintf("forward_evolved_topo_v%d.fasta", idx)), rec)
 			}
 
-			bed.Write(v.ExpectedPrefix+".bed", topoRecord)
-			fasta.Write(v.ExpectedPrefix+"_ils.fasta", ilsEvolved)
-		} else {
+			bed.Write("ilsSimulated_"+v.OutName+".bed", topoRecord)
+			fasta.Write("ilsSimulated_"+v.OutName+"_ils.fasta", ilsEvolved)
+			t.Errorf("simulation output differs from expected; wrote observed output to %s", outDir)
 
 		}
 	}
