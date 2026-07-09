@@ -77,10 +77,6 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength i
 	forwardEvolvedSeqs := make([][]fasta.Fasta, n)
 
 	var nodes []*expandedTree.ETree
-	// TODO
-	// try nonCoding.go NonCoding (so that it doesn't require genes)
-	// there should be a default substitution matrix
-	// unitBranchLength -- if newick is branch length of 1, then just use unitBranchLength = 1
 
 	for topologyIdx, root := range roots {
 		// SimulateFromSeq(anc, root, genePred, deletions)
