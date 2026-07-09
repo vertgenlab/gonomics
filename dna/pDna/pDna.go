@@ -232,3 +232,35 @@ func RandBase(seedSet bool, setSeed int64, randSource *rand.Rand) Float32Base {
 	answer.T = tFloat / sum
 	return answer
 }
+
+// MostLikelyBase returns the most likely Dna base from the Pdna base
+func MostLikelyBase(p Float32Base) dna.Base {
+	var base dna.Base
+	var maxPBase float32
+
+	if p.A == 0 && p.C == 0 && p.G == 0 && p.T == 0 {
+		return 10 // Gap
+	}
+
+	if p.A != 0 && p.A == p.C && p.A == p.G && p.A == p.T {
+		return 4 // N
+	}
+
+	base = 0 // A
+	maxPBase = p.A
+
+	if p.C > p.A {
+		maxPBase = p.C
+		base = 1 // C
+	}
+	if p.G > maxPBase {
+		maxPBase = p.G
+		base = 2 // G
+	}
+	if p.T > maxPBase {
+		maxPBase = p.T
+		base = 3 // T
+	}
+
+	return base
+}
