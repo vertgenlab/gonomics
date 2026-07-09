@@ -18,18 +18,25 @@ var SlurmGeneralizedCheckTests = []struct {
 }
 
 func TestParseTheInput(t *testing.T) {
+	var err error
+	var actual *os.File
 	for _, v := range SlurmGeneralizedCheckTests {
 		parsed := parseTheInput(v.inputFancyFile)
 		begin := parsed[0].begin
 		out := parsed[0].outToCheck
 		check := parsed[0].checkType
 		end := parsed[0].end
-		actual, err := os.Create(v.actualOutputParseTheInput)
+		actual, err = os.Create(v.actualOutputParseTheInput)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		fmt.Fprintf(actual, "begin: %s \n out: %s \n check: %s \n end: %s \n", begin, out, check, end)
+		_, err = fmt.Fprintf(actual, "begin: %s \n out: %s \n check: %s \n end: %s \n", begin, out, check, end)
+		exception.PanicOnErr(err)
+
+		err = actual.Close()
+		exception.PanicOnErr(err)
+
 		if !fileio.AreEqual(v.actualOutputParseTheInput, v.expectedOutputParseTheInput) {
 			t.Errorf("Error in slurmGeneralizedCheck, expected %s, actual %s", v.expectedOutputParseTheInput, v.actualOutputParseTheInput)
 		} else {

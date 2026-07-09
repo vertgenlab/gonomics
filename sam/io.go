@@ -248,6 +248,10 @@ func Read(filename string) ([]Sam, Header) {
 				alignments = append(alignments, curr)
 			}
 		}
+
+		err = br.Close()
+		exception.PanicOnErr(err)
+
 		return alignments, header
 	}
 

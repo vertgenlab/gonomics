@@ -79,6 +79,8 @@ func writeDeaminationDistribution(deaminationDistributionSlice []int, s Settings
 	var err error
 	deaminationOut := fileio.EasyCreate(s.DeaminationDistribution)
 	_, err = fmt.Fprintf(deaminationOut, "Position\tCount\n")
+	exception.PanicOnErr(err)
+
 	for i := range deaminationDistributionSlice {
 		_, err = fmt.Fprintf(deaminationOut, "%v\t%v\n", i, deaminationDistributionSlice[i])
 		exception.PanicOnErr(err)

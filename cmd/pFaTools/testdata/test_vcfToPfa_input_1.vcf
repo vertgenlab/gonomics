@@ -1,0 +1,12 @@
+##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT  sample1 sample2 sample3 sample4
+chr1	2	Testing1	C	T	100.0	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	5	Testing2	C	G	100.0	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	13	Testing3	C	T	100.0	PASS	.	GT:DP	0|0:44	0|1:10	1|0:34	0|0:0
+chr1	18	Testing4	C	G	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr1	19	Testing5	C	A	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr1	20	Testing6	C	T	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr1	21	Testing7	C	G	100.0	PASS	.	GT:DP	0|0:10	0|0:250	0|0:3	0|0:0
+chr1	42	Testing5	C	A	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr1	43	Testing6	C	T	100.0	PASS	.	GT:DP	0|1:10	1|0:250	1|1:3	0|0:0
+chr1	44	Testing7	C	G	100.0	PASS	.	GT:DP	0|0:10	0|0:250	0|0:3	0|0:0

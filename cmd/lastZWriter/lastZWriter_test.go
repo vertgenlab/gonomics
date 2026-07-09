@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -15,6 +16,7 @@ var allDists = pairwise + "/allDistsAll.txt"
 var out = "testdata/out.txt"
 
 func TestMakeArray(t *testing.T) {
+	var err error
 	MakeArray(lastZ, pairwise, speciesListFile, refListFile, allDists, out, true, "", "")
 	outRecords := fileio.EasyOpen(out)
 	expected := fileio.Read("testdata/expected.txt")
@@ -31,6 +33,9 @@ func TestMakeArray(t *testing.T) {
 		}
 	}
 
+	err = outRecords.Close()
+	exception.PanicOnErr(err)
+
 	fileio.EasyRemove(out)
 }
 
@@ -41,6 +46,7 @@ var outSimple = "testdata/out_simple.txt"
 var targetModifier = "[unmask]"
 
 func TestMakeArraySimple(t *testing.T) {
+	var err error
 	MakeArraySimple(lastZ, pairwise, speciesListFileSimple, refListFileSimple, parameters, outSimple, targetModifier)
 	outRecords := fileio.EasyOpen(outSimple)
 	expected := fileio.Read("testdata/expected_simple.txt")
@@ -56,6 +62,9 @@ func TestMakeArraySimple(t *testing.T) {
 			}
 		}
 	}
+
+	err = outRecords.Close()
+	exception.PanicOnErr(err)
 
 	fileio.EasyRemove(outSimple)
 }
