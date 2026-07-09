@@ -42,16 +42,16 @@ func probRange(transMat *mat.Dense) *mat.Dense {
 // SimulateILS takes a fasta sequence that is the starting sequence at the root nodes, a pointer to a phylogenetic tree,
 // a genePred filename related to the starting sequence, and if deletions should be allowed along with substitutions.
 // The starting sequence will then be evolved according to the neutral tree provided and each node in the tree, using
-// incomplete lineage separation
-// First provided topology should be the non-ILS informed topology
-// no gaps
-func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength int, seed int64, chromName string, GC float64, genePred string, deletions bool, leafFastasOnly bool) ([]fasta.Fasta, [][]fasta.Fasta, []bed.Bed, []fasta.Fasta) {
+// incomplete lineage separation. First provided topology should be the non-ILS informed topology. No gaps.
+func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength int, seed int64, chromName string, leafFastasOnly bool, substitutionMatrixFile string, unitBranchLength float64) ([]fasta.Fasta, [][]fasta.Fasta, []bed.Bed, []fasta.Fasta) {
+
 	// set entire genome to be 1 big gene
 	n := len(roots)
 	r, c := transMat.Dims()
 	if r != n || c != n {
 		log.Fatal("Must provide square transition matrix that matches number of provided phylogenies")
 	}
+
 	transMatConverted := probRange(transMat)
 
 	rand.New(rand.NewSource(seed))
@@ -66,14 +66,11 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength i
 	forwardEvolvedSeqs := make([][]fasta.Fasta, n)
 
 	var nodes []*expandedTree.ETree
-	// TODO
-	// try nonCoding.go NonCoding (so that it doesn't require genes)
-	// there should be a default substitution matrix
-	// unitBranchLength -- if newick is branch length of 1, then just use unitBranchLength = 1
 
-	// need to define gene and deletions
 	for topologyIdx, root := range roots {
-		SimulateFromSeq(anc, root, genePred, deletions)
+		// SimulateFromSeq(anc, root, genePred, deletions)
+		root.Fasta = &anc[0]
+		root = NonCoding(root, substitutionMatrixFile, unitBranchLength)
 		nodes = expandedTree.GetTree(root)
 		for i := 0; i < len(nodes); i++ {
 
