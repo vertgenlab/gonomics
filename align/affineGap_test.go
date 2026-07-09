@@ -2,7 +2,6 @@ package align
 
 import (
 	"fmt"
-	"runtime"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/dna"
@@ -83,7 +82,6 @@ func TestAffineGap_lowMem(t *testing.T) {
 }
 
 func TestAffineGapChunk(t *testing.T) {
-	t.Log("TESTING TESTING AffineGapChunk\t\tGo version:", runtime.Version())
 	for _, test := range affineAlignChunkTests {
 		basesOne := dna.StringToBases(test.seqOne)
 		basesTwo := dna.StringToBases(test.seqTwo)
