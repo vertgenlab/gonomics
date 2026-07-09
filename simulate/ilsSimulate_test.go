@@ -22,7 +22,6 @@ var IlsSimulateTests = []struct {
 	Precision      float64
 }{
 	{TransMat: "testdata/ilsSimulate_transMat.tsv",
-	{TransMat: "testdata/ilsSimulate_transMat.tsv",
 		Roots:          []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
 		Length:         14,
 		OutName:        "test1",
@@ -30,7 +29,6 @@ var IlsSimulateTests = []struct {
 		ExpectedPrefix: "testdata/ilsSimulate_expected_1",
 		Precision:      1e-3,
 	},
-	{TransMat: "testdata/ilsSimulate_transMat.tsv",
 	{TransMat: "testdata/ilsSimulate_transMat.tsv",
 		Roots:          []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
 		Length:         50,
@@ -53,7 +51,6 @@ func TestIlsSimulate(t *testing.T) {
 		roots := make([]*expandedTree.ETree, len(v.Roots))
 		for i, filename := range v.Roots {
 
-<<<<<<< HEAD
 			root, err := expandedTree.ReadNewick(filename)
 =======
 // probably should move this somewhere as a helper function, probably when command written
