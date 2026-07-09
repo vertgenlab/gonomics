@@ -156,7 +156,7 @@ func writeCache(groupMap map[string][]CmdInfo, srcPath string) {
 	}
 	slices.Sort(cmdNames) // so file is not updated on PRs with no cmd changes
 	for i := range cmdNames {
-		_, err = fmt.Fprintf(cacheWriter, cmdNames[i])
+		_, err = fmt.Fprint(cacheWriter, cmdNames[i])
 		exception.PanicOnErr(err)
 	}
 

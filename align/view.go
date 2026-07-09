@@ -17,7 +17,7 @@ func colTypeToRune(a ColType) rune {
 	case ColD:
 		return 'D'
 	default:
-		log.Fatalf(fmt.Sprintf("Error: unexpected value when converting colType to rune %d", a))
+		log.Fatalf("Error: unexpected value when converting colType to rune %d", a)
 		return '?'
 	}
 }

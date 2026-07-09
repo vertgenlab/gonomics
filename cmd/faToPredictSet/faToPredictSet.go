@@ -42,7 +42,7 @@ func faToPredictSet(s Settings) {
 			} else {
 				lineToWrite = fmt.Sprintf("%s\t%s\n", currFa.Name, dna.BasesToString(currFa.Seq))
 			}
-			_, err = fmt.Fprintf(out, lineToWrite)
+			_, err = fmt.Fprint(out, lineToWrite)
 			exception.PanicOnErr(err)
 		}
 	}
