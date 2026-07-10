@@ -2,6 +2,9 @@ module github.com/vertgenlab/gonomics
 
 go 1.25.0
 
+// temporary for sake of checking tests running, might delete
+godebug randseednop=0
+
 require (
 	github.com/klauspost/pgzip v1.2.6
 	github.com/x448/float16 v0.8.4
