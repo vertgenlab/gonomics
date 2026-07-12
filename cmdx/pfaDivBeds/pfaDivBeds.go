@@ -252,7 +252,7 @@ func writeDivBedsToFile(fileName string, records []DivBed) {
 	}()
 
 	for _, r := range records {
-		line := fmt.Sprintf("%s\t%d\t%d\t%s\t%s\t%s\n", r.Chrom, r.StartPos, r.EndPos, r.Div, r.Anc, r.Name)
+		line := fmt.Sprintf("%s\t%d\t%d\t%s\t%s\t%s", r.Chrom, r.StartPos, r.EndPos, r.Div, r.Anc, r.Name)
 		fileio.WriteToFileHandle(file, line)
 	}
 	// If records is empty, we still created the file (empty). Change behavior here if you want to skip empty files.
