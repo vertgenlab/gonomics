@@ -4,6 +4,17 @@
 // pfaDir == /hpc/group/vertgenlab/raven/PrimateT2T_20way/work/yl726/PrimateT2T_20way/haqerTmp.humanT2T, files like chr22.pFa.gz
 // outDir == /work/yl726/pfaDivBedOutputs
 
+// More Notes:
+// Take a file of bed regions, e.g. chr1 100 200
+// For each bed region, read the appropriate pFa file, e.g. chr1.pFa, extract subsequences e.g. positions 100-200, then scan 2 species in the []pFa, e.g. firstQuery, secondQuery, for divergent positions.
+// For each divergent position, report chrom, start, end, in reference pFa coordinates, as well as most likely bases in firstQuery and secondQuery.
+// Later, I will compare each bed region's divergent positions with population data vcf.
+// did not add safety check code
+// for my purposes, the pfa is multi-pfa, all from 1 chr, but many species
+// for my purposes, firstQueryName == HUMANanc (Div), secondQueryName == hcaT2T (Anc)
+// hard-coded filename .pFa.gz
+// DivBed Name will be HAQER name/ID
+
 package main
 
 import (
