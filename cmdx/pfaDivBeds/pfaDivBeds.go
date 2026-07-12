@@ -23,9 +23,7 @@ import (
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/dna/pDna"
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
-	"github.com/vertgenlab/gonomics/fileio"
 	"log"
 	"os"
 	"path/filepath"
@@ -244,18 +242,24 @@ func pfaDivBed(referenceSub []pDna.Float32Base, firstQuerySub []pDna.Float32Base
 
 // writeDivBedsToFile writes Divergent positions in BED-like tabular format:
 // chrom  start  end  divBase  ancBase  name
+// but have proper bed fields
 func writeDivBedsToFile(fileName string, records []DivBed) {
-	file := fileio.EasyCreate(fileName)
-	defer func() {
-		err := file.Close()
-		exception.PanicOnErr(err)
-	}()
-
+	var beds []bed.Bed
+	beds = make([]bed.Bed, 0, len(records))
 	for _, r := range records {
-		line := fmt.Sprintf("%s\t%d\t%d\t%s\t%s\t%s", r.Chrom, r.StartPos, r.EndPos, r.Div, r.Anc, r.Name)
-		fileio.WriteToFileHandle(file, line)
+		b := bed.Bed{
+			Chrom:             r.Chrom,
+			ChromStart:        r.StartPos,
+			ChromEnd:          r.EndPos,
+			Name:              r.Name,                 // column 4
+			Score:             0,                      // column 5
+			Strand:            bed.None,               // column 6
+			FieldsInitialized: 7,                      // write at least 7 fields to include annotations
+			Annotation:        []string{r.Div, r.Anc}, // columns 7+ (div, anc)
+		}
+		beds = append(beds, b)
 	}
-	// If records is empty, we still created the file (empty). Change behavior here if you want to skip empty files.
+	bed.Write(fileName, beds)
 }
 
 // sanitizeName replaces spaces and slashes with safe characters for filenames.
