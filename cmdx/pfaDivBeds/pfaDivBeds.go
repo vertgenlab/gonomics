@@ -41,6 +41,52 @@ type DivBed struct {
 	Name     string // record name
 }
 
+// convert a reference position (0-based) to an alignment position (0-based) in a pFasta sequence.
+// works like fasta.RefPosToAlnPosCounter / RefPosToAlnPos but for []pDna.Float32Base
+func pRefPosToAlnPosCounterSeq(record []pDna.Float32Base, refPos int, refStart int, alnStart int, allowBed bool) int {
+	if refStart > refPos {
+		log.Fatalf("refStart > RefPos")
+	}
+	if alnStart >= len(record) {
+		log.Fatalf("Ran out of alignment.")
+	}
+
+	// behaviour mirrors fasta.refPosToAlnPosCounterExposed (allowBed controls end-exclusive safety)
+	if !allowBed {
+		for t := alnStart; refStart < refPos; alnStart++ {
+			t++
+			if t == len(record) {
+				log.Fatalf("Ran out of chromosome.")
+			} else if !pDna.IsGap(record[t]) {
+				refStart++
+			}
+		}
+	} else {
+		// allowBed: permit stepping one past the end for bed end coordinates
+		for t := alnStart; refStart < refPos; alnStart++ {
+			t++
+			if t > len(record) {
+				log.Fatalf("Ran out of chromosome.")
+			} else if t == len(record) {
+				// push alnStart one forward for the bed-end convention then break
+				alnStart++
+				break
+			} else if !pDna.IsGap(record[t]) {
+				refStart++
+			}
+		}
+	}
+	return alnStart
+}
+
+func pRefPosToAlnPosSeq(record []pDna.Float32Base, refPos int) int {
+	return pRefPosToAlnPosCounterSeq(record, refPos, 0, 0, false)
+}
+
+func pRefPosToAlnPosBedSeq(record []pDna.Float32Base, refPos int) int {
+	return pRefPosToAlnPosCounterSeq(record, refPos, 0, 0, true)
+}
+
 // processRegionsFromPerChromPfa processes a BED file, for each region opens a chromosome-specific pFa file (chrom + ".pFa.gz"),
 // extracts the window [ChromStart:ChromEnd) from the pFasta alignment, selects reference/fistQuery/secondQuery sequences,
 // and writes a per-region bed file named <Name>.bed into outDir.
@@ -99,14 +145,30 @@ func processRegionsFromPerChromPfa(bedFile string, pfaDir string, outDir string,
 			log.Fatalf("Error: alignment lengths differ in %s\n", pfaName)
 		}
 
-		// Step 3: from 3 pFa, slice out region [ChromStart:ChromEnd)
-		if reg.ChromStart < 0 || reg.ChromEnd > len(reference) {
-			log.Fatalf("Error: region %s:%d-%d out of range for %s (len=%d)\n", reg.Chrom, reg.ChromStart, reg.ChromEnd, pfaName, len(reference))
+		// Step 3: convert reference coords to alignment coords, then slice by aln indices
+		// Ensure supplied ref coordinates are in [0, referenceRefLength]
+		refLength := 0
+		// compute reference length (number of non-gap positions in the reference pFasta)
+		for i := 0; i < len(reference); i++ {
+			if !pDna.IsGap(reference[i]) {
+				refLength++
+			}
+		}
+		if reg.ChromStart < 0 || reg.ChromEnd > refLength {
+			log.Fatalf("Error: region %s:%d-%d out of reference range [0,%d) for %s\n", reg.Chrom, reg.ChromStart, reg.ChromEnd, refLength, pfaName)
 		}
 
-		refSub := reference[reg.ChromStart:reg.ChromEnd]
-		firstSub := firstQuery[reg.ChromStart:reg.ChromEnd]
-		secondSub := secondQuery[reg.ChromStart:reg.ChromEnd]
+		// map ref positions to alignment indices
+		alnStart := pRefPosToAlnPosSeq(reference, reg.ChromStart)
+		alnEnd := pRefPosToAlnPosBedSeq(reference, reg.ChromEnd) // allow bed-end behaviour
+
+		if alnStart < 0 || alnEnd > len(reference) || alnStart >= alnEnd {
+			log.Fatalf("Error mapping ref->aln for region %s:%d-%d -> aln %d-%d in %s\n", reg.Chrom, reg.ChromStart, reg.ChromEnd, alnStart, alnEnd, pfaName)
+		}
+
+		refSub := reference[alnStart:alnEnd]
+		firstSub := firstQuery[alnStart:alnEnd]
+		secondSub := secondQuery[alnStart:alnEnd]
 
 		// Step 4: for sliced out 3 pFa [ChromStart:ChromEnd), get divs
 		divs := pfaDivBed(refSub, firstSub, secondSub, baseDotThreshold, reg.Chrom, reg.ChromStart, reg.Name)
