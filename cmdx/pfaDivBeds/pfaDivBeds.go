@@ -184,11 +184,18 @@ func processRegionsFromPerChromPfa(bedFile string, pfaDir string, outDir string,
 		// Step 4: for sliced out 3 pFa [ChromStart:ChromEnd), get divs
 		divs := pfaDivBed(refSub, firstSub, secondSub, baseDotThreshold, reg.Chrom, reg.ChromStart, reg.Name)
 
-		// Step 5: write per-region bed file
-		// sanitize name for filename
-		safeName := sanitizeName(reg.Name)
-		outPath := filepath.Join(outDir, safeName+".bed")
+		// Step 5: write per-region bed file with filename format: chr<chrom>.<start>.<end>.<name>.bed
+		safeName := sanitizeName(reg.Name) // keep sanitization for the name field only
+		fileName := fmt.Sprintf("%s.%d.%d.%s.bed", reg.Chrom, reg.ChromStart, reg.ChromEnd, safeName)
+		outPath := filepath.Join(outDir, fileName)
+
+		// If you prefer to skip empty output files, uncomment the following lines:
+		// if len(divs) == 0 {
+		//     continue
+		// }
+
 		writeDivBedsToFile(outPath, divs)
+
 	}
 }
 
