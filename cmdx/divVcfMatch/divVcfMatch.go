@@ -1,8 +1,10 @@
 // Notes:
-// CLI inputs below
-// -div == files like /work/yl726/divsOutput.bed
-// -vcfDir == /hpc/group/vertgenlab/raven/PrimateT2T_20way/selection_hs1/populationData/Filtered, files like chr22.segSite.vcf.gz
-// -out == file like /work/yl726/divsVcfCheck.bed
+// set divBedDir = "/work/yl726/pfaDivBedOutputs", files like chr5.107183644.107184616.Consensus_HAQER_0316.bed
+// set vcfDir    = "/hpc/group/vertgenlab/raven/PrimateT2T_20way/selection_hs1/populationData/Filtered", files like chr22.segSite.vcf.gz
+// (only for reference now, not used in program) divSegDir = /work/yl726/divVcfMatch, files like Consensus_HAQER_0006.divSeg.tsv, example divSeg line: chr10	12130633	chr10_12130633_G_A	G	A	255	.	.	GT	0|0	chr10	12130632	12130633	Consensus_HAQER_0006	0	.	G	A
+// Run this beforehand: cat /work/yl726/pfaDivBedOutputs/*.bed > allPfaDivs.bed
+// CLI below
+// divVcfMatch -div allPfaDivs.bed -vcfDir /hpc/group/vertgenlab/raven/PrimateT2T_20way/selection_hs1/populationData/Filtered -out allDivSegs.tsv
 
 package main
 
@@ -19,20 +21,25 @@ import (
 	"github.com/vertgenlab/gonomics/vcf"
 )
 
-// DivRecord represents one line from your divergence output file.
-type DivRecord struct {
-	Chrom string
-	Start int // 0-based (as in your divergence file)
-	End   int
-	Div   string
-	Anc   string
-	Name  string
+// DivBed represents one divergence line read from the BED-style input.
+// We expect BED lines like:
+// chrom start end name score strand div anc
+type DivBed struct {
+	Chrom   string
+	Start0  int // 0-based start from BED
+	End0    int
+	Name    string // HAQER id (col 4)
+	DivBase string // col 7
+	AncBase string // col 8
 }
 
-// map key type: chrom -> pos1 -> []DivRecord
-type DivMap map[string]map[int][]DivRecord
+// DivMap: chrom -> pos1 -> []DivBed
+type DivMap map[string]map[int][]DivBed
 
-func readDivFile(path string) (DivMap, error) {
+// readDivBed reads the input file produced by your pfaDivBed outputs (concatenated).
+// It expects each line to be a BED-like line with at least 8 tab-separated columns:
+// chrom (1), start (2), end (3), name (4), score (5), strand (6), div (7), anc (8)
+func readDivBed(path string) (DivMap, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -48,12 +55,14 @@ func readDivFile(path string) (DivMap, error) {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
-		if strings.HasPrefix(line, "#") {
-			continue
-		}
+		// Accept either tab-separated or whitespace
 		fields := strings.Fields(line)
-		if len(fields) < 6 {
-			return nil, fmt.Errorf("line %d: expected >=6 columns (chrom start end div anc name), got %d: %q", lineNo, len(fields), line)
+		// But try splitting by tab first to preserve empty fields (if any)
+		if strings.Contains(line, "\t") {
+			fields = strings.Split(line, "\t")
+		}
+		if len(fields) < 8 {
+			return nil, fmt.Errorf("line %d: expected >=8 columns (chrom start end name score strand div anc), got %d: %q", lineNo, len(fields), line)
 		}
 		chrom := fields[0]
 		start0, err := strconv.Atoi(fields[1])
@@ -64,22 +73,24 @@ func readDivFile(path string) (DivMap, error) {
 		if err != nil {
 			return nil, fmt.Errorf("line %d: invalid end: %v", lineNo, err)
 		}
-		div := fields[3]
-		anc := strings.ToUpper(fields[4])
-		name := fields[5]
+		name := fields[3]
+		// fields[4] score, fields[5] strand are ignored by the program but kept in input
+		div := fields[6]
+		anc := strings.ToUpper(fields[7])
 
-		rec := DivRecord{
-			Chrom: chrom,
-			Start: start0,
-			End:   end0,
-			Div:   div,
-			Anc:   anc,
-			Name:  name,
+		rec := DivBed{
+			Chrom:   chrom,
+			Start0:  start0,
+			End0:    end0,
+			Name:    name,
+			DivBase: div,
+			AncBase: anc,
 		}
-		pos1 := start0 + 1 // convert 0-based start to 1-based VCF POS
+
+		pos1 := start0 + 1 // VCF 1-based pos
 
 		if _, ok := ans[chrom]; !ok {
-			ans[chrom] = make(map[int][]DivRecord)
+			ans[chrom] = make(map[int][]DivBed)
 		}
 		ans[chrom][pos1] = append(ans[chrom][pos1], rec)
 	}
@@ -89,17 +100,17 @@ func readDivFile(path string) (DivMap, error) {
 	return ans, nil
 }
 
-// compute counts (AC, AN) of a desired allele index in a Vcf record.
-// desiredAlleleIdx: 0 == REF, 1..n == ALT index+1
+// alleleCountsForVcf computes AC and AN for desired allele index in vcf.Vcf
+// desiredAlleleIdx: 0 => REF, 1.. => ALT index+1
 func alleleCountsForVcf(v vcf.Vcf, desiredAlleleIdx int) (ac int, an int) {
 	ac = 0
 	an = 0
 
 	for _, s := range v.Samples {
-		// prefer pre-parsed sample alleles if present
+		// prefer pre-parsed Alleles if present
 		if len(s.Alleles) > 0 {
 			for _, a := range s.Alleles {
-				if int(a) >= 0 { // -1 may indicate missing
+				if int(a) >= 0 { // allele index -1 indicates missing
 					an++
 					if int(a) == desiredAlleleIdx {
 						ac++
@@ -108,8 +119,7 @@ func alleleCountsForVcf(v vcf.Vcf, desiredAlleleIdx int) (ac int, an int) {
 			}
 			continue
 		}
-
-		// fallback: try to parse GT from FormatData[0]
+		// fallback: parse GT-like field from FormatData[0]
 		if len(s.FormatData) > 0 {
 			gt := s.FormatData[0]
 			if gt == "." || gt == "./." || gt == ".|." {
@@ -131,42 +141,99 @@ func alleleCountsForVcf(v vcf.Vcf, desiredAlleleIdx int) (ac int, an int) {
 			}
 			continue
 		}
-		// no genotype info for this sample; skip.
+		// no genotype info: skip
 	}
 	return ac, an
 }
 
-func processChrom(chrom string, chromMap map[int][]DivRecord, vcfDir string, minFreq float64, requireSnp bool, out *os.File) {
-	vcfName := chrom + ".segSite.vcf.gz"
-	vcfPath := filepath.Join(vcfDir, vcfName)
+func processUsingVcfDir(divs DivMap, vcfDir string, minFreq float64, requireSnp bool, out *os.File) {
+	for chrom, chromMap := range divs {
+		vcfName := chrom + ".segSite.vcf.gz"
+		vcfPath := filepath.Join(vcfDir, vcfName)
 
-	if _, err := os.Stat(vcfPath); os.IsNotExist(err) {
-		log.Printf("warning: VCF for %s not found at %s — skipping\n", chrom, vcfPath)
-		return
-	}
-
-	vcfChan, _ := vcf.GoReadToChan(vcfPath)
-
-	for rec := range vcfChan {
-		pos := rec.Pos
-		divRecs, ok := chromMap[pos]
-		if !ok {
+		if _, err := os.Stat(vcfPath); os.IsNotExist(err) {
+			log.Printf("warning: VCF for %s not found at %s — skipping\n", chrom, vcfPath)
 			continue
 		}
 
-		for _, d := range divRecs {
-			anc := d.Anc
+		vcfChan, _ := vcf.GoReadToChan(vcfPath)
+		for rec := range vcfChan {
+			pos := rec.Pos
+			divList, ok := chromMap[pos]
+			if !ok {
+				continue
+			}
+			// handle each divergence record at this pos
+			for _, d := range divList {
+				anc := d.AncBase
+				if requireSnp && len(rec.Ref) != 1 {
+					continue
+				}
+				desiredAlleleIdx := -1
+				matchedAlt := "." // if anc matched an ALT, which one?
+				if anc == rec.Ref {
+					desiredAlleleIdx = 0
+				} else {
+					for ai, alt := range rec.Alt {
+						if strings.ToUpper(alt) == anc {
+							desiredAlleleIdx = ai + 1
+							matchedAlt = alt
+							break
+						}
+					}
+				}
+				if desiredAlleleIdx == -1 {
+					// ancestor base not present as REF/ALT in this VCF record; skip
+					continue
+				}
+
+				ac, an := alleleCountsForVcf(rec, desiredAlleleIdx)
+				if an == 0 {
+					continue
+				}
+				af := float64(ac) / float64(an)
+				if af > minFreq {
+					// Output: chr start(bed) vcfId vcfRefBase vcfAltBase vcfFrequencyOfHaqerAncBase haqerId haqerDivBase haqerAncBase
+					vcfAltOut := matchedAlt
+					if anc == rec.Ref {
+						vcfAltOut = "." // anc is ref; no specific matching ALT
+					}
+					start0 := d.Start0
+					fmt.Fprintf(out, "%s\t%d\t%s\t%s\t%s\t%.6f\t%s\t%s\t%s\n",
+						d.Chrom, start0, rec.Id, rec.Ref, vcfAltOut, af, d.Name, d.DivBase, d.AncBase)
+				}
+			}
+		}
+	}
+}
+
+func processUsingSingleVcf(divs DivMap, vcfPath string, minFreq float64, requireSnp bool, out *os.File) {
+	vcfChan, _ := vcf.GoReadToChan(vcfPath)
+	for rec := range vcfChan {
+		chrom := rec.Chr
+		pos := rec.Pos
+		chromMap, ok := divs[chrom]
+		if !ok {
+			continue
+		}
+		divList, ok := chromMap[pos]
+		if !ok {
+			continue
+		}
+		for _, d := range divList {
+			anc := d.AncBase
 			if requireSnp && len(rec.Ref) != 1 {
 				continue
 			}
-
 			desiredAlleleIdx := -1
+			matchedAlt := "."
 			if anc == rec.Ref {
 				desiredAlleleIdx = 0
 			} else {
 				for ai, alt := range rec.Alt {
-					if anc == alt {
+					if strings.ToUpper(alt) == anc {
 						desiredAlleleIdx = ai + 1
+						matchedAlt = alt
 						break
 					}
 				}
@@ -174,15 +241,19 @@ func processChrom(chrom string, chromMap map[int][]DivRecord, vcfDir string, min
 			if desiredAlleleIdx == -1 {
 				continue
 			}
-
 			ac, an := alleleCountsForVcf(rec, desiredAlleleIdx)
 			if an == 0 {
 				continue
 			}
 			af := float64(ac) / float64(an)
 			if af > minFreq {
-				fmt.Fprintf(out, "%s\t%d\t%s\t%s\t%.6f\t%d\t%d\t%s\t%s\t%s\n",
-					chrom, pos, d.Name, anc, af, ac, an, rec.Id, rec.Ref, strings.Join(rec.Alt, ","))
+				vcfAltOut := matchedAlt
+				if anc == rec.Ref {
+					vcfAltOut = "."
+				}
+				start0 := d.Start0
+				fmt.Fprintf(out, "%s\t%d\t%s\t%s\t%s\t%.6f\t%s\t%s\t%s\n",
+					d.Chrom, start0, rec.Id, rec.Ref, vcfAltOut, af, d.Name, d.DivBase, d.AncBase)
 			}
 		}
 	}
@@ -196,30 +267,30 @@ func main() {
 	var minFreq float64
 	var requireSnp bool
 
-	flag.StringVar(&divFile, "div", "", "Divergence file (tab: chrom start end div anc name) (required)")
-	flag.StringVar(&vcfFile, "vcf", "", "Single bgzipped VCF file to use (mutually exclusive with -vcfDir)")
-	flag.StringVar(&vcfDir, "vcfDir", "", "Directory containing per-chrom VCFs (files like chr22.segSite.vcf.gz)")
-	flag.StringVar(&outFile, "out", "", "Output file (default stdout)")
-	flag.Float64Var(&minFreq, "minFreq", 0.01, "Minimum ancestral allele frequency threshold (default 0.01 for 1%)")
-	flag.BoolVar(&requireSnp, "snponly", true, "Only consider SNP records (default true)")
+	flag.StringVar(&divFile, "div", "", "Input div BED file (chrom start end name score strand div anc). Required.")
+	flag.StringVar(&vcfFile, "vcf", "", "Single bgzipped VCF file to use (mutually exclusive with -vcfDir).")
+	flag.StringVar(&vcfDir, "vcfDir", "", "Directory containing per-chrom VCFs (files like chr22.segSite.vcf.gz).")
+	flag.StringVar(&outFile, "out", "", "Output file (default stdout).")
+	flag.Float64Var(&minFreq, "minFreq", 0.01, "Minimum ancestral allele frequency threshold (default 0.01).")
+	flag.BoolVar(&requireSnp, "snponly", true, "Only consider SNP records (default true).")
 	flag.Parse()
 
 	if divFile == "" {
 		flag.Usage()
-		log.Fatal("Error: -div is required")
+		log.Fatal("Error: -div is required.")
 	}
 	if vcfFile == "" && vcfDir == "" {
 		flag.Usage()
-		log.Fatal("Error: supply either -vcf (single file) or -vcfDir (directory of per-chrom VCFs)")
+		log.Fatal("Error: supply either -vcf or -vcfDir.")
 	}
 	if vcfFile != "" && vcfDir != "" {
 		flag.Usage()
-		log.Fatal("Error: supply only one of -vcf or -vcfDir")
+		log.Fatal("Error: supply only one of -vcf or -vcfDir.")
 	}
 
-	divMap, err := readDivFile(divFile)
+	divs, err := readDivBed(divFile)
 	if err != nil {
-		log.Fatalf("failed reading divergence file: %v", err)
+		log.Fatalf("failed reading div bed file: %v", err)
 	}
 
 	var outHandle *os.File
@@ -234,61 +305,11 @@ func main() {
 	}
 
 	// header
-	fmt.Fprintf(outHandle, "chrom\tpos\tname\tanc\tAF\tAC\tAN\tvcfId\tREF\tALT\n")
+	fmt.Fprintf(outHandle, "chr\tstart\tvcfId\tvcfRefBase\tvcfAltBase\tvcfFreqOfHaqerAnc\thaqerId\thaqerDivBase\thaqerAncBase\n")
 
-	// If user supplied a single VCF file, process only the chromosomes that map to that file.
 	if vcfFile != "" {
-		vcfPath := vcfFile
-		if _, err := os.Stat(vcfPath); os.IsNotExist(err) {
-			log.Fatalf("vcf file not found: %s", vcfPath)
-		}
-		vcfChan, _ := vcf.GoReadToChan(vcfPath)
-		// build a set of positions we care about from all chroms (but the VCF will have a CHROM field)
-		// simpler: as we stream, check if rec.Chr is in divMap
-		for rec := range vcfChan {
-			chrom := rec.Chr
-			if chromMap, ok := divMap[chrom]; ok {
-				// reuse the chrom processing logic by creating a tiny temp map for this rec.Pos
-				// but simpler: process the single rec inline:
-				divRecs, ok2 := chromMap[rec.Pos]
-				if !ok2 {
-					continue
-				}
-				for _, d := range divRecs {
-					anc := d.Anc
-					if requireSnp && len(rec.Ref) != 1 {
-						continue
-					}
-					desiredAlleleIdx := -1
-					if anc == rec.Ref {
-						desiredAlleleIdx = 0
-					} else {
-						for ai, alt := range rec.Alt {
-							if anc == alt {
-								desiredAlleleIdx = ai + 1
-								break
-							}
-						}
-					}
-					if desiredAlleleIdx == -1 {
-						continue
-					}
-					ac, an := alleleCountsForVcf(rec, desiredAlleleIdx)
-					if an == 0 {
-						continue
-					}
-					af := float64(ac) / float64(an)
-					if af > minFreq {
-						fmt.Fprintf(outHandle, "%s\t%d\t%s\t%s\t%.6f\t%d\t%d\t%s\t%s\t%s\n",
-							chrom, rec.Pos, d.Name, anc, af, ac, an, rec.Id, rec.Ref, strings.Join(rec.Alt, ","))
-					}
-				}
-			}
-		}
+		processUsingSingleVcf(divs, vcfFile, minFreq, requireSnp, outHandle)
 	} else {
-		// vcfDir mode: iterate chromosomes in divMap
-		for chrom, chromMap := range divMap {
-			processChrom(chrom, chromMap, vcfDir, minFreq, requireSnp, outHandle)
-		}
+		processUsingVcfDir(divs, vcfDir, minFreq, requireSnp, outHandle)
 	}
 }
