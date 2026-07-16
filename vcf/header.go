@@ -324,7 +324,7 @@ func WriteMultiSamplesHeader(file io.Writer, header Header, listNames []string) 
 	for h := 0; h < len(header.Text); h++ {
 		if strings.Contains(header.Text[h], "#CHROM\t") {
 			name := strings.Join(listNames, "\t")
-			_, err = fmt.Fprint(file, fmt.Sprintf("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s\n", name))
+			_, err = fmt.Fprintf(file, "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s\n", name)
 			exception.FatalOnErr(err)
 		} else {
 			_, err = fmt.Fprintf(file, "%s\n", header.Text[h])
