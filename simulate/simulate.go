@@ -473,10 +473,6 @@ func printSeqForNodes(node *expandedTree.ETree, sequence []dna.Base, gene string
 
 	length = node.BranchLength
 	seq = MutateGene(sequence, length, gene, deletions)
-<<<<<<< HEAD
-=======
-
->>>>>>> 661b080c (skeleton code for ils simulation)
 	seqFasta = fasta.Fasta{node.Name, seq}
 	node.Fasta = &seqFasta
 	if node.Left != nil && node.Right != nil {
