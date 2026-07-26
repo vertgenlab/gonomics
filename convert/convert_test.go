@@ -76,7 +76,10 @@ var ThreeWayFaToVcfTests = []struct {
 	ExpectedFile string
 	Chrom        string
 }{
-	{InFile: "testdata/threeWayFaToVcf/input.fa", OutFile: "tmp.threeWayFaToVcf.txt", ExpectedFile: "testdata/threeWayFaToVcf/expected.vcf", Chrom: "chr1"},
+	{InFile: "testdata/threeWayFaToVcf/input.fa", 
+	OutFile: "tmp.threeWayFaToVcf.txt", 
+	ExpectedFile: "testdata/threeWayFaToVcf/expected.vcf", 
+	Chrom: "chr1"},
 }
 
 func TestThreeWayFaToVcf(t *testing.T) {
@@ -94,6 +97,38 @@ func TestThreeWayFaToVcf(t *testing.T) {
 		}
 	}
 }
+
+
+var NWayFaToVcfTests = []struct {
+	InFile	string
+	OutFile	string
+	ExpectedFile string
+	Chrom string
+}{
+	{InFile: "testdata/NWayFaToVcf/input.fa",
+	OutFile: "testdata/NWayFaToVcf/tmp.NWayFaToVcf.vcf",
+	ExpectedFile: "testdata/NWayToVcf/expected.vcf",
+	Chrom: "chr1"},
+}
+
+func TestNWayFaToVcf(t *testing.T) {
+	var err error
+	var out *fileio.EasyWriter
+	for _, v := range NWayFaToVcfTests {
+		nWayInputFa := fasta.Read(v.InFile)
+		out = fileio.EasyCreate(v.OutFile)
+		NWayFaToVcf(nWayInputFa, v.Chrom, out)
+		err = out.Close()
+		exception.PanicOnErr(err)
+		if !fileio.AreEqual(v.OutFile, v.ExpectedFile) {
+			t.Errorf("NWayFaToVcf: output was not as expected.")
+		} else {
+			err = os.Remove(v.OutFile)
+			exception.PanicOnErr(err)
+		}
+	}
+}
+
 
 func TestPairwiseFaToVcfRetainN(t *testing.T) {
 	var err error
