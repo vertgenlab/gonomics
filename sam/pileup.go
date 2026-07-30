@@ -467,7 +467,6 @@ func sclipTerminalIns(s *Sam) {
 		s.Cigar[end-1].RunLength += s.Cigar[end].RunLength
 		s.Cigar = append(s.Cigar[:end], s.Cigar[end+1:]...)
 	}
-
 }
 
 // String for debug.
