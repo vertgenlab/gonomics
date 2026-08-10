@@ -197,7 +197,7 @@ func main() {
 	flag.Parse()
 
 	if *subSet < 0 || *subSet > 1 {
-		log.Fatalf(fmt.Sprintf("The subSet option must be between 0 and 1, received %v.", *subSet))
+		log.Fatalf("The subSet option must be between 0 and 1, received %v.", *subSet)
 	}
 
 	if *pairedEnd {

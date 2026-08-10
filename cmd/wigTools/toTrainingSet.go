@@ -3,15 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math"
+	"math/rand"
+	"os"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/wig"
-	"log"
-	"math"
-	"math/rand"
-	"os"
 )
 
 // ToTrainingSetSettings defines the usage settings for the wigTools toTrainingSet subcommand.
@@ -139,13 +140,13 @@ func toTrainingSet(s ToTrainingSetSettings) {
 			//now we shard the training example into either the testing, training, or validation set.
 			currRand = rand.Float64()
 			if currRand < s.TestingProp {
-				_, err = fmt.Fprintf(testOut, lineToWrite)
+				_, err = fmt.Fprint(testOut, lineToWrite)
 				exception.PanicOnErr(err)
 			} else if currRand < s.TestingProp+s.ValidationProp {
-				_, err = fmt.Fprintf(validateOut, lineToWrite)
+				_, err = fmt.Fprint(validateOut, lineToWrite)
 				exception.PanicOnErr(err)
 			} else {
-				_, err = fmt.Fprintf(trainOut, lineToWrite)
+				_, err = fmt.Fprint(trainOut, lineToWrite)
 				exception.PanicOnErr(err)
 			}
 
@@ -158,13 +159,13 @@ func toTrainingSet(s ToTrainingSetSettings) {
 				}
 				//we don't regenerate currRand, for and rev for same sequence both land in the same shard.
 				if currRand < s.TestingProp {
-					_, err = fmt.Fprintf(testOut, lineToWrite)
+					_, err = fmt.Fprint(testOut, lineToWrite)
 					exception.PanicOnErr(err)
 				} else if currRand < s.TestingProp+s.ValidationProp {
-					_, err = fmt.Fprintf(validateOut, lineToWrite)
+					_, err = fmt.Fprint(validateOut, lineToWrite)
 					exception.PanicOnErr(err)
 				} else {
-					_, err = fmt.Fprintf(trainOut, lineToWrite)
+					_, err = fmt.Fprint(trainOut, lineToWrite)
 					exception.PanicOnErr(err)
 				}
 			}

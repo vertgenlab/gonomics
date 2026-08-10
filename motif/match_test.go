@@ -2,11 +2,12 @@ package motif
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
-	"os"
-	"testing"
 )
 
 var ScoreWindowTests = []struct {
@@ -66,7 +67,7 @@ func TestRankTensors(t *testing.T) {
 		motifs = ReadJaspar(v.PwmFile, "Weight")
 		for i = range motifs {
 			currRankMatrix = initializeRankTensor(motifs[i])
-			_, err = fmt.Fprintf(out, rankTensorToString(currRankMatrix))
+			_, err = fmt.Fprint(out, rankTensorToString(currRankMatrix))
 			exception.PanicOnErr(err)
 		}
 		err = out.Close()
