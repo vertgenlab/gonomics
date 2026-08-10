@@ -231,7 +231,7 @@ func vcfInfo(inputFile string, inputChan <-chan vcf.Vcf, typesOut, divergenceOut
 		if !includeComplements {
 			mergeComplements(m)
 		}
-		_, err = fmt.Fprintf(contextOut, getOutput(m))
+		_, err = fmt.Fprint(contextOut, getOutput(m))
 		exception.PanicOnErr(err)
 	}
 }

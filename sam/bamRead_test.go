@@ -56,7 +56,7 @@ func TestReadBam(t *testing.T) {
 
 	err = r.Close()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	if len(actual) != len(expected) {

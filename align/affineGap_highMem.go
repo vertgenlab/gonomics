@@ -227,10 +227,10 @@ func affineGap_highMem(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapO
 func AffineGapChunk(alpha []dna.Base, beta []dna.Base, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []Cigar) {
 	var alphaSize, betaSize int64 = int64(len(alpha)), int64(len(beta))
 	if alphaSize%chunkSize != 0 {
-		log.Fatalf(fmt.Sprintf("Error: the first sequence, %s, has a length of %d, when it should be a multiple of %d\n", dna.BasesToString(alpha), alphaSize, chunkSize))
+		log.Fatalf("Error: the first sequence, %s, has a length of %d, when it should be a multiple of %d\n", dna.BasesToString(alpha), alphaSize, chunkSize)
 	}
 	if betaSize%chunkSize != 0 {
-		log.Fatalf(fmt.Sprintf("Error: the second sequence, %s, has a length of %d, when it should be a multiple of %d\n", dna.BasesToString(beta), betaSize, chunkSize))
+		log.Fatalf("Error: the second sequence, %s, has a length of %d, when it should be a multiple of %d\n", dna.BasesToString(beta), betaSize, chunkSize)
 	}
 	alphaChunks := alphaSize / chunkSize
 	betaChunks := betaSize / chunkSize
@@ -308,10 +308,10 @@ func multipleAffineGap(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64
 func multipleAffineGapChunk(alpha []fasta.Fasta, beta []fasta.Fasta, scores [][]int64, gapOpen int64, gapExtend int64, chunkSize int64) (int64, []Cigar) {
 	var alphaSize, betaSize int64 = int64(len(alpha[0].Seq)), int64(len(beta[0].Seq))
 	if alphaSize%chunkSize != 0 {
-		log.Fatalf(fmt.Sprintf("Error: the first subalignment has a length of %d, when it should be a multiple of %d\n", alphaSize, chunkSize))
+		log.Fatalf("Error: the first subalignment has a length of %d, when it should be a multiple of %d\n", alphaSize, chunkSize)
 	}
 	if betaSize%chunkSize != 0 {
-		log.Fatalf(fmt.Sprintf("Error: the second subalignment has a length of %d, when it should be a multiple of %d\n", betaSize, chunkSize))
+		log.Fatalf("Error: the second subalignment has a length of %d, when it should be a multiple of %d\n", betaSize, chunkSize)
 	}
 	alphaChunks := alphaSize / chunkSize
 	betaChunks := betaSize / chunkSize
