@@ -22,17 +22,17 @@ type IlsSettings struct {
 	UnitBranchLength       float64
 	LenSeq                 int
 	SetSeed                int64
-	chromNameOut		   string
-	outPathPrefix		   string
+	chromNameOut           string
+	outPathPrefix          string
 	SubstitutionMatrixFile string
 }
 
-"\tsimulateEvol ils roots.txt--- transition_matrix.tsv length seed chromName outPathPrefix unitBranchLength---" +
-			"options:\n")
-	flag.PrintDefaults()
-}
+// "\tsimulateEvol ils roots.txt--- transition_matrix.tsv length seed chromName outPathPrefix unitBranchLength---" +
+// 			"options:\n")
+// 	flag.PrintDefaults()
+// }
 
-option: leafFastasOnly bool, substitutionMatrixFile string
+// option: leafFastasOnly bool, substitutionMatrixFile string
 
 // IlsUsage defines the usage statement for the simulateEvol ils subcommand.
 func IlsUsage(ilsFlags *flag.FlagSet) {

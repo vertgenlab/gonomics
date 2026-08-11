@@ -25,8 +25,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-option: leafFastasOnly bool, substitutionMatrixFile string
-
+// options to add: leafFastasOnly bool, substitutionMatrixFile string
 
 func main() {
 	flag.Usage = usage
