@@ -94,6 +94,7 @@ func parseIlsArgs() {
 // A Newick tree file can be provided. Alternatively, one can be generated with a user-specified number of
 // nodes and Gamma-distribute random branch lengths.
 func Ils(s NonCodingSettings) {
+	// TODO: change this seed
 	rand.Seed(s.SetSeed)
 	var answer []fasta.Fasta
 	var root *expandedTree.ETree
