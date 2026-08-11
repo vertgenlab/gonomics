@@ -43,6 +43,7 @@ func probRange(transMat *mat.Dense) *mat.Dense {
 // a genePred filename related to the starting sequence, and if deletions should be allowed along with substitutions.
 // The starting sequence will then be evolved according to the neutral tree provided and each node in the tree, using
 // incomplete lineage separation. First provided topology should be the non-ILS informed topology. No gaps.
+// uses defaultSubstitutionMatrix if substitution matrix file empty
 func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength int, seed int64, chromName string, leafFastasOnly bool, substitutionMatrixFile string, unitBranchLength float64) ([]fasta.Fasta, [][]fasta.Fasta, []bed.Bed, []fasta.Fasta) {
 
 	// set entire genome to be 1 big gene
