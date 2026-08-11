@@ -19,9 +19,14 @@ func usage() {
 			"\tsimulateEvol withIndels seq.fasta outFile.fasta\n" +
 			"\tOR\n" +
 			"\tsimulateEvol nonCoding out.fasta\n" +
+			"\tOR\n" +
+			"\tsimulateEvol ils roots.txt transition_matrix.tsv length seed chromName outPathPrefix unitBranchLength" +
 			"options:\n")
 	flag.PrintDefaults()
 }
+
+option: leafFastasOnly bool, substitutionMatrixFile string
+
 
 func main() {
 	flag.Usage = usage
@@ -39,6 +44,8 @@ func main() {
 		parseWithIndelsFlags()
 	case "nonCoding":
 		parseNonCodingArgs()
+	case "ils":
+		parseIlsArgs()
 	default:
 		flag.Usage()
 		log.Fatalf("Unrecognized subcommand: %v.\n", flag.Arg(0))
