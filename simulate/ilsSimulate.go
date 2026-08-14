@@ -55,7 +55,8 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fast
 
 	transMatConverted := probRange(transMat)
 
-	rand.New(rand.NewSource(seed))
+	// TODO convert to seed object
+	rand.Seed(seed)
 	var anc []fasta.Fasta
 	if len(ancSeq) == 0 {
 		anc = []fasta.Fasta{{Name: "Anc", Seq: RandIntergenicSeq(GC, totalLength)}}

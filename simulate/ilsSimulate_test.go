@@ -13,32 +13,38 @@ import (
 )
 
 var IlsSimulateTests = []struct {
-	TransMat       string
-	AncSeq         string
-	Roots          []string
-	Length         int64
-	OutName        string
-	Seed           int64
-	ExpectedPrefix string
-	Precision      float64
+	TransMat           string
+	AncSeq             string
+	Roots              []string
+	Length             int64
+	OutName            string
+	Seed               int64
+	UnitBranchLength   float64
+	LeafFastasOnly     bool
+	SubstitutionMatrix string
+	ExpectedPrefix     string
 }{
 	{TransMat: "testdata/ilsSimulate_transMat.tsv",
-		Roots:          []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
-		AncSeq:         "",
-		Length:         14,
-		OutName:        "test1",
-		Seed:           3,
-		ExpectedPrefix: "testdata/ilsSimulate_expected_1",
-		Precision:      1e-3,
+		Roots:              []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
+		AncSeq:             "",
+		Length:             14,
+		OutName:            "test1",
+		Seed:               3,
+		UnitBranchLength:   1.0,
+		LeafFastasOnly:     true,
+		SubstitutionMatrix: "",
+		ExpectedPrefix:     "testdata/ilsSimulate_expected_1",
 	},
 	{TransMat: "testdata/ilsSimulate_transMat.tsv",
-		Roots:          []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
-		AncSeq:         "testdata/ilsSimulate_expected_2_anc.fasta",
-		Length:         50,
-		OutName:        "test2",
-		Seed:           5,
-		ExpectedPrefix: "testdata/ilsSimulate_expected_2",
-		Precision:      1e-3,
+		Roots:              []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
+		AncSeq:             "testdata/ilsSimulate_expected_2_anc.fasta",
+		Length:             50,
+		OutName:            "test2",
+		Seed:               5,
+		UnitBranchLength:   1.0,
+		LeafFastasOnly:     true,
+		SubstitutionMatrix: "",
+		ExpectedPrefix:     "testdata/ilsSimulate_expected_2",
 	},
 }
 
@@ -66,13 +72,13 @@ func TestIlsSimulate(t *testing.T) {
 		expectedIls = fasta.Read(v.ExpectedPrefix + "_ils.fasta")
 		expectedBed = bed.Read(v.ExpectedPrefix + ".bed")
 
-		if v.AncSeq != "" {
+		if len(v.AncSeq) != 0 {
 			ancSeq = fasta.Read(v.AncSeq)
 		} else {
 			ancSeq = []fasta.Fasta{}
 		}
 
-		anc, evolved, topoRecord, ilsEvolved := SimulateIls(roots, m, ancSeq, int(v.Length), v.Seed, v.OutName, true, "", 1.0)
+		anc, evolved, topoRecord, ilsEvolved := SimulateIls(roots, m, ancSeq, int(v.Length), v.Seed, v.OutName, v.LeafFastasOnly, v.SubstitutionMatrix, v.UnitBranchLength)
 
 		fasta.Write(fmt.Sprintf("testdata/ilsSimulate_%s_anc_out.fasta", v.OutName), anc)
 		for idx, rec := range evolved {
@@ -83,6 +89,14 @@ func TestIlsSimulate(t *testing.T) {
 		fasta.Write("testdata/ilsSimulate_"+v.OutName+"_ils_out.fasta", ilsEvolved)
 
 		if !fasta.AllAreEqual(ilsEvolved, expectedIls) || !bed.AllAreEqual(topoRecord, expectedBed) {
+			// fasta.Write(fmt.Sprintf("testdata/ilsSimulate_expected_%d_anc.fasta", vIdx), anc)
+			// for idx, rec := range evolved {
+			// 	fasta.Write(fmt.Sprintf("testdata/ilsSimulate_expected_%d_forward_evolved_topo_v%d.fasta", vIdx, idx), rec)
+			// }
+
+			// bed.Write(fmt.Sprintf("testdata/ilsSimulate_expected_%d.bed", vIdx), topoRecord)
+			// fasta.Write(fmt.Sprintf("testdata/ilsSimulate_expected_%d_ils.fasta", vIdx), ilsEvolved)
+
 			t.Errorf("simulation output differs from expected")
 		} else {
 			fileio.EasyRemove(fmt.Sprintf("testdata/ilsSimulate_%s_anc_out.fasta", v.OutName))

@@ -39,7 +39,6 @@ func IlsUsage(ilsFlags *flag.FlagSet) {
 			"The program can take in a specified ancestral sequence or randomly generate an initial ancestral sequence\n" +
 			"Usage:\n" +
 			"\tsimulateEvol ils roots.txt transition_matrix.tsv anc.fasta outPathPrefix unitBranchLength \n" +
-			// TODO MANDATORY
 			"options:\n",
 	)
 	ilsFlags.PrintDefaults()
@@ -57,7 +56,7 @@ func parseIlsArgs() {
 	ilsFlags.Usage = func() { NonCodingUsage(ilsFlags) }
 
 	var rootsFile *string = ilsFlags.String("rootsFile", "", "Specify a file for simulating molecular evolution along a set of pre-specified Newick trees.")
-	var transitionMatrixFile *string = ilsFlags.String("transitionMatrixFile", "", "Specify a file TODO.")
+	var transitionMatrixFile *string = ilsFlags.String("transitionMatrixFile", "", "Specify a file that describes the probability of transitions between topology states.")
 	var ancSeqFile *string = ilsFlags.String("ancSeqFile", "", "Specify the initial ancestral sequence. If empty, must provide setSEed and lenSeq.")
 	var setSeed *int64 = ilsFlags.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var lenSeq *int64 = ilsFlags.Int64("lenSeq", -1, "If generating a root DNA sequence, set the length of the simulated sequence. Ignored if ancSeqFile provided.")
@@ -65,7 +64,7 @@ func parseIlsArgs() {
 	var outPathPrefix *string = ilsFlags.String("outPathPrefix", "", "Specify the output directory and prefix of output files.")
 	var leafFastasOnly *bool = ilsFlags.Bool("outPathPrefix", false, "Specify if only leaf fastas are provided in output. Defaults to false.")
 	var substitutionMatrixFile *string = ilsFlags.String("substitutionMatrixFile", "", "Specify a custom substitution matrix.")
-	var unitBranchLength *float64 = ilsFlags.Float64("unitBranchLength", 0, "Set the branch length over which a custom substitution matrix was derived.")
+	var unitBranchLength *float64 = ilsFlags.Float64("unitBranchLength", -1, "Set the branch length over which a custom substitution matrix was derived.")
 
 	err = ilsFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
@@ -101,6 +100,26 @@ func Ils(s IlsSettings) {
 		log.Fatalf("error reading transition matrix: %v", err)
 	}
 
+	if len(s.RootsFile) == 0 {
+		log.Fatalf("Must provide roots file.")
+	} else if len(s.TransitionMatrixFile) == 0 {
+		log.Fatalf("Must provide transition file.")
+	} else if len(s.ChromName) == 0 {
+		log.Fatalf("Must provide desired output sequence name.")
+	} else if s.UnitBranchLength == -1 {
+		log.Fatalf("Must provide unit branch length as used in roots files.")
+	}
+
+	var ancSeq []fasta.Fasta
+	if s.AncSeqFile != "" {
+		ancSeq = fasta.Read(s.AncSeqFile)
+	} else {
+		if s.LenSeq == -1 {
+			log.Fatalf("Must provide either ancestral sequence or desired length of randomly generated sequence.")
+		}
+		ancSeq = []fasta.Fasta{}
+	}
+
 	// you need to read in the s.RootsFile and then make that rootsFiles = []string{}
 	rootsFiles := fileio.Read(s.RootsFile)
 	roots := make([]*expandedTree.ETree, len(rootsFiles))
@@ -117,22 +136,12 @@ func Ils(s IlsSettings) {
 		log.Fatalf("Must provide random seed.")
 	}
 
-	var ancSeq []fasta.Fasta
-	if s.AncSeqFile != "" {
-		ancSeq = fasta.Read(s.AncSeqFile)
-	} else {
-		if s.LenSeq == -1 {
-			log.Fatalf("Must provide either ancestral sequence or desired length of randomly generated sequence.")
-		}
-		ancSeq = []fasta.Fasta{}
-	}
+	anc, evolved, topoRecord, ilsEvolved := simulate.SimulateIls(roots, m, ancSeq, int(s.LenSeq), s.SetSeed, s.ChromName, s.LeafFastasOnly, s.SubstitutionMatrixFile, s.UnitBranchLength)
 
-	anc, evolved, topoRecord, ilsEvolved := simulate.SimulateIls(roots, m, ancSeq, int(s.LenSeq), s.SetSeed, s.ChromName, true, "", 1.0)
-
-	fasta.Write(fmt.Sprint(s.OutPathPrefix, "anc.fasta"), anc)
+	fasta.Write(fmt.Sprintf("%s_anc.fasta", s.OutPathPrefix), anc)
 	for idx, rec := range evolved {
-		fasta.Write(fmt.Sprintf(s.OutPathPrefix, "forward_evolved_topo_v%d.fasta", idx), rec)
+		fasta.Write(fmt.Sprintf("%s_forward_evolved_topo_v%d.fasta", s.OutPathPrefix, idx), rec)
 	}
-	bed.Write(fmt.Sprint(s.OutPathPrefix, ".bed"), topoRecord)
-	fasta.Write(fmt.Sprint(s.OutPathPrefix, "ils.fasta"), ilsEvolved)
+	bed.Write(fmt.Sprintf("%s.bed", s.OutPathPrefix), topoRecord)
+	fasta.Write(fmt.Sprintf("%s_ils.fasta", s.OutPathPrefix), ilsEvolved)
 }
