@@ -44,7 +44,7 @@ func probRange(transMat *mat.Dense) *mat.Dense {
 // The starting sequence will then be evolved according to the neutral tree provided and each node in the tree, using
 // incomplete lineage separation. First provided topology should be the non-ILS informed topology. No gaps.
 // uses defaultSubstitutionMatrix if substitution matrix file empty
-func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength int, seed int64, chromName string, leafFastasOnly bool, substitutionMatrixFile string, unitBranchLength float64) ([]fasta.Fasta, [][]fasta.Fasta, []bed.Bed, []fasta.Fasta) {
+func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fasta.Fasta, totalLength int, seed int64, chromName string, leafFastasOnly bool, substitutionMatrixFile string, unitBranchLength float64) ([]fasta.Fasta, [][]fasta.Fasta, []bed.Bed, []fasta.Fasta) {
 
 	// set entire genome to be 1 big gene
 	n := len(roots)
@@ -56,9 +56,13 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, totalLength i
 	transMatConverted := probRange(transMat)
 
 	rand.New(rand.NewSource(seed))
-
-	// Randomly generate ancestral sequence of length totalLength
-	anc := []fasta.Fasta{{Name: "Anc", Seq: RandIntergenicSeq(GC, totalLength)}}
+	var anc []fasta.Fasta
+	if len(ancSeq) == 0 {
+		anc = []fasta.Fasta{{Name: "Anc", Seq: RandIntergenicSeq(GC, totalLength)}}
+	} else {
+		// Randomly generate ancestral sequence of length totalLength
+		anc = ancSeq
+	}
 
 	// (Repeat for all n topologies) Forward evolve the ancestral sequence.
 	// Produces an output fasta with C sequences, one for each node in the topology

@@ -2,18 +2,19 @@ package simulate
 
 import (
 	"fmt"
-	"path/filepath"
 	"testing"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/matrix"
 )
 
 var IlsSimulateTests = []struct {
 	TransMat       string
+	AncSeq         string
 	Roots          []string
 	Length         int64
 	OutName        string
@@ -23,6 +24,7 @@ var IlsSimulateTests = []struct {
 }{
 	{TransMat: "testdata/ilsSimulate_transMat.tsv",
 		Roots:          []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
+		AncSeq:         "",
 		Length:         14,
 		OutName:        "test1",
 		Seed:           3,
@@ -31,6 +33,7 @@ var IlsSimulateTests = []struct {
 	},
 	{TransMat: "testdata/ilsSimulate_transMat.tsv",
 		Roots:          []string{"testdata/ilsSimulate_v0.nh", "testdata/ilsSimulate_v1.nh", "testdata/ilsSimulate_v2.nh", "testdata/ilsSimulate_v3.nh"},
+		AncSeq:         "testdata/ilsSimulate_expected_2_anc.fasta",
 		Length:         50,
 		OutName:        "test2",
 		Seed:           5,
@@ -42,7 +45,9 @@ var IlsSimulateTests = []struct {
 func TestIlsSimulate(t *testing.T) {
 	var expectedIls []fasta.Fasta
 	var expectedBed []bed.Bed
-	for _, v := range IlsSimulateTests {
+	var ancSeq []fasta.Fasta
+	for vIdx, v := range IlsSimulateTests {
+		vIdx = vIdx + 1
 		m, err := matrix.ReadDense(v.TransMat, '\t')
 		if err != nil {
 			t.Fatalf("error reading transition matrix: %v", err)
@@ -61,20 +66,31 @@ func TestIlsSimulate(t *testing.T) {
 		expectedIls = fasta.Read(v.ExpectedPrefix + "_ils.fasta")
 		expectedBed = bed.Read(v.ExpectedPrefix + ".bed")
 
-		anc, evolved, topoRecord, ilsEvolved := SimulateIls(roots, m, int(v.Length), v.Seed, v.OutName, true, "", 1.0)
+		if v.AncSeq != "" {
+			ancSeq = fasta.Read(v.AncSeq)
+		} else {
+			ancSeq = []fasta.Fasta{}
+		}
+
+		anc, evolved, topoRecord, ilsEvolved := SimulateIls(roots, m, ancSeq, int(v.Length), v.Seed, v.OutName, true, "", 1.0)
+
+		fasta.Write(fmt.Sprintf("testdata/ilsSimulate_%s_anc_out.fasta", v.OutName), anc)
+		for idx, rec := range evolved {
+			fasta.Write(fmt.Sprintf("testdata/ilsSimulate_%s_forward_evolved_topo_v%d_out.fasta", v.OutName, idx), rec)
+		}
+
+		bed.Write("testdata/ilsSimulate_"+v.OutName+"_out.bed", topoRecord)
+		fasta.Write("testdata/ilsSimulate_"+v.OutName+"_ils_out.fasta", ilsEvolved)
 
 		if !fasta.AllAreEqual(ilsEvolved, expectedIls) || !bed.AllAreEqual(topoRecord, expectedBed) {
-
-			outDir := t.TempDir()
-
-			fasta.Write(filepath.Join(outDir, "anc.fasta"), anc)
-			for idx, rec := range evolved {
-				fasta.Write(filepath.Join(outDir, fmt.Sprintf("forward_evolved_topo_v%d.fasta", idx)), rec)
+			t.Errorf("simulation output differs from expected")
+		} else {
+			fileio.EasyRemove(fmt.Sprintf("testdata/ilsSimulate_%s_anc_out.fasta", v.OutName))
+			for idx := range evolved {
+				fileio.EasyRemove(fmt.Sprintf("testdata/ilsSimulate_%s_forward_evolved_topo_v%d_out.fasta", v.OutName, idx))
 			}
-
-			bed.Write("ilsSimulated_"+v.OutName+".bed", topoRecord)
-			fasta.Write("ilsSimulated_"+v.OutName+"_ils.fasta", ilsEvolved)
-			t.Errorf("simulation output differs from expected; wrote observed output to %s", outDir)
+			fileio.EasyRemove("testdata/ilsSimulate_" + v.OutName + "_out.bed")
+			fileio.EasyRemove("testdata/ilsSimulate_" + v.OutName + "_ils_out.fasta")
 
 		}
 	}

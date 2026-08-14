@@ -4,88 +4,88 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 
+	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/numbers"
+	"github.com/vertgenlab/gonomics/numbers/matrix"
 	"github.com/vertgenlab/gonomics/simulate"
 )
 
 // IlsSettings defines usage settings for the simulateEvol ils subcommand.
 type IlsSettings struct {
-	rootsFile              string
-	transitionMatrixFile   string
+	RootsFile              string
+	TransitionMatrixFile   string
+	ChromName              string
+	OutPathPrefix          string
 	UnitBranchLength       float64
-	LenSeq                 int
+	AncSeqFile             string
+	LenSeq                 int64
 	SetSeed                int64
-	chromNameOut           string
-	outPathPrefix          string
+	LeafFastasOnly         bool
 	SubstitutionMatrixFile string
 }
-
-// "\tsimulateEvol ils roots.txt--- transition_matrix.tsv length seed chromName outPathPrefix unitBranchLength---" +
-// 			"options:\n")
-// 	flag.PrintDefaults()
-// }
-
-// option: leafFastasOnly bool, substitutionMatrixFile string
 
 // IlsUsage defines the usage statement for the simulateEvol ils subcommand.
 func IlsUsage(ilsFlags *flag.FlagSet) {
 	fmt.Print(
-		"simulateEvol Ils - a tool to simulate molecular evolution in noncoding regions.\n" +
+		"simulateEvol ils - simulate evolution with incomplete lineage sorting.\n" +
 			"This program simulates molecular evolution along a specified set of input Newick trees." +
 			"This program simulates with Jukes-Cantor evolution by default, but accepts custom substitution matrices.\n" +
 			"This program does not support indels, but rather simulates substitutions.\n" +
-			"The program randomly generates an initial \n" +
+			"The program can take in a specified ancestral sequence or randomly generate an initial ancestral sequence\n" +
 			"Usage:\n" +
-			"\tsimulateEvol ils out.fasta\n" +
-			"options:\n")
+			"\tsimulateEvol ils roots.txt transition_matrix.tsv anc.fasta outPathPrefix unitBranchLength \n" +
+			// TODO MANDATORY
+			"options:\n",
+	)
 	ilsFlags.PrintDefaults()
 }
 
-// parseNonCodingArgs is the main function of the simulateEvol nonCoding subcommand. It parses options and launches the NonCoding function.
+// transitionmatrix, chromName, outpathprefix, and unit branch length are mandatory.
+// leaffastas only if not provided is assumed false.
+// either anc seq or lenseq + setseed must be provided
+
+// parseIlsArgs is the main function of the simulateEvol nonCoding subcommand. It parses options and launches the NonCoding function.
 func parseIlsArgs() {
 	var expectedNumArgs int = 1
 	var err error
 	ilsFlags := flag.NewFlagSet("ils", flag.ExitOnError)
-	ilsFlags.Usage = func() { NonCodingUsage(nonCodingFlags) }
-	var setSeed *int64 = nonCodingFlags.Int64("setSeed", -1, "Use a specific seed for the RNG.")
-	var unitBranchLength *float64 = nonCodingFlags.Float64("unitBranchLength", -100, "Set the branch length over which a custom substitution matrix was derived. If ")
-	var substitutionMatrix *string = nonCodingFlags.String("substitutionMatrixFile", "", "Specify a custom substitution matrix.")
-	var numNodes *int = nonCodingFlags.Int("numNodes", 13, "If generating a Newick tree, set the total number of nodes in the simulate tree.")
-	var gammaAlpha *float64 = nonCodingFlags.Float64("gammaAlpha", 1, "If generating a Newick tree, set the alpha parameter for Gamma-distributed branch lengths.")
-	var gammaBeta *float64 = nonCodingFlags.Float64("gammaBeta", 50, "If generating a Newick tree, set the beta parameter for Gamma-distributed branch lengths.")
-	var gcContent *float64 = nonCodingFlags.Float64("gcContent", 0.41, "If generating a root DNA sequence, set the GC content for the simulated sequence.")
-	var lenSeq *int = nonCodingFlags.Int("lenSeq", 100, "If generating a root DNA sequence, set the length of the simulated sequence.")
-	var treeFile *string = nonCodingFlags.String("treeFile", "", "Specify a file for simulating molecular evolution along a pre-specified Newick tree.")
-	var fastaFile *string = nonCodingFlags.String("fastaFile", "", "Specify a sequence for the root node of the simulation. This file is expected to contain only one sequence. Output name is hardcoded as 'root', so the fasta name will be ignored.")
-	var newickOut *string = nonCodingFlags.String("newickOut", "", "Write the tree to an output Newick-format file.")
-	err = nonCodingFlags.Parse(os.Args[2:])
+	ilsFlags.Usage = func() { NonCodingUsage(ilsFlags) }
+
+	var rootsFile *string = ilsFlags.String("rootsFile", "", "Specify a file for simulating molecular evolution along a set of pre-specified Newick trees.")
+	var transitionMatrixFile *string = ilsFlags.String("transitionMatrixFile", "", "Specify a file TODO.")
+	var ancSeqFile *string = ilsFlags.String("ancSeqFile", "", "Specify the initial ancestral sequence. If empty, must provide setSEed and lenSeq.")
+	var setSeed *int64 = ilsFlags.Int64("setSeed", -1, "Use a specific seed for the RNG.")
+	var lenSeq *int64 = ilsFlags.Int64("lenSeq", -1, "If generating a root DNA sequence, set the length of the simulated sequence. Ignored if ancSeqFile provided.")
+	var chromName *string = ilsFlags.String("chromName", "", "Specify the name of the output sequence.")
+	var outPathPrefix *string = ilsFlags.String("outPathPrefix", "", "Specify the output directory and prefix of output files.")
+	var leafFastasOnly *bool = ilsFlags.Bool("outPathPrefix", false, "Specify if only leaf fastas are provided in output. Defaults to false.")
+	var substitutionMatrixFile *string = ilsFlags.String("substitutionMatrixFile", "", "Specify a custom substitution matrix.")
+	var unitBranchLength *float64 = ilsFlags.Float64("unitBranchLength", 0, "Set the branch length over which a custom substitution matrix was derived.")
+
+	err = ilsFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
-	if len(nonCodingFlags.Args()) != expectedNumArgs {
-		nonCodingFlags.Usage()
+	if len(ilsFlags.Args()) != expectedNumArgs {
+		ilsFlags.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
-			expectedNumArgs, len(nonCodingFlags.Args()))
+			expectedNumArgs, len(ilsFlags.Args()))
 	}
-	outFile := nonCodingFlags.Arg(0)
+
 	s := IlsSettings{
-		TreeFile:               *treeFile,
-		FastaFile:              *fastaFile,
-		OutFile:                outFile,
-		SetSeed:                *setSeed,
-		NumNodes:               *numNodes,
-		GammaAlpha:             *gammaAlpha,
-		GammaBeta:              *gammaBeta,
-		GcContent:              *gcContent,
-		LenSeq:                 *lenSeq,
-		SubstitutionMatrixFile: *substitutionMatrix,
+		RootsFile:              *rootsFile,
+		TransitionMatrixFile:   *transitionMatrixFile,
+		ChromName:              *chromName,
+		OutPathPrefix:          *outPathPrefix,
 		UnitBranchLength:       *unitBranchLength,
-		NewickOut:              *newickOut,
+		AncSeqFile:             *ancSeqFile,
+		LenSeq:                 *lenSeq,
+		SetSeed:                *setSeed,
+		LeafFastasOnly:         *leafFastasOnly,
+		SubstitutionMatrixFile: *substitutionMatrixFile,
 	}
 	Ils(s)
 }
@@ -93,53 +93,46 @@ func parseIlsArgs() {
 // Ils simulates molecular evolution along a Newick tree and writes the resulting sequences to a file.
 // A Newick tree file can be provided. Alternatively, one can be generated with a user-specified number of
 // nodes and Gamma-distribute random branch lengths.
-func Ils(s NonCodingSettings) {
-	// TODO: change this seed
-	rand.Seed(s.SetSeed)
-	var answer []fasta.Fasta
-	var root *expandedTree.ETree
+func Ils(s IlsSettings) {
 	var err error
 
-	if s.GammaAlpha <= 0 || s.GammaBeta <= 0 {
-		log.Fatalf("Error: expected Gamma distribution parameters to be positive numbers. Found: alpha=%v, beta=%v\n", s.GammaAlpha, s.GammaBeta)
+	m, err := matrix.ReadDense(s.TransitionMatrixFile, '\t')
+	if err != nil {
+		log.Fatalf("error reading transition matrix: %v", err)
 	}
-	if s.GcContent < 0 || s.GcContent > 1 {
-		log.Fatalf("Error: GcContent must be a value between 0 and 1. Found: %v.\n", s.GcContent)
-	}
-	if s.LenSeq < 0 {
-		log.Fatalf("Error: expected lenSeq to be a positive number. Found: %v.\n", s.LenSeq)
-	}
-	if s.TreeFile != "" {
-		root, err = expandedTree.ReadNewick(s.TreeFile)
-	} else {
-		root = simulate.ETree(s.NumNodes, s.GammaAlpha, s.GammaBeta)
-	}
-	if s.UnitBranchLength < 0 {
-		s.UnitBranchLength, _ = numbers.RandGamma(s.GammaAlpha, s.GammaBeta)
-	}
-	if s.FastaFile != "" {
-		records := fasta.Read(s.FastaFile)
-		if len(records) != 1 {
-			log.Fatalf("Error: expected 1 sequence in the input fasta file. Received: %v.\n", len(records))
+
+	// you need to read in the s.RootsFile and then make that rootsFiles = []string{}
+	rootsFiles := fileio.Read(s.RootsFile)
+	roots := make([]*expandedTree.ETree, len(rootsFiles))
+	for i, rootFile := range rootsFiles {
+		var err error
+		roots[i], err = expandedTree.ReadNewick(rootFile)
+		if err != nil {
+			log.Fatalf("Error: could not read Newick file at %q: %v\n", rootFile, err)
 		}
-		fasta.ToUpper(records[0])
-		root.Fasta = &records[0]
-		root.Name = "root"
+		exception.PanicOnErr(err)
+	}
+
+	if s.SetSeed == -1 {
+		log.Fatalf("Must provide random seed.")
+	}
+
+	var ancSeq []fasta.Fasta
+	if s.AncSeqFile != "" {
+		ancSeq = fasta.Read(s.AncSeqFile)
 	} else {
-		root.Fasta = &fasta.Fasta{Name: "root", Seq: simulate.RandIntergenicSeq(s.GcContent, s.LenSeq)}
+		if s.LenSeq == -1 {
+			log.Fatalf("Must provide either ancestral sequence or desired length of randomly generated sequence.")
+		}
+		ancSeq = []fasta.Fasta{}
 	}
-	exception.PanicOnErr(err)
-	root = simulate.NonCoding(root, s.SubstitutionMatrixFile, s.UnitBranchLength)
-	nodes := expandedTree.GetTree(root)
-	for currNode := range nodes {
-		answer = append(answer, *nodes[currNode].Fasta)
+
+	anc, evolved, topoRecord, ilsEvolved := simulate.SimulateIls(roots, m, ancSeq, int(s.LenSeq), s.SetSeed, s.ChromName, true, "", 1.0)
+
+	fasta.Write(fmt.Sprint(s.OutPathPrefix, "anc.fasta"), anc)
+	for idx, rec := range evolved {
+		fasta.Write(fmt.Sprintf(s.OutPathPrefix, "forward_evolved_topo_v%d.fasta", idx), rec)
 	}
-	fasta.Write(s.OutFile, answer)
-	if s.NewickOut != "" {
-		out := fileio.EasyCreate(s.NewickOut)
-		_, err = fmt.Fprintf(out, "%s\n", expandedTree.ToNewickString(root))
-		exception.PanicOnErr(err)
-		err = out.Close()
-		exception.PanicOnErr(err)
-	}
+	bed.Write(fmt.Sprint(s.OutPathPrefix, ".bed"), topoRecord)
+	fasta.Write(fmt.Sprint(s.OutPathPrefix, "ils.fasta"), ilsEvolved)
 }
