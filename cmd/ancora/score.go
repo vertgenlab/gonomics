@@ -233,7 +233,7 @@ func writeMatrix(out *fileio.EasyWriter, data [][]int, rowNames []string, header
 		log.Fatalf("Error: writeMatrix expects 10 rownames. Found %v.\n", len(rowNames))
 	}
 
-	_, err = fmt.Fprintf(out, header)
+	_, err = fmt.Fprint(out, header)
 	exception.PanicOnErr(err)
 	for i = 0; i < 10; i++ {
 		if len(data[i]) != 10 {

@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"math"
+	"strings"
+
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers"
 	"github.com/vertgenlab/gonomics/numbers/logspace"
-	"log"
-	"math"
-	"strings"
 )
 
 // incrementWindowEdge
@@ -237,7 +238,7 @@ func speedyWindowDifference(reference []pDna.Float32Base, firstQuery []pDna.Floa
 
 					// finish line and write once
 					sb.WriteByte('\n')
-					_, err = fmt.Fprintf(file, sb.String())
+					_, err = fmt.Fprint(file, sb.String())
 					exception.PanicOnErr(err)
 				}
 			}

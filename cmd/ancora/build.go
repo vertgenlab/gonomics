@@ -3,15 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"os"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/interval"
 	"github.com/vertgenlab/gonomics/sam"
-	"log"
-	"math/rand"
-	"os"
 )
 
 func buildUsage(buildFlags *flag.FlagSet) {
