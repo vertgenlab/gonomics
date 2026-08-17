@@ -42,6 +42,18 @@ func TestReadBeginsWithInsertion(t *testing.T) {
 	}
 }
 
+func TestHardClippedReadWithTerminalInsertion(t *testing.T) {
+	reads, header := GoReadToChan("testdata/hardclipIns.bam")
+	piles := GoPileup(reads, header, false, nil, nil)
+	var allPiles []Pile
+	for p := range piles {
+		allPiles = append(allPiles, p)
+	}
+	if allPiles[0].InsCountF != nil && allPiles[0].InsCountR != nil {
+		t.Errorf("problem handling hard-clipped reads")
+	}
+}
+
 func TestSyncPileup(t *testing.T) {
 	alphaReads, alphaHeader := GoReadToChan("testdata/peak.bam")
 	alpha := GoPileup(alphaReads, alphaHeader, false, nil, nil)

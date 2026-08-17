@@ -433,24 +433,39 @@ func sclipTerminalIns(s *Sam) {
 	if cigar.IsUnmapped(s.Cigar) {
 		return
 	}
-	if s.Cigar[0].Op == cigar.Insertion {
-		s.Cigar[0].Op = cigar.SoftClip
+
+	// Find the first/last op that isn't a hard clip; H bases aren't in SEQ so we never modify or merge into H itself.
+	start := 0
+	if s.Cigar[start].Op == cigar.HardClip {
+		start++
 	}
-	if s.Cigar[len(s.Cigar)-1].Op == cigar.Insertion {
-		s.Cigar[len(s.Cigar)-1].Op = cigar.SoftClip
+	end := len(s.Cigar) - 1
+	if end >= start && s.Cigar[end].Op == cigar.HardClip {
+		end--
+	}
+	if start > end {
+		return // read is nothing but hard clip(s)
 	}
 
-	// catch case where beginning/end of read is already soft clipped
-	if len(s.Cigar) >= 2 && s.Cigar[0].Op == cigar.SoftClip && s.Cigar[1].Op == cigar.Insertion {
-		s.Cigar[1].Op = cigar.SoftClip
-		s.Cigar[1].RunLength += s.Cigar[0].RunLength
-		s.Cigar = s.Cigar[1:]
+	if s.Cigar[start].Op == cigar.Insertion {
+		s.Cigar[start].Op = cigar.SoftClip
+	}
+	if s.Cigar[end].Op == cigar.Insertion {
+		s.Cigar[end].Op = cigar.SoftClip
 	}
 
-	if len(s.Cigar) >= 2 && s.Cigar[len(s.Cigar)-1].Op == cigar.SoftClip && s.Cigar[len(s.Cigar)-2].Op == cigar.Insertion {
-		s.Cigar[len(s.Cigar)-2].Op = cigar.SoftClip
-		s.Cigar[len(s.Cigar)-2].RunLength += s.Cigar[len(s.Cigar)-1].RunLength
-		s.Cigar = s.Cigar[:len(s.Cigar)-1]
+	// catch case where the read is already soft clipped just inside the (optional) hard clip
+	if end > start && s.Cigar[start].Op == cigar.SoftClip && s.Cigar[start+1].Op == cigar.Insertion {
+		s.Cigar[start+1].Op = cigar.SoftClip
+		s.Cigar[start+1].RunLength += s.Cigar[start].RunLength
+		s.Cigar = append(s.Cigar[:start], s.Cigar[start+1:]...)
+		end-- // slice shrank by one
+	}
+
+	if end > start && s.Cigar[end].Op == cigar.SoftClip && s.Cigar[end-1].Op == cigar.Insertion {
+		s.Cigar[end-1].Op = cigar.SoftClip
+		s.Cigar[end-1].RunLength += s.Cigar[end].RunLength
+		s.Cigar = append(s.Cigar[:end], s.Cigar[end+1:]...)
 	}
 }
 
