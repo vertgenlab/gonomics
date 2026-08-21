@@ -1,0 +1,8 @@
+##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Allele1	Allele2	Allele3	Allele4
+chr1	2	.	A	C	100	PASS	.	GT	1	0	0	0
+chr1	5	.	A	C	100	PASS	.	GT	1	1	0	0
+chr1	6	.	A	G	100	PASS	.	GT	0	0	1	0
+chr1	7	.	A	C,G,T	100	PASS	.	GT	1	2	3	0
+chr1	8	.	A	T	100	PASS	.	GT	0	0	0	1
+chr1	9	.	A	T	100	PASS	.	GT	1	1	1	1

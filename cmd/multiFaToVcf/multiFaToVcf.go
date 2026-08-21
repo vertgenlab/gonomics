@@ -19,9 +19,9 @@ func multiFaToVcf(inFile string, chr string, outFile string, substitutionsOnly b
 	f := fasta.Read(inFile)
 	out := fileio.EasyCreate(outFile)
 	header := vcf.NewHeader()
-	vcf.NewWriteHeader(out, header)
 
 	if secondQueryName != "" { // if a secondQueryName is specified
+		vcf.NewWriteHeader(out, header)
 		// first check that secondQueryName can be found in the multiFa
 		var fMap = fasta.ToMap(f)
 		var secondQuerySequence, found = fMap[secondQueryName]
@@ -36,11 +36,18 @@ func multiFaToVcf(inFile string, chr string, outFile string, substitutionsOnly b
 		convert.PairwiseFaToVcf(fEdited, chr, out, substitutionsOnly, retainN)
 	} else {
 		if len(f) == 2 {
+			vcf.NewWriteHeader(out, header)
 			convert.PairwiseFaToVcf(f, chr, out, substitutionsOnly, retainN)
 		} else if len(f) == 3 {
+			vcf.NewWriteHeader(out, header)
 			convert.ThreeWayFaToVcf(f, chr, out)
 		} else {
-			log.Fatalf("Error: expecting 2 or 3 sequences in the input FASTA.\n")
+			sampleNames := make([]string, len(f)-1)
+			for currQueryIdx := 1; currQueryIdx < len(f); currQueryIdx++ {
+				sampleNames[currQueryIdx-1] = f[currQueryIdx].Name
+			}
+			vcf.WriteMultiSamplesHeader(out, header, sampleNames)
+			convert.NWayFaToVcf(f, chr, out)
 		}
 	}
 
@@ -52,7 +59,7 @@ func usage() {
 	fmt.Print(
 		"multiFaToVcf - Generates a VCF file from an input multiFa alignment with the first entry as the reference.\n" +
 			"If the input multiFa is pairwise alignment, checks for substitutions as well as indels,\n" +
-			"but if the input multiFa is three-way alignment, it only checks for substitutions.\n" +
+			"but if the input multiFa has three or more sequences, it only checks for substitutions.\n" +
 			"Note that deletions in the first position of an alignment will not appear in the output Vcf.\n" +
 			"Usage:\n" +
 			"multiFaToVcf multi.Fa chromName out.vcf \n" +
