@@ -163,6 +163,9 @@ func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName 
 	var currentName string
 	var srcIdx int
 
+	// iterate over all positions and read the state path
+	// get the corresponding ils base for that state for each species
+	// create the bed file
 	for seqIdx := 0; seqIdx < totalLength; seqIdx++ {
 		currentState = states[seqIdx]
 		currentName = recordName[currentState]

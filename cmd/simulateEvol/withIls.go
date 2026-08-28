@@ -50,23 +50,24 @@ func IlsUsage(ilsFlags *flag.FlagSet) {
 
 // parseIlsArgs is the main function of the simulateEvol nonCoding subcommand. It parses options and launches the NonCoding function.
 func parseIlsArgs() {
-	var expectedNumArgs int = 1
+	var expectedNumArgs int = 5
 	var err error
 	ilsFlags := flag.NewFlagSet("ils", flag.ExitOnError)
 	ilsFlags.Usage = func() { NonCodingUsage(ilsFlags) }
-
+	// required
 	var rootsFile *string = ilsFlags.String("rootsFile", "", "Specify a file for simulating molecular evolution along a set of pre-specified Newick trees.")
 	var transitionMatrixFile *string = ilsFlags.String("transitionMatrixFile", "", "Specify a file that describes the probability of transitions between topology states.")
 	var ancSeqFile *string = ilsFlags.String("ancSeqFile", "", "Specify the initial ancestral sequence. If empty, must provide setSEed and lenSeq.")
+	var outPathPrefix *string = ilsFlags.String("outPathPrefix", "", "Specify the output directory and prefix of output files.")
+	var unitBranchLength *float64 = ilsFlags.Float64("unitBranchLength", -1, "Set the branch length over which a custom substitution matrix was derived.")
+	// optional params
 	var setSeed *int64 = ilsFlags.Int64("setSeed", -1, "Use a specific seed for the RNG.")
 	var lenSeq *int64 = ilsFlags.Int64("lenSeq", -1, "If generating a root DNA sequence, set the length of the simulated sequence. Ignored if ancSeqFile provided.")
 	var chromName *string = ilsFlags.String("chromName", "", "Specify the name of the output sequence.")
-	var outPathPrefix *string = ilsFlags.String("outPathPrefix", "", "Specify the output directory and prefix of output files.")
-	var leafFastasOnly *bool = ilsFlags.Bool("outPathPrefix", false, "Specify if only leaf fastas are provided in output. Defaults to false.")
+	var leafFastasOnly *bool = ilsFlags.Bool("leafFastasOnly", false, "Specify if only leaf fastas are provided in output. Defaults to false.")
 	var substitutionMatrixFile *string = ilsFlags.String("substitutionMatrixFile", "", "Specify a custom substitution matrix.")
-	var unitBranchLength *float64 = ilsFlags.Float64("unitBranchLength", -1, "Set the branch length over which a custom substitution matrix was derived.")
 
-	err = ilsFlags.Parse(os.Args[2:])
+	err = ilsFlags.Parse(os.Args[5:])
 	exception.PanicOnErr(err)
 	if len(ilsFlags.Args()) != expectedNumArgs {
 		ilsFlags.Usage()
