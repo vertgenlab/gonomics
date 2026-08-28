@@ -17,15 +17,17 @@ func usage() {
 			"\tOR\n" +
 			"\tpFaTools extract in.pfa chrom start end out.pFa\n" +
 			"\tOR\n" +
-			"\tpFaTools extractBed in.pfa regions.bed outDir.pFa\n" +
+			"\tpFaTools extractBed in.pfa regions.bed out.pFa\n" +
 			"\tOR\n" +
-			"\tpFaTools sample in.pfa outDir.Fa\n" +
+			"\tpFaTools sample in.pfa outDir\n" +
 			"\tOR\n" +
-			"\tPFaTools visualize in.pfa start end outDir.txt\n" +
+			"\tPFaTools visualize in.pfa start end out.txt\n" +
 			"\tOR\n" +
-			"\tPFaTools faToPfa inFile outDir.pfa InputType\n" +
+			"\tPFaTools faToPfa inFile out.pfa InputType\n" +
 			"\tOR\n" +
-			"\tPFaTools vcfToPfa inFile.vcf refFile.fa outDir.pfa\n" +
+			"\tPFaTools vcfToPfa inFile.vcf refFile.fa out.pfa\n" +
+			"\tOR\n" +
+			"\tPFaTools distTrack infile1.pfa infile2.pfa/fa out.wig\n" +
 			"Enter a subcommand to view options.\n")
 }
 
@@ -54,6 +56,8 @@ func main() {
 		parseVisualizeArgs()
 	case "vcfToPfa":
 		parseVcfToPfaArgs()
+	case "distTrack":
+		parseDistTrackArgs()
 	default:
 		flag.Usage()
 		log.Fatalf("Error: unrecognized subcommand: %v.\n", flag.Arg(0))
