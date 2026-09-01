@@ -15,8 +15,14 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// convert a 2D square transition matrix (a, b, c, ...) to (a, a+b, a+b+c, ...) per row
-func probRange(transMat *mat.Dense) *mat.Dense {
+// cumulativeTransitionMatrix converts a 2D square transition matrix
+// for example, given a stochastic matrix
+// where row 1 = (a, b, c, ..., n) where row 1 sums to 1,
+// and a, b, c... describe
+// the probability of the state 1 converting to any state N
+// we then convert the row 1 to (a, a+b, a+b+c, ..., a+b+⋯+n) such that
+// the last value in the row is 1.
+func cumulativeTransitionMatrix(transMat *mat.Dense) *mat.Dense {
 	r, c := transMat.Dims()
 	if r != c {
 		log.Fatal("Must provide square transition matrix")
@@ -44,22 +50,25 @@ func probRange(transMat *mat.Dense) *mat.Dense {
 // The starting sequence will then be evolved according to the neutral tree provided and each node in the tree, using
 // incomplete lineage separation. First provided topology should be the non-ILS informed topology. No gaps.
 // uses defaultSubstitutionMatrix if substitution matrix file empty
-func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fasta.Fasta, totalLength int, seed int64, chromName string, leafFastasOnly bool, substitutionMatrixFile string, unitBranchLength float64) ([]fasta.Fasta, [][]fasta.Fasta, []bed.Bed, []fasta.Fasta) {
+func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fasta.Fasta, totalLength int, seed int64, chromName string, leafFastasOnly bool, substitutionMatrixFile string, unitBranchLength float64, ancName string) ([]fasta.Fasta, [][]fasta.Fasta, []bed.Bed, []fasta.Fasta) {
 
 	// set entire genome to be 1 big gene
-	n := len(roots)
+	numRoots := len(roots)
 	r, c := transMat.Dims()
-	if r != n || c != n {
+	if r != numRoots || c != numRoots {
 		log.Fatal("Must provide square transition matrix that matches number of provided phylogenies")
 	}
 
-	transMatConverted := probRange(transMat)
+	transMatConverted := cumulativeTransitionMatrix(transMat)
 
 	// TODO convert to seed object
 	rand.Seed(seed)
 	var anc []fasta.Fasta
 	if len(ancSeq) == 0 {
-		anc = []fasta.Fasta{{Name: "Anc", Seq: RandIntergenicSeq(GC, totalLength)}}
+		if ancName == "" {
+			log.Fatal("Must provide name of ancestral sequence to be generated, if no input ancestral sequence provide.")
+		}
+		anc = []fasta.Fasta{{Name: ancName, Seq: RandIntergenicSeq(GC, totalLength)}}
 	} else {
 		// Randomly generate ancestral sequence of length totalLength
 		anc = ancSeq
@@ -69,9 +78,11 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fast
 	// Produces an output fasta with C sequences, one for each node in the topology
 	// if there are S species and N topologies,
 	// we get S*N total sequences ie a list of length N, each with S sequences
-	forwardEvolvedSeqs := make([][]fasta.Fasta, n)
+	forwardEvolvedSeqs := make([][]fasta.Fasta, numRoots)
 
 	var nodes []*expandedTree.ETree
+
+	// TODO: there should be a check that the name of the ancestral sequence matches the name of the topmost root
 
 	for topologyIdx, root := range roots {
 		// SimulateFromSeq(anc, root, genePred, deletions)
@@ -90,7 +101,7 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fast
 		}
 	}
 
-	statePath := GenerateIlsStatePath(totalLength, n, transMatConverted)
+	statePath := GenerateIlsStatePath(totalLength, numRoots, transMatConverted)
 	topologyRecord, ilsEvolvedSeqs := CombineIlsSeqs(forwardEvolvedSeqs, statePath, "ilsState")
 
 	return anc, forwardEvolvedSeqs, topologyRecord, ilsEvolvedSeqs

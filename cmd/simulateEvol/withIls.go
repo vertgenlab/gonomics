@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
@@ -25,6 +26,7 @@ type IlsSettings struct {
 	AncSeqFile             string
 	LenSeq                 int64
 	SetSeed                int64
+	AncName                string
 	LeafFastasOnly         bool
 	SubstitutionMatrixFile string
 }
@@ -38,8 +40,8 @@ func IlsUsage(ilsFlags *flag.FlagSet) {
 			"This program does not support indels, but rather simulates substitutions.\n" +
 			"The program can take in a specified ancestral sequence or randomly generate an initial ancestral sequence\n" +
 			"Usage:\n" +
-			"\tsimulateEvol ils roots.txt transition_matrix.tsv anc.fasta outPathPrefix unitBranchLength \n" +
-			"options:\n",
+			"\tsimulateEvol ils outPathPrefix roots.txt transition_matrix.tsv chromName setSeed unitBranchLength ancName \n" +
+			"options: (must provide either ancSeqFile or lenSeq)\n",
 	)
 	ilsFlags.PrintDefaults()
 }
@@ -50,24 +52,24 @@ func IlsUsage(ilsFlags *flag.FlagSet) {
 
 // parseIlsArgs is the main function of the simulateEvol nonCoding subcommand. It parses options and launches the NonCoding function.
 func parseIlsArgs() {
-	var expectedNumArgs int = 5
+	var expectedNumArgs int = 6
 	var err error
 	ilsFlags := flag.NewFlagSet("ils", flag.ExitOnError)
 	ilsFlags.Usage = func() { NonCodingUsage(ilsFlags) }
 	// required
-	var rootsFile *string = ilsFlags.String("rootsFile", "", "Specify a file for simulating molecular evolution along a set of pre-specified Newick trees.")
-	var transitionMatrixFile *string = ilsFlags.String("transitionMatrixFile", "", "Specify a file that describes the probability of transitions between topology states.")
-	var ancSeqFile *string = ilsFlags.String("ancSeqFile", "", "Specify the initial ancestral sequence. If empty, must provide setSEed and lenSeq.")
-	var outPathPrefix *string = ilsFlags.String("outPathPrefix", "", "Specify the output directory and prefix of output files.")
-	var unitBranchLength *float64 = ilsFlags.Float64("unitBranchLength", -1, "Set the branch length over which a custom substitution matrix was derived.")
+	// var rootsFile *string = ilsFlags.String("rootsFile", "", "Specify a file for simulating molecular evolution along a set of pre-specified Newick trees.")
+	// var transitionMatrixFile *string = ilsFlags.String("transitionMatrixFile", "", "Specify a file that describes the probability of transitions between topology states.")
+	// var chromName *string = ilsFlags.String("chromName", "", "Specify the name of the output sequence.")
+	// var outPathPrefix *string = ilsFlags.String("outPathPrefix", "", "Specify the output directory and prefix of output files.")
+	// var unitBranchLength *float64 = ilsFlags.Float64("unitBranchLength", -1, "Set the branch length over which a custom substitution matrix was derived.")
 	// optional params
-	var setSeed *int64 = ilsFlags.Int64("setSeed", -1, "Use a specific seed for the RNG.")
+	var ancSeqFile *string = ilsFlags.String("ancSeqFile", "", "Specify the initial ancestral sequence. If empty, must provide setSEed and lenSeq.")
 	var lenSeq *int64 = ilsFlags.Int64("lenSeq", -1, "If generating a root DNA sequence, set the length of the simulated sequence. Ignored if ancSeqFile provided.")
-	var chromName *string = ilsFlags.String("chromName", "", "Specify the name of the output sequence.")
 	var leafFastasOnly *bool = ilsFlags.Bool("leafFastasOnly", false, "Specify if only leaf fastas are provided in output. Defaults to false.")
 	var substitutionMatrixFile *string = ilsFlags.String("substitutionMatrixFile", "", "Specify a custom substitution matrix.")
+	var ancName *string = ilsFlags.String("ancName", "", "Specify the name of the ancestral sequence, if not provided as input file.")
 
-	err = ilsFlags.Parse(os.Args[5:])
+	err = ilsFlags.Parse(os.Args[2:])
 	exception.PanicOnErr(err)
 	if len(ilsFlags.Args()) != expectedNumArgs {
 		ilsFlags.Usage()
@@ -75,15 +77,29 @@ func parseIlsArgs() {
 			expectedNumArgs, len(ilsFlags.Args()))
 	}
 
+	outPathPrefix := ilsFlags.Arg(0)
+	rootsFile := ilsFlags.Arg(1)
+	transitionMatrixFile := ilsFlags.Arg(2)
+	chromName := ilsFlags.Arg(3)
+	setSeed, err := strconv.ParseInt(ilsFlags.Arg(5), 10, 64)
+	if err != nil {
+		log.Fatalf("Error: setSeed must be an integer in base 10: %v\n", err)
+	}
+	unitBranchLength, err := strconv.ParseFloat(ilsFlags.Arg(6), 64)
+	if err != nil {
+		log.Fatalf("Error: unitBranchLength must be a float: %v\n", err)
+	}
+
 	s := IlsSettings{
-		RootsFile:              *rootsFile,
-		TransitionMatrixFile:   *transitionMatrixFile,
-		ChromName:              *chromName,
-		OutPathPrefix:          *outPathPrefix,
-		UnitBranchLength:       *unitBranchLength,
+		RootsFile:              rootsFile,
+		TransitionMatrixFile:   transitionMatrixFile,
+		ChromName:              chromName,
+		OutPathPrefix:          outPathPrefix,
+		UnitBranchLength:       unitBranchLength,
 		AncSeqFile:             *ancSeqFile,
 		LenSeq:                 *lenSeq,
-		SetSeed:                *setSeed,
+		SetSeed:                setSeed,
+		AncName:                *ancName,
 		LeafFastasOnly:         *leafFastasOnly,
 		SubstitutionMatrixFile: *substitutionMatrixFile,
 	}
@@ -118,6 +134,9 @@ func Ils(s IlsSettings) {
 		if s.LenSeq == -1 {
 			log.Fatalf("Must provide either ancestral sequence or desired length of randomly generated sequence.")
 		}
+		if s.AncName == "" {
+			log.Fatalf("Must provide name for ancestral sequence")
+		}
 		ancSeq = []fasta.Fasta{}
 	}
 
@@ -137,7 +156,7 @@ func Ils(s IlsSettings) {
 		log.Fatalf("Must provide random seed.")
 	}
 
-	anc, evolved, topoRecord, ilsEvolved := simulate.SimulateIls(roots, m, ancSeq, int(s.LenSeq), s.SetSeed, s.ChromName, s.LeafFastasOnly, s.SubstitutionMatrixFile, s.UnitBranchLength)
+	anc, evolved, topoRecord, ilsEvolved := simulate.SimulateIls(roots, m, ancSeq, int(s.LenSeq), s.SetSeed, s.ChromName, s.LeafFastasOnly, s.SubstitutionMatrixFile, s.UnitBranchLength, s.AncName)
 
 	fasta.Write(fmt.Sprintf("%s_anc.fasta", s.OutPathPrefix), anc)
 	for idx, rec := range evolved {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
@@ -17,39 +16,58 @@ var WithIlsTests = []struct {
 	AncSeqFile             string
 	LenSeq                 int64
 	SetSeed                int64
+	AncName                string
 	LeafFastasOnly         bool
 	SubstitutionMatrixFile string
 	ExpectedPrefix         string
+	ExpectedNumTopos       int64
 }{
 	{RootsFile: "testdata/ilsSimulate_roots.txt",
 		TransitionMatrixFile:   "testdata/ilsSimulate_transMat.tsv",
 		ChromName:              "test1",
 		OutPathPrefix:          "testdata/ilsSimulate_out_1",
-		UnitBranchLength:       1.0,
+		UnitBranchLength:       0.01,
 		AncSeqFile:             "",
 		LenSeq:                 14,
 		SetSeed:                3,
+		AncName:                "Anc1",
 		LeafFastasOnly:         true,
 		SubstitutionMatrixFile: "",
 		ExpectedPrefix:         "testdata/ilsSimulate_expected_1",
+		ExpectedNumTopos:       4,
 	},
 	{RootsFile: "testdata/ilsSimulate_roots.txt",
 		TransitionMatrixFile:   "testdata/ilsSimulate_transMat.tsv",
 		ChromName:              "test2",
 		OutPathPrefix:          "testdata/ilsSimulate_out_2",
-		UnitBranchLength:       1.0,
-		AncSeqFile:             "testdata/ilsSimulate_expected_2_anc.fasta",
+		UnitBranchLength:       0.01,
+		AncSeqFile:             "testdata/ilsSimulate_in_2_anc.fasta",
 		LenSeq:                 50,
 		SetSeed:                5,
+		AncName:                "Anc2",
 		LeafFastasOnly:         true,
 		SubstitutionMatrixFile: "",
 		ExpectedPrefix:         "testdata/ilsSimulate_expected_2",
+		ExpectedNumTopos:       4,
+	},
+	{RootsFile: "testdata/ilsSimulate_roots.txt",
+		TransitionMatrixFile:   "testdata/ilsSimulate_transMat.tsv",
+		ChromName:              "test3",
+		OutPathPrefix:          "testdata/ilsSimulate_out_3",
+		UnitBranchLength:       .01,
+		AncSeqFile:             "",
+		LenSeq:                 1000,
+		SetSeed:                11,
+		AncName:                "Anc3",
+		LeafFastasOnly:         false,
+		SubstitutionMatrixFile: "",
+		ExpectedPrefix:         "testdata/ilsSimulate_expected_3",
+		ExpectedNumTopos:       4,
 	},
 }
 
 func TestSimulateIls(t *testing.T) {
 	var s IlsSettings
-	var numTopos int
 	for vIdx, v := range WithIlsTests {
 		s = IlsSettings{
 			RootsFile:              v.RootsFile,
@@ -60,6 +78,7 @@ func TestSimulateIls(t *testing.T) {
 			AncSeqFile:             v.AncSeqFile,
 			LenSeq:                 v.LenSeq,
 			SetSeed:                v.SetSeed,
+			AncName:                v.AncName,
 			LeafFastasOnly:         v.LeafFastasOnly,
 			SubstitutionMatrixFile: v.SubstitutionMatrixFile,
 		}
@@ -76,9 +95,7 @@ func TestSimulateIls(t *testing.T) {
 			t.Errorf("Error in SimulateEvol ils. Output bed %d was not as expected.", vIdx)
 		}
 
-		numTopos = len(fasta.Read(v.OutPathPrefix + "_ils.fasta"))
-
-		for idx := range numTopos {
+		for idx := range v.ExpectedNumTopos {
 			fileio.EasyRemove(fmt.Sprintf("%s_forward_evolved_topo_v%d.fasta", v.OutPathPrefix, idx))
 		}
 
