@@ -20,8 +20,7 @@ func usage() {
 			"\tOR\n" +
 			"\tsimulateEvol nonCoding out.fasta\n" +
 			"\tOR\n" +
-			"\tsimulateEvol ils roots.txt transition_matrix.tsv chromName outPathPrefix unitBranchLength" +
-			// TODO seed is mandatory
+			"\tsimulateEvol ils outPathPrefix roots.txt transition_matrix.tsv chromName setSeed unitBranchLength ancName\n" +
 			"options:\n")
 	flag.PrintDefaults()
 }

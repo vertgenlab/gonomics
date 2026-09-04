@@ -40,8 +40,8 @@ func IlsUsage(ilsFlags *flag.FlagSet) {
 			"This program does not support indels, but rather simulates substitutions.\n" +
 			"The program can take in a specified ancestral sequence or randomly generate an initial ancestral sequence\n" +
 			"Usage:\n" +
-			"\tsimulateEvol ils outPathPrefix roots.txt transition_matrix.tsv chromName setSeed unitBranchLength ancName \n" +
-			"options: (must provide either ancSeqFile or lenSeq)\n",
+			"\tsimulateEvol ils outPathPrefix roots.txt transition_matrix.tsv chromName setSeed unitBranchLength \n" +
+			"options: (must provide either ancSeqFile or lenSeq and AncName)\n",
 	)
 	ilsFlags.PrintDefaults()
 }
@@ -81,11 +81,11 @@ func parseIlsArgs() {
 	rootsFile := ilsFlags.Arg(1)
 	transitionMatrixFile := ilsFlags.Arg(2)
 	chromName := ilsFlags.Arg(3)
-	setSeed, err := strconv.ParseInt(ilsFlags.Arg(5), 10, 64)
+	setSeed, err := strconv.ParseInt(ilsFlags.Arg(4), 10, 64)
 	if err != nil {
 		log.Fatalf("Error: setSeed must be an integer in base 10: %v\n", err)
 	}
-	unitBranchLength, err := strconv.ParseFloat(ilsFlags.Arg(6), 64)
+	unitBranchLength, err := strconv.ParseFloat(ilsFlags.Arg(5), 64)
 	if err != nil {
 		log.Fatalf("Error: unitBranchLength must be a float: %v\n", err)
 	}
