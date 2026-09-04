@@ -4,10 +4,15 @@
 package matrix
 
 import (
-	"github.com/vertgenlab/gonomics/exception"
-	"gonum.org/v1/gonum/mat"
+	"encoding/csv"
+	"fmt"
 	"log"
 	"math"
+	"os"
+	"strconv"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"gonum.org/v1/gonum/mat"
 )
 
 // FractionalSymmetricMatrixExponentiation calculates A^t, where A is a symmetric square matrix *mat.Dense
@@ -195,4 +200,50 @@ func ApproxEqual(m1 [][]float64, m2 [][]float64, precision float64) bool {
 		}
 	}
 	return true
+}
+
+// ReadMatrix reads a delimited file as a dense matrix
+func ReadDense(filePath string, delimiter rune) (*mat.Dense, error) {
+	// rename variables and delete this comment
+	// Source - https://stackoverflow.com/a/58841827
+	// Posted by SyntaxRules
+	// Retrieved 2026-04-16, License - CC BY-SA 4.0
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("open %q: %w", filePath, err)
+	}
+	defer f.Close()
+
+	reader := csv.NewReader(f)
+	reader.Comma = delimiter
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("parse %q: %w", filePath, err)
+	}
+
+	if len(records) == 0 {
+		return mat.NewDense(0, 0, nil), nil
+	}
+
+	cols := len(records[0])
+	data := make([]float64, len(records)*cols)
+
+	k := 0
+	for i, row := range records {
+		if len(row) != cols {
+			return nil, fmt.Errorf("row %d has %d columns, expected %d", i, len(row), cols)
+		}
+
+		for j, cell := range row {
+			v, err := strconv.ParseFloat(cell, 64)
+			if err != nil {
+				return nil, fmt.Errorf("parse float at row %d, col %d: %w", i, j, err)
+			}
+			data[k] = v
+			k++
+		}
+	}
+
+	return mat.NewDense(len(records), cols, data), nil
 }
