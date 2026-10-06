@@ -6,10 +6,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
 )
 
 func multiFaExtract(s Settings) {
@@ -27,6 +28,7 @@ func multiFaExtract(s Settings) {
 	} else {
 		bedChan := bed.GoReadToChan(s.Bed)
 		for b := range bedChan {
+			fmt.Printf("chrom start %d\tchrom end %d\n", b.ChromStart, b.ChromEnd)
 			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd)
 			if s.RemoveGaps {
 				ans = fasta.RemoveGaps(ans)
@@ -39,6 +41,9 @@ func multiFaExtract(s Settings) {
 func extractMultiHelper(records []fasta.Fasta, start int, end int) []fasta.Fasta {
 	var ans = make([]fasta.Fasta, len(records))
 	for i := range records {
+		tempRefPosStart := fasta.RefPosToAlnPos(records[0], start)
+		tempRefPosEnd := fasta.RefPosToAlnPos(records[0], end)
+		fmt.Printf("ref start %d\tref end %d\n", tempRefPosStart, tempRefPosEnd)
 		ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPos(records[0], start), fasta.RefPosToAlnPos(records[0], end), records[i].Name)
 	}
 	return ans
