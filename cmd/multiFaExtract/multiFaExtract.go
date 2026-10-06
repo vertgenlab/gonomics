@@ -20,7 +20,7 @@ func multiFaExtract(s Settings) {
 		if !(s.Start < s.End) {
 			log.Fatalf("Invalid arguments, start must be lower than end")
 		}
-		ans = extractMultiHelper(records, s.Start, s.End)
+		ans = extractMultiHelper(records, s.Start, s.End, false)
 		if s.RemoveGaps {
 			ans = fasta.RemoveGaps(ans)
 		}
@@ -29,7 +29,7 @@ func multiFaExtract(s Settings) {
 		bedChan := bed.GoReadToChan(s.Bed)
 		for b := range bedChan {
 			fmt.Printf("chrom start %d\tchrom end %d\n", b.ChromStart, b.ChromEnd)
-			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd)
+			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd, true)
 			if s.RemoveGaps {
 				ans = fasta.RemoveGaps(ans)
 			}
@@ -38,13 +38,22 @@ func multiFaExtract(s Settings) {
 	}
 }
 
-func extractMultiHelper(records []fasta.Fasta, start int, end int) []fasta.Fasta {
+func extractMultiHelper(records []fasta.Fasta, start int, end int, isBed bool) []fasta.Fasta {
 	var ans = make([]fasta.Fasta, len(records))
-	for i := range records {
-		tempRefPosStart := fasta.RefPosToAlnPos(records[0], start)
-		tempRefPosEnd := fasta.RefPosToAlnPos(records[0], end)
-		fmt.Printf("ref start %d\tref end %d\n", tempRefPosStart, tempRefPosEnd)
-		ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPos(records[0], start), fasta.RefPosToAlnPos(records[0], end), records[i].Name)
+	if !isBed {
+		for i := range records {
+			tempRefPosStart := fasta.RefPosToAlnPos(records[0], start)
+			tempRefPosEnd := fasta.RefPosToAlnPos(records[0], end)
+			fmt.Printf("ref start %d\tref end %d\n", tempRefPosStart, tempRefPosEnd)
+			ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPos(records[0], start), fasta.RefPosToAlnPos(records[0], end), records[i].Name)
+		}
+	} else { // using bed as ref regions
+		for i := range records {
+			tempRefPosStart := fasta.RefPosToAlnPosBed(records[0], start)
+			tempRefPosEnd := fasta.RefPosToAlnPosBed(records[0], end)
+			fmt.Printf("ref start %d\tref end %d\n", tempRefPosStart, tempRefPosEnd)
+			ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPosBed(records[0], start), fasta.RefPosToAlnPosBed(records[0], end), records[i].Name)
+		}
 	}
 	return ans
 }

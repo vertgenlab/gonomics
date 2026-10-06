@@ -19,7 +19,7 @@ var MultiFaExtractSingleTests = []struct {
 	out          string
 	expected     string
 }{
-	// {"testdata/testInput2.fa", "", "", false, "testdata/test2.bed", -1, -1, "chr1.0.50.fa", "testdata/chr1.0.50.expected.fa"}, //~/go/bin/multiFaExtract -bed testdata/test2.bed testdata/testInput2.fa
+	{"testdata/testInput2.fa", "", "", false, "testdata/test2.bed", -1, -1, "chr1.0.50.fa", "testdata/chr1.0.50.expected.fa"}, //~/go/bin/multiFaExtract -bed testdata/test2.bed testdata/testInput2.fa
 	{"testdata/testInput2.fa", "", "", false, "testdata/test3.bed", -1, -1, "chr1.0.49.fa", "testdata/chr1.0.49.expected.fa"}, //~/go/bin/multiFaExtract -bed testdata/test2.bed testdata/testInput2.fa
 }
 
@@ -50,11 +50,10 @@ func TestMultiFaExtractSingle(t *testing.T) {
 			exp1 := fasta.Read(v.expected)
 			if !fasta.AllAreEqual(rec1, exp1) {
 				t.Errorf("Error in multiFaExtract, bed usage. OutFile.")
+			} else {
+				err = os.Remove(v.out)
+				exception.PanicOnErr(err)
 			}
-			// else {
-			// 	err = os.Remove(v.out)
-			// 	exception.PanicOnErr(err)
-			// }
 		}
 	}
 }
