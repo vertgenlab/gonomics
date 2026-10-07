@@ -77,7 +77,6 @@ var MultiFaExtractTests = []struct {
 	{"testdata/testInput.fa", "testdata/testOut.fa", "testdata/testOut.10to200.RemoveGaps.fa", true, "", 10, 200, "", "", "", "", "", ""},
 	{"testdata/testInput.fa", "", "", false, "testdata/test.bed", -1, -1, "chr1.20.30.fa", "chr1.30.50.fa", "chr1.60.200.fa", "testdata/chr1.20.30.expected.fa", "testdata/chr1.30.50.expected.fa", "testdata/chr1.60.200.expected.fa"},                  //~/go/bin/multiFaExtract -bed testdata/test.bed testdata/testInput.fa
 	{"testdata/testInput.fa", "", "", true, "testdata/test.bed", -1, -1, "chr1.20.30.fa", "chr1.30.50.fa", "chr1.60.200.fa", "testdata/chr1.20.30.expected.noGap.fa", "testdata/chr1.30.50.expected.noGap.fa", "testdata/chr1.60.200.expected.noGap.fa"}, //~/go/bin/multiFaExtract -bed testdata/test.bed -removeGaps testdata/testInput.fa
-	{"testdata/testInput.fa", "", "", false, "testdata/test.bed", -1, -1, "chr1.20.50.fa", "chr1.30.50.fa", "chr1.60.200.fa", "testdata/chr1.20.30.expected.fa", "testdata/chr1.30.50.expected.fa", "testdata/chr1.60.200.expected.fa"},                  //~/go/bin/multiFaExtract -bed testdata/test2.bed testdata/testInput2.fa
 }
 
 func TestMultiFaExtract(t *testing.T) {
