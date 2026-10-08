@@ -6,10 +6,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/numbers/parse"
-	"log"
 )
 
 func multiFaExtract(s Settings) {
@@ -19,7 +20,7 @@ func multiFaExtract(s Settings) {
 		if !(s.Start < s.End) {
 			log.Fatalf("Invalid arguments, start must be lower than end")
 		}
-		ans = extractMultiHelper(records, s.Start, s.End)
+		ans = extractMultiHelper(records, s.Start, s.End, false)
 		if s.RemoveGaps {
 			ans = fasta.RemoveGaps(ans)
 		}
@@ -27,7 +28,7 @@ func multiFaExtract(s Settings) {
 	} else {
 		bedChan := bed.GoReadToChan(s.Bed)
 		for b := range bedChan {
-			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd)
+			ans = extractMultiHelper(records, b.ChromStart, b.ChromEnd, true)
 			if s.RemoveGaps {
 				ans = fasta.RemoveGaps(ans)
 			}
@@ -36,10 +37,16 @@ func multiFaExtract(s Settings) {
 	}
 }
 
-func extractMultiHelper(records []fasta.Fasta, start int, end int) []fasta.Fasta {
+func extractMultiHelper(records []fasta.Fasta, start int, end int, isBed bool) []fasta.Fasta {
 	var ans = make([]fasta.Fasta, len(records))
-	for i := range records {
-		ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPos(records[0], start), fasta.RefPosToAlnPos(records[0], end), records[i].Name)
+	if !isBed {
+		for i := range records {
+			ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPos(records[0], start), fasta.RefPosToAlnPos(records[0], end), records[i].Name)
+		}
+	} else { // using bed as ref regions
+		for i := range records {
+			ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPosBed(records[0], start), fasta.RefPosToAlnPosBed(records[0], end), records[i].Name)
+		}
 	}
 	return ans
 }
