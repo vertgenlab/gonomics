@@ -13,4 +13,4 @@ require (
 	gonum.org/v1/gonum v0.14.0
 )
 
-require github.com/klauspost/compress v1.17.6 // indirect
+require github.com/klauspost/compress v1.18.7 // indirect
