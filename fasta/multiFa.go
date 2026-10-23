@@ -20,7 +20,7 @@ func RefPosToAlnPos(record Fasta, RefPos int) int {
 	return alnStart
 }
 
-// RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
+// RefPosToAlnPosCounter 
 func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
 	return refPosToAlnPosCounterExposed(record, RefPos, refStart, alnStart, false)
 }
