@@ -2,8 +2,9 @@ package matrix
 
 import (
 	"fmt"
-	"gonum.org/v1/gonum/mat"
 	"testing"
+
+	"gonum.org/v1/gonum/mat"
 )
 
 var FractionalSymmetricMatrixExponentiationTests = []struct {
@@ -217,4 +218,52 @@ func equalMatrix(a [][]float64, b [][]float64) bool {
 		}
 	}
 	return true
+}
+
+var ReadDenseTests = []struct {
+	InFile    string
+	Delimiter rune
+	Expected  *mat.Dense
+}{
+	{
+		InFile:    "testdata/dense.tsv",
+		Delimiter: '\t',
+		Expected: mat.NewDense(4, 4, []float64{
+			0.88, 0.08, 0.02, 0.02,
+			0.08, 0.88, 0.02, 0.02,
+			0.02, 0.02, 0.90, 0.06,
+			0.02, 0.02, 0.06, 0.90,
+		}),
+	},
+	{
+		InFile:    "testdata/dense.csv",
+		Delimiter: ',',
+		Expected: mat.NewDense(4, 4, []float64{
+			0.88, 0.08, 0.02, 0.02,
+			0.08, 0.88, 0.02, 0.02,
+			0.02, 0.02, 0.90, 0.06,
+			0.02, 0.02, 0.06, 0.90,
+		}),
+	},
+}
+
+func TestReadDense(t *testing.T) {
+	for _, v := range ReadDenseTests {
+		t.Run(v.InFile, func(t *testing.T) {
+			observed, err := ReadDense(v.InFile, v.Delimiter)
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if !mat.EqualApprox(observed, v.Expected, 1e-12) {
+				t.Errorf("readDense(%q, %q) mismatch\nobserved:\n%v\nexpected:\n%v",
+					v.InFile,
+					string(v.Delimiter),
+					mat.Formatted(observed),
+					mat.Formatted(v.Expected),
+				)
+			}
+		})
+	}
 }
