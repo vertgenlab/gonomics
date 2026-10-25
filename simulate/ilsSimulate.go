@@ -142,6 +142,7 @@ func generateIlsStatePath(totalLength int, n int, transMatConverted mat.Matrix) 
 	return statePath
 }
 
+// TODO potentially the same as ilsReconstruct/ilsReconstructSeq
 // Combine the n forward-evolved multifastas using the transition matrix
 // Sequences should be the the same length and not
 func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName string) ([]bed.Bed, []fasta.Fasta) {
