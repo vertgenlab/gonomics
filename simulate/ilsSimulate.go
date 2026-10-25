@@ -222,11 +222,22 @@ func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName 
 	return topologyRecord, ilsEvolvedSeqs
 }
 
-func stateToPostProbWig(states []int) []map[string]wig.Wig {
-	var v0 wig.Wig
-	var v1 wig.Wig
-	var v2 wig.Wig
-	var v3 
+//	type Wig struct {
+//		StepType     string
+//		Chrom        string
+//		Start        int
+//		Step         int
+//		Span         int
+//		DefaultValue float64 // this will be the value in positions where there is no wig data, alternatively referred to as "MissingValue" in some functions
+//		Values       []float64
+//	}
+//
+// fixedStep chrom=chr1 start=1 step=1
+func stateToPostProbWig(states []int, numRoots int) []map[string]wig.Wig {
+	stateWigs := make([]wig.Wig, numRoots)
+	for _, wig := range stateWigs {
+		wig.StepType
+	}
 	for idx, state := range states {
 
 	}
