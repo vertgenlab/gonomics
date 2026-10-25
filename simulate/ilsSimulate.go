@@ -12,6 +12,7 @@ import (
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/wig"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -104,7 +105,10 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fast
 	}
 
 	statePath := generateIlsStatePath(totalLength, numRoots, transMatConverted)
-	topologyRecord, ilsEvolvedSeqs := CombineIlsSeqs(forwardEvolvedSeqs, statePath, "ilsState")
+	// topologyRecord, ilsEvolvedSeqs := CombineIlsSeqs(forwardEvolvedSeqs, statePath, "ilsState")
+	statePathWig := stateToPostProbWig(statePath)
+	stateBeds := ilsWigToBed()
+	topologyRecord, ilsEvolvedSeqs := SumIlsSeqsFasta(statePathWig, forwardEvolvedSeqs)
 
 	return anc, forwardEvolvedSeqs, topologyRecord, ilsEvolvedSeqs
 }
@@ -215,4 +219,8 @@ func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName 
 	}
 
 	return topologyRecord, ilsEvolvedSeqs
+}
+
+func stateToPostProbWig(states []int) []map[string]wig.Wig {
+
 }
