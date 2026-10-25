@@ -204,15 +204,11 @@ func ApproxEqual(m1 [][]float64, m2 [][]float64, precision float64) bool {
 
 // ReadMatrix reads a delimited file as a dense matrix
 func ReadDense(filePath string, delimiter rune) (*mat.Dense, error) {
-	// rename variables and delete this comment
-	// Source - https://stackoverflow.com/a/58841827
-	// Posted by SyntaxRules
-	// Retrieved 2026-04-16, License - CC BY-SA 4.0
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("open %q: %w", filePath, err)
 	}
-	defer f.Close()
+	f.Close()
 
 	reader := csv.NewReader(f)
 	reader.Comma = delimiter

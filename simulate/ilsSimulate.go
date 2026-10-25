@@ -28,11 +28,16 @@ func cumulativeTransitionMatrix(transMat *mat.Dense) *mat.Dense {
 		log.Fatal("Must provide square transition matrix")
 	}
 
+	var curProb float64
 	out := mat.NewDense(r, r, nil)
 	for i := range r {
 		rowSum := float64(0)
 		for j := range c { // r and c are the same value, named this way for clarity
-			rowSum += transMat.At(i, j) // sum at row i
+			curProb = transMat.At(i, j)
+			if curProb < 0 || curProb > 1 {
+				log.Fatalf("Cannot provide negative transition probability or probability over 1.")
+			}
+			rowSum += curProb // sum at row i
 			out.Set(i, j, rowSum)
 		}
 
@@ -45,7 +50,7 @@ func cumulativeTransitionMatrix(transMat *mat.Dense) *mat.Dense {
 	return out
 }
 
-// SimulateILS takes a fasta sequence that is the starting sequence at the root nodes, a pointer to a phylogenetic tree,
+// SimulateIls takes a fasta sequence that is the starting sequence at the root nodes, a pointer to a phylogenetic tree,
 // a genePred filename related to the starting sequence, and if deletions should be allowed along with substitutions.
 // The starting sequence will then be evolved according to the neutral tree provided and each node in the tree, using
 // incomplete lineage separation. First provided topology should be the non-ILS informed topology. No gaps.
@@ -101,7 +106,7 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fast
 		}
 	}
 
-	statePath := GenerateIlsStatePath(totalLength, numRoots, transMatConverted)
+	statePath := generateIlsStatePath(totalLength, numRoots, transMatConverted)
 	topologyRecord, ilsEvolvedSeqs := CombineIlsSeqs(forwardEvolvedSeqs, statePath, "ilsState")
 
 	return anc, forwardEvolvedSeqs, topologyRecord, ilsEvolvedSeqs
@@ -115,10 +120,13 @@ func pickState(prevState int, n int, transMatConverted mat.Matrix) int {
 		}
 	}
 
-	return -1
+	log.Fatal("Failed to pick next state.")
 }
 
-func GenerateIlsStatePath(totalLength int, n int, transMatConverted mat.Matrix) []int {
+// generateIlsStatePath generates state transition path for ILS states, given number of root/topology states n,
+// a cumulative probability transition matrix transMatConverted and
+// the total length of the state path totalLength
+func generateIlsStatePath(totalLength int, n int, transMatConverted mat.Matrix) []int {
 	statePath := make([]int, totalLength)
 
 	prevState := rand.Intn(n)
@@ -126,9 +134,6 @@ func GenerateIlsStatePath(totalLength int, n int, transMatConverted mat.Matrix) 
 
 	for seqIdx := 1; seqIdx < totalLength; seqIdx++ {
 		currentState := pickState(prevState, n, transMatConverted)
-		if currentState == -1 {
-			log.Fatal("Failed to pick next state")
-		}
 
 		statePath[seqIdx] = currentState
 		prevState = currentState
@@ -137,9 +142,8 @@ func GenerateIlsStatePath(totalLength int, n int, transMatConverted mat.Matrix) 
 	return statePath
 }
 
-// Generate the topology state record by randomly selecting a starting input state, and then selecting a transition
 // Combine the n forward-evolved multifastas using the transition matrix
-// Have to iterate over all C sequences in the multifasta!!!!!
+// Sequences should be the the same length and not
 func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName string) ([]bed.Bed, []fasta.Fasta) {
 	numTopologies := len(forwardEvolvedSeqs)
 	numSpecies := len(forwardEvolvedSeqs[0])
@@ -173,6 +177,7 @@ func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName 
 	var currentState int
 	var currentName string
 	var srcIdx int
+	var okay bool
 
 	// iterate over all positions and read the state path
 	// get the corresponding ils base for that state for each species
@@ -188,7 +193,10 @@ func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName 
 		}
 
 		for species, specIdx := range speciesIndex[0] {
-			srcIdx = speciesIndex[currentState][species]
+			srcIdx, okay = speciesIndex[currentState][species]
+			if !okay {
+				log.Fatalf("Species does not exist in topology %d", currentState)
+			}
 			ilsEvolvedSeqs[specIdx].Seq[seqIdx] = forwardEvolvedSeqs[currentState][srcIdx].Seq[seqIdx]
 		}
 	}
