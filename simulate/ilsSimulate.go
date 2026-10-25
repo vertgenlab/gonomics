@@ -143,6 +143,21 @@ func generateIlsStatePath(totalLength int, n int, transMatConverted mat.Matrix) 
 }
 
 // TODO potentially the same as ilsReconstruct/ilsReconstructSeq
+
+// want to generate individual wigs for each topology given the states, where the value is 1
+// first create beds
+// ## ??? // fmt.Println("START")
+// sizesFile := "../../../20wayPrimateRefHs1/posteriors/hcg_postProb.sizes"
+// topo_v0_wig := wig.Read("../../../20wayPrimateRefHs1/posteriors/chr1.0.wig", sizesFile, 0)
+// fmt.Println("FINISH topo wig 0")
+// topo_v1_wig := wig.Read("../../../20wayPrimateRefHs1/posteriors/chr1.1.wig", sizesFile, 0)
+// fmt.Println("FINISH topo wig 1")
+// topo_v2_wig := wig.Read("../../../20wayPrimateRefHs1/posteriors/chr1.2.wig", sizesFile, 0)
+// fmt.Println("FINISH topo wig 2")
+// topo_v3_wig := wig.Read("../../../20wayPrimateRefHs1/posteriors/chr1.3.wig", sizesFile, 0)
+// allPostProbs := []map[string]wig.Wig{topo_v0_wig, topo_v1_wig, topo_v2_wig, topo_v3_wig}
+// fmt.Println("FINISH all topos")
+// precision := float32(0.001)
 // Combine the n forward-evolved multifastas using the transition matrix
 // Sequences should be the the same length and not
 func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName string) ([]bed.Bed, []fasta.Fasta) {
