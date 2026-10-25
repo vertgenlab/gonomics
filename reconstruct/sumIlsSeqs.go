@@ -10,11 +10,11 @@ import (
 	"github.com/vertgenlab/gonomics/wig"
 )
 
-// IlsReconstructSeq takes in a list of posterior probabilities for n sequences and a list of n reconstructed pFasta sequences, and aggregates the pFasta sequences by weighing them by the corresponding posterior probability. Posterior probabilities should sum to 1 at each position.
-func IlsReconstructSeq(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFasta, precision float32) pFasta.PFasta {
+// SumIlsSeqs takes in a list of posterior probabilities for n sequences and a list of n reconstructed pFasta sequences, and aggregates the pFasta sequences by weighing them by the corresponding posterior probability. Posterior probabilities should sum to 1 at each position.
+func SumIlsSeqs(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFasta, precision float32) pFasta.PFasta {
 	// checks
 	if len(allPostProbs) != len(allRecons) {
-		log.Fatalf("IlsReconstructSeq requires the same number of postProbs (%v) as recons (%v)", len(allPostProbs), len(allRecons))
+		log.Fatalf("SumIlsSeqs requires the same number of postProbs (%v) as recons (%v)", len(allPostProbs), len(allRecons))
 	}
 
 	for idx := 0; idx < len(allRecons)-1; idx++ {
@@ -92,7 +92,7 @@ func IlsReconstructSeq(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFa
 						weightedSum.Seq[pos] = zeroBase
 					} else {
 						//TODO
-						weightedSum.Seq[pos] = pDna.Scale(sum, 1/(1-allPostProbs[idx][allRecons[idx].Name].Values[pos]))
+						weightedSum.Seq[pos] = pDna.Scale(sum, float32(1/(1-allPostProbs[idx][allRecons[idx].Name].Values[pos])))
 					}
 				}
 			}
@@ -102,13 +102,13 @@ func IlsReconstructSeq(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFa
 	return weightedSum
 }
 
-// IlsReconstructSeq takes in a list of posterior probabilities for n sequences and a list of n reconstructed Fasta sequences, and aggregates the Fasta sequences by weighing them by the corresponding posterior probability to produce one pFasta sequence. Posterior probabilities should sum to 1 at each position.
-func IlsReconstructSeqFasta(allPostProbs []map[string]wig.Wig, allRecons []fasta.Fasta, precision float32) pFasta.PFasta {
+// SumIlsSeqs takes in a list of posterior probabilities for n sequences and a list of n reconstructed Fasta sequences, and aggregates the Fasta sequences by weighing them by the corresponding posterior probability to produce one pFasta sequence. Posterior probabilities should sum to 1 at each position.
+func SumIlsSeqsFasta(allPostProbs []map[string]wig.Wig, allRecons []fasta.Fasta, precision float32) pFasta.PFasta {
 	allRecons_pfa := make([]pFasta.PFasta, len(allRecons))
 
 	for idx, record := range allRecons {
 		allRecons_pfa[idx] = pFasta.FaToPfa(record, 0, len(record.Seq))
 	}
 
-	return IlsReconstructSeq(allPostProbs, allRecons_pfa, precision)
+	return SumIlsSeqs(allPostProbs, allRecons_pfa, precision)
 }
