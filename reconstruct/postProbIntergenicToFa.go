@@ -1,20 +1,24 @@
 package reconstruct
 
 import (
+	"log"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/fasta"
-	"log"
 )
 
-func PostProb_intergenic_regions_extract(regions []bed.Bed, inputFa []fasta.Fasta, specifyChrom string) []fasta.Fasta{
+// TODO why am I not using MultiFaExtract with the -bed flag?
+// does this assume that that the regions are consecutive in the fasta regardless of
+// bed region n chromEnd and region n+1 chromStart?
+func PostProb_intergenic_regions_extract(regions []bed.Bed, inputFa []fasta.Fasta, specifyChrom string) []fasta.Fasta {
 	extracted := fasta.Fasta{}
 
 	/// the input fasta file is X fastas, where X is the number of species in the alignment
 	/// I need to initialise a X-length []fasta.Fasta{} output file
 	/// and then iterate over the regions in the bed file
-	/// extracting that region in each of the X sequences in the input file, 
-	//  and append them onto each of the X-sequences in the output file 
-	
+	/// extracting that region in each of the X sequences in the input file,
+	//  and append them onto each of the X-sequences in the output file
+
 	///////////////////////////////////// get only bed regions for specified chrom (if available), else return all regions
 	filteredRegions := []bed.Bed{}
 	if specifyChrom != "" {
@@ -28,7 +32,7 @@ func PostProb_intergenic_regions_extract(regions []bed.Bed, inputFa []fasta.Fast
 	} else {
 		filteredRegions = regions
 	}
-	
+
 	if len(filteredRegions) == 0 {
 		log.Fatalf("Error: expecting more than 1 region in bed file")
 	}
@@ -50,7 +54,7 @@ func PostProb_intergenic_regions_extract(regions []bed.Bed, inputFa []fasta.Fast
 	refStart := filteredRegions[0].ChromEnd
 	alnStart = alnEnd
 
-	for idx, r := range filteredRegions[1:len(filteredRegions)-1] {
+	for idx, r := range filteredRegions[1 : len(filteredRegions)-1] {
 		alnChromStart = fasta.RefPosToAlnPosCounter(inputFa[0], r.ChromStart, refStart, alnStart)
 		alnChromEnd = fasta.RefPosToAlnPosCounter(inputFa[0], r.ChromEnd, r.ChromStart, alnChromStart)
 		alnRegions[idx+1].Chrom = r.Chrom
@@ -70,7 +74,6 @@ func PostProb_intergenic_regions_extract(regions []bed.Bed, inputFa []fasta.Fast
 	alnRegions[len(filteredRegions)-1].Chrom = region.Chrom
 	alnRegions[len(filteredRegions)-1].ChromStart = alnChromStart
 	alnRegions[len(filteredRegions)-1].ChromEnd = alnChromEnd
-
 
 	///////////////////////////////////// extract from multifa based on alignment bed
 	ans := make([]fasta.Fasta, len(inputFa))

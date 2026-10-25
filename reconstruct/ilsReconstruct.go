@@ -91,6 +91,7 @@ func IlsReconstructSeq(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFa
 					if allPostProbs[idx][allRecons[idx].Name].Values[pos] > 0.5 { // prob of gap greater than prob of non-gap
 						weightedSum.Seq[pos] = zeroBase
 					} else {
+						//TODO
 						weightedSum.Seq[pos] = pDna.Scale(sum, 1/(1-allPostProbs[idx][allRecons[idx].Name].Values[pos]))
 					}
 				}
