@@ -9,6 +9,7 @@ import (
 	"math/rand"
 
 	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -107,8 +108,8 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fast
 
 	statePath := generateIlsStatePath(totalLength, numRoots, transMatConverted)
 	// topologyRecord, ilsEvolvedSeqs := CombineIlsSeqs(forwardEvolvedSeqs, statePath, "ilsState")
-	statePathWig := stateToPostProbWig(statePath, numRoots)
-	stateBeds := reconstruct.IlsWigToBed(statePathWig)
+	statePathWig := stateToPostProbWig(statePath, numRoots, totalLength)
+	topologyRecord := reconstruct.IlsWigToBed(statePathWig)
 	topologyRecord, ilsEvolvedSeqs := reconstruct.SumIlsSeqsFasta(statePathWig, forwardEvolvedSeqs)
 
 	return anc, forwardEvolvedSeqs, topologyRecord, ilsEvolvedSeqs
@@ -145,23 +146,6 @@ func generateIlsStatePath(totalLength int, n int, transMatConverted mat.Matrix) 
 }
 
 // TODO potentially the same as ilsReconstruct/ilsReconstructSeq
-
-// want to generate individual wigs for each topology given the states, where the value is 1
-// first create beds
-// ## ??? // fmt.Println("START")
-// sizesFile := "../../../20wayPrimateRefHs1/posteriors/hcg_postProb.sizes"
-// topo_v0_wig := wig.Read("../../../20wayPrimateRefHs1/posteriors/chr1.0.wig", sizesFile, 0)
-// fmt.Println("FINISH topo wig 0")
-// topo_v1_wig := wig.Read("../../../20wayPrimateRefHs1/posteriors/chr1.1.wig", sizesFile, 0)
-// fmt.Println("FINISH topo wig 1")
-// topo_v2_wig := wig.Read("../../../20wayPrimateRefHs1/posteriors/chr1.2.wig", sizesFile, 0)
-// fmt.Println("FINISH topo wig 2")
-// topo_v3_wig := wig.Read("../../../20wayPrimateRefHs1/posteriors/chr1.3.wig", sizesFile, 0)
-// allPostProbs := []map[string]wig.Wig{topo_v0_wig, topo_v1_wig, topo_v2_wig, topo_v3_wig}
-// fmt.Println("FINISH all topos")
-// precision := float32(0.001)
-// Combine the n forward-evolved multifastas using the transition matrix
-// Sequences should be the the same length and not
 func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName string) ([]bed.Bed, []fasta.Fasta) {
 	numTopologies := len(forwardEvolvedSeqs)
 	numSpecies := len(forwardEvolvedSeqs[0])
@@ -222,23 +206,25 @@ func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName 
 	return topologyRecord, ilsEvolvedSeqs
 }
 
-//	type Wig struct {
-//		StepType     string
-//		Chrom        string
-//		Start        int
-//		Step         int
-//		Span         int
-//		DefaultValue float64 // this will be the value in positions where there is no wig data, alternatively referred to as "MissingValue" in some functions
-//		Values       []float64
-//	}
-//
-// fixedStep chrom=chr1 start=1 step=1
-func stateToPostProbWig(states []int, numRoots int) []map[string]wig.Wig {
-	stateWigs := make([]wig.Wig, numRoots)
-	for _, wig := range stateWigs {
-		wig.StepType
+func stateToPostProbWig(states []int, numRoots int, seqLength int) map[string]wig.Wig {
+	var topoName string
+	sizes := make(map[string]chromInfo.ChromInfo, numRoots)
+	for topo := range numRoots {
+		topoName = fmt.Sprintf("V%d", topo)
+		// add topo to map
+		_, _ = sizes[topoName]
+		sizes[topoName] = chromInfo.ChromInfo{Name: topoName, Size: seqLength, Order: topo}
 	}
-	for idx, state := range states {
 
+	stateWigs := wig.MakeSkeleton(sizes, 0) // return map[string]Wig
+	for pos, state := range states {
+		for topo := range numRoots {
+			topoName = fmt.Sprintf("V%d", topo)
+			if topo == state {
+				stateWigs[topoName].Values[pos] = 1
+			}
+		}
 	}
+
+	return stateWigs
 }
