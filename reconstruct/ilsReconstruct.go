@@ -102,7 +102,7 @@ func IlsReconstructSeq(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFa
 	return weightedSum
 }
 
-// IlsReconstructSeq takes in a list of posterior probabilities for n sequences and a list of n reconstructed pFasta sequences, and aggregates the pFasta sequences by weighing them by the corresponding posterior probability. Posterior probabilities should sum to 1 at each position.
+// IlsReconstructSeq takes in a list of posterior probabilities for n sequences and a list of n reconstructed Fasta sequences, and aggregates the Fasta sequences by weighing them by the corresponding posterior probability to produce one pFasta sequence. Posterior probabilities should sum to 1 at each position.
 func IlsReconstructSeqFasta(allPostProbs []map[string]wig.Wig, allRecons []fasta.Fasta, precision float32) pFasta.PFasta {
 	allRecons_pfa := make([]pFasta.PFasta, len(allRecons))
 
