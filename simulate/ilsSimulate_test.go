@@ -10,6 +10,7 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/numbers/matrix"
+	"gonum.org/v1/gonum/mat"
 )
 
 var IlsSimulateTests = []struct {
@@ -67,9 +68,12 @@ func TestIlsSimulate(t *testing.T) {
 	var expectedIls []fasta.Fasta
 	var expectedBed []bed.Bed
 	var ancSeq []fasta.Fasta
+	var m *mat.Dense
+	var err error
+	var root *expandedTree.ETree
 	for vIdx, v := range IlsSimulateTests {
 		vIdx = vIdx + 1
-		m, err := matrix.ReadDense(v.TransMat, '\t')
+		m, err = matrix.ReadDense(v.TransMat, '\t')
 		if err != nil {
 			t.Fatalf("error reading transition matrix: %v", err)
 		}
@@ -77,7 +81,7 @@ func TestIlsSimulate(t *testing.T) {
 		roots := make([]*expandedTree.ETree, len(v.Roots))
 		for i, filename := range v.Roots {
 
-			root, err := expandedTree.ReadNewick(filename)
+			root, err = expandedTree.ReadNewick(filename)
 			if err != nil {
 				t.Fatalf("error reading newick %s: %v", filename, err)
 			}

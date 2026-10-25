@@ -15,13 +15,10 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// cumulativeTransitionMatrix converts a 2D square transition matrix
-// for example, given a stochastic matrix
-// where row 1 = (a, b, c, ..., n) where row 1 sums to 1,
-// and a, b, c... describe
-// the probability of the state 1 converting to any state N
-// we then convert the row 1 to (a, a+b, a+b+c, ..., a+b+⋯+n) such that
-// the last value in the row is 1.
+// cumulativeTransitionMatrix converts a 2D square transition matrix.
+// for example, given a stochastic matrix where row 1 = (a, b, c, ..., n) such that row 1 sums to 1,
+// and a, b, c... describe the probability of the state 1 converting to any state N,
+// We then convert the row 1 to (a, a+b, a+b+c, ..., a+b+⋯+n) such that the last value in the row is 1.
 func cumulativeTransitionMatrix(transMat *mat.Dense) *mat.Dense {
 	r, c := transMat.Dims()
 	if r != c {
