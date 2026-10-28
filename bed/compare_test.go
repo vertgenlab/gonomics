@@ -191,3 +191,75 @@ func TestAllAreEqual(t *testing.T) {
 		}
 	}
 }
+
+var MergeBedsKeepNamesAndAnnotationsTests = []struct {
+	Input    []Bed
+	Expected []Bed
+}{
+	{ // merged records keep the annotations of every record, including records with multiple or no annotations
+		Input: []Bed{
+			{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: "a", Score: 1, Annotation: []string{"annA"}, FieldsInitialized: 7},
+			{Chrom: "chr1", ChromStart: 15, ChromEnd: 30, Name: "b", Score: 2, Annotation: []string{"annB1", "annB2"}, FieldsInitialized: 8},
+			{Chrom: "chr1", ChromStart: 25, ChromEnd: 35, Name: "c", Score: 4, FieldsInitialized: 6},
+			{Chrom: "chr1", ChromStart: 50, ChromEnd: 60, Name: "d", Score: 8, Annotation: []string{"annD"}, FieldsInitialized: 7},
+		},
+		Expected: []Bed{
+			{Chrom: "chr1", ChromStart: 10, ChromEnd: 35, Name: "a,b,c", Score: 7, Annotation: []string{"annA", "annB1", "annB2"}, FieldsInitialized: 7},
+			{Chrom: "chr1", ChromStart: 50, ChromEnd: 60, Name: "d", Score: 8, Annotation: []string{"annD"}, FieldsInitialized: 7},
+		},
+	},
+}
+
+func TestMergeBedsKeepNamesAndAnnotations(t *testing.T) {
+	var actual []Bed
+	for _, v := range MergeBedsKeepNamesAndAnnotationsTests {
+		actual = MergeBedsKeepNamesAndAnnotations(v.Input)
+		checkMergedBeds(t, "MergeBedsKeepNamesAndAnnotations", actual, v.Expected)
+	}
+}
+
+var MergeBedsIfNamesMatchAnnotationTests = []struct {
+	Input    []Bed
+	Expected []Bed
+}{
+	{
+		Input: []Bed{
+			{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: "a", Score: 1, Annotation: []string{"ann1"}, FieldsInitialized: 7},
+			{Chrom: "chr1", ChromStart: 15, ChromEnd: 30, Name: "a", Score: 2, Annotation: []string{"ann2", "ann3"}, FieldsInitialized: 8},
+			{Chrom: "chr1", ChromStart: 50, ChromEnd: 60, Name: "b", Score: 4, Annotation: []string{"ann4"}, FieldsInitialized: 7},
+		},
+		Expected: []Bed{
+			{Chrom: "chr1", ChromStart: 10, ChromEnd: 30, Name: "a", Score: 3, Annotation: []string{"ann1", "ann2", "ann3"}, FieldsInitialized: 7},
+			{Chrom: "chr1", ChromStart: 50, ChromEnd: 60, Name: "b", Score: 4, Annotation: []string{"ann4"}, FieldsInitialized: 7},
+		},
+	},
+}
+
+func TestMergeBedsIfNamesMatchAnnotation(t *testing.T) {
+	var actual []Bed
+	for _, v := range MergeBedsIfNamesMatchAnnotationTests {
+		actual = MergeBedsIfNamesMatch(v.Input)
+		checkMergedBeds(t, "MergeBedsIfNamesMatch", actual, v.Expected)
+	}
+}
+
+func checkMergedBeds(t *testing.T, funcName string, actual []Bed, expected []Bed) {
+	var i, j int
+	if len(actual) != len(expected) {
+		t.Fatalf("Error in %s. Expected %d records, got %d.", funcName, len(expected), len(actual))
+	}
+	for i = range actual {
+		if !Equal(actual[i], expected[i]) || actual[i].Name != expected[i].Name || actual[i].Score != expected[i].Score {
+			t.Errorf("Error in %s. Expected: %v. Actual: %v.", funcName, expected[i], actual[i])
+		}
+		if len(actual[i].Annotation) != len(expected[i].Annotation) {
+			t.Errorf("Error in %s. Expected annotation: %v. Actual: %v.", funcName, expected[i].Annotation, actual[i].Annotation)
+			continue
+		}
+		for j = range actual[i].Annotation {
+			if actual[i].Annotation[j] != expected[i].Annotation[j] {
+				t.Errorf("Error in %s. Expected annotation: %v. Actual: %v.", funcName, expected[i].Annotation, actual[i].Annotation)
+			}
+		}
+	}
+}
