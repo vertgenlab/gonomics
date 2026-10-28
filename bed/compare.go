@@ -85,6 +85,8 @@ func MergeBedsIfNamesMatch(bedFile []Bed) []Bed {
 				bedFile[j] = bedFile[j+1]
 			}
 			bedFile = bedFile[:len(bedFile)-1]
+		} else {
+			i++
 		}
 	}
 	return bedFile
