@@ -150,6 +150,40 @@ func TestSortByChromEndByChrom(t *testing.T) {
 	}
 }
 
+var MergeBedsIfNamesMatchTests = []struct {
+	Input    []Bed
+	Expected []Bed
+}{
+	{ // overlapping records with different names are not merged
+		Input: []Bed{
+			{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: "a", Score: 1, FieldsInitialized: 5},
+			{Chrom: "chr1", ChromStart: 15, ChromEnd: 30, Name: "b", Score: 2, FieldsInitialized: 5},
+			{Chrom: "chr1", ChromStart: 50, ChromEnd: 60, Name: "c", Score: 4, FieldsInitialized: 5},
+		},
+		Expected: []Bed{
+			{Chrom: "chr1", ChromStart: 10, ChromEnd: 20, Name: "a", Score: 1, FieldsInitialized: 5},
+			{Chrom: "chr1", ChromStart: 15, ChromEnd: 30, Name: "b", Score: 2, FieldsInitialized: 5},
+			{Chrom: "chr1", ChromStart: 50, ChromEnd: 60, Name: "c", Score: 4, FieldsInitialized: 5},
+		},
+	},
+}
+
+func TestMergeBedsIfNamesMatch(t *testing.T) {
+	var actual []Bed
+	var i int
+	for _, v := range MergeBedsIfNamesMatchTests {
+		actual = MergeBedsIfNamesMatch(v.Input)
+		if len(actual) != len(v.Expected) {
+			t.Fatalf("Error in MergeBedsIfNamesMatch. Expected %d records, got %d.", len(v.Expected), len(actual))
+		}
+		for i = range actual {
+			if !Equal(actual[i], v.Expected[i]) || actual[i].Name != v.Expected[i].Name || actual[i].Score != v.Expected[i].Score {
+				t.Errorf("Error in MergeBedsIfNamesMatch. Expected: %v. Actual: %v.", v.Expected[i], actual[i])
+			}
+		}
+	}
+}
+
 var Equal1 Bed = Bed{Chrom: "chr1", ChromStart: 100, ChromEnd: 200, Name: "First", Score: 1, Strand: '+', FieldsInitialized: 6}
 var Equal2 Bed = Bed{Chrom: "chr2", ChromStart: 400, ChromEnd: 900, Name: "Second", Score: 5, Strand: '-', FieldsInitialized: 6}
 
