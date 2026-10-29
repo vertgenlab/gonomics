@@ -1,28 +1,29 @@
 package reconstruct
 
 import (
+	"os"
+	"testing"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/maf"
 	"github.com/vertgenlab/gonomics/wig"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/exception"
-	"testing"
-	"os"
 )
 
 var postProbtoWigTests = []struct {
-	mafFile 	string
-	postProbFile	string
+	mafFile        string
+	postProbFile   string
 	desiredSpecies []string
-	wigOutDir	string
-	mapEstimOutDir	string
-	expectedWigDir	string
-	expectedMapDir	string
+	wigOutDir      string
+	mapEstimOutDir string
+	expectedWigDir string
+	expectedMapDir string
 }{
 	{"testdata/chr22.test.maf", "testdata/postProbToWig_post_prob_test.csv", []string{"hg38", "panPan2", "panTro6", "gorGor5"}, "testdata/postProbToWig_out.wig", "testdata/postProbToWig_map_out.wig", "testdata/postProbToWig_expected.wig", "testdata/postProbToWig_map_expected.wig"},
 }
 
 func TestPostProbToWig(t *testing.T) {
-	// TODO: there is a weird print out of "diff" + list of a few numbers? probably some sort of probability 
+	// TODO: there is a weird print out of "diff" + list of a few numbers? probably some sort of probability
 	var err error
 
 	var postProbOut map[string]wig.Wig
@@ -30,7 +31,7 @@ func TestPostProbToWig(t *testing.T) {
 	var inMaf []*maf.Maf
 	for _, v := range postProbtoWigTests {
 		inMaf = maf.Read(v.mafFile)
-		postProbOut, mapEstimOut  = PostProbToWig(v.postProbFile, inMaf, v.desiredSpecies)
+		postProbOut, mapEstimOut = PostProbToWig(v.postProbFile, inMaf, v.desiredSpecies)
 		wig.Write(v.wigOutDir, postProbOut)
 		wig.Write(v.mapEstimOutDir, mapEstimOut)
 		if !fileio.AreEqual(v.wigOutDir, v.expectedWigDir) {
@@ -42,5 +43,5 @@ func TestPostProbToWig(t *testing.T) {
 			err = os.Remove(v.mapEstimOutDir)
 		}
 		exception.PanicOnErr(err)
-	} 
+	}
 }

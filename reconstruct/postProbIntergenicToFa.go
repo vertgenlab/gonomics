@@ -7,10 +7,22 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-// TODO why am I not using MultiFaExtract with the -bed flag?
-// does this assume that that the regions are consecutive in the fasta regardless of
-// bed region n chromEnd and region n+1 chromStart?
-func PostProb_intergenic_regions_extract(regions []bed.Bed, inputFa []fasta.Fasta, specifyChrom string) []fasta.Fasta {
+func ConcatenateMultifa(inputMultifa [][]fasta.Fasta) []fasta.Fasta {
+	ans := make([]fasta.Fasta, len(inputMultifa))
+	for i_idx, multi := range inputMultifa {
+		ans[i_idx].Name = multi[0].Name
+		for _, seq := range multi {
+			ans[i_idx].Seq = append(ans[i_idx].Seq, seq.Seq...)
+		}
+	}
+	return ans
+}
+
+// PostProbExtractIntergenic takes as input regions, sorted bed file,
+// and inputFa, a multifasta, where all sequences are aligned to the first sequence (index 0),
+// then extracts all regions in 'regions' from inputFa and output them as a list of
+// TODO make these output as non-concatenated and then create another function that concatenates them
+func PostProbExtractIntergenic(regions []bed.Bed, inputFa []fasta.Fasta, specifyChrom string) ([][]fasta.Fasta, []fasta.Fasta) {
 	extracted := fasta.Fasta{}
 
 	/// the input fasta file is X fastas, where X is the number of species in the alignment
@@ -55,8 +67,8 @@ func PostProb_intergenic_regions_extract(regions []bed.Bed, inputFa []fasta.Fast
 	alnStart = alnEnd
 
 	for idx, r := range filteredRegions[1 : len(filteredRegions)-1] {
-		alnChromStart = fasta.RefPosToAlnPosCounter(inputFa[0], r.ChromStart, refStart, alnStart)
-		alnChromEnd = fasta.RefPosToAlnPosCounter(inputFa[0], r.ChromEnd, r.ChromStart, alnChromStart)
+		alnChromStart = fasta.RefPosToAlnPosCounterBed(inputFa[0], r.ChromStart, refStart, alnStart)
+		alnChromEnd = fasta.RefPosToAlnPosCounterBed(inputFa[0], r.ChromEnd, r.ChromStart, alnChromStart)
 		alnRegions[idx+1].Chrom = r.Chrom
 		alnRegions[idx+1].ChromStart = alnChromStart
 		alnRegions[idx+1].ChromEnd = alnChromEnd
@@ -66,24 +78,29 @@ func PostProb_intergenic_regions_extract(regions []bed.Bed, inputFa []fasta.Fast
 	}
 
 	//// last region
-	region := filteredRegions[len(filteredRegions)-1]
-	alnChromStart = fasta.RefPosToAlnPosCounter(inputFa[0], region.ChromStart, refStart, alnStart)
+	ans := make([][]fasta.Fasta, len(inputFa))
+	if len(filteredRegions) > 1 {
+		region := filteredRegions[len(filteredRegions)-1]
+		alnChromStart = fasta.RefPosToAlnPosCounterBed(inputFa[0], region.ChromStart, refStart, alnStart)
 
-	alnChromEnd = fasta.RefPosToAlnPosCounter(inputFa[0], region.ChromEnd, region.ChromStart, alnChromStart)
+		alnChromEnd = fasta.RefPosToAlnPosCounterBed(inputFa[0], region.ChromEnd, region.ChromStart, alnChromStart)
 
-	alnRegions[len(filteredRegions)-1].Chrom = region.Chrom
-	alnRegions[len(filteredRegions)-1].ChromStart = alnChromStart
-	alnRegions[len(filteredRegions)-1].ChromEnd = alnChromEnd
+		alnRegions[len(filteredRegions)-1].Chrom = region.Chrom
+		alnRegions[len(filteredRegions)-1].ChromStart = alnChromStart
+		alnRegions[len(filteredRegions)-1].ChromEnd = alnChromEnd
 
-	///////////////////////////////////// extract from multifa based on alignment bed
-	ans := make([]fasta.Fasta, len(inputFa))
-	for idx, inSeq := range inputFa {
-		ans[idx].Name = inSeq.Name
-
-		for _, r := range alnRegions {
-			extracted = fasta.Extract(inSeq, r.ChromStart, r.ChromEnd, inSeq.Name)
-			ans[idx].Seq = append(ans[idx].Seq, extracted.Seq...)
+		///////////////////////////////////// extract from multifa based on alignment bed
+		for idx, rec := range inputFa {
+			for _, r := range alnRegions {
+				extracted = fasta.Extract(rec, r.ChromStart, r.ChromEnd, rec.Name)
+				ans[idx] = append(ans[idx], extracted)
+			}
+		}
+	} else {
+		for idx, rec := range inputFa {
+			firstRegion := alnRegions[0]
+			ans[idx] = append(ans[idx], fasta.Extract(rec, firstRegion.ChromStart, firstRegion.ChromEnd, rec.Name))
 		}
 	}
-	return ans
+	return ans, ConcatenateMultifa(ans)
 }

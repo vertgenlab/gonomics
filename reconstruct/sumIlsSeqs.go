@@ -1,3 +1,4 @@
+// Package reconstruct has tools for reconstructing ancient genomes from the genomes of extant species using newick trees and fasta files.
 package reconstruct
 
 import (
@@ -10,7 +11,9 @@ import (
 	"github.com/vertgenlab/gonomics/wig"
 )
 
-// SumIlsSeqs takes in a list of posterior probabilities for n sequences and a list of n reconstructed pFasta sequences, and aggregates the pFasta sequences by weighing them by the corresponding posterior probability. Posterior probabilities should sum to 1 at each position.
+// SumIlsSeqs takes in a list of posterior probabilities for n sequences and a list of n pFasta sequences
+// and aggregates the pFasta sequences by weighing them by the corresponding posterior probability.
+// Posterior probabilities should sum to 1 at each position across all tracks
 func SumIlsSeqs(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFasta, precision float32) pFasta.PFasta {
 	// checks
 	if len(allPostProbs) != len(allRecons) {
@@ -102,7 +105,10 @@ func SumIlsSeqs(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFasta, pr
 	return weightedSum
 }
 
-// SumIlsSeqs takes in a list of posterior probabilities for n sequences and a list of n reconstructed Fasta sequences, and aggregates the Fasta sequences by weighing them by the corresponding posterior probability to produce one pFasta sequence. Posterior probabilities should sum to 1 at each position.
+// SumIlsSeqs takes in a list of posterior probabilities for n sequences and a list of n Fasta sequences,
+// converts the Fasta sequences to n one-hot pFasta sequences, then aggregates the pFasta
+// sequences by weighing them by the corresponding posterior probability.
+// Posterior probabilities should sum to 1 at each position across all tracks
 func SumIlsSeqsFasta(allPostProbs []map[string]wig.Wig, allRecons []fasta.Fasta, precision float32) pFasta.PFasta {
 	allRecons_pfa := make([]pFasta.PFasta, len(allRecons))
 

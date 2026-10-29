@@ -1,11 +1,17 @@
 package reconstruct
 
 import (
-	"github.com/vertgenlab/gonomics/wig"
-	"github.com/vertgenlab/gonomics/bed"
 	"log"
+
+	"github.com/vertgenlab/gonomics/bed"
+	"github.com/vertgenlab/gonomics/wig"
 )
 
+// IlsWigToBed takes in n posterior probability wigs and converts to n beds, one for each topology
+// by taking the map estimate over these posterior probabilities for each position
+// and assigning that position to the correct topology's bed
+// e.g. for n=4, returns a slice of 4 beds containing info on which positions are in
+// which topology states V0-V3
 func IlsWigToBed(postProbWig map[string]wig.Wig) [][]bed.Bed {
 	keys := make([]string, len(postProbWig))
 
@@ -20,11 +26,11 @@ func IlsWigToBed(postProbWig map[string]wig.Wig) [][]bed.Bed {
 	trackNames := []string{"V0", "V1", "V2", "V3"}
 
 	n := len(postProbWig[trackNames[0]].Values)
-    for _, name := range trackNames[1:] {
-        if len(postProbWig[name].Values) != n {
-            log.Fatal("Length of posterior probabilities not the same for each topology.")
-        }
-    }
+	for _, name := range trackNames[1:] {
+		if len(postProbWig[name].Values) != n {
+			log.Fatal("Length of posterior probabilities not the same for each topology.")
+		}
+	}
 
 	w0 := postProbWig[trackNames[0]]
 	start := w0.Start
@@ -46,15 +52,15 @@ func IlsWigToBed(postProbWig map[string]wig.Wig) [][]bed.Bed {
 			}
 		}
 
-		lastRegionIdx := len(ilsBeds[maxTopo])-1
+		lastRegionIdx := len(ilsBeds[maxTopo]) - 1
 		bedIdx = (start + idx*step) - 1
 		if len(ilsBeds[maxTopo]) == 0 { //// start new bed region run, no existing regions in bed
-			ilsBeds[maxTopo] = append(ilsBeds[maxTopo], bed.Bed{Chrom: chromName, ChromStart: bedIdx, ChromEnd: bedIdx+1, Name: trackNames[maxTopo], FieldsInitialized: 4})
+			ilsBeds[maxTopo] = append(ilsBeds[maxTopo], bed.Bed{Chrom: chromName, ChromStart: bedIdx, ChromEnd: bedIdx + 1, Name: trackNames[maxTopo], FieldsInitialized: 4})
 		} else {
 			if ilsBeds[maxTopo][lastRegionIdx].GetChromEnd() == bedIdx { //// extend existing bed region by 1
-			ilsBeds[maxTopo][lastRegionIdx].ChromEnd = bedIdx+1
+				ilsBeds[maxTopo][lastRegionIdx].ChromEnd = bedIdx + 1
 			} else { //// start new bed region run
-				ilsBeds[maxTopo] = append(ilsBeds[maxTopo], bed.Bed{Chrom: chromName, ChromStart: bedIdx, ChromEnd: bedIdx+1, Name: trackNames[maxTopo], FieldsInitialized: 4})
+				ilsBeds[maxTopo] = append(ilsBeds[maxTopo], bed.Bed{Chrom: chromName, ChromStart: bedIdx, ChromEnd: bedIdx + 1, Name: trackNames[maxTopo], FieldsInitialized: 4})
 			}
 		}
 	}
