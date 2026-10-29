@@ -20,7 +20,7 @@ func RefPosToAlnPos(record Fasta, RefPos int) int {
 	return alnStart
 }
 
-// RefPosToAlnPosCounter is like RefPosToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
+// RefPosToAlnPosCounter
 func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
 	return refPosToAlnPosCounterExposed(record, RefPos, refStart, alnStart, false)
 }
@@ -33,7 +33,7 @@ func RefPosToAlnPosCounterBed(record Fasta, RefPos int, refStart int, alnStart i
 
 // refPosToAlnPosCounterExposed is the function underlying both RefPosToAlnPosCounter and RefPosToAlnPosCounterBed.
 // the allowBed option permits RefPosToAlnPosCounter to read one more base beyond the length of the rec, which accounts for BED file coordinates being end-exclusive,
-// and is used in RefPosToAlnPosCounterBed. allowBed is false for RefPosToAlnPosCounter. 
+// and is used in RefPosToAlnPosCounterBed. allowBed is false for RefPosToAlnPosCounter.
 func refPosToAlnPosCounterExposed(record Fasta, RefPos int, refStart int, alnStart int, allowBed bool) int {
 	if refStart > RefPos {
 		//refStart, alnStart = 0, 0 //in case the refStart was improperly set (greater than the desired position, we reset these counters to 0.
@@ -74,7 +74,7 @@ func refPosToAlnPosCounterExposed(record Fasta, RefPos int, refStart int, alnSta
 			log.Fatalf("Ran out of chromosome. needed %d, advanced %d", RefPos-initRefStart, incremented)
 		}
 	}
-	
+
 	return alnStart
 }
 

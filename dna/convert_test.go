@@ -220,15 +220,16 @@ func byteToBase(b byte) Base {
 }
 
 var extractTests = []struct {
-	seq []Base
-	start int
-	end int
-	expected []Base	
+	seq      []Base
+	start    int
+	end      int
+	expected []Base
 }{
 	{StringToBases("ATCA"), 0, 1, StringToBases("A")},
 	{StringToBases("ATCA"), 2, 3, StringToBases("C")},
-	{StringToBases("ATCA"), 3, 4, StringToBases("A")},		
+	{StringToBases("ATCA"), 3, 4, StringToBases("A")},
 }
+
 func TestExtract(t *testing.T) {
 	var actual []Base
 	for _, test := range extractTests {

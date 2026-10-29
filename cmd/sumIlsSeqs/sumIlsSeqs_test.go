@@ -1,9 +1,10 @@
 package main
 
 import (
+	"testing"
+
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"testing"
 )
 
 var IlsReconstructTests = []struct {
@@ -25,13 +26,13 @@ var IlsReconstructTests = []struct {
 	},
 }
 
-func TestIlsReconstructSeq(t *testing.T) {
-	var s IlsReconstructSeqSettings
+func TestSumIlsSeqs(t *testing.T) {
+	var s SumIlsSeqsSettings
 	var observed []pFasta.PFasta
 	var expected []pFasta.PFasta
 	for _, v := range IlsReconstructTests {
 
-		s = IlsReconstructSeqSettings{
+		s = SumIlsSeqsSettings{
 			PostProbsFiles: v.PostProbsFiles,
 			ReconFiles:     v.ReconFiles,
 			ChromSizesFile: v.ChromSizesFile,
@@ -39,12 +40,12 @@ func TestIlsReconstructSeq(t *testing.T) {
 			Precision:      v.Precision,
 		}
 
-		IlsReconstructSeq(s)
+		SumIlsSeqs(s)
 		observed = pFasta.Read(v.OutDir)
 		expected = pFasta.Read(v.Expected)
 
 		if !pFasta.AllAreEqual(observed, expected, v.TestPrecision) {
-			t.Errorf("Error in ilsReconstructSeq.")
+			t.Errorf("Error in iSumIlsSeqs.")
 		} else {
 			fileio.EasyRemove(v.OutDir)
 		}

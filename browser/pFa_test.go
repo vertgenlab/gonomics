@@ -2,7 +2,7 @@ package browser
 
 import (
 	"testing"
-	
+
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"

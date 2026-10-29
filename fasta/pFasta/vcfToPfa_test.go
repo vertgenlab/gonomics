@@ -44,6 +44,3 @@ func TestVcfToPfa(t *testing.T) {
 		}
 	}
 }
-
-
-
