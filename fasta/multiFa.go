@@ -1,12 +1,13 @@
 package fasta
 
 import (
-	"github.com/vertgenlab/gonomics/dna"
 	"log"
-	// "fmt"
+
+	"github.com/vertgenlab/gonomics/dna"
 )
 
-// RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
+// RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0-indexed.
+// start inclusive, end inclusive -- cannot be used to return end of alignment position for reference bed, as bed is end-exclusive, function will error.
 func RefPosToAlnPos(record Fasta, RefPos int) int {
 	var refStart, alnStart = 0, 0
 	for t := alnStart; refStart < RefPos; alnStart++ {
@@ -20,7 +21,8 @@ func RefPosToAlnPos(record Fasta, RefPos int) int {
 	return alnStart
 }
 
-// RefPosToAlnPosCounter
+// RefPosToAlnPosCounter is like RefposToAlnPos, but can begin midway through a chromosome at a refPosition/alnPosition pair, defined by the input variables refStart and alnStart.
+// start inclusive, end inclusive.
 func RefPosToAlnPosCounter(record Fasta, RefPos int, refStart int, alnStart int) int {
 	return refPosToAlnPosCounterExposed(record, RefPos, refStart, alnStart, false)
 }
