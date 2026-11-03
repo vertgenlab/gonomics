@@ -103,5 +103,5 @@ func PostProbExtractIntergenic(regions []bed.Bed, inputFa []fasta.Fasta, specify
 			ans[idx] = append(ans[idx], fasta.Extract(rec, firstRegion.ChromStart, firstRegion.ChromEnd, rec.Name))
 		}
 	}
-	return ans, ConcatenateMultifa(ans)
+	return ans, concatenateMultifa(ans)
 }
