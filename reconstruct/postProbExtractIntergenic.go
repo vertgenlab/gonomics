@@ -7,9 +7,9 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
-// ConcatenateMultifa takes a list of N multifastas, where all sequences in one multifa belong to the same sequence,
+// concatenateMultifa takes a list of N multifastas, where all sequences in one multifa belong to the same sequence,
 // and concatenates them consecutively, returning one fasta per original multifa. Returns a multifasta with N sequences.
-func ConcatenateMultifa(inputMultifa [][]fasta.Fasta) []fasta.Fasta {
+func concatenateMultifa(inputMultifa [][]fasta.Fasta) []fasta.Fasta {
 	ans := make([]fasta.Fasta, len(inputMultifa))
 	for i_idx, multi := range inputMultifa {
 		ans[i_idx].Name = multi[0].Name

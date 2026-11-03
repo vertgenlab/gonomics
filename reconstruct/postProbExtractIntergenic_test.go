@@ -11,7 +11,7 @@ import (
 	"github.com/vertgenlab/gonomics/fileio"
 )
 
-var postProbIntergenicToFaTests = []struct {
+var postProbExtractIntergenicTests = []struct {
 	intergenicRegions string
 	inFa              string
 	outPrefix         string
@@ -21,7 +21,7 @@ var postProbIntergenicToFaTests = []struct {
 	{"testdata/postProbIntergenicToFa_input_1.bed", "testdata/postProbIntergenicToFa_ref_1.fasta", "testdata/postProbIntergenicToFa_test_out_1", "testdata/postProbIntergenicToFa_test_expected_1.fasta", "chr1"},
 }
 
-func TestPostProbIntergenicToFa(t *testing.T) {
+func TestPostProbExtractIntergenic(t *testing.T) {
 	var err error
 	var list_out [][]fasta.Fasta
 	var out []fasta.Fasta
@@ -29,7 +29,7 @@ func TestPostProbIntergenicToFa(t *testing.T) {
 	var inFa []fasta.Fasta
 	var outPath string
 
-	for _, v := range postProbIntergenicToFaTests {
+	for _, v := range postProbExtractIntergenicTests {
 		inRegions = bed.Read(v.intergenicRegions)
 		inFa = fasta.Read(v.inFa)
 		list_out, out = PostProbExtractIntergenic(inRegions, inFa, v.inChrom)
