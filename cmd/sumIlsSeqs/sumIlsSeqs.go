@@ -1,6 +1,7 @@
 // Command Group: "Sequence Evolution & Reconstruction"
 
-// Reconstruct ancient sequences using extant genomes and a newick tree with branch lengths
+// Takes the weighted sum of FASTA/pFASTA sequences given a wig file for all positions with probability
+// of that position being one of the sequencess
 package main
 
 import (
@@ -16,8 +17,8 @@ import (
 	"github.com/vertgenlab/gonomics/wig"
 )
 
-// IlsReconstructSeqSettings defines the usage settings for the ilsReconstructSeq command
-type IlsReconstructSeqSettings struct {
+// SumIlsSeqsSettings defines the usage settings for the iSumIlsSeqs command
+type SumIlsSeqsSettings struct {
 	PostProbsFiles string
 	ReconFiles     string
 	ChromSizesFile string
@@ -25,44 +26,44 @@ type IlsReconstructSeqSettings struct {
 	Precision      float32
 }
 
-// IlsReconstructSeqUsage defines the usage statement for the ilsReconstructSeq command
-func IlsReconstructSeqUsage(IlsReconstructSeqFlags *flag.FlagSet) {
+// SumIlsSeqsUsage defines the usage statement for the iSumIlsSeqs command
+func SumIlsSeqsUsage(SumIlsSeqsFlags *flag.FlagSet) {
 	fmt.Print(
-		"ilsReconstructSeq performs ancestral sequence reconstruction while accounting for phylogenetic topological uncertainty resulting from incomplete lineage sorting.\n" +
+		"iSumIlsSeqs performs ancestral sequence reconstruction while accounting for phylogenetic topological uncertainty resulting from incomplete lineage sorting.\n" +
 			"Initial ancestral sequence reconstructions are generated for each possible topology. A final, adjusted ancestral sequence estimate is generated as the\n" +
 			"average of ancestral estimates across topologies, weighted by the posterior probability of a topology at each position.\n" +
 			"Memory scales by pDNA size, so if working with large genomes, make sure to split by chromosome.\n" +
 			"This program takes as input a txt file containing the addresses of n wig files, and a txt file containing the addresses of n corresponding pFastas.\n" +
 			"This program returns a pFasta file containing a sequence representing the weighted average of the input pFastas.\n" +
 			"Usage:\n" +
-			"ilsReconstructSeq <posterior-probabilities>.txt <recons>.txt outDir\n" +
+			"iSumIlsSeqs <posterior-probabilities>.txt <recons>.txt outDir\n" +
 			"options:\n")
-	IlsReconstructSeqFlags.PrintDefaults()
+	SumIlsSeqsFlags.PrintDefaults()
 }
 
-// parseIlsReconstructSeqArgs is the main function of the IlsReconstructSeq command. It parses options and runs the ilsReconstructSeq function.
-func parseIlsReconstructSeqArgs() {
+// parseSumIlsSeqsArgs is the main function of the SumIlsSeqs command. It parses options and runs the iSumIlsSeqs function.
+func parseSumIlsSeqsArgs() {
 	expectedNumArgs := 4
 	var err error
-	IlsReconstructSeqFlags := flag.NewFlagSet("IlsReconstructSeq", flag.ExitOnError)
-	var precision *float64 = IlsReconstructSeqFlags.Float64("precision", 0.001, "Specify the precision to use when checking for valid pDNA base (sums to 1).")
-	IlsReconstructSeqFlags.Usage = func() { IlsReconstructSeqUsage(IlsReconstructSeqFlags) }
-	err = IlsReconstructSeqFlags.Parse(os.Args[2:])
+	SumIlsSeqsFlags := flag.NewFlagSet("SumIlsSeqs", flag.ExitOnError)
+	var precision *float64 = SumIlsSeqsFlags.Float64("precision", 0.001, "Specify the precision to use when checking for valid pDNA base (sums to 1).")
+	SumIlsSeqsFlags.Usage = func() { SumIlsSeqsUsage(SumIlsSeqsFlags) }
+	err = SumIlsSeqsFlags.Parse(os.Args[2:])
 
 	exception.PanicOnErr(err)
 
-	if len(IlsReconstructSeqFlags.Args()) != expectedNumArgs {
-		IlsReconstructSeqFlags.Usage()
+	if len(SumIlsSeqsFlags.Args()) != expectedNumArgs {
+		SumIlsSeqsFlags.Usage()
 		log.Fatalf("Error: expecting %d arguments, but got %d\n",
-			expectedNumArgs, len(IlsReconstructSeqFlags.Args()))
+			expectedNumArgs, len(SumIlsSeqsFlags.Args()))
 	}
 
-	postProbsFiles := IlsReconstructSeqFlags.Arg(0)
-	reconFiles := IlsReconstructSeqFlags.Arg(1)
-	chromSizesFile := IlsReconstructSeqFlags.Arg(2)
-	outDir := IlsReconstructSeqFlags.Arg(3)
+	postProbsFiles := SumIlsSeqsFlags.Arg(0)
+	reconFiles := SumIlsSeqsFlags.Arg(1)
+	chromSizesFile := SumIlsSeqsFlags.Arg(2)
+	outDir := SumIlsSeqsFlags.Arg(3)
 
-	s := IlsReconstructSeqSettings{
+	s := SumIlsSeqsSettings{
 		PostProbsFiles: postProbsFiles,
 		ReconFiles:     reconFiles,
 		ChromSizesFile: chromSizesFile,
@@ -70,10 +71,10 @@ func parseIlsReconstructSeqArgs() {
 		Precision:      float32(*precision),
 	}
 
-	IlsReconstructSeq(s)
+	SumIlsSeqs(s)
 }
 
-func IlsReconstructSeq(s IlsReconstructSeqSettings) {
+func SumIlsSeqs(s SumIlsSeqsSettings) {
 	var fileScanner *bufio.Scanner
 	var err error
 	var readPostProbs *os.File
@@ -121,11 +122,11 @@ func IlsReconstructSeq(s IlsReconstructSeqSettings) {
 		postProbs = append(postProbs, wig.Read(filepath, s.ChromSizesFile, 0))
 	}
 
-	out := []pFasta.PFasta{reconstruct.IlsReconstructSeq(postProbs, recons, s.Precision)}
+	out := []pFasta.PFasta{reconstruct.SumIlsSeqs(postProbs, recons, s.Precision)}
 
 	pFasta.Write(s.OutDir, out)
 }
 
 func main() {
-	parseIlsReconstructSeqArgs()
+	parseSumIlsSeqsArgs()
 }

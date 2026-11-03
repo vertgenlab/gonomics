@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/tree"
 )
 
@@ -26,7 +26,7 @@ type ETree struct {
 	Scrap                 float64
 	Left                  *ETree
 	Right                 *ETree
-	Up                    *ETree         // The immediate ancestral node.
+	Up                    *ETree      // The immediate ancestral node.
 	DescendentBasePresent bool        // True if any descendent nodes have a base, in a specific position
 	BasePresent           bool        // True if this node has a base (A, C, G, T, or N). False if this node has dna.Gap.
 	SubstitutionMatrix    [][]float64 // for custom substitution matrices. This is a 4x4 substitution matrices for nucleotides.

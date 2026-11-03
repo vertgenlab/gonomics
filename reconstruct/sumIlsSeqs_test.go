@@ -2,12 +2,13 @@ package reconstruct
 
 import (
 	"bufio"
-	"github.com/vertgenlab/gonomics/fasta/pFasta"
-	"github.com/vertgenlab/gonomics/fileio"
-	"github.com/vertgenlab/gonomics/wig"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/wig"
 )
 
 var IlsReconstructTests = []struct {
@@ -82,7 +83,7 @@ func TestIlsReconstruct(t *testing.T) {
 			postProbs = append(postProbs, wig.Read(filepath, v.ChromSizesFileName, 0))
 		}
 
-		out = []pFasta.PFasta{IlsReconstructSeq(postProbs, recons, v.Precision)}
+		out = []pFasta.PFasta{SumIlsSeqs(postProbs, recons, v.Precision)}
 		pFasta.Write(v.OutFile, out)
 
 		expected = pFasta.Read(v.Expected)

@@ -1,14 +1,14 @@
 package simulate
 
 import (
-	"math/rand"
-	"os"
-	"testing"
 	"fmt"
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/fileio"
+	"math/rand"
+	"os"
+	"testing"
 )
 
 var CountWindowsTests = []struct {

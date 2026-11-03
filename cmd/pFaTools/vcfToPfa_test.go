@@ -7,16 +7,16 @@ import (
 )
 
 var vcfToPfaTests = []struct {
-	InFile	string
-	RefFile	string
-	OutDir	string
-	Start	int
-	End		int
-	Expected string
+	InFile    string
+	RefFile   string
+	OutDir    string
+	Start     int
+	End       int
+	Expected  string
 	Precision float32
 }{
 	{InFile: "testdata/test_vcfToPfa_input_1.vcf",
-		RefFile:     "testdata/test_vcfToPfa_input_1.fa",
+		RefFile:   "testdata/test_vcfToPfa_input_1.fa",
 		OutDir:    "testdata/test_vcfToPfa_observed_1.pfa",
 		Start:     1,
 		End:       36,
@@ -24,7 +24,7 @@ var vcfToPfaTests = []struct {
 		Precision: 1e-3,
 	},
 	{InFile: "testdata/test_vcfToPfa_input_2.vcf",
-		RefFile:     "testdata/test_vcfToPfa_input_1.fa",
+		RefFile:   "testdata/test_vcfToPfa_input_1.fa",
 		OutDir:    "testdata/test_vcfToPfa_observed_2.pfa",
 		Start:     1,
 		End:       44,
@@ -37,11 +37,11 @@ func TestVcfToPfa(t *testing.T) {
 	var s VcfToPfaSettings
 	for _, tc := range vcfToPfaTests {
 		s = VcfToPfaSettings{
-			InFile: tc.InFile,
+			InFile:  tc.InFile,
 			RefFile: tc.RefFile,
-			OutDir: tc.OutDir,
-			Start: tc.Start,
-			End: tc.End,
+			OutDir:  tc.OutDir,
+			Start:   tc.Start,
+			End:     tc.End,
 		}
 
 		vcfToPfa(s)
