@@ -14,12 +14,13 @@ var postProbtoWigTests = []struct {
 	mafFile        string
 	postProbFile   string
 	desiredSpecies []string
+	numTopos       int
 	wigOutDir      string
 	mapEstimOutDir string
 	expectedWigDir string
 	expectedMapDir string
 }{
-	{"testdata/chr22.test.maf", "testdata/postProbToWig_post_prob_test.csv", []string{"hg38", "panPan2", "panTro6", "gorGor5"}, "testdata/postProbToWig_out.wig", "testdata/postProbToWig_map_out.wig", "testdata/postProbToWig_expected.wig", "testdata/postProbToWig_map_expected.wig"},
+	{"testdata/chr22.test.maf", "testdata/postProbToWig_post_prob_test.csv", []string{"hg38", "panPan2", "panTro6", "gorGor5"}, 4, "testdata/postProbToWig_out.wig", "testdata/postProbToWig_map_out.wig", "testdata/postProbToWig_expected.wig", "testdata/postProbToWig_map_expected.wig"},
 }
 
 func TestPostProbToWig(t *testing.T) {
@@ -31,7 +32,7 @@ func TestPostProbToWig(t *testing.T) {
 	var inMaf []*maf.Maf
 	for _, v := range postProbtoWigTests {
 		inMaf = maf.Read(v.mafFile)
-		postProbOut, mapEstimOut = PostProbToWig(v.postProbFile, inMaf, v.desiredSpecies)
+		postProbOut, mapEstimOut = PostProbToWig(v.postProbFile, inMaf, v.desiredSpecies, v.numTopos)
 		wig.Write(v.wigOutDir, postProbOut)
 		wig.Write(v.mapEstimOutDir, mapEstimOut)
 		if !fileio.AreEqual(v.wigOutDir, v.expectedWigDir) {

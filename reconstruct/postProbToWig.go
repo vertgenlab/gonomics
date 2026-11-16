@@ -3,6 +3,7 @@ package reconstruct
 import (
 	"bufio"
 	"encoding/csv"
+	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -45,6 +46,8 @@ func readPostProbs(postProbsFilename string) map[string][]float64 {
 	mapPostProbs := make(map[string][]float64)
 	topoSum := float64(0)
 
+	// Column groupings for an uncondensed posterior probability file with 29 TRAILS states
+	// Creates groups of columns mapping to the four topologies (V0-3) for n_AB = n_ABC = 3.
 	uncondensedEndIdx := []int{10, 16, 22, 28}
 
 	row, err := reader.Read()
@@ -109,12 +112,17 @@ func readPostProbs(postProbsFilename string) map[string][]float64 {
 	return mapPostProbs
 }
 
-// PostProbToWig converts a csv file of posterior probabilities for four topologies to a wig file with four tracks
-// desiredSpecies MUST be in order, 1st listed species must be the MAF reference species
-// outputs two wigs: outputWigMap is a wig containing the posterior probability for the whole sequence
-// per topology; mapEstimateMap is a wig produced by comparing the same position across all topologies and
-// taking the highest probability state as the MAP (maximum a posteriori) estimate
-func PostProbToWig(postProbsFile string, mafInput []*maf.Maf, desiredSpecies []string) (map[string]wig.Wig, map[string]wig.Wig) {
+// PostProbToWig converts TRAILS posterior probabilities into
+// topology-specific WIG tracks using nucleotide patterns from a MAF
+// multiple sequence alignment.
+// desiredSpecies must contain N species in the same order used by
+// TRAILS, with an ungapped reference species listed first. Will not
+// give correct alignment if given gapped reference sequence.
+// Returns two maps of WIG tracks: outputWigMap contains posterior
+// probabilities for each topology, while mapEstimateMap contains
+// the highest posterior probability assigned to its corresponding
+// topology at each processed genomic position.
+func PostProbToWig(postProbsFile string, mafInput []*maf.Maf, desiredSpecies []string, numTopos int) (map[string]wig.Wig, map[string]wig.Wig) {
 	// make a chrom.sizes ChromInfo struct for the entire maf file
 	if len(mafInput) == 0 {
 		log.Fatal("mafInput is empty")
@@ -129,10 +137,25 @@ func PostProbToWig(postProbsFile string, mafInput []*maf.Maf, desiredSpecies []s
 		log.Fatal("Reference species ", desiredSpecies[0], " not found.")
 	}
 
+	if numTopos <= 0 {
+		log.Fatalf("numTopos must be a positive integer")
+	}
+
+	//// Use reference genome length to initialize four WIG tracks (one per topology)
+	//// for posterior probabilities and MAP estimates.
 	refSize := mafInput[0].Species[0].SLine.SrcSize
 
-	trackNames := []string{"V0", "V1", "V2", "V3"}
-	chromSizes := make([]chromInfo.ChromInfo, 4)
+	chromSizes := make([]chromInfo.ChromInfo, numTopos)
+	trackNames := make([]string, numTopos)
+	for idx := 0; idx < numTopos; idx++ {
+		trackNames[idx] = fmt.Sprintf("V%d", idx)
+
+		chromSizes[idx] = chromInfo.ChromInfo{
+			Name:  trackNames[idx],
+			Size:  refSize,
+			Order: idx,
+		}
+	}
 
 	for idx, trackName := range trackNames {
 		chromSizes[idx] = chromInfo.ChromInfo{
@@ -142,16 +165,27 @@ func PostProbToWig(postProbsFile string, mafInput []*maf.Maf, desiredSpecies []s
 		}
 	}
 
+	// Initialize genome-length WIG tracks for each topolog
+	// Unassigned positions retain posterior probability=zero
+	// Want to storee all topology probabilities in outputWigMap, but record
+	// only the highest-probability topology in mapEstimateMap
 	outputWigMap := wig.MakeSkeleton(chromInfo.SliceToMap(chromSizes), 0)
 	mapEstimateMap := wig.MakeSkeleton(chromInfo.SliceToMap(chromSizes), 0)
 
-	// iterate through each maf block
-	desiredSpeciesIdx := make([]int, 4)
+	// Locate desired species within each MAF block, as species
+	// may appear in different orders or be absent from some blocks
+	// Only process blocks containing all required species
+	numSpecies := len(desiredSpecies)
+	desiredSpeciesIdx := make([]int, numSpecies)
+
 	allSpeciesPresent := 0
 	var curPosAlign string
 	collectSpecies := make([]string, 0)
 	mapPostProbs := readPostProbs(postProbsFile)
-	validBases := regexp.MustCompile(`^[ACGTacgt]{4}$`)
+	validBases := regexp.MustCompile(fmt.Sprintf(`^[ACGTacgt]{%d}$`, numSpecies))
+
+	// adjustIdx determines reference genomic position corresponding to the
+	// current alignment column for assigning posterior probabilities.
 	var adjustIdx int
 	refSpeciesIdx := 0
 	mapIdx := 0
@@ -161,7 +195,7 @@ func PostProbToWig(postProbsFile string, mafInput []*maf.Maf, desiredSpecies []s
 		allSpeciesPresent = 0
 		collectSpecies = collectSpecies[:0]
 		for desiredIdx, species := range desiredSpecies {
-			for speciesIdx, _ := range block.Species {
+			for speciesIdx := range block.Species {
 				collectSpecies = append(collectSpecies, species)
 				if strings.HasPrefix(block.Species[speciesIdx].Src, species) {
 					desiredSpeciesIdx[desiredIdx] = speciesIdx
@@ -170,27 +204,28 @@ func PostProbToWig(postProbsFile string, mafInput []*maf.Maf, desiredSpecies []s
 				}
 			}
 		}
-		if allSpeciesPresent == 4 {
+
+		if allSpeciesPresent == numSpecies {
 			for idx := 0; idx < block.Species[refSpeciesIdx].SLine.Size; idx++ {
+				adjustIdx = block.Species[refSpeciesIdx].SLine.Start + idx
 				curPosAlign = dna.BaseToString(block.Species[desiredSpeciesIdx[0]].SLine.Seq[idx]) + dna.BaseToString(block.Species[desiredSpeciesIdx[1]].SLine.Seq[idx]) + dna.BaseToString(block.Species[desiredSpeciesIdx[2]].SLine.Seq[idx]) + dna.BaseToString(block.Species[desiredSpeciesIdx[3]].SLine.Seq[idx])
 
-				adjustIdx = block.Species[refSpeciesIdx].SLine.Start + idx
 				if !validBases.MatchString(curPosAlign) {
 					continue
 				}
 
-				// hardcoded for 4 topologies
 				mapIdx = 0
 				mapVal = 0
+				// Normalize nucleotide pattern to match keys in posterior probability lookup table
 				lookupAlignment = strings.ToUpper(curPosAlign)
 				alignmentProb, valid := mapPostProbs[lookupAlignment]
-				if !valid || len(alignmentProb) != 4 {
+				if !valid || len(alignmentProb) != numTopos {
 					log.Fatal("No probability exists for ", lookupAlignment, ", check posterior probability file.")
 				}
 
 				for idx, val := range mapPostProbs[lookupAlignment] {
 					outputWigMap[trackNames[idx]].Values[adjustIdx] = mapPostProbs[lookupAlignment][idx]
-					// assign if state is the highest probability state and what is the probability
+					// assign if state is the highest probability state
 					if val > mapVal {
 						mapVal = val
 						mapIdx = idx

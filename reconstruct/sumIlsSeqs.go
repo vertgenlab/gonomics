@@ -3,7 +3,6 @@ package reconstruct
 
 import (
 	"log"
-	"strings"
 
 	"github.com/vertgenlab/gonomics/dna/pDna"
 	"github.com/vertgenlab/gonomics/fasta"
@@ -20,95 +19,96 @@ func SumIlsSeqs(allPostProbs []map[string]wig.Wig, allRecons []pFasta.PFasta, pr
 		log.Fatalf("SumIlsSeqs requires the same number of postProbs (%v) as recons (%v)", len(allPostProbs), len(allRecons))
 	}
 
-	for idx := 0; idx < len(allRecons)-1; idx++ {
-		wigA, okA := allPostProbs[idx][allRecons[idx].Name]
-		wigB, okB := allPostProbs[idx+1][allRecons[idx+1].Name]
+	if len(allRecons) == 0 {
+		log.Fatal("SumIlsSeqs requires at least one input sequence")
+	}
 
-		if !okA || !okB {
-			keys := []string{}
-			for k := range allPostProbs[idx] {
-				keys = append(keys, k)
-			}
+	for idx, recon := range allRecons {
+		currWig, ok := allPostProbs[idx][recon.Name]
 
-			possible := strings.Join(keys, ", ")
-			log.Fatalf("Reconstructions (%v, %v) do not have the same names as posterior probabilities (possible: %v)", okA, okB, possible)
+		if !ok {
+			log.Fatalf("No posterior probability WIG for %s", recon.Name)
 		}
 
-		if len(wigA.Values) != len(wigB.Values) {
-			log.Fatalf("Posterior probabilities do not have the same length.")
+		if len(currWig.Values) != len(recon.Seq) {
+			log.Fatalf("WIG and reconstruction lengths differ for %s", recon.Name)
 		}
 
-		if len(allRecons[idx].Seq) != len(allRecons[idx+1].Seq) {
-			log.Fatalf("Reconstructions do not have the same length.")
+		if len(recon.Seq) != len(allRecons[0].Seq) {
+			log.Fatal("Reconstructions do not have the same length")
 		}
 	}
 
-	// weight each sequence by the corresponding posterior probability
-	var allWeightedRecons []pFasta.PFasta = make([]pFasta.PFasta, len(allRecons))
-	var topoName string
-	var n int
-
-	for topologyIdx := range allPostProbs {
-		topoName = allRecons[topologyIdx].Name
-		topoSeq := allRecons[topologyIdx].Seq
-
-		allWeightedRecons[topologyIdx] = pFasta.PFasta{Name: topoName, Seq: make([]pDna.Float32Base, len(topoSeq))}
-		topoProb := allPostProbs[topologyIdx][topoName].Values
-
-		n = len(topoProb)
-		if len(topoSeq) < n {
-			n = len(topoSeq)
-		}
-
-		for pos := 0; pos < n; pos++ {
-			allWeightedRecons[topologyIdx].Seq[pos] = pDna.Scale(topoSeq[pos], float32(topoProb[pos]))
-		}
+	if len(allPostProbs[0][allRecons[0].Name].Values) != len(allRecons[0].Seq) {
+		log.Fatalf("Reconstructions and posterior probabilies do not have the same length")
 	}
 
-	// Sum the weighted sequences
-	// TODO: if prob = 0 at that position, default set it to V0
-	// TODO: what if there is NOTHING at the position?
-	// should there be a boolean option to say if you want default {0.25, 0.25, 0.25, 0.25}
+	var lenRecon int
 
-	n = len(allPostProbs[0][topoName].Values)
-	if len(allRecons[0].Seq) < n {
-		n = len(allRecons[0].Seq)
+	lenRecon = len(allPostProbs[0][allRecons[0].Name].Values)
+	if len(allRecons[0].Seq) < lenRecon {
+		lenRecon = len(allRecons[0].Seq)
 	}
 
-	weightedSum := pFasta.PFasta{Name: "ilsRecon", Seq: make([]pDna.Float32Base, len(allWeightedRecons[0].Seq))}
+	weightedSum := pFasta.PFasta{Name: "ilsRecon", Seq: make([]pDna.Float32Base, len(allRecons[0].Seq))}
 	sum := pDna.Float32Base{A: 0, C: 0, G: 0, T: 0}
 	zeroBase := pDna.Float32Base{A: 0, C: 0, G: 0, T: 0}
 
-	for pos := range n {
+	var gapProbSum float32
+	var nonGapProb float32
+
+	for pos := range lenRecon {
 		sum.A, sum.C, sum.G, sum.T = 0, 0, 0, 0
-		// sum over all the given recons at that position
-		for _, recon := range allWeightedRecons {
-			sum = pDna.Sum(sum, recon.Seq[pos])
+
+		// Sum weighted reconstructions at this position
+		for idx, recon := range allRecons {
+			prob := float32(allPostProbs[idx][recon.Name].Values[pos])
+			sum = pDna.Sum(sum, pDna.Scale(recon.Seq[pos], prob))
 		}
 
 		if pDna.SumsToOne(sum, precision) {
 			weightedSum.Seq[pos] = sum
-		} else {
-			for idx, recon := range allRecons {
-				if pDna.IsGap(recon.Seq[pos]) {
-					if allPostProbs[idx][allRecons[idx].Name].Values[pos] > 0.5 { // prob of gap greater than prob of non-gap
-						weightedSum.Seq[pos] = zeroBase
-					} else {
-						//TODO
-						weightedSum.Seq[pos] = pDna.Scale(sum, float32(1/(1-allPostProbs[idx][allRecons[idx].Name].Values[pos])))
-					}
-				}
+			continue
+		}
+
+		gapProbSum = 0
+
+		// Sum posterior probabilities of all gap-containing topologies
+		for idx, recon := range allRecons {
+			if pDna.IsGap(recon.Seq[pos]) {
+				gapProbSum += float32(allPostProbs[idx][recon.Name].Values[pos])
 			}
+		}
+
+		// Assign gap if combined posterior probability exceeds 0.5
+		if gapProbSum > 0.5 {
+			weightedSum.Seq[pos] = zeroBase
+			continue
+		}
+
+		// Normalize by total probability of non-gap topologies
+		nonGapProb = 1 - gapProbSum
+
+		if nonGapProb <= 0 {
+			weightedSum.Seq[pos] = zeroBase
+			continue
+		}
+
+		weightedSum.Seq[pos] = pDna.Scale(sum, 1/nonGapProb)
+		if !pDna.SumsToOne(weightedSum.Seq[pos], precision) {
+			log.Fatalf("Normalized probabilities do not sum to one at position %d", pos)
+		}
+
+		if gapProbSum == 0 {
+			log.Fatalf("Invalid nucleotide probability sum of zero at position %d", pos)
 		}
 	}
 
 	return weightedSum
 }
 
-// SumIlsSeqs takes in a list of posterior probabilities for n sequences and a list of n Fasta sequences,
-// converts the Fasta sequences to n one-hot pFasta sequences, then aggregates the pFasta
-// sequences by weighing them by the corresponding posterior probability.
-// Posterior probabilities should sum to 1 at each position across all tracks
+// SumIlsSeqsFasta converts topology-specific FASTA reconstructions into
+// one-hot probabilistic sequences, then combines them using SumIlsSeqs.
 func SumIlsSeqsFasta(allPostProbs []map[string]wig.Wig, allRecons []fasta.Fasta, precision float32) pFasta.PFasta {
 	allRecons_pfa := make([]pFasta.PFasta, len(allRecons))
 

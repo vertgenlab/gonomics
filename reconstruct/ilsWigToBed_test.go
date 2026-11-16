@@ -1,23 +1,25 @@
 package reconstruct
 
 import (
+	"os"
+	"strconv"
+	"testing"
+
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/wig"
-	"os"
-	"strconv"
-	"testing"
 )
 
 var ilsWigToBedTests = []struct {
 	postProbWigFile string
+	chromName       string
 	chromSizes      string
 	outDirPrefix    string
 	expectedPrefix  string
 }{
 	// {"C:/Users/sarah/Documents/pDNA/pdna/hcg_postProb_wig_luria/hcg_postProb.wig", "C:/Users/sarah/Documents/pDNA/pdna/20way/hcg_postProb.sizes", "C:/Users/sarah/Documents/pDNA/pdna/20way/ilsWigToBedOut/20way_postProb_v", "C:/Users/sarah/Documents/pDNA/pdna/20way/ilsWigToBedOut/20way_postProb_v"},
-	{"testdata/postProbToWig_Expected_1.wig", "testdata/ilsWigToBed_test_1.sizes", "testdata/wigToBed_test_output_v", "testdata/wigToBed_test_expected_v"},
+	{"testdata/postProbToWig_Expected_1.wig", "chr1", "testdata/ilsWigToBed_test_1.sizes", "testdata/wigToBed_test_output_v", "testdata/wigToBed_test_expected_v"},
 }
 
 func TestIlsWigToBed(t *testing.T) {
@@ -26,7 +28,7 @@ func TestIlsWigToBed(t *testing.T) {
 	var inWig map[string]wig.Wig
 	for _, v := range ilsWigToBedTests {
 		inWig = wig.Read(v.postProbWigFile, v.chromSizes, 0)
-		out = IlsWigToBed(inWig)
+		out = IlsWigToBed(inWig, v.chromName)
 
 		for idx, ilsBed := range out {
 			if len(ilsBed) >= 0 {
