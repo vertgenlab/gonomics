@@ -10,7 +10,6 @@ import (
 
 	"github.com/vertgenlab/gonomics/bed"
 	"github.com/vertgenlab/gonomics/chromInfo"
-	"github.com/vertgenlab/gonomics/dna"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
 	"github.com/vertgenlab/gonomics/reconstruct"
@@ -50,6 +49,42 @@ func cumulativeTransitionMatrix(transMat *mat.Dense) *mat.Dense {
 	return out
 }
 
+// stationaryDistribution calculates the stationary probabilities of a transition matrix by solving pi*P = pi, subject to sum(pi) = 1
+func stationaryDistribution(transMat mat.Matrix) []float64 {
+	n, _ := transMat.Dims()
+
+	a := mat.NewDense(n, n, nil)
+	b := mat.NewDense(n, 1, nil)
+
+	for i := 0; i < n-1; i++ {
+		for j := 0; j < n; j++ {
+			value := transMat.At(j, i)
+			if i == j {
+				value--
+			}
+			a.Set(i, j, value)
+		}
+	}
+
+	// replace final equation with sum(pi) = 1
+	for j := 0; j < n; j++ {
+		a.Set(n-1, j, 1)
+	}
+	b.Set(n-1, 0, 1)
+
+	var x mat.Dense
+	if err := x.Solve(a, b); err != nil {
+		log.Fatalf("Failed to calculate stationary distribution: %v", err)
+	}
+
+	probs := make([]float64, n)
+	for i := range probs {
+		probs[i] = x.At(i, 0)
+	}
+
+	return probs
+}
+
 // SimulateIls takes a fasta sequence that is the starting sequence at the root nodes, a pointer to a phylogenetic tree,
 // a genePred filename related to the starting sequence, and if deletions should be allowed along with substitutions.
 // The starting sequence will then be evolved according to the neutral tree provided and each node in the tree, using
@@ -77,6 +112,7 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fast
 	} else {
 		// Randomly generate ancestral sequence of length totalLength
 		anc = ancSeq
+		totalLength = len(anc[0].Seq)
 	}
 
 	// (Repeat for all n topologies) Forward evolve the ancestral sequence.
@@ -106,10 +142,9 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fast
 		}
 	}
 
-	statePath := generateIlsStatePath(totalLength, numRoots, transMatConverted)
-	// topologyRecord, ilsEvolvedSeqs := CombineIlsSeqs(forwardEvolvedSeqs, statePath, "ilsState")
+	statePath := generateIlsStatePath(totalLength, numRoots, transMat, transMatConverted)
 	statePathWig := stateToPostProbWig(statePath, numRoots, totalLength)
-	topologyRecord := reconstruct.IlsWigToBed(statePathWig)
+	topologyRecord := reconstruct.IlsWigToBed(statePathWig, chromName)
 	topologyRecord, ilsEvolvedSeqs := reconstruct.SumIlsSeqsFasta(statePathWig, forwardEvolvedSeqs)
 
 	return anc, forwardEvolvedSeqs, topologyRecord, ilsEvolvedSeqs
@@ -126,84 +161,40 @@ func pickState(prevState int, n int, transMatConverted mat.Matrix) int {
 	log.Fatal("Failed to pick next state.")
 }
 
-// generateIlsStatePath generates state transition path for ILS states, given number of root/topology states n,
-// a cumulative probability transition matrix transMatConverted and
-// the total length of the state path totalLength
-func generateIlsStatePath(totalLength int, n int, transMatConverted mat.Matrix) []int {
+// pickInitialState samples an initial topology from the stationary distribution to avoid bias from a uniformly selected initial state.
+func pickInitialState(transMat mat.Matrix) int {
+	probs := stationaryDistribution(transMat)
+
+	r := rand.Float64()
+	cumulative := 0.0
+
+	for i, prob := range probs {
+		cumulative += prob
+		if r < cumulative {
+			return i
+		}
+	}
+
+	return len(probs) - 1
+}
+
+// generateIlsStatePath simulates a sequence of topology states using a
+// first-order Markov chain. The initial state is sampled from the stationary
+// distribution of transMat, and subsequent states are sampled using
+// transMatConverted, the cumulative transition matrix.
+func generateIlsStatePath(totalLength int, n int, transMat mat.Matrix, transMatConverted mat.Matrix) []int {
 	statePath := make([]int, totalLength)
 
-	prevState := rand.Intn(n)
+	prevState := pickInitialState(transMat)
 	statePath[0] = prevState
 
 	for seqIdx := 1; seqIdx < totalLength; seqIdx++ {
 		currentState := pickState(prevState, n, transMatConverted)
-
 		statePath[seqIdx] = currentState
 		prevState = currentState
 	}
 
 	return statePath
-}
-
-// TODO potentially the same as ilsReconstruct/ilsReconstructSeq
-func CombineIlsSeqs(forwardEvolvedSeqs [][]fasta.Fasta, states []int, chromName string) ([]bed.Bed, []fasta.Fasta) {
-	numTopologies := len(forwardEvolvedSeqs)
-	numSpecies := len(forwardEvolvedSeqs[0])
-	totalLength := len(forwardEvolvedSeqs[0][0].Seq)
-
-	if len(states) != totalLength {
-		log.Fatalf("state path length %d does not match sequence length %d", len(states), totalLength)
-	}
-
-	// get the order index in a fasta given species name
-	speciesIndex := make([]map[string]int, numTopologies)
-	for topoIdx := range speciesIndex {
-		speciesIndex[topoIdx] = make(map[string]int)
-		for seqIdx := range forwardEvolvedSeqs[topoIdx] {
-			speciesIndex[topoIdx][forwardEvolvedSeqs[topoIdx][seqIdx].Name] = seqIdx
-		}
-	}
-
-	recordName := make(map[int]string)
-	for i := 0; i < numTopologies; i++ {
-		recordName[i] = fmt.Sprintf("V%d", i)
-	}
-
-	ilsEvolvedSeqs := make([]fasta.Fasta, numSpecies)
-	for speciesIdx := 0; speciesIdx < numSpecies; speciesIdx++ {
-		ilsEvolvedSeqs[speciesIdx].Name = forwardEvolvedSeqs[0][speciesIdx].Name
-		ilsEvolvedSeqs[speciesIdx].Seq = make([]dna.Base, totalLength)
-	}
-
-	var topologyRecord []bed.Bed
-	var currentState int
-	var currentName string
-	var srcIdx int
-	var okay bool
-
-	// iterate over all positions and read the state path
-	// get the corresponding ils base for that state for each species
-	// create the bed file
-	for seqIdx := 0; seqIdx < totalLength; seqIdx++ {
-		currentState = states[seqIdx]
-		currentName = recordName[currentState]
-
-		if len(topologyRecord) > 0 && topologyRecord[len(topologyRecord)-1].ChromEnd == seqIdx && topologyRecord[len(topologyRecord)-1].Name == currentName {
-			topologyRecord[len(topologyRecord)-1].ChromEnd = seqIdx + 1
-		} else {
-			topologyRecord = append(topologyRecord, bed.Bed{Chrom: chromName, ChromStart: seqIdx, ChromEnd: seqIdx + 1, Name: currentName, FieldsInitialized: 4})
-		}
-
-		for species, specIdx := range speciesIndex[0] {
-			srcIdx, okay = speciesIndex[currentState][species]
-			if !okay {
-				log.Fatalf("Species does not exist in topology %d", currentState)
-			}
-			ilsEvolvedSeqs[specIdx].Seq[seqIdx] = forwardEvolvedSeqs[currentState][srcIdx].Seq[seqIdx]
-		}
-	}
-
-	return topologyRecord, ilsEvolvedSeqs
 }
 
 func stateToPostProbWig(states []int, numRoots int, seqLength int) map[string]wig.Wig {
