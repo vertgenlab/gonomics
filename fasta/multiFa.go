@@ -13,7 +13,7 @@ func RefPosToAlnPos(record Fasta, RefPos int) int {
 }
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
-func RefPosToAlnPosBedInput(record Fasta, RefPos int) int {
+func RefPosToAlnPosBed(record Fasta, RefPos int) int {
 	return RefPosToAlnPosExposed(record, RefPos, true)
 }
 
