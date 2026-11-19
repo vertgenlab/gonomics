@@ -13,7 +13,7 @@ import (
 
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
-	"github.com/vertgenlab/gonomics/reconstruct"
+	"github.com/vertgenlab/gonomics/reconstruct/ilsReconstruct"
 	"github.com/vertgenlab/gonomics/wig"
 )
 
@@ -122,7 +122,7 @@ func SumIlsSeqs(s SumIlsSeqsSettings) {
 		postProbs = append(postProbs, wig.Read(filepath, s.ChromSizesFile, 0))
 	}
 
-	out := []pFasta.PFasta{reconstruct.SumIlsSeqs(postProbs, recons, s.Precision)}
+	out := []pFasta.PFasta{ilsReconstruct.SumIlsSeqs(postProbs, recons, s.Precision)}
 
 	pFasta.Write(s.OutDir, out)
 }
