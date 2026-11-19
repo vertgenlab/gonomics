@@ -90,10 +90,10 @@ func TestToMap(t *testing.T) {
 }
 
 var extractTests = []struct {
-	fa Fasta
-	start int
-	end int
-	name string
+	fa       Fasta
+	start    int
+	end      int
+	name     string
 	expected Fasta
 }{
 	{fa: Fasta{Name: "chr1", Seq: dna.StringToBases("ATCA")}, start: 0, end: 1, name: "chr1_subset", expected: Fasta{Name: "chr1_subset", Seq: dna.StringToBases("A")}},
