@@ -12,6 +12,7 @@ import (
 
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
+	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/maf"
 	"github.com/vertgenlab/gonomics/wig"
 )
@@ -22,13 +23,13 @@ func ReadLines(path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close() // TODO Riley said to hard close it, but it won't let me do that?
 	var lines []string
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	file.Close()
+	err = file.Close()
+	exception.PanicOnErr(err)
 	return lines, scanner.Err()
 }
 

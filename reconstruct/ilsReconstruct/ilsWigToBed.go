@@ -14,6 +14,7 @@ import (
 // e.g. for n=4, returns a slice of 4 beds containing info on which positions are in
 // which topology states V0-V3
 // chromName defaults to chr1
+// if ties in probability, takes lower index topology
 func IlsWigToBed(postProbWig map[string]wig.Wig, chromName string) [][]bed.Bed {
 	// check number of topologies
 	keys := make([]string, len(postProbWig))

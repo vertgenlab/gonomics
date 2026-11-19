@@ -18,7 +18,6 @@ var ilsWigToBedTests = []struct {
 	outDirPrefix    string
 	expectedPrefix  string
 }{
-	// {"C:/Users/sarah/Documents/pDNA/pdna/hcg_postProb_wig_luria/hcg_postProb.wig", "C:/Users/sarah/Documents/pDNA/pdna/20way/hcg_postProb.sizes", "C:/Users/sarah/Documents/pDNA/pdna/20way/ilsWigToBedOut/20way_postProb_v", "C:/Users/sarah/Documents/pDNA/pdna/20way/ilsWigToBedOut/20way_postProb_v"},
 	{"testdata/postProbToWig_Expected_1.wig", "chr1", "testdata/ilsWigToBed_test_1.sizes", "testdata/wigToBed_test_output_v", "testdata/wigToBed_test_expected_v"},
 }
 

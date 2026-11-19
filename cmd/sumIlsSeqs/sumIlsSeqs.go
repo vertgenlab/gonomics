@@ -29,10 +29,8 @@ type SumIlsSeqsSettings struct {
 // SumIlsSeqsUsage defines the usage statement for the SumIlsSeqs command
 func SumIlsSeqsUsage(SumIlsSeqsFlags *flag.FlagSet) {
 	fmt.Print(
-		"SumIlsSeqs performs ancestral sequence reconstruction while accounting for phylogenetic topological uncertainty resulting from incomplete lineage sorting.\n" +
-			"Initial ancestral sequence reconstructions are generated for each possible topology. A final, adjusted ancestral sequence estimate is generated as the\n" +
-			"average of ancestral estimates across topologies, weighted by the posterior probability of a topology at each position.\n" +
-			"Memory scales by pDNA size, so if working with large genomes, make sure to split by chromosome.\n" +
+		"SumIlsSeqs takes the weighted sum of FASTA/pFASTA sequences given a wig file for all positions with probability" +
+			"of that position being one of the sequencess\n" +
 			"This program takes as input a txt file containing the addresses of n wig files, and a txt file containing the addresses of n corresponding pFastas.\n" +
 			"This program returns a pFasta file containing a sequence representing the weighted average of the input pFastas.\n" +
 			"Usage:\n" +

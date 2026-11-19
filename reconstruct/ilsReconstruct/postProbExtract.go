@@ -19,20 +19,25 @@ func concatenateMultifa(inputMultifa [][]fasta.Fasta) []fasta.Fasta {
 	return ans
 }
 
-// PostProbExtractIntergenic takes as input regions, sorted bed file,
+// PostProbExtract takes as input regions, sorted bed file,
 // and inputFa, a multifasta, where all sequences are aligned to the first sequence (index 0),
-// then extracts all regions in 'regions' from inputFa and output them as a list of
-func PostProbExtractIntergenic(regions []bed.Bed, inputFa []fasta.Fasta, specifyChrom string) ([][]fasta.Fasta, []fasta.Fasta) {
+// then extracts all regions in 'regions' from inputFa and output them as a list of fastas
+// regions must not overlap
+func PostProbExtract(regions []bed.Bed, inputFa []fasta.Fasta, specifyChrom string) ([][]fasta.Fasta, []fasta.Fasta) {
 	extracted := fasta.Fasta{}
 
 	/// the input fasta file is X fastas, where X is the number of species in the alignment
-	/// I need to initialise a X-length []fasta.Fasta{} output file
+	/// initialise a X-length []fasta.Fasta{} output file
 	/// and then iterate over the regions in the bed file
 	/// extracting that region in each of the X sequences in the input file,
 	//  and append them onto each of the X-sequences in the output file
 
 	// Retain only BED regions matching the specified chromosome.
 	// If no chromosome is specified, use all regions.
+	bed.SortByCoord(regions)
+	if bed.IsSelfOverlapping(regions, 0) {
+		log.Fatalf("Region file has overlapping regions.")
+	}
 	filteredRegions := []bed.Bed{}
 	if specifyChrom != "" {
 		for _, r := range regions {
@@ -60,6 +65,10 @@ func PostProbExtractIntergenic(regions []bed.Bed, inputFa []fasta.Fasta, specify
 	if len(inputFa) == 0 {
 		log.Fatalf("Must have at least 1 FASTA record.")
 	}
+
+	// TODO
+	// not breaking anything here but should be fasta.RefPosToAlnPosBed
+	// multifaExtractTesting needs to be pushed to main
 	alnStart := fasta.RefPosToAlnPos(inputFa[0], filteredRegions[0].ChromStart)
 	alnEnd := fasta.RefPosToAlnPos(inputFa[0], filteredRegions[0].ChromEnd)
 
