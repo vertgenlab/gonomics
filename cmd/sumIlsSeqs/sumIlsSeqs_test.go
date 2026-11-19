@@ -45,7 +45,7 @@ func TestSumIlsSeqs(t *testing.T) {
 		expected = pFasta.Read(v.Expected)
 
 		if !pFasta.AllAreEqual(observed, expected, v.TestPrecision) {
-			t.Errorf("Error in iSumIlsSeqs.")
+			t.Errorf("Error in SumIlsSeqs.")
 		} else {
 			fileio.EasyRemove(v.OutDir)
 		}

@@ -17,7 +17,7 @@ import (
 	"github.com/vertgenlab/gonomics/wig"
 )
 
-// SumIlsSeqsSettings defines the usage settings for the iSumIlsSeqs command
+// SumIlsSeqsSettings defines the usage settings for the SumIlsSeqs command
 type SumIlsSeqsSettings struct {
 	PostProbsFiles string
 	ReconFiles     string
@@ -26,22 +26,22 @@ type SumIlsSeqsSettings struct {
 	Precision      float32
 }
 
-// SumIlsSeqsUsage defines the usage statement for the iSumIlsSeqs command
+// SumIlsSeqsUsage defines the usage statement for the SumIlsSeqs command
 func SumIlsSeqsUsage(SumIlsSeqsFlags *flag.FlagSet) {
 	fmt.Print(
-		"iSumIlsSeqs performs ancestral sequence reconstruction while accounting for phylogenetic topological uncertainty resulting from incomplete lineage sorting.\n" +
+		"SumIlsSeqs performs ancestral sequence reconstruction while accounting for phylogenetic topological uncertainty resulting from incomplete lineage sorting.\n" +
 			"Initial ancestral sequence reconstructions are generated for each possible topology. A final, adjusted ancestral sequence estimate is generated as the\n" +
 			"average of ancestral estimates across topologies, weighted by the posterior probability of a topology at each position.\n" +
 			"Memory scales by pDNA size, so if working with large genomes, make sure to split by chromosome.\n" +
 			"This program takes as input a txt file containing the addresses of n wig files, and a txt file containing the addresses of n corresponding pFastas.\n" +
 			"This program returns a pFasta file containing a sequence representing the weighted average of the input pFastas.\n" +
 			"Usage:\n" +
-			"iSumIlsSeqs <posterior-probabilities>.txt <recons>.txt outDir\n" +
+			"SumIlsSeqs <posterior-probabilities>.txt <recons>.txt outDir\n" +
 			"options:\n")
 	SumIlsSeqsFlags.PrintDefaults()
 }
 
-// parseSumIlsSeqsArgs is the main function of the SumIlsSeqs command. It parses options and runs the iSumIlsSeqs function.
+// parseSumIlsSeqsArgs is the main function of the SumIlsSeqs command. It parses options and runs the SumIlsSeqs function.
 func parseSumIlsSeqsArgs() {
 	expectedNumArgs := 4
 	var err error
