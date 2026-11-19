@@ -45,7 +45,7 @@ func extractMultiHelper(records []fasta.Fasta, start int, end int, isBed bool) [
 		}
 	} else { // using bed as ref regions
 		for i := range records {
-			ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPosBed(records[0], start), fasta.RefPosToAlnPosBed(records[0], end), records[i].Name)
+			ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPosBedInput(records[0], start), fasta.RefPosToAlnPosBedInput(records[0], end), records[i].Name)
 		}
 	}
 	return ans
