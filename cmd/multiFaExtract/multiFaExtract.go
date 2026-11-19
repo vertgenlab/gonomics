@@ -37,15 +37,17 @@ func multiFaExtract(s Settings) {
 	}
 }
 
-func extractMultiHelper(records []fasta.Fasta, start int, end int, isBed bool) []fasta.Fasta {
+// allowBed allows for bed input if true
+// where if you can specify 1 more beyond the end of the fasta (because bed is 0 indexed)
+func extractMultiHelper(records []fasta.Fasta, start int, end int, allowBed bool) []fasta.Fasta {
 	var ans = make([]fasta.Fasta, len(records))
-	if !isBed {
+	if allowBed {
 		for i := range records {
-			ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPos(records[0], start), fasta.RefPosToAlnPos(records[0], end), records[i].Name)
+			ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPosBed(records[0], start), fasta.RefPosToAlnPosBed(records[0], end), records[i].Name)
 		}
 	} else { // using bed as ref regions
 		for i := range records {
-			ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPosBedInput(records[0], start), fasta.RefPosToAlnPosBedInput(records[0], end), records[i].Name)
+			ans[i] = fasta.Extract(records[i], fasta.RefPosToAlnPos(records[0], start), fasta.RefPosToAlnPos(records[0], end), records[i].Name)
 		}
 	}
 	return ans

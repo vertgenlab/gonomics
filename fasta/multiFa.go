@@ -9,16 +9,18 @@ import (
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
 func RefPosToAlnPos(record Fasta, RefPos int) int {
-	return RefPosToAlnPosExposed(record, RefPos, false)
+	return refPosToAlnPosExposed(record, RefPos, false)
 }
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
 func RefPosToAlnPosBed(record Fasta, RefPos int) int {
-	return RefPosToAlnPosExposed(record, RefPos, true)
+	return refPosToAlnPosExposed(record, RefPos, true)
 }
 
 // RefPosToAlnPos returns the alignment position associated with a given reference position for an input MultiFa. 0 based.
-func RefPosToAlnPosExposed(record Fasta, RefPos int, allowBed bool) int {
+// allowBed allows for bed-style coordinate input
+// where if you can specify 1 more beyond the end of the fasta (because bed is 0 indexed)
+func refPosToAlnPosExposed(record Fasta, RefPos int, allowBed bool) int {
 	var refStart, alnStart = 0, 0
 	if !allowBed {
 		for t := alnStart; refStart < RefPos; alnStart++ {
