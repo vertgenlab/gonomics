@@ -39,7 +39,7 @@ func refPosToAlnPosExposed(record Fasta, RefPos int, allowBed bool) int {
 			if t > len(record.Seq) {
 				log.Fatalf("Ran out of chromosome.")
 			} else if t == len(record.Seq) {
-				alnStart++ // TODO: same issue here with alnStart
+				alnStart++
 				incremented++
 				break
 			} else if record.Seq[t] != dna.Gap {
@@ -76,11 +76,11 @@ func refPosToAlnPosCounterExposed(record Fasta, RefPos int, refStart int, alnSta
 		log.Fatalf("refStart > RefPos")
 	}
 
-	if alnStart == len(record.Seq) {
-		log.Fatalf("Ran out of chromosome.")
-	}
-
 	if !allowBed {
+		if alnStart >= len(record.Seq) {
+			log.Fatalf("Ran out of chromosome.")
+		}
+
 		for t := alnStart; refStart < RefPos; alnStart++ {
 			t++
 			if t == len(record.Seq) {
@@ -90,15 +90,17 @@ func refPosToAlnPosCounterExposed(record Fasta, RefPos int, refStart int, alnSta
 			}
 		}
 	} else {
+		if alnStart > len(record.Seq) {
+			log.Fatalf("Ran out of chromosome.")
+		}
 		initRefStart := refStart
 		incremented := 0
 		for t := alnStart; refStart < RefPos; alnStart++ {
 			t++
 			if t > len(record.Seq) {
 				log.Fatalf("Ran out of chromosome.")
-			} else if t == len(record.Seq) { // TODO: should this be, if t==RefPos?? something is wrong here I think
-				alnStart++ // TODO: should this be refStart???? it appears that previously alnStart was set to 0, but that is no longer the case
-				// technically, this isn't breaking anything because I break the loop right after, but still, this is weird
+			} else if t == len(record.Seq) {
+				alnStart++
 				incremented++
 				break
 			} else if record.Seq[t] != dna.Gap {
