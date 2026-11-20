@@ -8,6 +8,56 @@ import (
 	"github.com/vertgenlab/gonomics/fasta"
 )
 
+var MultiFaExtractSingleTests = []struct {
+	inputFile    string
+	outputFile   string
+	expectedFile string
+	removeGaps   bool
+	bed          string
+	start        int
+	end          int
+	out          string
+	expected     string
+}{
+	{"testdata/testInput2.fa", "", "", false, "testdata/test2.bed", -1, -1, "chr1.0.50.fa", "testdata/chr1.0.50.expected.fa"}, //~/go/bin/multiFaExtract -bed testdata/test2.bed testdata/testInput2.fa
+	{"testdata/testInput2.fa", "", "", false, "testdata/test3.bed", -1, -1, "chr1.0.49.fa", "testdata/chr1.0.49.expected.fa"}, //~/go/bin/multiFaExtract -bed testdata/test2.bed testdata/testInput2.fa
+}
+
+func TestMultiFaExtractSingle(t *testing.T) {
+	var err error
+	var s Settings
+	for _, v := range MultiFaExtractSingleTests {
+		s = Settings{
+			InFile:     v.inputFile,
+			OutFile:    v.outputFile,
+			Start:      v.start,
+			End:        v.end,
+			Bed:        v.bed,
+			RemoveGaps: v.removeGaps,
+		}
+		multiFaExtract(s)
+		if v.bed == "" {
+			records := fasta.Read(v.outputFile)
+			expected := fasta.Read(v.expectedFile)
+			if !fasta.AllAreEqual(records, expected) {
+				t.Errorf("Error in multiFaExtract.")
+			} else {
+				err = os.Remove(v.outputFile)
+				exception.PanicOnErr(err)
+			}
+		} else {
+			rec1 := fasta.Read(v.out)
+			exp1 := fasta.Read(v.expected)
+			if !fasta.AllAreEqual(rec1, exp1) {
+				t.Errorf("Error in multiFaExtract, bed usage. OutFile.")
+			} else {
+				err = os.Remove(v.out)
+				exception.PanicOnErr(err)
+			}
+		}
+	}
+}
+
 var MultiFaExtractTests = []struct {
 	inputFile    string
 	outputFile   string
