@@ -12,12 +12,13 @@ import (
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/expandedTree"
 	"github.com/vertgenlab/gonomics/fasta"
+	"github.com/vertgenlab/gonomics/numbers/matrix"
 	"github.com/vertgenlab/gonomics/reconstruct"
 	"github.com/vertgenlab/gonomics/wig"
 	"gonum.org/v1/gonum/mat"
 )
 
-// cumulativeTransitionMatrix converts a 2D square transition matrix.
+// cumulativeTransitionMatrix converts a 2D square transition matrix to a cumulative transition matrix
 // for example, given a stochastic matrix where row 1 = (a, b, c, ..., n) such that row 1 sums to 1,
 // and a, b, c... describe the probability of the state 1 converting to any state N,
 // We then convert the row 1 to (a, a+b, a+b+c, ..., a+b+⋯+n) such that the last value in the row is 1.
@@ -49,47 +50,30 @@ func cumulativeTransitionMatrix(transMat *mat.Dense) *mat.Dense {
 	return out
 }
 
-// stationaryDistribution calculates the stationary probabilities of a transition matrix by solving pi*P = pi, subject to sum(pi) = 1
-func stationaryDistribution(transMat mat.Matrix) []float64 {
-	n, _ := transMat.Dims()
-
-	a := mat.NewDense(n, n, nil)
-	b := mat.NewDense(n, 1, nil)
-
-	for i := 0; i < n-1; i++ {
-		for j := 0; j < n; j++ {
-			value := transMat.At(j, i)
-			if i == j {
-				value--
-			}
-			a.Set(i, j, value)
-		}
-	}
-
-	// replace final equation with sum(pi) = 1
-	for j := 0; j < n; j++ {
-		a.Set(n-1, j, 1)
-	}
-	b.Set(n-1, 0, 1)
-
-	var x mat.Dense
-	if err := x.Solve(a, b); err != nil {
-		log.Fatalf("Failed to calculate stationary distribution: %v", err)
-	}
-
-	probs := make([]float64, n)
-	for i := range probs {
-		probs[i] = x.At(i, 0)
-	}
-
-	return probs
-}
-
-// SimulateIls takes a fasta sequence that is the starting sequence at the root nodes, a pointer to a phylogenetic tree,
-// a genePred filename related to the starting sequence, and if deletions should be allowed along with substitutions.
-// The starting sequence will then be evolved according to the neutral tree provided and each node in the tree, using
-// incomplete lineage separation. First provided topology should be the non-ILS informed topology. No gaps.
-// uses defaultSubstitutionMatrix if substitution matrix file empty
+// SimulateIls simulates sequence evolution across a set of phylogenetic trees,
+// incorporating incomplete lineage sorting (ILS).
+//   - roots: Pointer to a set of phylogenetic trees
+//   - transMat: Transition matrix defining transitions between phylogenetic
+//     topologies and their unit branch lengths
+//   - ancSeq: FASTA sequence used as the ancestral sequence at the root nodes
+//     May be empty if totalLength is nonzero and ancName is nonempty
+//   - totalLength: Length of the ancestral sequence to generate if ancSeq is empty
+//   - ancName: Name of the ancestral sequence; required if ancSeq is empty
+//   - seed: Random seed used for sequence evolution
+//   - chromName: Chromosome name used to construct output sequence names
+//   - leafFastasOnly: If true, outputs only leaf-node sequences
+//   - genePred: GenePred filename associated with the starting sequence
+//   - deletions: Whether to allow deletions in addition to substitutions
+//
+// Uses defaultSubstitutionMatrix if no substitution matrix file is provided.
+// The ancestral sequence is evolved along the supplied phylogenetic trees,
+// accounting for topology changes due to ILS. No gaps are introduced.
+//
+// Outputs:
+//   - ancestral sequence
+//   - multi-FASTA file containing forward-evolved sequences without ILS
+//   - BED file identifying the topology associated with each position
+//   - ILS-informed sequences multifa
 func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fasta.Fasta, totalLength int, seed int64, chromName string, leafFastasOnly bool, substitutionMatrixFile string, unitBranchLength float64, ancName string) ([]fasta.Fasta, [][]fasta.Fasta, []bed.Bed, []fasta.Fasta) {
 
 	// set entire genome to be 1 big gene
@@ -116,7 +100,9 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fast
 	}
 
 	// (Repeat for all n topologies) Forward evolve the ancestral sequence.
-	// Produces an output fasta with C sequences, one for each node in the topology
+	// Produces an output fasta with C sequences
+	// 
+	, one for each node in the topology
 	// if there are S species and N topologies,
 	// we get S*N total sequences ie a list of length N, each with S sequences
 	forwardEvolvedSeqs := make([][]fasta.Fasta, numRoots)
@@ -124,9 +110,7 @@ func SimulateIls(roots []*expandedTree.ETree, transMat *mat.Dense, ancSeq []fast
 	var nodes []*expandedTree.ETree
 
 	// TODO: there should be a check that the name of the ancestral sequence matches the name of the topmost root
-
 	for topologyIdx, root := range roots {
-		// SimulateFromSeq(anc, root, genePred, deletions)
 		root.Fasta = &anc[0]
 		root = NonCoding(root, substitutionMatrixFile, unitBranchLength)
 		nodes = expandedTree.GetTree(root)
@@ -163,7 +147,7 @@ func pickState(prevState int, n int, transMatConverted mat.Matrix) int {
 
 // pickInitialState samples an initial topology from the stationary distribution to avoid bias from a uniformly selected initial state.
 func pickInitialState(transMat mat.Matrix) int {
-	probs := stationaryDistribution(transMat)
+	probs := matrix.StationaryDistribution(transMat)
 
 	r := rand.Float64()
 	cumulative := 0.0

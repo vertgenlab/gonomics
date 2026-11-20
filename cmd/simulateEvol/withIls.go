@@ -56,13 +56,6 @@ func parseIlsArgs() {
 	var err error
 	ilsFlags := flag.NewFlagSet("ils", flag.ExitOnError)
 	ilsFlags.Usage = func() { NonCodingUsage(ilsFlags) }
-	// required
-	// var rootsFile *string = ilsFlags.String("rootsFile", "", "Specify a file for simulating molecular evolution along a set of pre-specified Newick trees.")
-	// var transitionMatrixFile *string = ilsFlags.String("transitionMatrixFile", "", "Specify a file that describes the probability of transitions between topology states.")
-	// var chromName *string = ilsFlags.String("chromName", "", "Specify the name of the output sequence.")
-	// var outPathPrefix *string = ilsFlags.String("outPathPrefix", "", "Specify the output directory and prefix of output files.")
-	// var unitBranchLength *float64 = ilsFlags.Float64("unitBranchLength", -1, "Set the branch length over which a custom substitution matrix was derived.")
-	// optional params
 	var ancSeqFile *string = ilsFlags.String("ancSeqFile", "", "Specify the initial ancestral sequence. If empty, must provide setSEed and lenSeq.")
 	var lenSeq *int64 = ilsFlags.Int64("lenSeq", -1, "If generating a root DNA sequence, set the length of the simulated sequence. Ignored if ancSeqFile provided.")
 	var leafFastasOnly *bool = ilsFlags.Bool("leafFastasOnly", false, "Specify if only leaf fastas are provided in output. Defaults to false.")

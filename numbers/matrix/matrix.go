@@ -202,13 +202,14 @@ func ApproxEqual(m1 [][]float64, m2 [][]float64, precision float64) bool {
 	return true
 }
 
-// ReadMatrix reads a delimited file as a dense matrix
+// ReadMatrix reads a delimited file with no header as a dense matrix
 func ReadDense(filePath string, delimiter rune) (*mat.Dense, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("open %q: %w", filePath, err)
 	}
-	f.Close()
+	err = f.Close()
+	exception.PanicOnErr(err)
 
 	reader := csv.NewReader(f)
 	reader.Comma = delimiter
@@ -225,21 +226,54 @@ func ReadDense(filePath string, delimiter rune) (*mat.Dense, error) {
 	cols := len(records[0])
 	data := make([]float64, len(records)*cols)
 
-	k := 0
-	for i, row := range records {
-		if len(row) != cols {
-			return nil, fmt.Errorf("row %d has %d columns, expected %d", i, len(row), cols)
-		}
-
-		for j, cell := range row {
-			v, err := strconv.ParseFloat(cell, 64)
+	dataIdx := 0
+	for currRow, row := range records {
+		for currCol, cell := range row {
+			cellVal, err := strconv.ParseFloat(cell, 64)
 			if err != nil {
-				return nil, fmt.Errorf("parse float at row %d, col %d: %w", i, j, err)
+				return nil, fmt.Errorf("parse float at row %d, col %d: %w", currRow, currCol, err)
 			}
-			data[k] = v
-			k++
+			data[dataIdx] = cellVal
+			dataIdx++
 		}
 	}
 
 	return mat.NewDense(len(records), cols, data), nil
+}
+
+// stationaryDistribution calculates the stationary probabilities of a transition matrix
+// by solving pi*P = pi, subject to sum(pi) = 1
+func StationaryDistribution(transMat mat.Matrix) []float64 {
+	n, _ := transMat.Dims()
+
+	a := mat.NewDense(n, n, nil)
+	b := mat.NewDense(n, 1, nil)
+
+	for i := 0; i < n-1; i++ {
+		for j := 0; j < n; j++ {
+			value := transMat.At(j, i)
+			if i == j {
+				value--
+			}
+			a.Set(i, j, value)
+		}
+	}
+
+	// replace final equation with sum(pi) = 1
+	for j := 0; j < n; j++ {
+		a.Set(n-1, j, 1)
+	}
+	b.Set(n-1, 0, 1)
+
+	var x mat.Dense
+	if err := x.Solve(a, b); err != nil {
+		log.Fatalf("Failed to calculate stationary distribution: %v", err)
+	}
+
+	probs := make([]float64, n)
+	for i := range probs {
+		probs[i] = x.At(i, 0)
+	}
+
+	return probs
 }
