@@ -34,7 +34,7 @@ func SumIlsSeqsUsage(SumIlsSeqsFlags *flag.FlagSet) {
 			"This program takes as input a txt file containing the addresses of n wig files, and a txt file containing the addresses of n corresponding pFastas.\n" +
 			"This program returns a pFasta file containing a sequence representing the weighted average of the input pFastas.\n" +
 			"Usage:\n" +
-			"SumIlsSeqs <posterior-probabilities>.txt <recons>.txt outDir\n" +
+			"SumIlsSeqs <posterior-probabilities>.txt <recons>.txt chromSizes.chrom.sizes outDir\n" +
 			"options:\n")
 	SumIlsSeqsFlags.PrintDefaults()
 }
