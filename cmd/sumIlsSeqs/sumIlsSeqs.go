@@ -1,0 +1,99 @@
+// Command Group: "Sequence Evolution & Reconstruction"
+
+// Takes the weighted sum of FASTA/pFASTA sequences given a wig file for all positions with probability
+// of that position being one of the sequencess
+package main
+
+import (
+	"flag"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/fileio"
+	"github.com/vertgenlab/gonomics/reconstruct/ilsReconstruct"
+	"github.com/vertgenlab/gonomics/wig"
+)
+
+// SumIlsSeqsSettings defines the usage settings for the SumIlsSeqs command
+type SumIlsSeqsSettings struct {
+	PostProbsFiles string
+	ReconFiles     string
+	ChromSizesFile string
+	OutDir         string
+	Precision      float32
+}
+
+// SumIlsSeqsUsage defines the usage statement for the SumIlsSeqs command
+func SumIlsSeqsUsage(SumIlsSeqsFlags *flag.FlagSet) {
+	fmt.Print(
+		"SumIlsSeqs takes the weighted sum of FASTA/pFASTA sequences given a wig file for all positions with probability" +
+			"of that position being one of the sequencess\n" +
+			"This program takes as input a txt file containing the addresses of n wig files, and a txt file containing the addresses of n corresponding pFastas.\n" +
+			"This program returns a pFasta file containing a sequence representing the weighted average of the input pFastas.\n" +
+			"Usage:\n" +
+			"SumIlsSeqs <posterior-probabilities>.txt <recons>.txt chromSizes.chrom.sizes outDir\n" +
+			"options:\n")
+	SumIlsSeqsFlags.PrintDefaults()
+}
+
+// parseSumIlsSeqsArgs is the main function of the SumIlsSeqs command. It parses options and runs the SumIlsSeqs function.
+func parseSumIlsSeqsArgs() {
+	expectedNumArgs := 4
+	var err error
+	SumIlsSeqsFlags := flag.NewFlagSet("SumIlsSeqs", flag.ExitOnError)
+	var precision *float64 = SumIlsSeqsFlags.Float64("precision", 0.001, "Specify the precision to use when checking for valid pDNA base (sums to 1).")
+	SumIlsSeqsFlags.Usage = func() { SumIlsSeqsUsage(SumIlsSeqsFlags) }
+	err = SumIlsSeqsFlags.Parse(os.Args[2:])
+
+	exception.PanicOnErr(err)
+
+	if len(SumIlsSeqsFlags.Args()) != expectedNumArgs {
+		SumIlsSeqsFlags.Usage()
+		log.Fatalf("Error: expecting %d arguments, but got %d\n",
+			expectedNumArgs, len(SumIlsSeqsFlags.Args()))
+	}
+
+	postProbsFiles := SumIlsSeqsFlags.Arg(0)
+	reconFiles := SumIlsSeqsFlags.Arg(1)
+	chromSizesFile := SumIlsSeqsFlags.Arg(2)
+	outDir := SumIlsSeqsFlags.Arg(3)
+
+	s := SumIlsSeqsSettings{
+		PostProbsFiles: postProbsFiles,
+		ReconFiles:     reconFiles,
+		ChromSizesFile: chromSizesFile,
+		OutDir:         outDir,
+		Precision:      float32(*precision),
+	}
+
+	SumIlsSeqs(s)
+}
+
+func SumIlsSeqs(s SumIlsSeqsSettings) {
+	reconFileLines := fileio.Read(s.ReconFiles)
+	recons := make([]pFasta.PFasta, len(reconFileLines))
+
+	for i, filepath := range reconFileLines {
+		recons[i] = pFasta.Read(filepath)[0]
+	}
+
+	postProbsFileLines := fileio.Read(s.PostProbsFiles)
+	postProbs := make([]map[string]wig.Wig, len(postProbsFileLines))
+
+	for i, filepath := range postProbsFileLines {
+		postProbs[i] = wig.Read(filepath, s.ChromSizesFile, 0)
+	}
+
+	out := []pFasta.PFasta{
+		ilsReconstruct.SumIlsSeqs(postProbs, recons, s.Precision),
+	}
+
+	pFasta.Write(s.OutDir, out)
+}
+
+func main() {
+	parseSumIlsSeqsArgs()
+}
