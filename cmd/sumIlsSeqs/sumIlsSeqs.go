@@ -5,7 +5,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/vertgenlab/gonomics/exception"
 	"github.com/vertgenlab/gonomics/fasta/pFasta"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/reconstruct/ilsReconstruct"
 	"github.com/vertgenlab/gonomics/wig"
 )
@@ -73,54 +73,23 @@ func parseSumIlsSeqsArgs() {
 }
 
 func SumIlsSeqs(s SumIlsSeqsSettings) {
-	var fileScanner *bufio.Scanner
-	var err error
-	var readPostProbs *os.File
-	var readRecons *os.File
+	reconFileLines := fileio.Read(s.ReconFiles)
+	recons := make([]pFasta.PFasta, len(reconFileLines))
 
-	readRecons, err = os.Open(s.ReconFiles)
-	if err != nil {
-		log.Fatalf("%s does not exist.", s.ReconFiles)
+	for i, filepath := range reconFileLines {
+		recons[i] = pFasta.Read(filepath)[0]
 	}
 
-	fileScanner = bufio.NewScanner(readRecons)
-	fileScanner.Split(bufio.ScanLines)
-	reconFileLines := make([]string, 0)
+	postProbsFileLines := fileio.Read(s.PostProbsFiles)
+	postProbs := make([]map[string]wig.Wig, len(postProbsFileLines))
 
-	for fileScanner.Scan() {
-		reconFileLines = append(reconFileLines, fileScanner.Text())
+	for i, filepath := range postProbsFileLines {
+		postProbs[i] = wig.Read(filepath, s.ChromSizesFile, 0)
 	}
 
-	err = readRecons.Close()
-	exception.PanicOnErr(err)
-	recons := make([]pFasta.PFasta, 0)
-
-	for _, filepath := range reconFileLines {
-		recons = append(recons, pFasta.Read(filepath)[0])
+	out := []pFasta.PFasta{
+		ilsReconstruct.SumIlsSeqs(postProbs, recons, s.Precision),
 	}
-
-	readPostProbs, err = os.Open(s.PostProbsFiles)
-	if err != nil {
-		log.Fatalf("%s does not exist.", s.PostProbsFiles)
-	}
-
-	fileScanner = bufio.NewScanner(readPostProbs)
-	fileScanner.Split(bufio.ScanLines)
-	postProbsFileLines := make([]string, 0)
-
-	for fileScanner.Scan() {
-		postProbsFileLines = append(postProbsFileLines, fileScanner.Text())
-	}
-
-	err = readPostProbs.Close()
-	exception.PanicOnErr(err)
-	postProbs := make([]map[string]wig.Wig, 0)
-
-	for _, filepath := range postProbsFileLines {
-		postProbs = append(postProbs, wig.Read(filepath, s.ChromSizesFile, 0))
-	}
-
-	out := []pFasta.PFasta{ilsReconstruct.SumIlsSeqs(postProbs, recons, s.Precision)}
 
 	pFasta.Write(s.OutDir, out)
 }

@@ -1,47 +1,26 @@
 package ilsReconstruct
 
 import (
-	"bufio"
 	"encoding/csv"
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/vertgenlab/gonomics/chromInfo"
 	"github.com/vertgenlab/gonomics/dna"
-	"github.com/vertgenlab/gonomics/exception"
+	"github.com/vertgenlab/gonomics/fileio"
 	"github.com/vertgenlab/gonomics/maf"
 	"github.com/vertgenlab/gonomics/wig"
 )
-
-// readLines reads a whole file into memory and returns a slice of its lines
-func ReadLines(path string) ([]string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	err = file.Close()
-	exception.PanicOnErr(err)
-	return lines, scanner.Err()
-}
 
 // readPostProbs reads the posterior probability CSV file output from TRAILS
 // currently supports n_AB=n_ABC=3, which outputs 29 states
 // and per state, sums over i for all V_#^i topology, for each n which gives four sums per state
 // alternatively also supports a posterior probability file that only has 4 states
 func readPostProbs(postProbsFilename string) map[string][]float64 {
-	f, err := os.Open(postProbsFilename)
-	if err != nil {
-		log.Fatal("Unable to read input file "+postProbsFilename, err)
-	}
+	f := fileio.EasyOpen(postProbsFilename)
 
 	reader := csv.NewReader(f)
 	mapPostProbs := make(map[string][]float64)
